@@ -20,7 +20,7 @@ window.onload = function() {
         });
 
         divLogo.addEventListener('click', function(){
-            window.location = '/';
+            window.location = '/qambi/';
         }, false);
 
         window.addEventListener('resize', resize, false);
