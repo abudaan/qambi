@@ -1,4 +1,0 @@
-input[type='range']{
-    width: calc(100% - 10px);
-    max-width: 300px;
-}
