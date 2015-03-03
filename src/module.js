@@ -37,6 +37,7 @@ let sequencer = {
     midiOutputs: []
 };
 
+
 sequencer.createSong = function(config){
     return new Song(config);
 }
