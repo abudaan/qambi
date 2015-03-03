@@ -14,7 +14,7 @@ window.onload = function() {
   console.log(sequencer);
 
   song = sequencer.createSong();
-  song.addSamples('hier wat samples jo!');
+  song.addSamples({48:'base64data'});
 
   song.addEventListener('stop', function(){
     console.log('song has stopped');
