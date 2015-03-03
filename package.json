@@ -1,0 +1,18 @@
+{
+  "name": "heartbeat",
+  "private": true,
+  "devDependencies": {
+    "6to5ify": ">=4.0.0",
+    "browserify": ">=8.1.1",
+    "exorcist": "^0.1.6",
+    "local-web-server": "^0.5.16",
+    "watchify": ">=1.0.1"
+  },
+  "engines": {
+    "node": "0.10.x"
+  },
+  "scripts": {
+    "build": "browserify src/module.js --standalone sequencer -t 6to5ify --debug | exorcist build/qambi.js.map > build/qambi.js ",
+    "watch": "watchify src/module.js --standalone sequencer -t 6to5ify -o build/qambi.js --debug --verbose"
+  }
+}
