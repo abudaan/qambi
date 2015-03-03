@@ -2,7 +2,7 @@
   "name": "heartbeat",
   "private": true,
   "devDependencies": {
-    "6to5ify": ">=4.0.0",
+    "babelify": ">=4.0.0",
     "browserify": ">=8.1.1",
     "exorcist": "^0.1.6",
     "local-web-server": "^0.5.16",
@@ -12,7 +12,7 @@
     "node": "0.10.x"
   },
   "scripts": {
-    "build": "browserify src/module.js --standalone sequencer -t 6to5ify --debug | exorcist build/qambi.js.map > build/qambi.js ",
-    "watch": "watchify src/module.js --standalone sequencer -t 6to5ify -o build/qambi.js --debug --verbose"
+    "build": "browserify src/module.js --standalone sequencer -t [ babelify --sourceMapRelative ./src ] --debug | exorcist build/qambi.js.map > build/qambi.js",
+    "watch": "watchify src/module.js --standalone sequencer -t babelify -o build/qambi.js --debug --verbose"
   }
 }

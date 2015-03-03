@@ -20,7 +20,7 @@ window.onload = function() {
   track1 = sequencer.createTrack();
   track2 = sequencer.createTrack();
 
-  // id of Track is now read only
+  // id of Track is now read only so this yields an error
   try{
     track2.id = 'another id';
   }catch(e){

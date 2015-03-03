@@ -1,0 +1,5 @@
+http://davidwalsh.name/javascript-objects-deconstruction
+http://ferrante.pl/frontend/javascript/objectcreate-history-and-memory-leaks/
+http://stackoverflow.com/questions/2709612/using-object-create-instead-of-new
+http://jsperf.com/obj-create-vs-new/5
+http://es6rocks.com/2014/10/arrow-functions-and-their-scope/

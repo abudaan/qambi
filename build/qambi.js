@@ -41,7 +41,6 @@ var sequencer = {
     midiOutputs: []
 };
 
-
 sequencer.createSong = function (config) {
     return new Song(config);
 };
@@ -51,7 +50,6 @@ sequencer.createTrack = function () {
     t.init();
     return t;
 };
-
 
 module.exports = sequencer;
 
@@ -68,7 +66,6 @@ var addEventListener = _song_addeventlistener.addEventListener;
 var removeEventListener = _song_addeventlistener.removeEventListener;
 var dispatchEvent = _song_addeventlistener.dispatchEvent;
 
-
 var songId = 0;
 
 var Song = (function () {
@@ -83,6 +80,7 @@ var Song = (function () {
     addSamples: {
 
       // add samples to the instrument after it has been created, this allows you to jit load the samples of an instrument
+
       value: function addSamples(samples) {
         console.log("added", samples);
       },
@@ -147,9 +145,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var trackId = 0;
 
-
 var Track = {
-    init: function () {
+    init: function init() {
         var id = "T" + trackId++ + new Date().getTime();
         Object.defineProperty(this, "id", {
             value: id
