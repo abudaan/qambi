@@ -2,7 +2,7 @@
   "version": 3,
   "sources": [
     "node_modules/browserify/node_modules/browser-pack/_prelude.js",
-    "module.js",
+    "sequencer.js",
     "song.js",
     "song_addeventlistener.js",
     "track.js"
