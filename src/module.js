@@ -1,6 +1,7 @@
 'use strict';
 
 import Song from './song.js';
+import Track from './track.js';
 
 let sequencer = {
     name: 'qambi',
@@ -38,6 +39,12 @@ let sequencer = {
 
 sequencer.createSong = function(config){
     return new Song(config);
+}
+
+sequencer.createTrack = function(){
+    var t = Object.create(Track);
+    t.init();
+    return t;
 }
 
 
