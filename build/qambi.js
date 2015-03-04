@@ -21,9 +21,8 @@ var sequencer = {
     // -> see init method in sequencer.js at line 90 of heartbeat!
     return new Promise(function executor(resolve, reject) {
       var settings = getSettings();
-      if (settings.error !== undefined) {
-        //alert(settings.error);
-        reject(settings.error);
+      if (settings.audio_context === false) {
+        reject("The WebAudio API hasn't been implemented in " + settings.browser + ", please use any other browser");
       } else {
         sequencer.os = settings.os;
         sequencer.browser = settings.browser;
@@ -70,15 +69,12 @@ module.exports = sequencer;
 "use strict";
 
 var settings = undefined,
-    context = undefined,
     ua = undefined,
     os = undefined,
-    browser = undefined,
-    gainNode = undefined,
-    compressor = undefined,
-    src = undefined;
+    browser = undefined;
 
 function getSettings() {
+  // --> rename to getConfiguration
 
   if (settings !== undefined) {
     return settings;
@@ -121,45 +117,14 @@ function getSettings() {
   // check if audio can be recorded
   navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
-  // audio context
-  if (window.AudioContext) {
-    context = new window.AudioContext();
-    if (context.createGainNode === undefined) {
-      context.createGainNode = context.createGain;
-    }
-  } else if (window.webkitAudioContext) {
-    context = new window.webkitAudioContext();
-  } else if (window.oAudioContext) {
-    context = new window.oAudioContext();
-  } else if (window.msAudioContext) {
-    context = new window.msAudioContext();
-  } else {
-    var error = "The WebAudio API hasn't been implemented in " + browser + ", please use any other browser";
-    return { error: error };
-  }
-
-  // check for older implementations of WebAudio
-  src = context.createBufferSource();
-  settings.legacy = false;
-  if (src.start === undefined) {
-    settings.legacy = true;
-  }
-
-  // set up the elementary audio nodes
-  compressor = context.createDynamicsCompressor();
-  compressor.connect(context.destination);
-  gainNode = context.createGainNode();
-  gainNode.connect(context.destination);
-  gainNode.gain.value = 1;
+  // check if we have an audio context
+  window.AudioContext = window.AudioContext || window.webkitAudioContext || window.oAudioContext || window.msAudioContext;
 
   // add to settings object
-  settings.context = context;
-  settings.masterGainNode = gainNode;
-  settings.masterCompressor = compressor;
-
   settings.ua = ua;
   settings.os = os;
   settings.browser = browser; // the name of thebrowser in lowercase, e.g. firefox, opera, safari, chromium, etc.
+  settings.audio_context = window.AudioContext !== undefined;
   settings.record_audio = navigator.getUserMedia !== undefined;
 
   return settings;

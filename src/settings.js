@@ -2,16 +2,12 @@
 
 let
   settings,
-  context,
   ua,
   os,
-  browser,
-  gainNode,
-  compressor,
-  src;
+  browser;
 
 
-function getSettings(){
+function getSettings(){ // --> rename to getConfiguration
 
   if(settings !== undefined){
     return settings;
@@ -64,47 +60,20 @@ function getSettings(){
   );
 
 
-  // audio context
-  if(window.AudioContext){
-    context = new window.AudioContext();
-    if(context.createGainNode === undefined){
-      context.createGainNode = context.createGain;
-    }
-  }else if(window.webkitAudioContext){
-    context = new window.webkitAudioContext();
-  }else if(window.oAudioContext){
-    context = new window.oAudioContext();
-  }else if(window.msAudioContext){
-    context = new window.msAudioContext();
-  }else{
-    let error = 'The WebAudio API hasn\'t been implemented in ' + browser + ', please use any other browser';
-    return {error};
-  }
-
-
-  // check for older implementations of WebAudio
-  src = context.createBufferSource();
-  settings.legacy = false;
-  if(src.start === undefined){
-    settings.legacy = true;
-  }
-
-  // set up the elementary audio nodes
-  compressor = context.createDynamicsCompressor();
-  compressor.connect(context.destination);
-  gainNode = context.createGainNode();
-  gainNode.connect(context.destination);
-  gainNode.gain.value = 1;
+  // check if we have an audio context
+  window.AudioContext = (
+    window.AudioContext ||
+    window.webkitAudioContext ||
+    window.oAudioContext ||
+    window.msAudioContext
+  );
 
 
   // add to settings object
-  settings.context = context;
-  settings.masterGainNode = gainNode;
-  settings.masterCompressor = compressor;
-
   settings.ua = ua;
   settings.os = os;
   settings.browser = browser; // the name of thebrowser in lowercase, e.g. firefox, opera, safari, chromium, etc.
+  settings.audio_context = window.AudioContext !== undefined;
   settings.record_audio = navigator.getUserMedia !== undefined;
 
   return settings;

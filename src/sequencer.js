@@ -16,9 +16,8 @@ let sequencer = {
     // -> see init method in sequencer.js at line 90 of heartbeat!
     return new Promise(function executor(resolve, reject){
       let settings = getSettings();
-      if(settings.error !== undefined){
-        //alert(settings.error);
-        reject(settings.error);
+      if(settings.audio_context === false){
+        reject(`The WebAudio API hasn\'t been implemented in ${settings.browser}, please use any other browser`);
       }else{
         sequencer.os = settings.os;
         sequencer.browser = settings.browser;
