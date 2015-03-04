@@ -14,36 +14,40 @@ window.onload = function() {
 
   console.log(sequencer);
 
-  song = sequencer.createSong();
-  song.addSamples({48:'base64data'});
+  sequencer.init().then(function(){
 
-  track1 = sequencer.createTrack();
-  track2 = sequencer.createTrack();
+    song = sequencer.createSong();
+    song.addSamples({48:'base64data'});
 
-  // id of Track is now read only so this yields an error
-  try{
-    track2.id = 'another id';
-  }catch(e){
-    console.log(e);
-  }
-  console.log(track1.id, track2.id);
+    track1 = sequencer.createTrack();
+    track2 = sequencer.createTrack();
 
+    // id of Track is now read only so this yields an error
+    try{
+      track2.id = 'another id';
+    }catch(e){
+      console.log(e);
+    }
+    console.log(track1.id, track2.id);
 
-  song.addEventListener('stop', function(){
-    console.log('song has stopped');
+    sequencer.unlockWebAudio();
+    sequencer.unlockWebAudio();
+
+    song.addEventListener('stop', function(){
+      console.log('song has stopped');
+    });
+
+    song.addEventListener('play', function(){
+      console.log('song starts playing');
+    });
+
+    btnPlay.addEventListener('click', function(){
+      song.play();
+    });
+
+    btnStop.addEventListener('click', function(){
+      song.stop();
+      song.removeEventListener('stop');
+    });
   });
-
-  song.addEventListener('play', function(){
-    console.log('song starts playing');
-  });
-
-  btnPlay.addEventListener('click', function(){
-    song.play();
-  });
-
-  btnStop.addEventListener('click', function(){
-    song.stop();
-    song.removeEventListener('stop');
-  });
-
 };

@@ -1,52 +1,62 @@
 'use strict';
 
+import getSettings from './settings.js';
 import Song from './song.js';
 import Track from './track.js';
 
 let sequencer = {
-    name: 'qambi',
-    ui: {},
-    util: {},
-    ua: '',
-    os: '',
-    browser: '',
-    legacy: false, // true if the browser uses an older version of the WebAudio API, source.noteOn() and source.noteOff instead of source.start() and source.stop()
-    record_audio: navigator.getUserMedia !== undefined,
-    midi: false,
-    webmidi: false,
-    webaudio: true,
-    jazz: false,
-    ogg: false,
-    mp3: false,
-    bitrate_mp3_encoding: 128,
-    debug: 4, // 0 = off, 1 = error, 2 = warn, 3 = info, 4 = log
-    debugLevel: 4, // 0 = off, 1 = error, 2 = warn, 3 = info, 4 = log
-    pitch: 440,
-    bufferTime: 350/1000, //seconds
-    autoAdjustBufferTime: false,
-    noteNameMode: 'sharp',
-    minimalSongLength: 60000, //millis
-    pauseOnBlur: false,
-    restartOnFocus: true,
-    defaultPPQ: 960,
-    overrulePPQ: true,
-    precision: 3, // means float with precision 3, e.g. 10.437
+  name: 'qambi',
+  ui: {}, // ui functions
+  util: {}, // util functions
+  activeSongs: {}, // the songs that are currently loaded in memory
+  midiInputs: [],
+  midiOutputs: [],
+  init: function(){
+    // add more promises here: for init midi system, testing audio support, and parsing metronome samples
+    // -> see init method in sequencer.js at line 90 of heartbeat!
+    return new Promise(function executor(resolve, reject){
+      let settings = getSettings();
+      if(settings.error !== undefined){
+        //alert(settings.error);
+        reject(settings.error);
+      }else{
+        sequencer.os = settings.os;
+        sequencer.browser = settings.browser;
 
-    activeSongs: {}, // the songs that are currently loaded in memory
-    midiInputs: [],
-    midiOutputs: []
+        if(sequencer.os !== 'ios'){
+          sequencer.unlockWebAudio = function(){};
+        }else{
+          sequencer.unlockWebAudio = function(){
+            let src = settings.context.createOscillator(),
+              gainNode = settings.context.createGainNode();
+            gainNode.gain.value = 0;
+            src.connect(gainNode);
+            gainNode.connect(settings.context.destination);
+            if(src.noteOn !== undefined){
+              src.start = src.noteOn;
+              src.stop = src.noteOff;
+            }
+            src.start(0);
+            src.stop(0.001);
+
+            // remove function after first use
+            sequencer.unlockWebAudio = function(){};
+          };
+        }
+        resolve();
+      }
+    });
+  }
 };
 
-
 sequencer.createSong = function(config){
-    return new Song(config);
-}
+  return new Song(config);
+};
 
 sequencer.createTrack = function(){
-    var t = Object.create(Track);
-    t.init();
-    return t;
-}
-
+  var t = Object.create(Track);
+  t.init();
+  return t;
+};
 
 export default sequencer;
