@@ -15,10 +15,6 @@ class Song{
     this.data = data;
   }
 
-  // add samples to the instrument after it has been created, this allows you to jit load the samples of an instrument
-  addSamples(samples){
-    //console.log('added', samples);
-  }
 
   stop(){
     dispatchEvent('stop');

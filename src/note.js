@@ -38,12 +38,12 @@ let
       number: 60
     }
   */
-    createNote = function(){
+    export function createNote(){
         let args = slice.call(arguments),
             numArgs = args.length,
+            error,
+            warn,
             data,
-            warn = false,
-            error = false,
             octave,
             noteName,
             noteNumber,
@@ -317,62 +317,65 @@ let
     };
 
 ///*
-    sequencer.getNoteNumber = function(){
-        let note = createNote.apply(this,arguments);
-        if(note){
-            return note.number;
-        }
-        return false;
-    };
+export function getNoteNumber(){
+  let note = createNote.apply(this,arguments);
+  if(note){
+    return note.number;
+  }
+  return false;
+};
 
 
-    sequencer.getNoteName = function(){
-        let note = createNote.apply(this, arguments);
-        if(note){
-            return note.name;
-        }
-        return false;
-    };
-
-    sequencer.getNoteNameFromNoteNumber = function(number, mode){
-        return getNoteName(number, mode);
-    };
+export function getNoteName(){
+  let note = createNote.apply(this, arguments);
+  if(note){
+    return note.name;
+  }
+  return false;
+};
 
 
-    sequencer.getNoteOctave = function(){
-        let note = createNote.apply(this,arguments);
-        if(note){
-            return note.octave;
-        }
-        return false;
-    };
+export function getNoteNameFromNoteNumber(number, mode){
+  return getNoteName(number, mode);
+};
 
 
-    sequencer.getFullNoteName = function(){
-        let note = createNote.apply(this,arguments);
-        if(note){
-            return note.fullName;
-        }
-        return false;
-    };
+export function getNoteOctave(){
+  let note = createNote.apply(this,arguments);
+  if(note){
+    return note.octave;
+  }
+  return false;
+};
 
 
-    sequencer.getFrequency = function(){
-        let note = createNote.apply(this,arguments);
-        if(note){
-            return note.frequency;
-        }
-        return false;
-    };
+export function getFullNoteName(){
+  let note = createNote.apply(this,arguments);
+  if(note){
+    return note.fullName;
+  }
+  return false;
+};
 
-//*/
-    sequencer.isBlackKey = function(){
-        let note = createNote.apply(this,arguments);
-        if(note){
-            return note.blackKey;
-        }
-        return false;
-    };
+
+export function getFrequency(){
+  let note = createNote.apply(this,arguments);
+  if(note){
+    return note.frequency;
+  }
+  return false;
+};
+
+
+export function isBlackKey(){
+  let note = createNote.apply(this,arguments);
+  if(note){
+    return note.blackKey;
+  }
+  return false;
+};
+
+
 
 /*
     sequencer.SHARP = 'sharp';
@@ -380,6 +383,8 @@ let
     sequencer.ENHARMONIC_SHARP = 'enharmonic-sharp';
     sequencer.ENHARMONIC_FLAT = 'enharmonic-flat';
 */
+
+    // TODO: this should be Symbols!
 
     Object.defineProperty(sequencer, 'SHARP', {value: 'sharp'});
     Object.defineProperty(sequencer, 'FLAT', {value: 'flat'});

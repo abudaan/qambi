@@ -17,24 +17,11 @@ window.onload = function() {
   sequencer.init().then(
 
     function onFulFilled(){
-      //console.log('initialized!');
 
       song = sequencer.createSong();
-      song.addSamples({48:'base64data'});
 
       track1 = sequencer.createTrack();
       track2 = sequencer.createTrack();
-    /*
-      // id of Track is now read only so this yields an error
-      try{
-        track2.id = 'another id';
-      }catch(e){
-        console.log(e);
-      }
-      console.log(track1.id, track2.id);
-    */
-      sequencer.unlockWebAudio();
-      sequencer.unlockWebAudio();
 
       song.addEventListener('stop', function(){
         console.log('song has stopped');
