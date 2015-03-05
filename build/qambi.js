@@ -2791,6 +2791,10 @@ function initMidi() {
           data.webmidi = true;
           data.midi = true;
         }
+        if (typeof midi.inputs.values !== "function") {
+          reject("Please update your browser for MIDI support");
+          return;
+        }
         iterator = midi.inputs.values();
         doubleNames = {};
 
@@ -2928,23 +2932,25 @@ function initMidi() {
         });
 
         data.numMidiOutputs = midiOutputsOrder.length;
-        /*
-                  // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
-                  midi.addEventListener('onconnect', function(e){
-                    console.log('device connected', e);
-                  }, false);
-        
-                  midi.addEventListener('ondisconnect', function(e){
-                    console.log('device disconnected', e);
-                  }, false);
-        */
+
+        // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
+        midi.addEventListener("onconnect", function (e) {
+          console.log("device connected", e);
+        }, false);
+
+        midi.addEventListener("ondisconnect", function (e) {
+          console.log("device disconnected", e);
+        }, false);
+
         resolve(data);
-      }, function onReject() {
-        reject();
+      }, function onReject(e) {
+        //console.log(e);
+        reject("Something went wrong while requesting MIDIAccess");
       });
       // browsers without WebMIDI API
     } else {
-      reject();
+      data.midi = false;
+      resolve(data);
     }
   });
 }
@@ -3029,8 +3035,10 @@ function executor(resolve, reject) {
         sequencer.midiOutputs = midi.midiOutputs;
 
         resolve();
-      }, function onRejected() {
-        if (config.browser === "chrome") {
+      }, function onRejected(e) {
+        if (e !== undefined && typeof e === "string") {
+          reject(e);
+        } else if (config.browser === "chrome" || config.browser === "chromium") {
           reject("Web MIDI API not enabled");
         } else {
           reject("Web MIDI API not supported");
@@ -3282,7 +3290,7 @@ function parseSample(sample, id, every) {
           }
         }
       }, function onError(e) {
-        console.log("error decoding audiodata", id, e);
+        //console.log('error decoding audiodata', id, e);
         //reject(e); // don't use reject because we use this as a nested promise and we don't want the parent promise to reject
         if (id !== undefined) {
           resolve({ id: id, buffer: undefined });
@@ -3291,7 +3299,7 @@ function parseSample(sample, id, every) {
         }
       });
     } catch (e) {
-      console.log("error decoding audiodata", id, e);
+      //console.log('error decoding audiodata', id, e);
       //reject(e);
       if (id !== undefined) {
         resolve({ id: id, buffer: undefined });

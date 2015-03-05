@@ -119,7 +119,7 @@ function parseSample(sample, id, every){
           }
       },
       function onError(e){
-        console.log('error decoding audiodata', id, e);
+        //console.log('error decoding audiodata', id, e);
         //reject(e); // don't use reject because we use this as a nested promise and we don't want the parent promise to reject
         if(id !== undefined){
           resolve({'id': id, 'buffer': undefined});
@@ -129,7 +129,7 @@ function parseSample(sample, id, every){
       }
     );
     }catch(e){
-      console.log('error decoding audiodata', id, e);
+      //console.log('error decoding audiodata', id, e);
       //reject(e);
       if(id !== undefined){
         resolve({'id': id, 'buffer': undefined});

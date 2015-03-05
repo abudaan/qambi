@@ -25,6 +25,10 @@ function initMidi(){
             data.webmidi = true;
             data.midi = true;
           }
+          if(typeof midi.inputs.values !== 'function'){
+            reject('Please update your browser for MIDI support');
+            return;
+          }
           iterator = midi.inputs.values();
           doubleNames = {};
 
@@ -119,7 +123,7 @@ function initMidi(){
           });
 
           data.numMidiOutputs = midiOutputsOrder.length;
-/*
+
           // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
           midi.addEventListener('onconnect', function(e){
             console.log('device connected', e);
@@ -128,17 +132,19 @@ function initMidi(){
           midi.addEventListener('ondisconnect', function(e){
             console.log('device disconnected', e);
           }, false);
-*/
+
           resolve(data);
         },
 
-        function onReject(){
-          reject();
+        function onReject(e){
+          //console.log(e);
+          reject('Something went wrong while requesting MIDIAccess');
         }
       );
     // browsers without WebMIDI API
     }else{
-      reject();
+      data.midi = false;
+      resolve(data);
     }
   });
 }

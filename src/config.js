@@ -81,7 +81,6 @@ function getConfig(){
   config.os = os;
   config.browser = browser;
 
-
   // check if we have an audio context
   window.AudioContext = (
     window.AudioContext ||

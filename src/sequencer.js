@@ -73,8 +73,10 @@ function executor(resolve, reject){
 
             resolve();
           },
-          function onRejected(){
-            if(config.browser === 'chrome'){
+          function onRejected(e){
+            if(e !== undefined && typeof e === 'string'){
+              reject(e);
+            }else if(config.browser === 'chrome' || config.browser === 'chromium'){
               reject('Web MIDI API not enabled');
             }else{
               reject('Web MIDI API not supported');
