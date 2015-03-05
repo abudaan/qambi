@@ -68,8 +68,8 @@ function executor(resolve, reject){
         initMidi().then(
           function onFulfilled(midi){
 
-            sequencer.midiInputs = midi.midiInputs;
-            sequencer.midiOutputs = midi.midiOutputs;
+            sequencer.midiInputs = midi.inputs;
+            sequencer.midiOutputs = midi.outputs;
 
             resolve();
           },

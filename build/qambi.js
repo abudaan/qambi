@@ -2765,21 +2765,19 @@ module.exports = initAudio;
 },{"./util":13}],8:[function(require,module,exports){
 "use strict";
 
+var data = {};
+var inputs = [];
+var outputs = [];
+var numInputs = 0;
+var numOutputs = 0;
+
 function initMidi() {
 
   return new Promise(function executor(resolve, reject) {
 
     var iterator = undefined,
         item = undefined,
-        doubleNames = undefined;
-    var name = undefined,
         port = undefined;
-    var midiInputsOrder = [];
-    var midiOutputsOrder = [];
-    var data = {
-      midiInputs: {},
-      midiOutputs: {}
-    };
 
     if (navigator.requestMIDIAccess !== undefined) {
 
@@ -2791,68 +2789,25 @@ function initMidi() {
           data.webmidi = true;
           data.midi = true;
         }
+
+        // old implementation of WebMIDI
         if (typeof midi.inputs.values !== "function") {
           reject("Please update your browser for MIDI support");
           return;
         }
+
+        // inputs
+
         iterator = midi.inputs.values();
-        doubleNames = {};
 
         while ((item = iterator.next()).done === false) {
           port = item.value;
-          name = port.name;
-          if (doubleNames[name] === undefined) {
-            doubleNames[name] = [];
-          }
-          doubleNames[name].push(port);
+          inputs.push(port);
         }
 
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-          for (var _iterator = Reflect.ownKeys(doubleNames)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            name = _step.value;
-
-            var obj = doubleNames[name];
-            var i = undefined,
-                _port = undefined,
-                numPorts = obj.length;
-            //console.log(numPorts);
-            if (numPorts === 1) {
-              _port = obj[0];
-              _port.label = name;
-              midiInputsOrder.push({ label: _port.label, id: _port.id });
-              data.midiInputs[_port.id] = _port;
-            } else {
-              for (i = 0; i < numPorts; i++) {
-                _port = obj[i];
-                _port.label = name + " port " + i; //(i + 1);
-                //console.log(port.id, port.label, name);
-                midiInputsOrder.push({ label: _port.label, id: _port.id });
-                data.midiInputs[_port.id] = _port;
-              }
-            }
-          }
-        } catch (err) {
-          _didIteratorError = true;
-          _iteratorError = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion && _iterator["return"]) {
-              _iterator["return"]();
-            }
-          } finally {
-            if (_didIteratorError) {
-              throw _iteratorError;
-            }
-          }
-        }
-
-        midiInputsOrder.sort(function (a, b) {
-          var nameA = a.label.toLowerCase(),
-              nameB = b.label.toLowerCase();
+        inputs.sort(function (a, b) {
+          var nameA = a.name.toLowerCase(),
+              nameB = b.name.toLowerCase();
           if (nameA < nameB) {
             //sort string ascending
             return -1;
@@ -2862,66 +2817,20 @@ function initMidi() {
           return 0; //default return value (no sorting)
         });
 
-        data.numMidiInputs = midiInputsOrder.length;
+        numInputs = inputs.length;
+
+        // outputs
 
         iterator = midi.outputs.values();
-        doubleNames = {};
 
         while ((item = iterator.next()).done === false) {
           port = item.value;
-          name = port.name;
-          if (doubleNames[name] === undefined) {
-            doubleNames[name] = [];
-          }
-          doubleNames[name].push(port);
+          outputs.push(port);
         }
 
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-          for (var _iterator2 = Reflect.ownKeys(doubleNames)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            name = _step2.value;
-
-            var obj = doubleNames[name];
-            var i = undefined,
-                _port2 = undefined,
-                numPorts = obj.length;
-            //console.log(numPorts);
-            if (numPorts === 1) {
-              _port2 = obj[0];
-              _port2.label = name;
-              midiOutputsOrder.push({ label: _port2.label, id: _port2.id });
-              data.midiOutputs[_port2.id] = _port2;
-            } else {
-              for (i = 0; i < numPorts; i++) {
-                _port2 = obj[i];
-                _port2.label = name + " port " + i; //(i + 1);
-                //console.log(port.id, port.label, name);
-                midiOutputsOrder.push({ label: _port2.label, id: _port2.id });
-                data.midiOutputs[_port2.id] = _port2;
-              }
-            }
-          }
-        } catch (err) {
-          _didIteratorError2 = true;
-          _iteratorError2 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-              _iterator2["return"]();
-            }
-          } finally {
-            if (_didIteratorError2) {
-              throw _iteratorError2;
-            }
-          }
-        }
-
-        midiOutputsOrder.sort(function (a, b) {
-          var nameA = a.label.toLowerCase(),
-              nameB = b.label.toLowerCase();
+        outputs.sort(function (a, b) {
+          var nameA = a.name.toLowerCase(),
+              nameB = b.name.toLowerCase();
           if (nameA < nameB) {
             //sort string ascending
             return -1;
@@ -2931,7 +2840,7 @@ function initMidi() {
           return 0; //default return value (no sorting)
         });
 
-        data.numMidiOutputs = midiOutputsOrder.length;
+        numOutputs = outputs.length;
 
         // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
         midi.addEventListener("onconnect", function (e) {
@@ -2941,6 +2850,12 @@ function initMidi() {
         midi.addEventListener("ondisconnect", function (e) {
           console.log("device disconnected", e);
         }, false);
+
+        // export
+        data.inputs = inputs;
+        data.outputs = outputs;
+        data.numInputs = numInputs;
+        data.numOutputs = numOutputs;
 
         resolve(data);
       }, function onReject(e) {
@@ -3031,8 +2946,8 @@ function executor(resolve, reject) {
 
       initMidi().then(function onFulfilled(midi) {
 
-        sequencer.midiInputs = midi.midiInputs;
-        sequencer.midiOutputs = midi.midiOutputs;
+        sequencer.midiInputs = midi.inputs;
+        sequencer.midiOutputs = midi.outputs;
 
         resolve();
       }, function onRejected(e) {

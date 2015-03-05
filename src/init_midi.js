@@ -1,17 +1,16 @@
 'use strict';
 
+let data = {};
+let inputs = [];
+let outputs = [];
+let numInputs = 0;
+let numOutputs = 0;
+
 function initMidi(){
 
   return new Promise(function executor(resolve, reject){
 
-    let iterator, item, doubleNames;
-    let name, port;
-    let midiInputsOrder = [];
-    let midiOutputsOrder = [];
-    let data = {
-      midiInputs: {},
-      midiOutputs: {}
-    };
+    let iterator, item, port;
 
     if(navigator.requestMIDIAccess !== undefined){
 
@@ -25,46 +24,26 @@ function initMidi(){
             data.webmidi = true;
             data.midi = true;
           }
+
+          // old implementation of WebMIDI
           if(typeof midi.inputs.values !== 'function'){
             reject('Please update your browser for MIDI support');
             return;
           }
+
+
+          // inputs
+
           iterator = midi.inputs.values();
-          doubleNames = {};
 
           while((item = iterator.next()).done === false){
             port = item.value;
-            name = port.name;
-            if(doubleNames[name] === undefined){
-              doubleNames[name] = [];
-            }
-            doubleNames[name].push(port);
+            inputs.push(port);
           }
 
-          for(name of Reflect.ownKeys(doubleNames)){
-            let obj = doubleNames[name];
-            let i, port, numPorts = obj.length;
-            //console.log(numPorts);
-            if(numPorts === 1){
-              port = obj[0];
-              port.label = name;
-              midiInputsOrder.push({label: port.label, id: port.id});
-              data.midiInputs[port.id] = port;
-            }else{
-              for(i = 0; i < numPorts; i++){
-                port = obj[i];
-                port.label = name + ' port ' + i;//(i + 1);
-                //console.log(port.id, port.label, name);
-                midiInputsOrder.push({label: port.label, id: port.id});
-                data.midiInputs[port.id] = port;
-              }
-            }
-          }
-
-
-          midiInputsOrder.sort(function(a, b){
-            let nameA = a.label.toLowerCase(),
-              nameB = b.label.toLowerCase();
+          inputs.sort(function(a, b){
+            let nameA = a.name.toLowerCase(),
+              nameB = b.name.toLowerCase();
             if(nameA < nameB){ //sort string ascending
               return -1;
             }else if (nameA > nameB){
@@ -73,47 +52,21 @@ function initMidi(){
             return 0; //default return value (no sorting)
           });
 
-          data.numMidiInputs = midiInputsOrder.length;
+          numInputs = inputs.length;
 
 
+          // outputs
 
           iterator = midi.outputs.values();
-          doubleNames = {};
 
           while((item = iterator.next()).done === false){
             port = item.value;
-            name = port.name;
-            if(doubleNames[name] === undefined){
-              doubleNames[name] = [];
-            }
-            doubleNames[name].push(port);
+            outputs.push(port);
           }
 
-
-          for(name of Reflect.ownKeys(doubleNames)){
-            let obj = doubleNames[name];
-            let i, port, numPorts = obj.length;
-            //console.log(numPorts);
-            if(numPorts === 1){
-              port = obj[0];
-              port.label = name;
-              midiOutputsOrder.push({label: port.label, id: port.id});
-              data.midiOutputs[port.id] = port;
-            }else{
-              for(i = 0; i < numPorts; i++){
-                port = obj[i];
-                port.label = name + ' port ' + i;//(i + 1);
-                //console.log(port.id, port.label, name);
-                midiOutputsOrder.push({label: port.label, id: port.id});
-                data.midiOutputs[port.id] = port;
-              }
-            }
-          }
-
-
-          midiOutputsOrder.sort(function(a, b){
-            let nameA = a.label.toLowerCase(),
-              nameB = b.label.toLowerCase();
+          outputs.sort(function(a, b){
+            let nameA = a.name.toLowerCase(),
+              nameB = b.name.toLowerCase();
             if(nameA < nameB){ //sort string ascending
               return -1;
             }else if (nameA > nameB){
@@ -122,7 +75,8 @@ function initMidi(){
             return 0; //default return value (no sorting)
           });
 
-          data.numMidiOutputs = midiOutputsOrder.length;
+          numOutputs = outputs.length;
+
 
           // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
           midi.addEventListener('onconnect', function(e){
@@ -132,6 +86,13 @@ function initMidi(){
           midi.addEventListener('ondisconnect', function(e){
             console.log('device disconnected', e);
           }, false);
+
+
+          // export
+          data.inputs = inputs;
+          data.outputs = outputs;
+          data.numInputs = numInputs;
+          data.numOutputs = numOutputs;
 
           resolve(data);
         },
