@@ -3,9 +3,8 @@
 import {parseSamples} from './util';
 
 let
+  data = {},
   context,
-  frame = 0,
-  lastTimeStamp,
 
   source,
   gainNode,
@@ -18,19 +17,20 @@ let
   lowtick = 'UklGRlQFAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAFAAB0/5v+U/4T/3gA0wFTAuUB+f8d/nT90f1q/ub+tf46/mb/8wFQA9gC7wCd/mr+FAGRA3cE6wJf/h36evmv+8v/NwRHBZUC2/60+//5EvuZ/aX/bgFOAp8Azvzh9wfzLPF68zT4y/2BAygIfQwaEjYY0x31Irwl8SOWHVESOgPh9NfpReFt22nYHddD2BXcZeDa5InqgPDx9nP+6gS4CBYLnw0zES0WXxv4HkcgLh/1G+EX1RNpD4wKigXH/6r5/fNu7lTpj+Zu5hHoXOtL71byr/Qp91L64v6OBO4JoQ5zEskU+hU1FiQVeRP7EWgP4Qr0BIT+tPid9C3y1vCh8FDxJvK28vvyy/LA8pLzU/XP95v6xvw4/uD/RAK2BSkKcg6BEScTZBMeEqkPTQxjCKEEVwFi/nv7h/hp9aDyAvHP8MfxLvM+9PX0uPW19g/4Lfr7/C4AKgNaBXQGywb0BhIHWQfWB1oIzAjtCF8IHwdtBakDVwKLAeYA8v9w/kj81/nQ94v29/XX9bz1bPUY9Uz1Z/aH+Hr7yP4MAi4F+wcfCnYLNgyfDPsMSw0sDUAMfgrcB5IEMwFb/iX8T/pT+O/1X/Mf8cbvrO+18MLyvfVP+Rf9wgAoBCEHpwnIC5EN4Q5AD3wO1Ay0CpsIvwbvBNcCbQAr/nX8Ofsf+vb4mvda9rj1z/WX9pL3a/hH+ZX6R/wn/vP/eQESA/AE+wYDCcwKFAyPDCkMFQuSCe4HVQbSBHQDCwI8ANL9JPuY+HX28vTq82PzdPMV9Az1MfZ49zD5gftx/sQBBQXLB8cJ/gqpCw8MigwWDXENXQ2rDDUL7QgDBswCdv8S/K74WPVk8hXwou4P7mvu1+9T8pz1Uvli/ZoBwgWRCcsMPg/CEEQR4RDADwoO9wusCVMH4ARSApn/ufzd+Wj3bvX78xzzx/L68qzz1vSD9qX4Gfvd/c0AhwO/BWwHmghvCQEKVQonClsJCwiIBh0F0gOgAm0BOwAx/03+XP0g/Lb6cPmX+F/4vfh++TH6s/os+7/7cvwL/Zz9XP5O/3IA3AF9AzsF9gaUCAAKHgueCzcL9wntB3sF4wIzAI396fp1+Gv2IvWn9N30p/Xi9m74G/ru+9P9k/8aAYEC1AMTBSIG0wYuB1gHkgcACGEISAhTBzEFWAKt/5L92fuU+vX50fmf+SP5i/gb+Bf4mviv+Sr7kvyb/Uj+r/4X/8r/+gCiAo0EUAaRBzwISwjqB3IHGQfCBv8FpgTMApQAKf67+5n5/vfn9jz2yPVn9SL1RPXq9SP3Dvmr+6f+sQGKBAcH+whOCh0Laws3C28KLAmDB5AFfQNoAVP/Zv3e+7P6sfnL+Cv4vPeM95b37feV+Jn51Poq/LL9mv+YAVYD3gQuBmcHSAikCIEI7Af+BuEFngQXA1sBv/9v/pf9MP3W/Fj8q/sR+6H6U/o3+mP6y/pN+/f7xvye/WH+Jf9mAD4CQAQJBisHtgf6Bw0I8QdsB1sGywT4AggBCP/o/KX6mPg19572jfaz9uf2S/cM+E35E/tW/af/5wH1A8AFKgfkB/AHgwfxBlAGgQVIBMMCJwGs/43+vP0i/Zr8Lfzl+9H76fvi+9f75fsf/In8BP10/ej9cf4O/7f/dAAcAaUBEgKMAhgDpAMEBCEEDwTfA3IDxQL8ASoBUwCG/87+J/6h/Rr9pPxk/Gb8oPwJ/XH9w/39/UD+qP41/9D/WwDeAGsBAgKdAhEDQQNAA0sDbwOVA5YDVwPOAhgCVAGRAA==';
 
 
-function initAudio(config){
+function initAudio(ctx){
+  context = ctx;
   return new Promise(function executor(resolve, reject){
     context = new window.AudioContext();
-    config.context = context;
+    data.context = context;
 
     if(context.createGainNode === undefined){
       context.createGainNode = context.createGain;
     }
     // check for older implementations of WebAudio
     source = context.createBufferSource();
-    config.legacy = false;
+    data.legacy = false;
     if(source.start === undefined){
-      config.legacy = true;
+      data.legacy = true;
     }
 
     // set up the elementary audio nodes
@@ -40,8 +40,8 @@ function initAudio(config){
     gainNode.connect(context.destination);
     gainNode.gain.value = 1;
 
-    config.masterGainNode = gainNode;
-    config.masterCompressor = compressor;
+    data.masterGainNode = gainNode;
+    data.masterCompressor = compressor;
 
     parseSamples({
       'ogg': emptyOgg,
@@ -50,14 +50,14 @@ function initAudio(config){
       'hightick': hightick
     }).then(
       function onFulfilled(buffers){
-        config.ogg = buffers.ogg !== undefined;
-        config.mp3 = buffers.mp3 !== undefined;
-        config.lowtick = buffers.lowtick;
-        config.hightick = buffers.hightick;
-        if(config.ogg === false && config.mp3 === false){
+        data.ogg = buffers.ogg !== undefined;
+        data.mp3 = buffers.mp3 !== undefined;
+        data.lowtick = buffers.lowtick;
+        data.hightick = buffers.hightick;
+        if(data.ogg === false && data.mp3 === false){
           reject('No support for ogg nor mp3!');
         }else{
-          resolve(config);
+          resolve(data);
         }
       },
       function onRejected(){
@@ -66,6 +66,67 @@ function initAudio(config){
     );
   });
 }
+
+
+data.setMasterVolume = function(value){
+  value = value < 0 ? 0 : value > 1 ? 1 : value;
+  gainNode.gain.value = value;
+};
+
+
+data.getMasterVolume = function(){
+  return gainNode.gain.value;
+};
+
+
+data.getCompressionReduction = function(){
+  //console.log(compressor);
+  return compressor.reduction.value;
+};
+
+
+data.enableMasterCompressor = function(flag){
+  if(flag){
+    gainNode.disconnect(0);
+    gainNode.connect(compressor);
+    compressor.disconnect(0);
+    compressor.connect(context.destination);
+  }else{
+    compressor.disconnect(0);
+    gainNode.disconnect(0);
+    gainNode.connect(context.destination);
+  }
+};
+
+
+data.configureMasterCompressor = function(cfg){
+  /*
+      readonly attribute AudioParam threshold; // in Decibels
+      readonly attribute AudioParam knee; // in Decibels
+      readonly attribute AudioParam ratio; // unit-less
+      readonly attribute AudioParam reduction; // in Decibels
+      readonly attribute AudioParam attack; // in Seconds
+      readonly attribute AudioParam release; // in Seconds
+  */
+  let i, param;
+  for(i = compressorParams.length; i >= 0; i--){
+      param = compressorParams[i];
+      if(cfg[param] !== undefined){
+          compressor[param].value = cfg[param];
+      }
+  }
+};
+
+
+data.getAudioContext = function(){
+  return context;
+};
+
+
+data.getTime = function(){
+  return context.currentTime;
+};
+
 
 export default initAudio;
 

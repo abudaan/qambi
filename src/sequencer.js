@@ -1,5 +1,7 @@
 'use strict';
 
+require('babelify/polyfill');
+
 import getConfig from './config.js';
 import initAudio from './init_audio.js';
 import initMidi from './init_midi.js';
@@ -30,9 +32,10 @@ function executor(resolve, reject){
     if(sequencer.os === 'ios'){
       sequencer.unlockWebAudio = function(){};
     }else{
+      config.context = new window.AudioContext();
       sequencer.unlockWebAudio = function(){
         let src = config.context.createOscillator(),
-          gainNode = config.context.createGainNode();
+          gainNode = config.context.createGain();
         gainNode.gain.value = 0;
         src.connect(gainNode);
         gainNode.connect(config.context.destination);
@@ -47,27 +50,35 @@ function executor(resolve, reject){
       };
     }
 
-    initAudio(config).then(
-      function onFulfilled(){
-        console.log(config);
-        resolve();
-      },
-      function onRejected(e){
-        reject(e);
-      }
-    );
-/*
-    initAudio().then(
-      function onFulfilled(audio){
-        settings.context = audio.context;
+    initAudio(config.context).then(
+      function onFulfilled(data){
+
+        config.lowtick = data.lowtick; // metronome sample
+        config.hightick = data.hightick; //metronome sample
+        config.masterGainNode = data.gainNode;
+        config.masterCompressor = data.compressor;
+
+        sequencer.getTime = data.getTime;
+        sequencer.getAudioContext = data.getAudioContext;
+        sequencer.setMasterVolume = data.setMasterVolume;
+        sequencer.getMasterVolume = data.getMasterVolume;
+        sequencer.enableMasterCompressor = data.enableMasterCompressor;
+        sequencer.configureMasterCompressor = data.configureMasterCompressor;
+
         initMidi().then(
           function onFulfilled(midi){
-            sequencer.midiInputs = midi.inputs;
-            sequencer.midiOutputs = midi.outputs;
+
+            sequencer.midiInputs = midi.midiInputs;
+            sequencer.midiOutputs = midi.midiOutputs;
+
+            resolve();
           },
-          function onRejected(e){
-            //'Something went wrong while initializing MIDI'
-            reject(e);
+          function onRejected(){
+            if(config.browser === 'chrome'){
+              reject('Web MIDI API not enabled');
+            }else{
+              reject('Web MIDI API not supported');
+            }
           }
         );
       },
@@ -75,9 +86,9 @@ function executor(resolve, reject){
         reject(e);
       }
     );
-*/
   }
 }
+
 
 sequencer.createSong = function(config){
   return new Song(config);
