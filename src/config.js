@@ -21,7 +21,6 @@ function getConfig(){
     ogg: false,
     mp3: false,
     bitrate_mp3_encoding: 128,
-    debug: 4, // 0 = off, 1 = error, 2 = warn, 3 = info, 4 = log
     debugLevel: 4, // 0 = off, 1 = error, 2 = warn, 3 = info, 4 = log
     pitch: 440,
     bufferTime: 350/1000, //seconds

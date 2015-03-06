@@ -1,6 +1,6 @@
 'use strict';
 
-import {parseSamples} from './util';
+import {log, info, warn, error, parseSamples} from './util';
 
 let
   data = {},
@@ -68,7 +68,10 @@ function initAudio(ctx){
 }
 
 
-data.setMasterVolume = function(value){
+data.setMasterVolume = function(value = 0.5){
+  if(value > 1){
+    info('maximal volume is 1.0, volume is set to 1.0');
+  }
   value = value < 0 ? 0 : value > 1 ? 1 : value;
   gainNode.gain.value = value;
 };

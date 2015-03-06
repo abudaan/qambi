@@ -20,34 +20,44 @@ let sequencer = {
   }
 };
 
+let config;
+let debugLevel;
+
 
 function executor(resolve, reject){
-  let config = getConfig();
+  config = getConfig();
+  // the debug level has been set before sequencer.init() so add it to the config object
+  if(debugLevel !== undefined){
+    config.debugLevel = debugLevel;
+  }
 
   if(config === false){
     reject(`The WebAudio API hasn\'t been implemented in ${config.browser}, please use any other browser`);
   }else{
+    config.context = new window.AudioContext();
     // add unlock method for ios devices
     // unlockWebAudio is called when the user called Song.play(), because we assume that the user presses a button to start the song.
-    if(sequencer.os === 'ios'){
-      sequencer.unlockWebAudio = function(){};
+    if(config.os !== 'ios'){
+      Object.defineProperty(sequencer, 'unlockWebAudio', {value: function(){}});
     }else{
-      config.context = new window.AudioContext();
-      sequencer.unlockWebAudio = function(){
-        let src = config.context.createOscillator(),
-          gainNode = config.context.createGain();
-        gainNode.gain.value = 0;
-        src.connect(gainNode);
-        gainNode.connect(config.context.destination);
-        if(src.noteOn !== undefined){
-          src.start = src.noteOn;
-          src.stop = src.noteOff;
-        }
-        src.start(0);
-        src.stop(0.001);
-        // remove function after first use
-        sequencer.unlockWebAudio = function(){};
-      };
+      Object.defineProperty(sequencer, 'unlockWebAudio', {
+        value: function(){
+          let src = config.context.createOscillator(),
+            gainNode = config.context.createGain();
+          gainNode.gain.value = 0;
+          src.connect(gainNode);
+          gainNode.connect(config.context.destination);
+          if(src.noteOn !== undefined){
+            src.start = src.noteOn;
+            src.stop = src.noteOff;
+          }
+          src.start(0);
+          src.stop(0.001);
+          // remove function after first use
+          Object.defineProperty(sequencer, 'unlockWebAudio', {value: function(){}});
+        },
+        configurable: true
+      });
     }
 
     initAudio(config.context).then(
@@ -58,19 +68,19 @@ function executor(resolve, reject){
         config.masterGainNode = data.gainNode;
         config.masterCompressor = data.compressor;
 
-        sequencer.getTime = data.getTime;
-        sequencer.getAudioContext = data.getAudioContext;
-        sequencer.setMasterVolume = data.setMasterVolume;
-        sequencer.getMasterVolume = data.getMasterVolume;
-        sequencer.enableMasterCompressor = data.enableMasterCompressor;
-        sequencer.configureMasterCompressor = data.configureMasterCompressor;
+        Object.defineProperty(sequencer, 'time', {get: data.getTime});
+        Object.defineProperty(sequencer, 'audioContext', {get: data.getAudioContext});
+        Object.defineProperty(sequencer, 'masterVolume', {get: data.getMasterVolume, set: data.setMasterVolume});
+        Object.defineProperty(sequencer, 'enableMasterCompressor', {value: data.enableMasterCompressor});
+        Object.defineProperty(sequencer, 'configureMasterCompressor', {value: data.configureMasterCompressor});
 
         initMidi().then(
           function onFulfilled(midi){
 
-            sequencer.midiInputs = midi.inputs;
-            sequencer.midiOutputs = midi.outputs;
+            Object.defineProperty(sequencer, 'midiInputs', {value: midi.inputs});
+            Object.defineProperty(sequencer, 'midiOutputs', {value: midi.outputs});
 
+            //Object.seal(sequencer);
             resolve();
           },
           function onRejected(e){
@@ -101,5 +111,55 @@ sequencer.createTrack = function(){
   t.init();
   return t;
 };
+
+
+Object.defineProperty(sequencer, 'debugLevel', {
+  get: function(){
+    return config.debugLevel;
+  },
+  set: function(value){
+    if(config !== undefined){
+      config.debugLevel = value;
+    }else{
+      // allow the debugLevel to be set before sequencer.init();
+      debugLevel = value;
+    }
+  }
+});
+
+
+// note name modi
+Object.defineProperty(sequencer, 'SHARP', {value: 'sharp'});
+Object.defineProperty(sequencer, 'FLAT', {value: 'flat'});
+Object.defineProperty(sequencer, 'ENHARMONIC_SHARP', {value: 'enharmonic-sharp'});
+Object.defineProperty(sequencer, 'ENHARMONIC_FLAT', {value: 'enharmonic-flat'});
+
+
+// standard MIDI events
+Object.defineProperty(sequencer, 'NOTE_OFF', {value: 0x80}); //128
+Object.defineProperty(sequencer, 'NOTE_ON', {value: 0x90}); //144
+Object.defineProperty(sequencer, 'POLY_PRESSURE', {value: 0xA0}); //160
+Object.defineProperty(sequencer, 'CONTROL_CHANGE', {value: 0xB0}); //176
+Object.defineProperty(sequencer, 'PROGRAM_CHANGE', {value: 0xC0}); //192
+Object.defineProperty(sequencer, 'CHANNEL_PRESSURE', {value: 0xD0}); //208
+Object.defineProperty(sequencer, 'PITCH_BEND', {value: 0xE0}); //224
+Object.defineProperty(sequencer, 'SYSTEM_EXCLUSIVE', {value: 0xF0}); //240
+Object.defineProperty(sequencer, 'MIDI_TIMECODE', {value: 241});
+Object.defineProperty(sequencer, 'SONG_POSITION', {value: 242});
+Object.defineProperty(sequencer, 'SONG_SELECT', {value: 243});
+Object.defineProperty(sequencer, 'TUNE_REQUEST', {value: 246});
+Object.defineProperty(sequencer, 'EOX', {value: 247});
+Object.defineProperty(sequencer, 'TIMING_CLOCK', {value: 248});
+Object.defineProperty(sequencer, 'START', {value: 250});
+Object.defineProperty(sequencer, 'CONTINUE', {value: 251});
+Object.defineProperty(sequencer, 'STOP', {value: 252});
+Object.defineProperty(sequencer, 'ACTIVE_SENSING', {value: 254});
+Object.defineProperty(sequencer, 'SYSTEM_RESET', {value: 255});
+
+
+Object.defineProperty(sequencer, 'TEMPO', {value: 0x51});
+Object.defineProperty(sequencer, 'TIME_SIGNATURE', {value: 0x58});
+Object.defineProperty(sequencer, 'END_OF_TRACK', {value: 0x2F});
+
 
 export default sequencer;

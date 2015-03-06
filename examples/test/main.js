@@ -11,12 +11,14 @@ window.onload = function() {
     btnPlay = document.getElementById('play'),
     btnStop = document.getElementById('stop');
 
-
   console.log(sequencer);
 
   sequencer.init().then(
 
     function onFulFilled(){
+
+      sequencer.unlockWebAudio();
+      sequencer.unlockWebAudio();
 
       song = sequencer.createSong();
 

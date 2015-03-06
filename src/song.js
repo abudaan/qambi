@@ -1,6 +1,7 @@
 'use strict';
 
 import {addEventListener, removeEventListener, dispatchEvent} from './song_add_eventlistener';
+import {log, info, warn, error, typeString} from './util';
 import getConfig from './config';
 
 
@@ -13,6 +14,11 @@ class Song{
   constructor(data){
     this.id = 'S' + songId++ + new Date().getTime();
     this.data = data;
+
+    // log('log');
+    // info('info');
+    // warn('warn');
+    // error('error');
   }
 
 

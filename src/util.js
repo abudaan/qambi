@@ -248,3 +248,33 @@ function base64ToBinary(input){
   //console.log(buffer);
   return buffer;
 }
+
+
+
+export function error(){
+  if(config.debugLevel >= 1){
+    console.error(slice.call(arguments).join(' '));
+    console.trace();
+  }
+}
+
+export function warn(){
+  if(config.debugLevel >= 2){
+    console.warn(slice.call(arguments).join(' '));
+    console.trace();
+  }
+}
+
+export function info(){
+  if(config.debugLevel >= 3){
+    console.info(slice.call(arguments).join(' '));
+    console.trace();
+  }
+}
+
+export function log(){
+  if(config.debugLevel >= 4){
+    console.log(slice.call(arguments).join(' '));
+    console.trace();
+  }
+}
