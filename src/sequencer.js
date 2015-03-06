@@ -7,6 +7,7 @@ import initAudio from './init_audio.js';
 import initMidi from './init_midi.js';
 import Song from './song.js';
 import Track from './track.js';
+import {createNote, getNoteNumber} from './note.js';
 
 let sequencer = {
   name: 'qambi',
@@ -126,6 +127,11 @@ Object.defineProperty(sequencer, 'debugLevel', {
     }
   }
 });
+
+
+Object.defineProperty(sequencer, 'createNote', {value: createNote});
+Object.defineProperty(sequencer, 'getNoteNumber', {value: getNoteNumber});
+
 
 
 // note name modi

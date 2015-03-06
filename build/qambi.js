@@ -2772,7 +2772,7 @@ data.getTime = function () {
 
 module.exports = initAudio;
 
-},{"./util":13}],8:[function(require,module,exports){
+},{"./util":14}],8:[function(require,module,exports){
 "use strict";
 
 var data = {};
@@ -2887,6 +2887,425 @@ module.exports = initMidi;
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
+/*
+  arguments
+  - noteNumber: 60
+  - noteNumber and notename mode: 60, sharp
+  - noteName: 'C#4'
+  - name and octave: 'C#', 4
+
+  note {
+  name: 'C',
+  octave: 1,
+  fullName: 'C1',
+  frequency: 234.16,
+  number: 60
+  }
+*/
+exports.createNote = createNote;
+exports.getNoteNumber = getNoteNumber;
+exports.getNoteName = getNoteName;
+exports.getNoteNameFromNoteNumber = getNoteNameFromNoteNumber;
+exports.getNoteOctave = getNoteOctave;
+exports.getFullNoteName = getFullNoteName;
+exports.getFrequency = getFrequency;
+exports.isBlackKey = isBlackKey;
+
+var getConfig = _interopRequire(require("./config"));
+
+var _util = require("./util");
+
+var log = _util.log;
+var info = _util.info;
+var warn = _util.warn;
+var error = _util.error;
+var typeString = _util.typeString;
+
+var config = getConfig(),
+    pow = Math.pow,
+    floor = Math.floor;
+
+var noteNames = {
+  sharp: ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
+  flat: ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"],
+  "enharmonic-sharp": ["B#", "C#", "C##", "D#", "D##", "E#", "F#", "F##", "G#", "G##", "A#", "A##"],
+  "enharmonic-flat": ["Dbb", "Db", "Ebb", "Eb", "Fb", "Gbb", "Gb", "Abb", "Ab", "Bbb", "Bb", "Cb"]
+};
+function createNote() {
+  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  var numArgs = args.length,
+      error = undefined,
+      warn = undefined,
+      data = undefined,
+      octave = undefined,
+      noteName = undefined,
+      noteNumber = undefined,
+      noteNameMode = undefined,
+      arg0 = args[0],
+      arg1 = args[1],
+      arg2 = args[2],
+      type0 = typeString(arg0),
+      type1 = typeString(arg1),
+      type2 = typeString(arg2);
+
+  // argument: note number
+  if (numArgs === 1 && type0 === "number") {
+    if (arg0 < 0 || arg0 > 127) {
+      error = "please provide a note number >= 0 and <= 127 " + arg0;
+    } else {
+      noteNumber = arg0;
+      data = _getNoteName(noteNumber);
+      noteName = data[0];
+      octave = data[1];
+    }
+
+    // arguments: full note name
+  } else if (numArgs === 1 && type0 === "string") {
+    data = _checkNoteName(arg0);
+    if (!data) {
+      error = arg0 + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
+    } else {
+      noteName = data[0];
+      octave = data[1];
+      noteNumber = _getNoteNumber(noteName, octave);
+      if (!noteNumber) {
+        error = arg0 + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
+      } else if (noteNumber < 0 || noteNumber > 127) {
+        error = "please provide a note between C0 and G10";
+      }
+    }
+
+    // arguments: note name, octave
+  } else if (numArgs === 2 && type0 === "string" && type1 === "number") {
+    data = _checkNoteName(arg0, arg1);
+    if (!data) {
+      error = arg0 + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb";
+    } else {
+      noteName = data[0];
+      octave = data[1];
+      noteNumber = _getNoteNumber(noteName, octave);
+      if (!noteNumber) {
+        error = noteName + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb";
+      } else if (noteNumber < 0 || noteNumber > 127) {
+        error = "please provide a note between C0 and G10";
+      }
+    }
+
+    // arguments: full note name, note name mode -> for converting between note name modes
+  } else if (numArgs === 2 && type0 === "string" && type1 === "string") {
+    data = _checkNoteName(arg0);
+    if (!data) {
+      error = arg0 + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
+    } else {
+      noteNameMode = _isNoteMode(arg1);
+      if (!noteNameMode) {
+        noteNameMode = config.noteNameMode;
+        warn = arg1 + " is not a valid note name mode, using " + noteNameMode;
+      }
+      noteName = data[0];
+      octave = data[1];
+      noteNumber = _getNoteNumber(noteName, octave);
+      if (!noteNumber) {
+        error = noteName + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
+      } else if (noteNumber < 0 || noteNumber > 127) {
+        error = "please provide a note between C0 and G10";
+      }
+      noteName = _getNoteName(noteNumber, noteNameMode)[0];
+    }
+
+    // arguments: note number, note name mode
+  } else if (numArgs === 2 && typeString(arg0) === "number" && typeString(arg1) === "string") {
+    if (arg0 < 0 || arg0 > 127) {
+      error = "please provide a note number >= 0 and <= 127 " + arg0;
+    } else {
+      noteNameMode = _isNoteMode(arg1);
+      if (!noteNameMode) {
+        noteNameMode = config.noteNameMode;
+        warn = arg1 + " is not a valid note name mode, using " + noteNameMode;
+      }
+      noteNumber = arg0;
+      data = _getNoteName(noteNumber, noteNameMode);
+      noteName = data[0];
+      octave = data[1];
+      noteName = getNoteName(noteNumber, noteNameMode)[0];
+    }
+
+    // arguments: note name, octave, note name mode
+  } else if (numArgs === 3 && type0 === "string" && type1 === "number" && type2 === "string") {
+    data = _checkNoteName(arg0, arg1);
+    if (!data) {
+      error = arg0 + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
+    } else {
+      noteNameMode = _isNoteMode(arg2);
+      if (!noteNameMode) {
+        noteNameMode = config.noteNameMode;
+        warn = arg2 + " is not a valid note name mode, using " + noteNameMode;
+      }
+      noteName = data[0];
+      octave = data[1];
+      noteNumber = _getNoteNumber(noteName, octave);
+      if (!noteNumber) {
+        error = noteName + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
+      } else if (noteNumber < 0 || noteNumber > 127) {
+        error = "please provide a note between C0 and G10";
+      }
+      noteName = _getNoteName(noteNumber, noteNameMode)[0];
+    }
+  } else {
+    error = "wrong arguments, please consult documentation";
+  }
+
+  if (error) {
+    console.error(error);
+    return false;
+  }
+
+  if (warn) {
+    console.warn(warn);
+  }
+
+  return {
+    name: noteName,
+    octave: octave,
+    fullName: noteName + octave,
+    number: noteNumber,
+    frequency: _getFrequency(noteNumber),
+    blackKey: _isBlackKey(noteNumber)
+  };
+}
+
+function _getNoteName(number) {
+  var mode = arguments[1] === undefined ? config.noteNameMode : arguments[1];
+
+  //let octave = Math.floor((number / 12) - 2), // → in Cubase central C = C3 instead of C4
+  var octave = floor(number / 12 - 1),
+      noteName = noteNames[mode][number % 12];
+  return [noteName, octave];
+}
+
+function _getNoteNumber(name, octave) {
+  var keys = Object.keys(noteNames),
+      index = -1,
+      number = undefined;
+
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = keys[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var key = _step.value;
+
+      var mode = noteNames[key];
+      index = mode.findIndex(function (x) {
+        return x === name;
+      });
+      if (index !== -1) {
+        if (_iterator["return"]) _iterator["return"]();
+
+        break;
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator["return"]) {
+        _iterator["return"]();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  if (index === -1) {
+    return false;
+  }
+
+  //number = (index + 12) + (octave * 12) + 12; // → in Cubase central C = C3 instead of C4
+  number = index + 12 + octave * 12; // → midi standard + scientific naming, see: http://en.wikipedia.org/wiki/Middle_C and http://en.wikipedia.org/wiki/Scientific_pitch_notation
+  return number;
+}
+
+function _getFrequency(number) {
+  return config.pitch * pow(2, (number - 69) / 12); // midi standard, see: http://en.wikipedia.org/wiki/MIDI_Tuning_Standard
+}
+
+// TODO: calculate note from frequency
+function _getPitch(hertz) {}
+
+function _checkNoteName() {
+  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  var numArgs = args.length,
+      arg0 = args[0],
+      arg1 = args[1],
+      length = undefined,
+      i = undefined,
+      char = undefined,
+      name = undefined,
+      octave = undefined;
+
+  if (numArgs === 1 && typeString(arg0) === "string") {
+
+    length = arg0.length;
+    name = "";
+    octave = "";
+
+    for (i = 0; i < length; i++) {
+      char = arg0[i];
+      if (isNaN(char) && char !== "-") {
+        name += char;
+      } else {
+        octave += char;
+      }
+    }
+
+    if (octave === "") {
+      octave = 0;
+    }
+  } else if (numArgs === 2 && typeString(arg0) === "string" && !isNaN(arg1)) {
+
+    name = arg0;
+    octave = arg1;
+  } else {
+    return false;
+  }
+
+  octave = parseInt(octave, 10);
+  name = name.substring(0, 1).toUpperCase() + name.substring(1);
+
+  //console.log(name,'|',octave);
+  return [name, octave];
+}
+
+function _isNoteMode(mode) {
+  var result = false;
+  switch (mode) {
+    case "sharp":
+    case "flat":
+    case "enharmonic-sharp":
+    case "enharmonic-flat":
+      result = mode;
+      break;
+  }
+  return result;
+}
+
+function _isBlackKey(noteNumber) {
+  var black = undefined;
+
+  switch (true) {
+    case noteNumber % 12 === 1: //C#
+    case noteNumber % 12 === 3: //D#
+    case noteNumber % 12 === 6: //F#
+    case noteNumber % 12 === 8: //G#
+    case noteNumber % 12 === 10:
+      //A#
+      black = true;
+      break;
+    default:
+      black = false;
+  }
+
+  return black;
+}
+
+function getNoteNumber() {
+  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  var note = createNote.apply(undefined, args);
+  if (note) {
+    return note.number;
+  }
+  return false;
+}
+
+function getNoteName() {
+  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  var note = createNote.apply(undefined, args);
+  if (note) {
+    return note.name;
+  }
+  return false;
+}
+
+function getNoteNameFromNoteNumber(number, mode) {
+  return getNoteName(number, mode);
+}
+
+function getNoteOctave() {
+  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  var note = createNote.apply(undefined, args);
+  if (note) {
+    return note.octave;
+  }
+  return false;
+}
+
+function getFullNoteName() {
+  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  var note = createNote.apply(undefined, args);
+  if (note) {
+    return note.fullName;
+  }
+  return false;
+}
+
+function getFrequency() {
+  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  var note = createNote.apply(undefined, args);
+  if (note) {
+    return note.frequency;
+  }
+  return false;
+}
+
+function isBlackKey() {
+  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  var note = createNote.apply(undefined, args);
+  if (note) {
+    return note.blackKey;
+  }
+  return false;
+}
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+//fm  =  2(m−69)/12(440 Hz).
+
+},{"./config":6,"./util":14}],10:[function(require,module,exports){
+"use strict";
+
+var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
 require("babelify/polyfill");
 
 var getConfig = _interopRequire(require("./config.js"));
@@ -2898,6 +3317,11 @@ var initMidi = _interopRequire(require("./init_midi.js"));
 var Song = _interopRequire(require("./song.js"));
 
 var Track = _interopRequire(require("./track.js"));
+
+var _noteJs = require("./note.js");
+
+var createNote = _noteJs.createNote;
+var getNoteNumber = _noteJs.getNoteNumber;
 
 var sequencer = {
   name: "qambi",
@@ -3009,6 +3433,9 @@ Object.defineProperty(sequencer, "debugLevel", {
   }
 });
 
+Object.defineProperty(sequencer, "createNote", { value: createNote });
+Object.defineProperty(sequencer, "getNoteNumber", { value: getNoteNumber });
+
 // note name modi
 Object.defineProperty(sequencer, "SHARP", { value: "sharp" });
 Object.defineProperty(sequencer, "FLAT", { value: "flat" });
@@ -3042,7 +3469,7 @@ Object.defineProperty(sequencer, "END_OF_TRACK", { value: 47 });
 
 module.exports = sequencer;
 
-},{"./config.js":6,"./init_audio.js":7,"./init_midi.js":8,"./song.js":10,"./track.js":12,"babelify/polyfill":5}],10:[function(require,module,exports){
+},{"./config.js":6,"./init_audio.js":7,"./init_midi.js":8,"./note.js":9,"./song.js":11,"./track.js":13,"babelify/polyfill":5}],11:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -3109,7 +3536,7 @@ Song.prototype.dispatchEvent = dispatchEvent;
 
 module.exports = Song;
 
-},{"./config":6,"./song_add_eventlistener":11,"./util":13}],11:[function(require,module,exports){
+},{"./config":6,"./song_add_eventlistener":12,"./util":14}],12:[function(require,module,exports){
 "use strict";
 
 var listeners = {};
@@ -3137,7 +3564,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
 var trackId = 0;
@@ -3153,7 +3580,7 @@ var Track = {
 
 module.exports = Track;
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
@@ -3440,7 +3867,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-},{"./config":6}]},{},[9])(9)
+},{"./config":6}]},{},[10])(10)
 });
 
 

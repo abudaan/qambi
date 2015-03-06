@@ -12,6 +12,8 @@ window.onload = function() {
     btnStop = document.getElementById('stop');
 
   console.log(sequencer);
+  console.log(sequencer.createNote('C', 4));
+  console.log(sequencer.getNoteNumber('C4'));
 
   sequencer.init().then(
 
