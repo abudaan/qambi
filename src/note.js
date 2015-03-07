@@ -142,15 +142,16 @@ export function createNote(...args){
     warn(warningMsg);
   }
 
-  return {
+  let note = {
     name: noteName,
     octave: octave,
     fullName: noteName + octave,
     number: noteNumber,
     frequency: _getFrequency(noteNumber),
     blackKey: _isBlackKey(noteNumber)
-  };
-
+  }
+  Object.freeze(note);
+  return note;
 }
 
 
