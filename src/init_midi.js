@@ -1,3 +1,7 @@
+/*
+  Requests MIDI access, queries all inputs and outputs and stores them in alphabetical order
+*/
+
 'use strict';
 
 let data = {};
@@ -27,7 +31,7 @@ function initMidi(){
 
           // old implementation of WebMIDI
           if(typeof midi.inputs.values !== 'function'){
-            reject('Please update your browser for MIDI support');
+            reject('You browser is using an old implementation of the WebMIDI API, please update your browser.');
             return;
           }
 

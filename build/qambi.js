@@ -2554,21 +2554,21 @@ function getConfig() {
 
   config = {
     legacy: false, // true if the browser uses an older version of the WebAudio API, source.noteOn() and source.noteOff instead of source.start() and source.stop()
-    midi: false,
-    webmidi: false,
-    webaudio: true,
-    jazz: false,
-    ogg: false,
-    mp3: false,
-    bitrate_mp3_encoding: 128,
+    midi: false, // true if the browser has MIDI support either via WebMIDI or Jazz
+    webmidi: false, // true if the browser has WebMIDI
+    webaudio: true, // true if the browser has WebAudio
+    jazz: false, // true if the browser has the Jazz plugin
+    ogg: false, // true if WebAudio supports ogg
+    mp3: false, // true if WebAudio supports mp3
+    bitrate_mp3_encoding: 128, // default bitrate for audio recordings
     debugLevel: 4, // 0 = off, 1 = error, 2 = warn, 3 = info, 4 = log
-    pitch: 440,
-    bufferTime: 350 / 1000, //seconds
+    pitch: 440, // basic pitch that is used when generating samples
+    bufferTime: 350 / 1000, // time in seconds that events are scheduled ahead
     autoAdjustBufferTime: false,
     noteNameMode: "sharp",
     minimalSongLength: 60000, //millis
-    pauseOnBlur: false,
-    restartOnFocus: true,
+    pauseOnBlur: false, // pause the AudioContext when page or tab looses focus
+    restartOnFocus: true, // if song was playing at the time the page or tab lost focus, it will start playing automatically as soon as the page/tab gets focus again
     defaultPPQ: 960,
     overrulePPQ: true,
     precision: 3 };
@@ -2638,6 +2638,10 @@ function getConfig() {
 }
 
 module.exports = getConfig;
+/*
+  Creates the config object that is used for internally sharing settings, information and the state. Other modules may add keys to this object.
+*/
+
 // means float with precision 3, e.g. 10.437
 
 // TODO: check os here with Nodejs' require('os')
@@ -2657,8 +2661,9 @@ var data = {},
     context = undefined,
     source = undefined,
     gainNode = undefined,
-    compressor = undefined,
-    compressorParams = ["threshold", "knee", "ratio", "reduction", "attack", "release"],
+    compressor = undefined;
+
+var compressorParams = ["threshold", "knee", "ratio", "reduction", "attack", "release"],
     emptyOgg = "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Y5l93VlmX3eO4Rg6v/Djqaqvm64rDKcsC7/t68az+76yjK7r+6osC78q28Kx677z/L6wLKPs+sJqy8Kw2rYx3L5uLL9wHMtr68ox675RtnV8X3gKw/N0dV15Zl3H9nV040c4fsoAAIABBwCAABPKQKEhKwKAOAEAjySJomRZoihZliiKpui6omi6rqRppqlpnmlammeapmmqsimarixpmmlanmaamqeZpmiarmuapqyKpinLpmrKsmmasuy6sm27rmzbomnKsmmasmyapiy7sqvbruzquqRZpql5nmlqnmeapmrKsmmarqt5nmp6nmiqniiqqmqqqq2qqixbnmeamuippieKqmqqpq2aqirLpqrasmmqtmyqqm27quz6sm3rummqsm2qpi2bqmrbruzqsizbui9pmmlqnmeamueZpmmasmyaqitbnqeaniiqquaJpmqqqiybpqrKlueZqieKquqJnmuaqirLpmraqmmatmyqqi2bpirLrm37vuvKsm6qqmybqmrrpmrKsmzLvu/Kqu6KpinLpqrasmmqsi3bsu/Lsqz7omnKsmmqsm2qqi7Lsm0bs2z7umiasm2qpi2bqirbsi37uizbuu/Krm+rqqzrsi37uu76rnDrujC8smz7qqz6uivbum/rMtv2fUTTlGVTNW3bVFVZdmXZ9mXb9n3RNG1bVVVbNk3VtmVZ9n1Ztm1hNE3ZNlVV1k3VtG1Zlm1htmXhdmXZt2Vb9nXXlXVf133j12Xd5rqy7cuyrfuqq/q27vvCcOuu8AoAABhwAAAIMKEMFBqyEgCIAgAAjGGMMQiNUs45B6FRyjnnIGTOQQghlcw5CCGUkjkHoZSUMucglJJSCKGUlFoLIZSUUmsFAAAUOAAABNigKbE4QKEhKwGAVAAAg+NYlueZomrasmNJnieKqqmqtu1IlueJommqqm1bnieKpqmqruvrmueJommqquvqumiapqmqruu6ui6aoqmqquu6sq6bpqqqriu7suzrpqqqquvKriz7wqq6rivLsm3rwrCqruvKsmzbtm/cuq7rvu/7wpGt67ou/MIxDEcBAOAJDgBABTasjnBSNBZYaMhKACADAIAwBiGDEEIGIYSQUkohpZQSAAAw4AAAEGBCGSg0ZEUAECcAABhDKaSUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJIKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKqaSUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKZVSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUgoAkIpwAJB6MKEMFBqyEgBIBQAAjFFKKcacgxAx5hhj0EkoKWLMOcYclJJS5RyEEFJpLbfKOQghpNRSbZlzUlqLMeYYM+ekpBRbzTmHUlKLseaaa+6ktFZrrjXnWlqrNdecc825tBZrrjnXnHPLMdecc8455xhzzjnnnHPOBQDgNDgAgB7YsDrCSdFYYKEhKwGAVAAAAhmlGHPOOegQUow55xyEECKFGHPOOQghVIw55xx0EEKoGHPMOQghhJA55xyEEEIIIXMOOugghBBCBx2EEEIIoZTOQQghhBBKKCGEEEIIIYQQOgghhBBCCCGEEEIIIYRSSgghhBBCCaGUUAAAYIEDAECADasjnBSNBRYashIAAAIAgByWoFLOhEGOQY8NQcpRMw1CTDnRmWJOajMVU5A5EJ10EhlqQdleMgsAAIAgACDABBAYICj4QgiIMQAAQYjMEAmFVbDAoAwaHOYBwANEhEQAkJigSLu4gC4DXNDFXQdCCEIQglgcQAEJODjhhife8IQbnKBTVOogAAAAAAAMAOABAOCgACIimquwuMDI0Njg6PAIAAAAAAAWAPgAADg+gIiI5iosLjAyNDY4OjwCAAAAAAAAAACAgIAAAAAAAEAAAACAgE9nZ1MABAEAAAAAAAAAXcXeFwIAAABq2npxAgEBAAo=",
     emptyMp3 = "//sQxAADwAABpAAAACAAADSAAAAETEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=",
     hightick = "UklGRkQFAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YSAFAACx/xf/dADOACwBsP3p+6H+zAGoBOkCCwBX/EH5OvxlA4kJ2wcSArT9E/ut+HT2evUx98n6OAF5CCUMwQvfCOsJxAx0DSIMEAq9BiAB3vhz7mLkT9sR133YxN2s5QLv0vrUBnwRnxuQJeEsSDCiMd8yFS8aKFIhohUsCKj64u625OraA9HuyPnElcP+wxvJWtW25637VQ0jHPgnBTDDM1o0CzKLK+8hzhgFDOz8Se4J47DYVtG0z5fQq9LB12rfA+j99roHAhelIyMwIjdTOuU8mjwIOGoxhCb5E53/j+3k3/fTY8pTw4y/Tr+ew8DMvdsk8RcHRRkSKO4yGTkHPkU/rzzyNcgsrR94Dp/5r+Zs17zOncoDxhfE38WLyn/TeOMi9r0IRxlRKIQzyTlOPKo9yjmWMcokDRLc/Y7rudtdzu/D2L1Iu+27JcG3yYrVLujl+3UOZx1UK5Q0qzmNPDk8ZjeeMPojzhH+/jLtPd5m0hHLHsYIw5TEMMnA0jvj8fSOBiwXASZgMzM8dUBGQbI+rzjpKkIZygZT9QflcdaRyqXCz7+VwUPH784r3K7s+v0KDu8bvyeLMb43NjrhOIo0dSvQHi0PnP6i7ovg3NTxy4/Gf8X8yH/QBtvX55P2Ygb0FcUjsy4LNmI5ejiXM38r7iC8FJwHPvok7dDgQdaJzlTKIsoFzsrVkuA87d/6qAi7FQ0h9ClKMLEz3TOrMBcqYSD8E9AFd/dS6kTf6dbU0XnQv9IH2MXfZ+ln9DEAFwwdFy8giib6KawqeChgI/UbHBOTCZj/vvXe7InlFuDN3P3b0d1F4gzpifG2+u4D7Qw1FfwbnCD+IlgjWyHLHPMVog2mBL37qvP+7NvnYuTv4rvjfubN6k3wpPZ0/WkEOwtiEUsWcxm+Gl4aOhhiFDAPIwmbAtn7TPVy77zqcefr5YHmHull7enyfPmcAHgHew1REr8Vhhd/F+AV1RJ0DikJWQNc/ZP3efKd7hvs2ur46rHs5u8e9N/48/0hA/8HFgwuD04RSBIREqsQOg7mCssGMAJW/Xn4G/TK8Lbuzu0I7qTvnPJy9sX6bP84BLYIbAwdD84QYxG7EOcODAxwCFMEAQC9+7P3SvTX8XHw+u9R8KTxIvSo9+X7VQCUBJ0IMwziDj4QLhAGD9UMrgnTBZcBRv1v+Xv2UfS+8tfx+vES87z0+vb3+Zf9ZgEQBSEIUArWC8kM2QyzC5EJEAdvBHgBXP5n++r4Avd89Wj07fMw9D31Jvfp+Uj9xQD9A8QG5QhXClELrAsvC9wJ7gd6BWIC3v6O+7T4PPZN9EHzWvNf9Pz1Fvit+qL9rQCHAwEG/weCCZUKFwvDCnIJcAcQBWcCaf8Z/CD55vaB9dD0wPSP9UL3m/k7/Mz+JwEyAw8FzAY7CBsJaQk5CWkI2gatBCICYf+j/Fr6vfiV9872sfZP91z4p/lR+3H9zf89AroEFAfjCP0Jcwo8CjAJdQdgBSEDkgDQ/Vj7ZfnR95T28fUd9v32Vvg2+nb8+/6xAWoE4AbDCP4JpAqbCqQJ0weEBfgCTACT/R37M/m+9672IPY69gb3afhW+tT8qf+MAj0FggcuCScKXAriCcMIEAfyBJYCFwCP/Rz7A/l793z2F/Zn9mH37fjd+i39yf9pAt0EFAfRCNkJGAqrCZYIvgZPBJ8B6P4//M350vdz9q/1lfUq9mz3RPmi+3H+bgFVBOQG3wgHCkwK0Am7CCAHCgWmAjAA",
@@ -2771,6 +2776,9 @@ data.getTime = function () {
 };
 
 module.exports = initAudio;
+/*
+  Sets up the basic audio routing, tests which audio formats are supported and parses the samples for the metronome ticks.
+*/
 
 },{"./util":14}],8:[function(require,module,exports){
 "use strict";
@@ -2802,7 +2810,7 @@ function initMidi() {
 
         // old implementation of WebMIDI
         if (typeof midi.inputs.values !== "function") {
-          reject("Please update your browser for MIDI support");
+          reject("You browser is using an old implementation of the WebMIDI API, please update your browser.");
           return;
         }
 
@@ -2881,6 +2889,9 @@ function initMidi() {
 }
 
 module.exports = initMidi;
+/*
+  Requests MIDI access, queries all inputs and outputs and stores them in alphabetical order
+*/
 
 },{}],9:[function(require,module,exports){
 "use strict";
@@ -2890,18 +2901,21 @@ var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["defau
 /*
   arguments
   - noteNumber: 60
-  - noteNumber and notename mode: 60, sharp
+  - noteNumber and notename mode: 60, 'sharp'
   - noteName: 'C#4'
   - name and octave: 'C#', 4
-
-  note {
-  name: 'C',
-  octave: 1,
-  fullName: 'C1',
-  frequency: 234.16,
-  number: 60
-  }
+  - note name, octave, note name mode: 'D', 4, 'sharp'
+  - data object:
+    {
+      name: 'C',
+      octave: 4
+    }
+    or
+    {
+      frequency: 234.16
+    }
 */
+
 exports.createNote = createNote;
 exports.getNoteNumber = getNoteNumber;
 exports.getNoteName = getNoteName;
@@ -2921,7 +2935,9 @@ var warn = _util.warn;
 var error = _util.error;
 var typeString = _util.typeString;
 
-var config = getConfig(),
+var errorMsg = undefined,
+    warningMsg = undefined,
+    config = getConfig(),
     pow = Math.pow,
     floor = Math.floor;
 
@@ -2937,8 +2953,6 @@ function createNote() {
   }
 
   var numArgs = args.length,
-      error = undefined,
-      warn = undefined,
       data = undefined,
       octave = undefined,
       noteName = undefined,
@@ -2951,10 +2965,13 @@ function createNote() {
       type1 = typeString(arg1),
       type2 = typeString(arg2);
 
+  errorMsg = "";
+  warningMsg = "";
+
   // argument: note number
   if (numArgs === 1 && type0 === "number") {
     if (arg0 < 0 || arg0 > 127) {
-      error = "please provide a note number >= 0 and <= 127 " + arg0;
+      errorMsg = "please provide a note number >= 0 and <= 127 " + arg0;
     } else {
       noteNumber = arg0;
       data = _getNoteName(noteNumber);
@@ -2965,106 +2982,63 @@ function createNote() {
     // arguments: full note name
   } else if (numArgs === 1 && type0 === "string") {
     data = _checkNoteName(arg0);
-    if (!data) {
-      error = arg0 + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
-    } else {
+    if (errorMsg === "") {
       noteName = data[0];
       octave = data[1];
       noteNumber = _getNoteNumber(noteName, octave);
-      if (!noteNumber) {
-        error = arg0 + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
-      } else if (noteNumber < 0 || noteNumber > 127) {
-        error = "please provide a note between C0 and G10";
-      }
     }
 
     // arguments: note name, octave
   } else if (numArgs === 2 && type0 === "string" && type1 === "number") {
     data = _checkNoteName(arg0, arg1);
-    if (!data) {
-      error = arg0 + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb";
-    } else {
+    if (errorMsg === "") {
       noteName = data[0];
       octave = data[1];
       noteNumber = _getNoteNumber(noteName, octave);
-      if (!noteNumber) {
-        error = noteName + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb";
-      } else if (noteNumber < 0 || noteNumber > 127) {
-        error = "please provide a note between C0 and G10";
-      }
     }
 
     // arguments: full note name, note name mode -> for converting between note name modes
   } else if (numArgs === 2 && type0 === "string" && type1 === "string") {
     data = _checkNoteName(arg0);
-    if (!data) {
-      error = arg0 + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
-    } else {
-      noteNameMode = _isNoteMode(arg1);
-      if (!noteNameMode) {
-        noteNameMode = config.noteNameMode;
-        warn = arg1 + " is not a valid note name mode, using " + noteNameMode;
-      }
+    if (errorMsg === "") {
+      noteNameMode = _checkNoteNameMode(arg1);
       noteName = data[0];
       octave = data[1];
       noteNumber = _getNoteNumber(noteName, octave);
-      if (!noteNumber) {
-        error = noteName + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
-      } else if (noteNumber < 0 || noteNumber > 127) {
-        error = "please provide a note between C0 and G10";
-      }
-      noteName = _getNoteName(noteNumber, noteNameMode)[0];
     }
 
     // arguments: note number, note name mode
   } else if (numArgs === 2 && typeString(arg0) === "number" && typeString(arg1) === "string") {
     if (arg0 < 0 || arg0 > 127) {
-      error = "please provide a note number >= 0 and <= 127 " + arg0;
+      errorMsg = "please provide a note number >= 0 and <= 127 " + arg0;
     } else {
-      noteNameMode = _isNoteMode(arg1);
-      if (!noteNameMode) {
-        noteNameMode = config.noteNameMode;
-        warn = arg1 + " is not a valid note name mode, using " + noteNameMode;
-      }
+      noteNameMode = _checkNoteNameMode(arg1);
       noteNumber = arg0;
       data = _getNoteName(noteNumber, noteNameMode);
       noteName = data[0];
       octave = data[1];
-      noteName = getNoteName(noteNumber, noteNameMode)[0];
     }
 
     // arguments: note name, octave, note name mode
   } else if (numArgs === 3 && type0 === "string" && type1 === "number" && type2 === "string") {
     data = _checkNoteName(arg0, arg1);
-    if (!data) {
-      error = arg0 + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
-    } else {
-      noteNameMode = _isNoteMode(arg2);
-      if (!noteNameMode) {
-        noteNameMode = config.noteNameMode;
-        warn = arg2 + " is not a valid note name mode, using " + noteNameMode;
-      }
+    if (errorMsg === "") {
+      noteNameMode = _checkNoteNameMode(arg2);
       noteName = data[0];
       octave = data[1];
       noteNumber = _getNoteNumber(noteName, octave);
-      if (!noteNumber) {
-        error = noteName + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
-      } else if (noteNumber < 0 || noteNumber > 127) {
-        error = "please provide a note between C0 and G10";
-      }
-      noteName = _getNoteName(noteNumber, noteNameMode)[0];
     }
   } else {
-    error = "wrong arguments, please consult documentation";
+    errorMsg = "wrong arguments, please consult documentation";
   }
 
-  if (error) {
-    console.error(error);
+  if (errorMsg) {
+    error(errorMsg);
     return false;
   }
 
-  if (warn) {
-    console.warn(warn);
+  if (warningMsg) {
+    warn(warningMsg);
   }
 
   return {
@@ -3081,15 +3055,14 @@ function _getNoteName(number) {
   var mode = arguments[1] === undefined ? config.noteNameMode : arguments[1];
 
   //let octave = Math.floor((number / 12) - 2), // → in Cubase central C = C3 instead of C4
-  var octave = floor(number / 12 - 1),
-      noteName = noteNames[mode][number % 12];
+  var octave = floor(number / 12 - 1);
+  var noteName = noteNames[mode][number % 12];
   return [noteName, octave];
 }
 
 function _getNoteNumber(name, octave) {
-  var keys = Object.keys(noteNames),
-      index = -1,
-      number = undefined;
+  var keys = Object.keys(noteNames);
+  var index = undefined;
 
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
@@ -3124,12 +3097,13 @@ function _getNoteNumber(name, octave) {
     }
   }
 
-  if (index === -1) {
-    return false;
-  }
-
   //number = (index + 12) + (octave * 12) + 12; // → in Cubase central C = C3 instead of C4
-  number = index + 12 + octave * 12; // → midi standard + scientific naming, see: http://en.wikipedia.org/wiki/Middle_C and http://en.wikipedia.org/wiki/Scientific_pitch_notation
+  var number = index + 12 + octave * 12; // → midi standard + scientific naming, see: http://en.wikipedia.org/wiki/Middle_C and http://en.wikipedia.org/wiki/Scientific_pitch_notation
+
+  if (number < 0 || number > 127) {
+    errorMsg = "please provide a note between C0 and G10";
+    return;
+  }
   return number;
 }
 
@@ -3140,6 +3114,18 @@ function _getFrequency(number) {
 // TODO: calculate note from frequency
 function _getPitch(hertz) {}
 
+function _checkNoteNameMode(mode) {
+  var keys = Object.keys(noteNames);
+  var result = keys.find(function (x) {
+    return x === mode;
+  }) !== undefined;
+  if (result === false) {
+    mode = config.noteNameMode;
+    warningMsg = mode + " is not a valid note name mode, using \"" + mode + "\" instead";
+  }
+  return mode;
+}
+
 function _checkNoteName() {
   for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
     args[_key] = arguments[_key];
@@ -3148,36 +3134,94 @@ function _checkNoteName() {
   var numArgs = args.length,
       arg0 = args[0],
       arg1 = args[1],
-      length = undefined,
-      i = undefined,
       char = undefined,
-      name = undefined,
-      octave = undefined;
+      name = "",
+      octave = "";
 
-  if (numArgs === 1 && typeString(arg0) === "string") {
+  // extract octave from note name
+  if (numArgs === 1) {
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
 
-    length = arg0.length;
-    name = "";
-    octave = "";
+    try {
+      for (var _iterator = arg0[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        char = _step.value;
 
-    for (i = 0; i < length; i++) {
-      char = arg0[i];
-      if (isNaN(char) && char !== "-") {
-        name += char;
-      } else {
-        octave += char;
+        if (isNaN(char) && char !== "-") {
+          name += char;
+        } else {
+          octave += char;
+        }
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator["return"]) {
+          _iterator["return"]();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
       }
     }
 
     if (octave === "") {
       octave = 0;
     }
-  } else if (numArgs === 2 && typeString(arg0) === "string" && !isNaN(arg1)) {
-
+  } else if (numArgs === 2) {
     name = arg0;
     octave = arg1;
-  } else {
-    return false;
+  }
+
+  // check if note name is valid
+  var keys = Object.keys(noteNames);
+  var index = -1;
+
+  var _iteratorNormalCompletion2 = true;
+  var _didIteratorError2 = false;
+  var _iteratorError2 = undefined;
+
+  try {
+    for (var _iterator2 = keys[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+      var key = _step2.value;
+
+      var mode = noteNames[key];
+      index = mode.findIndex(function (x) {
+        return x === name;
+      });
+      if (index !== -1) {
+        if (_iterator2["return"]) _iterator2["return"]();
+
+        break;
+      }
+    }
+  } catch (err) {
+    _didIteratorError2 = true;
+    _iteratorError2 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+        _iterator2["return"]();
+      }
+    } finally {
+      if (_didIteratorError2) {
+        throw _iteratorError2;
+      }
+    }
+  }
+
+  if (index === -1) {
+    errorMsg = arg0 + " is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave";
+    return;
+  }
+
+  if (octave < -1 || octave > 9) {
+    errorMsg = "please provide an octave between -1 and 9";
+    return;
   }
 
   octave = parseInt(octave, 10);
@@ -3185,19 +3229,6 @@ function _checkNoteName() {
 
   //console.log(name,'|',octave);
   return [name, octave];
-}
-
-function _isNoteMode(mode) {
-  var result = false;
-  switch (mode) {
-    case "sharp":
-    case "flat":
-    case "enharmonic-sharp":
-    case "enharmonic-flat":
-      result = mode;
-      break;
-  }
-  return result;
 }
 
 function _isBlackKey(noteNumber) {
@@ -3298,6 +3329,16 @@ function isBlackKey() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+/*
+  Adds a function to create a note object that contains information about a musical note:
+    - name, e.g. 'C'
+    - octave,  -1 - 9
+    - fullName: 'C1'
+    - frequency: 234.16, based on the basic pitch
+    - number: 60 midi note number
+
+  Adds several utility methods organised around the note object
+*/
 
 //fm  =  2(m−69)/12(440 Hz).
 
@@ -3306,6 +3347,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
+// required by babelify for transpiling es6
 require("babelify/polyfill");
 
 var getConfig = _interopRequire(require("./config.js"));
@@ -3323,20 +3365,13 @@ var _noteJs = require("./note.js");
 var createNote = _noteJs.createNote;
 var getNoteNumber = _noteJs.getNoteNumber;
 
-var sequencer = {
-  name: "qambi",
-  ui: {}, // ui functions
-  util: {}, // util functions
-  activeSongs: {}, // the songs that are currently loaded in memory
-  midiInputs: [],
-  midiOutputs: [],
-  init: function init() {
-    return new Promise(executor);
-  }
-};
-
+var sequencer = {};
 var config = undefined;
 var debugLevel = undefined;
+
+function init() {
+  return new Promise(executor);
+}
 
 function executor(resolve, reject) {
   config = getConfig();
@@ -3348,6 +3383,7 @@ function executor(resolve, reject) {
   if (config === false) {
     reject("The WebAudio API hasn't been implemented in " + config.browser + ", please use any other browser");
   } else {
+    // create the context and share it internally via the config object
     config.context = new window.AudioContext();
     // add unlock method for ios devices
     // unlockWebAudio is called when the user called Song.play(), because we assume that the user presses a button to start the song.
@@ -3376,6 +3412,7 @@ function executor(resolve, reject) {
 
     initAudio(config.context).then(function onFulfilled(data) {
 
+      config.legacy = data.legacy; // true if the browser uses an older version of the WebAudio API, source.noteOn() and source.noteOff instead of source.start() and source.stop()
       config.lowtick = data.lowtick; // metronome sample
       config.hightick = data.hightick; //metronome sample
       config.masterGainNode = data.gainNode;
@@ -3409,15 +3446,11 @@ function executor(resolve, reject) {
   }
 }
 
-sequencer.createSong = function (config) {
-  return new Song(config);
-};
-
-sequencer.createTrack = function () {
-  var t = Object.create(Track);
-  t.init();
-  return t;
-};
+Object.defineProperty(sequencer, "name", { value: "qambi" });
+Object.defineProperty(sequencer, "init", { value: init });
+Object.defineProperty(sequencer, "ui", { value: {}, writable: true }); // ui functions
+Object.defineProperty(sequencer, "util", { value: {}, writable: true }); // util functions
+Object.defineProperty(sequencer, "activeSongs", { activeSongs: {}, writable: true }); // the songs that are currently loaded in memory
 
 Object.defineProperty(sequencer, "debugLevel", {
   get: function get() {
@@ -3432,6 +3465,16 @@ Object.defineProperty(sequencer, "debugLevel", {
     }
   }
 });
+
+Object.defineProperty(sequencer, "createSong", { value: function value(config) {
+    return new Song(config);
+  } });
+
+Object.defineProperty(sequencer, "createTrack", { value: function value() {
+    var t = Object.create(Track);
+    t.init();
+    return t;
+  } });
 
 Object.defineProperty(sequencer, "createNote", { value: createNote });
 Object.defineProperty(sequencer, "getNoteNumber", { value: getNoteNumber });
@@ -3468,6 +3511,9 @@ Object.defineProperty(sequencer, "TIME_SIGNATURE", { value: 88 });
 Object.defineProperty(sequencer, "END_OF_TRACK", { value: 47 });
 
 module.exports = sequencer;
+/*
+  This is the main module of the library: it creates the sequencer object and functionality from other modules gets mixed in
+*/
 
 },{"./config.js":6,"./init_audio.js":7,"./init_midi.js":8,"./note.js":9,"./song.js":11,"./track.js":13,"babelify/polyfill":5}],11:[function(require,module,exports){
 "use strict";
@@ -3600,14 +3646,13 @@ var slice = Array.prototype.slice,
     mRound = Math.round,
     mFloor = Math.floor,
     mRandom = Math.random,
-    config = getConfig(),
-
+    config = getConfig();
 // context = config.context,
 // floor = function(value){
 //  return value | 0;
 // },
 
-noteLengthNames = {
+var noteLengthNames = {
   1: "quarter",
   2: "eighth",
   4: "sixteenth",
@@ -3838,34 +3883,37 @@ function base64ToBinary(input) {
 function error() {
   if (config.debugLevel >= 1) {
     console.error(slice.call(arguments).join(" "));
-    console.trace();
+    //console.trace();
   }
 }
 
 function warn() {
   if (config.debugLevel >= 2) {
     console.warn(slice.call(arguments).join(" "));
-    console.trace();
+    //console.trace();
   }
 }
 
 function info() {
   if (config.debugLevel >= 3) {
     console.info(slice.call(arguments).join(" "));
-    console.trace();
+    //console.trace();
   }
 }
 
 function log() {
   if (config.debugLevel >= 4) {
     console.log(slice.call(arguments).join(" "));
-    console.trace();
+    //console.trace();
   }
 }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+/*
+  An unorganised collection of various utility functions that are used across the library
+*/
 
 },{"./config":6}]},{},[10])(10)
 });

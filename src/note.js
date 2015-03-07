@@ -1,9 +1,22 @@
+/*
+  Adds a function to create a note object that contains information about a musical note:
+    - name, e.g. 'C'
+    - octave,  -1 - 9
+    - fullName: 'C1'
+    - frequency: 234.16, based on the basic pitch
+    - number: 60 midi note number
+
+  Adds several utility methods organised around the note object
+*/
+
 'use strict';
 
 import getConfig from './config';
 import {log, info, warn, error, typeString} from './util';
 
 let
+  errorMsg,
+  warningMsg,
   config = getConfig(),
   pow = Math.pow,
   floor = Math.floor;
@@ -19,23 +32,24 @@ const noteNames = {
 /*
   arguments
   - noteNumber: 60
-  - noteNumber and notename mode: 60, sharp
+  - noteNumber and notename mode: 60, 'sharp'
   - noteName: 'C#4'
   - name and octave: 'C#', 4
-
-  note {
-  name: 'C',
-  octave: 1,
-  fullName: 'C1',
-  frequency: 234.16,
-  number: 60
-  }
+  - note name, octave, note name mode: 'D', 4, 'sharp'
+  - data object:
+    {
+      name: 'C',
+      octave: 4
+    }
+    or
+    {
+      frequency: 234.16
+    }
 */
+
 export function createNote(...args){
   let
     numArgs = args.length,
-    error,
-    warn,
     data,
     octave,
     noteName,
@@ -48,11 +62,13 @@ export function createNote(...args){
     type1 = typeString(arg1),
     type2 = typeString(arg2);
 
+  errorMsg = '';
+  warningMsg = '';
 
   // argument: note number
   if(numArgs === 1 && type0 === 'number'){
     if(arg0 < 0 || arg0 > 127){
-      error = 'please provide a note number >= 0 and <= 127 ' +  arg0;
+      errorMsg = 'please provide a note number >= 0 and <= 127 ' +  arg0;
     }else{
       noteNumber = arg0;
       data = _getNoteName(noteNumber);
@@ -64,108 +80,66 @@ export function createNote(...args){
   // arguments: full note name
   }else if(numArgs === 1 && type0 === 'string'){
     data = _checkNoteName(arg0);
-    if(!data){
-      error = arg0 + ' is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave';
-    }else{
+    if(errorMsg === ''){
       noteName = data[0];
       octave = data[1];
       noteNumber = _getNoteNumber(noteName, octave);
-      if(!noteNumber){
-        error = arg0 + ' is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave';
-      }else if(noteNumber < 0 || noteNumber > 127){
-        error = 'please provide a note between C0 and G10';
-      }
     }
 
   // arguments: note name, octave
   }else if(numArgs === 2 && type0 === 'string' && type1 === 'number'){
     data = _checkNoteName(arg0, arg1);
-    if(!data){
-      error = arg0 + ' is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb';
-    }else{
+    if(errorMsg === ''){
       noteName = data[0];
       octave = data[1];
       noteNumber = _getNoteNumber(noteName, octave);
-      if(!noteNumber){
-        error = noteName + ' is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb';
-      }else if(noteNumber < 0 || noteNumber > 127){
-        error = 'please provide a note between C0 and G10';
-      }
     }
 
   // arguments: full note name, note name mode -> for converting between note name modes
   }else if(numArgs === 2 && type0 === 'string' && type1 === 'string'){
     data = _checkNoteName(arg0);
-    if(!data){
-      error = arg0 + ' is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave';
-    }else{
-      noteNameMode = _isNoteMode(arg1);
-      if(!noteNameMode){
-        noteNameMode = config.noteNameMode;
-        warn = arg1 + ' is not a valid note name mode, using ' + noteNameMode;
-      }
+    if(errorMsg === ''){
+      noteNameMode = _checkNoteNameMode(arg1);
       noteName = data[0];
       octave = data[1];
       noteNumber = _getNoteNumber(noteName, octave);
-      if(!noteNumber){
-        error = noteName + ' is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave';
-      }else if(noteNumber < 0 || noteNumber > 127){
-        error = 'please provide a note between C0 and G10';
-      }
-      noteName = _getNoteName(noteNumber, noteNameMode)[0];
     }
 
 
   // arguments: note number, note name mode
   }else if(numArgs === 2 && typeString(arg0) === 'number' && typeString(arg1) === 'string'){
     if(arg0 < 0 || arg0 > 127){
-      error = 'please provide a note number >= 0 and <= 127 ' + arg0;
+      errorMsg = 'please provide a note number >= 0 and <= 127 ' + arg0;
     }else{
-      noteNameMode = _isNoteMode(arg1);
-      if(!noteNameMode){
-        noteNameMode = config.noteNameMode;
-        warn = arg1 + ' is not a valid note name mode, using ' + noteNameMode;
-      }
+      noteNameMode = _checkNoteNameMode(arg1);
       noteNumber = arg0;
       data = _getNoteName(noteNumber, noteNameMode);
       noteName = data[0];
       octave = data[1];
-      noteName = getNoteName(noteNumber,noteNameMode)[0];
     }
 
 
   // arguments: note name, octave, note name mode
   }else if(numArgs === 3 && type0 === 'string' && type1 === 'number' && type2 === 'string'){
     data = _checkNoteName(arg0, arg1);
-    if(!data){
-      error = arg0 + ' is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave';
-    }else{
-      noteNameMode = _isNoteMode(arg2);
-      if(!noteNameMode){
-        noteNameMode = config.noteNameMode;
-        warn = arg2 + ' is not a valid note name mode, using ' + noteNameMode;
-      }
+    if(errorMsg === ''){
+      noteNameMode = _checkNoteNameMode(arg2);
       noteName = data[0];
       octave = data[1];
       noteNumber = _getNoteNumber(noteName,octave);
-      if(!noteNumber){
-        error = noteName + ' is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave';
-      }else if(noteNumber < 0 || noteNumber > 127){
-        error = 'please provide a note between C0 and G10';
-      }
-      noteName = _getNoteName(noteNumber,noteNameMode)[0];
     }
+
   }else{
-    error = 'wrong arguments, please consult documentation';
+    errorMsg = 'wrong arguments, please consult documentation';
   }
 
-  if(error){
-    console.error(error);
+  if(errorMsg){
+    error(errorMsg);
     return false;
   }
 
-  if(warn){
-    console.warn(warn);
+  if(warningMsg){
+    warn(warningMsg);
   }
 
   return {
@@ -182,15 +156,15 @@ export function createNote(...args){
 
 function _getNoteName(number, mode = config.noteNameMode) {
   //let octave = Math.floor((number / 12) - 2), // → in Cubase central C = C3 instead of C4
-  let octave = floor((number / 12) - 1),
-    noteName = noteNames[mode][number % 12];
+  let octave = floor((number / 12) - 1);
+  let noteName = noteNames[mode][number % 12];
   return [noteName, octave];
 }
 
 
 function _getNoteNumber(name, octave) {
-  let keys = Object.keys(noteNames),
-    index = -1, number;
+  let keys = Object.keys(noteNames);
+  let index;
 
   for(let key of keys){
     let mode = noteNames[key];
@@ -200,12 +174,13 @@ function _getNoteNumber(name, octave) {
     }
   }
 
-  if(index === -1) {
-    return false;
-  }
-
   //number = (index + 12) + (octave * 12) + 12; // → in Cubase central C = C3 instead of C4
-  number = (index + 12) + (octave * 12);// → midi standard + scientific naming, see: http://en.wikipedia.org/wiki/Middle_C and http://en.wikipedia.org/wiki/Scientific_pitch_notation
+  let number = (index + 12) + (octave * 12);// → midi standard + scientific naming, see: http://en.wikipedia.org/wiki/Middle_C and http://en.wikipedia.org/wiki/Scientific_pitch_notation
+
+  if(number < 0 || number > 127){
+    errorMsg = 'please provide a note between C0 and G10';
+    return;
+  }
   return number;
 }
 
@@ -221,64 +196,72 @@ function _getPitch(hertz){
 }
 
 
+function _checkNoteNameMode(mode){
+  let keys = Object.keys(noteNames);
+  let result = keys.find(x => x === mode) !== undefined;
+  if(result === false){
+    mode = config.noteNameMode;
+    warningMsg = mode + ' is not a valid note name mode, using "' + mode + '" instead';
+  }
+  return mode;
+}
+
+
 function _checkNoteName(...args){
   let
     numArgs = args.length,
     arg0 = args[0],
     arg1 = args[1],
-    length,i,char,
-    name,
-    octave;
-
-
-  if(numArgs === 1 && typeString(arg0) === 'string'){
-
-    length = arg0.length;
-    name = '';
+    char,
+    name = '',
     octave = '';
 
-    for(i = 0; i < length; i++){
-      char = arg0[i];
+  // extract octave from note name
+  if(numArgs === 1){
+    for(char of arg0){
       if(isNaN(char) && char !== '-'){
         name += char;
       }else{
         octave += char;
       }
     }
-
     if(octave === ''){
       octave = 0;
     }
-
-  }else if(numArgs === 2 && typeString(arg0) === 'string' && !isNaN(arg1)){
-
+  }else if(numArgs === 2){
     name = arg0;
     octave = arg1;
-
-  }else{
-    return false;
   }
 
-  octave = parseInt(octave,10);
-  name = name.substring(0,1).toUpperCase() + name.substring(1);
+  // check if note name is valid
+  let keys = Object.keys(noteNames);
+  let index = -1;
+
+  for(let key of keys){
+    let mode = noteNames[key];
+    index = mode.findIndex(x => x === name);
+    if(index !== -1){
+      break;
+    }
+  }
+
+  if(index === -1){
+    errorMsg = arg0 + ' is not a valid note name, please use letters A - G and if necessary an accidental like #, ##, b or bb, followed by a number for the octave';
+    return;
+  }
+
+  if(octave < -1 || octave > 9){
+    errorMsg = 'please provide an octave between -1 and 9';
+    return;
+  }
+
+  octave = parseInt(octave, 10);
+  name = name.substring(0, 1).toUpperCase() + name.substring(1);
 
   //console.log(name,'|',octave);
   return [name, octave];
 }
 
-
-function _isNoteMode(mode){
-  let result = false;
-  switch(mode){
-    case 'sharp':
-    case 'flat':
-    case 'enharmonic-sharp':
-    case 'enharmonic-flat':
-      result = mode;
-      break;
-  }
-  return result;
-}
 
 
 function _isBlackKey(noteNumber){

@@ -1,5 +1,10 @@
+/*
+  This is the main module of the library: it creates the sequencer object and functionality from other modules gets mixed in
+*/
+
 'use strict';
 
+// required by babelify for transpiling es6
 require('babelify/polyfill');
 
 import getConfig from './config.js';
@@ -9,21 +14,14 @@ import Song from './song.js';
 import Track from './track.js';
 import {createNote, getNoteNumber} from './note.js';
 
-let sequencer = {
-  name: 'qambi',
-  ui: {}, // ui functions
-  util: {}, // util functions
-  activeSongs: {}, // the songs that are currently loaded in memory
-  midiInputs: [],
-  midiOutputs: [],
-  init: function(){
-    return new Promise(executor);
-  }
-};
-
+let sequencer = {};
 let config;
 let debugLevel;
 
+
+function init(){
+  return new Promise(executor);
+}
 
 function executor(resolve, reject){
   config = getConfig();
@@ -35,6 +33,7 @@ function executor(resolve, reject){
   if(config === false){
     reject(`The WebAudio API hasn\'t been implemented in ${config.browser}, please use any other browser`);
   }else{
+    // create the context and share it internally via the config object
     config.context = new window.AudioContext();
     // add unlock method for ios devices
     // unlockWebAudio is called when the user called Song.play(), because we assume that the user presses a button to start the song.
@@ -64,6 +63,7 @@ function executor(resolve, reject){
     initAudio(config.context).then(
       function onFulfilled(data){
 
+        config.legacy = data.legacy; // true if the browser uses an older version of the WebAudio API, source.noteOn() and source.noteOff instead of source.start() and source.stop()
         config.lowtick = data.lowtick; // metronome sample
         config.hightick = data.hightick; //metronome sample
         config.masterGainNode = data.gainNode;
@@ -102,17 +102,11 @@ function executor(resolve, reject){
   }
 }
 
-
-sequencer.createSong = function(config){
-  return new Song(config);
-};
-
-sequencer.createTrack = function(){
-  var t = Object.create(Track);
-  t.init();
-  return t;
-};
-
+Object.defineProperty(sequencer, 'name', {value: 'qambi'});
+Object.defineProperty(sequencer, 'init', {value: init});
+Object.defineProperty(sequencer, 'ui', {value: {}, writable: true}); // ui functions
+Object.defineProperty(sequencer, 'util', {value: {}, writable: true}); // util functions
+Object.defineProperty(sequencer, 'activeSongs', {activeSongs: {}, writable: true}); // the songs that are currently loaded in memory
 
 Object.defineProperty(sequencer, 'debugLevel', {
   get: function(){
@@ -129,9 +123,20 @@ Object.defineProperty(sequencer, 'debugLevel', {
 });
 
 
+Object.defineProperty(sequencer, 'createSong', {value: function(config){
+  return new Song(config);
+}});
+
+
+Object.defineProperty(sequencer, 'createTrack', {value: function(){
+  var t = Object.create(Track);
+  t.init();
+  return t;
+}});
+
+
 Object.defineProperty(sequencer, 'createNote', {value: createNote});
 Object.defineProperty(sequencer, 'getNoteNumber', {value: getNoteNumber});
-
 
 
 // note name modi

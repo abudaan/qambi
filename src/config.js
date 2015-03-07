@@ -1,3 +1,7 @@
+/*
+  Creates the config object that is used for internally sharing settings, information and the state. Other modules may add keys to this object.
+*/
+
 'use strict';
 
 let
@@ -14,21 +18,21 @@ function getConfig(){
 
   config = {
     legacy: false, // true if the browser uses an older version of the WebAudio API, source.noteOn() and source.noteOff instead of source.start() and source.stop()
-    midi: false,
-    webmidi: false,
-    webaudio: true,
-    jazz: false,
-    ogg: false,
-    mp3: false,
-    bitrate_mp3_encoding: 128,
+    midi: false, // true if the browser has MIDI support either via WebMIDI or Jazz
+    webmidi: false, // true if the browser has WebMIDI
+    webaudio: true, // true if the browser has WebAudio
+    jazz: false, // true if the browser has the Jazz plugin
+    ogg: false, // true if WebAudio supports ogg
+    mp3: false, // true if WebAudio supports mp3
+    bitrate_mp3_encoding: 128, // default bitrate for audio recordings
     debugLevel: 4, // 0 = off, 1 = error, 2 = warn, 3 = info, 4 = log
-    pitch: 440,
-    bufferTime: 350/1000, //seconds
+    pitch: 440, // basic pitch that is used when generating samples
+    bufferTime: 350/1000, // time in seconds that events are scheduled ahead
     autoAdjustBufferTime: false,
     noteNameMode: 'sharp',
     minimalSongLength: 60000, //millis
-    pauseOnBlur: false,
-    restartOnFocus: true,
+    pauseOnBlur: false, // pause the AudioContext when page or tab looses focus
+    restartOnFocus: true, // if song was playing at the time the page or tab lost focus, it will start playing automatically as soon as the page/tab gets focus again
     defaultPPQ: 960,
     overrulePPQ: true,
     precision: 3, // means float with precision 3, e.g. 10.437

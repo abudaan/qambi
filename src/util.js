@@ -1,3 +1,7 @@
+/*
+  An unorganised collection of various utility functions that are used across the library
+*/
+
 'use strict';
 
 import getConfig from './config';
@@ -9,18 +13,19 @@ let
   mRound = Math.round,
   mFloor = Math.floor,
   mRandom = Math.random,
-  config = getConfig(),
+  config = getConfig();
   // context = config.context,
   // floor = function(value){
   //  return value | 0;
   // },
 
+const
   noteLengthNames = {
-      1: 'quarter',
-      2: 'eighth',
-      4: 'sixteenth',
-      8: '32th',
-      16: '64th'
+    1: 'quarter',
+    2: 'eighth',
+    4: 'sixteenth',
+    8: '32th',
+    16: '64th'
   };
 
 
@@ -254,27 +259,27 @@ function base64ToBinary(input){
 export function error(){
   if(config.debugLevel >= 1){
     console.error(slice.call(arguments).join(' '));
-    console.trace();
+    //console.trace();
   }
 }
 
 export function warn(){
   if(config.debugLevel >= 2){
     console.warn(slice.call(arguments).join(' '));
-    console.trace();
+    //console.trace();
   }
 }
 
 export function info(){
   if(config.debugLevel >= 3){
     console.info(slice.call(arguments).join(' '));
-    console.trace();
+    //console.trace();
   }
 }
 
 export function log(){
   if(config.debugLevel >= 4){
     console.log(slice.call(arguments).join(' '));
-    console.trace();
+    //console.trace();
   }
 }
