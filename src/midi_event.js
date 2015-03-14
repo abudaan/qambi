@@ -39,10 +39,8 @@ let
 */
 
 class MidiEvent{
-  constructor(args){
+  constructor(...args){
     let data, note;
-
-    console.log(args);
 
     this.id = 'M' + midiEventId++ + new Date().getTime();
     this.eventNumber = midiEventId;
@@ -58,7 +56,12 @@ class MidiEvent{
       info('midimessageevent');
       return;
     }else if(typeString(args[0]) === 'array'){
+      // support for un-spreaded parameters
       args = args[0];
+      if(typeString(args[0]) === 'array'){
+        // support for passing parameters in an array
+        args = args[0];
+      }
     }
 
     args.forEach(function(data, i){

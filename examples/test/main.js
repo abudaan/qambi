@@ -33,10 +33,11 @@ window.onload = function() {
 
       track1 = sequencer.createTrack();
       track2 = sequencer.createTrack();
-      console.log(track1);
+      //console.log(track1);
 
       event1 = sequencer.createMidiEvent(0, sequencer.NOTE_ON, 60, 100);
-      //console.log(event1);
+      console.log(event1);
+      event1 = sequencer.createMidiEvent([0, sequencer.NOTE_ON, 72, 100]);
       //event1.move(100);
       console.log(event1);
       event2 = event1.clone();

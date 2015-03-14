@@ -126,6 +126,8 @@ Object.defineProperty(sequencer, 'debugLevel', {
 
 
 Object.defineProperty(sequencer, 'createMidiEvent', {value: function(...args){
+  // for some reason we can't use spread here because then the console logs the MidiEvent as an Object, probably a bug in babelify
+  //return new MidiEvent(...args);
   return new MidiEvent(args);
 }});
 
