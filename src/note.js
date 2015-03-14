@@ -304,11 +304,6 @@ export function getNoteName(...args){
 }
 
 
-export function getNoteNameFromNoteNumber(number, mode){
-  return getNoteName(number, mode);
-}
-
-
 export function getNoteOctave(...args){
   let note = createNote(...args);
   if(note){

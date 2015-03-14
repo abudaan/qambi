@@ -8,6 +8,7 @@ window.onload = function() {
     console = window.console,
     song,
     track1, track2,
+    event1, event2,
     btnPlay = document.getElementById('play'),
     btnStop = document.getElementById('stop');
 
@@ -28,9 +29,18 @@ window.onload = function() {
       sequencer.unlockWebAudio();
 
       song = sequencer.createSong();
+      console.log(song);
 
       track1 = sequencer.createTrack();
       track2 = sequencer.createTrack();
+      console.log(track1);
+
+      event1 = sequencer.createMidiEvent(0, sequencer.NOTE_ON, 60, 100);
+      //console.log(event1);
+      //event1.move(100);
+      console.log(event1);
+      event2 = event1.clone();
+      console.log(event2);
 
       song.addEventListener('stop', function(){
         console.log('song has stopped');

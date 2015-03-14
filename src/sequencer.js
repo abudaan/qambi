@@ -12,7 +12,8 @@ import initAudio from './init_audio.js';
 import initMidi from './init_midi.js';
 import Song from './song.js';
 import Track from './track.js';
-import {createNote, getNoteNumber} from './note.js';
+import MidiEvent from './midi_event.js';
+import {createNote, getNoteNumber, getNoteName, getNoteOctave, getFullNoteName, getFrequency, isBlackKey} from './note.js';
 
 let sequencer = {};
 let config;
@@ -123,8 +124,9 @@ Object.defineProperty(sequencer, 'debugLevel', {
 });
 
 
-Object.defineProperty(sequencer, 'createSong', {value: function(config){
-  return new Song(config);
+
+Object.defineProperty(sequencer, 'createMidiEvent', {value: function(...args){
+  return new MidiEvent(args);
 }});
 
 
@@ -135,8 +137,20 @@ Object.defineProperty(sequencer, 'createTrack', {value: function(){
 }});
 
 
+Object.defineProperty(sequencer, 'createSong', {value: function(config){
+  return new Song(config);
+}});
+
+
+
 Object.defineProperty(sequencer, 'createNote', {value: createNote});
 Object.defineProperty(sequencer, 'getNoteNumber', {value: getNoteNumber});
+Object.defineProperty(sequencer, 'getNoteName', {value: getNoteName});
+Object.defineProperty(sequencer, 'getNoteOctave', {value: getNoteOctave});
+Object.defineProperty(sequencer, 'getFullNoteName', {value: getFullNoteName});
+Object.defineProperty(sequencer, 'getFrequency', {value: getFrequency});
+Object.defineProperty(sequencer, 'isBlackKey', {value: isBlackKey});
+
 
 
 // note name modi
