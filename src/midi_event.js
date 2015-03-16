@@ -5,6 +5,7 @@
   @param type {int} type of MidiEvent, e.g. NOTE_ON, NOTE_OFF or, 144, 128, etc.
   @param data1 {int} if type is 144 or 128: note number
   @param [data2] {int} if type is 144 or 128: velocity
+  @param [channel] {int} channel
 
 
   @example
@@ -14,8 +15,6 @@
   // pass arguments as array
   let event = sequencer.createMidiEvent([120, sequencer.NOTE_ON, 60, 100]);
 
-  // if you pass a MidiEvent instance a copy/clone will be returned
-  let copy = sequencer.createMidiEvent(event);
 */
 
 
@@ -31,20 +30,19 @@ let
 
 
 /*
-   arguments:
+  arguments:
    - [ticks, type, data1, data2, channel]
    - ticks, type, data1, data2, channel
 
-   data1, data2 and channel are optional but must be numbers if provided
+  data2 and channel are optional but must be numbers if provided
 */
 
 class MidiEvent{
   constructor(...args){
-    let data, note;
+    let note;
 
     this.id = 'M' + midiEventId++ + new Date().getTime();
     this.eventNumber = midiEventId;
-    this.channel = 'any';
     this.time = 0;
     this.muted = false;
 
@@ -65,8 +63,8 @@ class MidiEvent{
     }
 
     args.forEach(function(data, i){
-      if(isNaN(data) && i < 4){
-        error('please provide numbers for ticks, type and optionally data1 and data2');
+      if(isNaN(data) && i < 5){
+        error('please provide numbers for ticks, type, data1 and optionally for data2 and channel');
       }
     });
 
@@ -74,14 +72,14 @@ class MidiEvent{
     this.status = args[1];
     this.type = (this.status >> 4) * 16;
     //console.log(this.type, this.status);
-    if(this.type >= 0x80){
+    if(this.type >= 0x80 && this.type <= 0xE0){
       //the higher 4 bits of the status byte is the command
       this.command = this.type;
       //the lower 4 bits of the status byte is the channel number
       this.channel = (this.status & 0xF) + 1; // from zero-based to 1-based
     }else{
       this.type = this.status;
-      this.channel = args[4] || 'any';
+      this.channel = args[4] || 1;
     }
 
     this.sortIndex = this.type + this.ticks; // note off events come before note on events
@@ -320,4 +318,4 @@ class MidiEvent{
 }
 
 
-export default MidiEvent
+export default MidiEvent;
