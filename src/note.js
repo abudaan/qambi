@@ -155,7 +155,7 @@ export function createNote(...args){
 }
 
 
-function _getNoteName(number, mode = config.noteNameMode) {
+function _getNoteName(number, mode = config.get('noteNameMode')) {
   //let octave = Math.floor((number / 12) - 2), // → in Cubase central C = C3 instead of C4
   let octave = floor((number / 12) - 1);
   let noteName = noteNames[mode][number % 12];
@@ -187,7 +187,7 @@ function _getNoteNumber(name, octave) {
 
 
 function _getFrequency(number){
-  return config.pitch * pow(2,(number - 69)/12); // midi standard, see: http://en.wikipedia.org/wiki/MIDI_Tuning_Standard
+  return config.get('pitch') * pow(2,(number - 69)/12); // midi standard, see: http://en.wikipedia.org/wiki/MIDI_Tuning_Standard
 }
 
 
@@ -201,7 +201,7 @@ function _checkNoteNameMode(mode){
   let keys = Object.keys(noteNames);
   let result = keys.find(x => x === mode) !== undefined;
   if(result === false){
-    mode = config.noteNameMode;
+    mode = config.get('noteNameMode');
     warningMsg = mode + ' is not a valid note name mode, using "' + mode + '" instead';
   }
   return mode;

@@ -6,6 +6,7 @@
 
 let
   config,
+  defaultSong,
   ua = 'NA',
   os = 'unknown',
   browser = 'NA';
@@ -16,27 +17,44 @@ function getConfig(){
     return config;
   }
 
-  config = {
-    legacy: false, // true if the browser uses an older version of the WebAudio API, source.noteOn() and source.noteOff instead of source.start() and source.stop()
-    midi: false, // true if the browser has MIDI support either via WebMIDI or Jazz
-    webmidi: false, // true if the browser has WebMIDI
-    webaudio: true, // true if the browser has WebAudio
-    jazz: false, // true if the browser has the Jazz plugin
-    ogg: false, // true if WebAudio supports ogg
-    mp3: false, // true if WebAudio supports mp3
-    bitrate_mp3_encoding: 128, // default bitrate for audio recordings
-    debugLevel: 4, // 0 = off, 1 = error, 2 = warn, 3 = info, 4 = log
-    pitch: 440, // basic pitch that is used when generating samples
-    bufferTime: 350/1000, // time in seconds that events are scheduled ahead
-    autoAdjustBufferTime: false,
-    noteNameMode: 'sharp',
-    minimalSongLength: 60000, //millis
-    pauseOnBlur: false, // pause the AudioContext when page or tab looses focus
-    restartOnFocus: true, // if song was playing at the time the page or tab lost focus, it will start playing automatically as soon as the page/tab gets focus again
-    defaultPPQ: 960,
-    overrulePPQ: true,
-    precision: 3, // means float with precision 3, e.g. 10.437
-  };
+  config = new Map();
+  config.set('legacy', false); // true if the browser uses an older version of the WebAudio API, source.noteOn() and source.noteOff instead of source.start() and source.stop()
+  config.set('midi', false); // true if the browser has MIDI support either via WebMIDI or Jazz
+  config.set('webmidi', false); // true if the browser has WebMIDI
+  config.set('webaudio', true); // true if the browser has WebAudio
+  config.set('jazz', false); // true if the browser has the Jazz plugin
+  config.set('ogg', false); // true if WebAudio supports ogg
+  config.set('mp3', false); // true if WebAudio supports mp3
+  config.set('bitrate_mp3_encoding', 128); // default bitrate for audio recordings
+  config.set('debugLevel', 4); // 0 = off, 1 = error, 2 = warn, 3 = info, 4 = log
+  config.set('pitch', 440); // basic pitch that is used when generating samples
+  config.set('bufferTime', 350/1000); // time in seconds that events are scheduled ahead
+  config.set('autoAdjustBufferTime', false);
+  config.set('noteNameMode', 'sharp');
+  config.set('minimalSongLength', 60000); //millis
+  config.set('pauseOnBlur', false); // pause the AudioContext when page or tab looses focus
+  config.set('restartOnFocus', true); // if song was playing at the time the page or tab lost focus, it will start playing automatically as soon as the page/tab gets focus again
+  config.set('defaultPPQ', 960);
+  config.set('overrulePPQ', true);
+  config.set('precision', 3); // means float with precision 3, e.g. 10.437
+  config.set('activeSongs', {});// the songs currently loaded in memory
+
+
+  defaultSong = new Map();
+  defaultSong.set('bpm', 120);
+  defaultSong.set('ppq', config.get('defaultPPQ'));
+  defaultSong.set('bars', 30);
+  defaultSong.set('lowestNote', 0);
+  defaultSong.set('highestNote', 127);
+  defaultSong.set('nominator', 4);
+  defaultSong.set('denominator', 4);
+  defaultSong.set('quantizeValue', 8);
+  defaultSong.set('fixedLengthValue', false);
+  defaultSong.set('positionType', 'all');
+  defaultSong.set('useMetronome', false);
+  defaultSong.set('autoSize', true);
+  defaultSong.set('loop', false);
+  config.set('defaultSong', defaultSong);
 
 
   // get browser and os
@@ -80,9 +98,9 @@ function getConfig(){
   }else{
     // TODO: check os here with Nodejs' require('os')
   }
-  config.ua = ua;
-  config.os = os;
-  config.browser = browser;
+  config.set('ua', ua);
+  config.set('os', os);
+  config.set('browser', browser);
 
   // check if we have an audio context
   window.AudioContext = (
@@ -91,13 +109,8 @@ function getConfig(){
     window.oAudioContext ||
     window.msAudioContext
   );
-  config.record_audio = navigator.getUserMedia !== undefined;
-
-
-  // no webaudio, return
-  if(config.audio_context === false){
-    return false;
-  }
+  config.set('audio_context', navigator.getUserMedia !== undefined);
+  config.set('record_audio', navigator.getUserMedia !== undefined);
 
 
   // check if audio can be recorded
@@ -107,8 +120,13 @@ function getConfig(){
     navigator.mozGetUserMedia ||
     navigator.msGetUserMedia
   );
-  config.audio_context = window.AudioContext !== undefined;
+  config.set('audio_context', window.AudioContext !== undefined);
 
+
+  // no webaudio, return
+  if(config.get('audio_context') === false){
+    return false;
+  }
 
   // check for other 'modern' API's
   window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame;

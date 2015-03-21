@@ -107,7 +107,9 @@ Object.defineProperty(sequencer, 'name', {value: 'qambi'});
 Object.defineProperty(sequencer, 'init', {value: init});
 Object.defineProperty(sequencer, 'ui', {value: {}, writable: true}); // ui functions
 Object.defineProperty(sequencer, 'util', {value: {}, writable: true}); // util functions
-Object.defineProperty(sequencer, 'activeSongs', {activeSongs: {}, writable: true}); // the songs that are currently loaded in memory
+
+//TODO: create methods getSongs, removeSong and so on
+//Object.defineProperty(sequencer, 'activeSongs', {activeSongs: {}, writable: true}); // the songs that are currently loaded in memory
 
 Object.defineProperty(sequencer, 'debugLevel', {
   get: function(){
