@@ -3,6 +3,7 @@
 import {addEventListener, removeEventListener, dispatchEvent} from './song_add_eventlistener';
 import {log, info, warn, error, typeString} from './util';
 import getConfig from './config';
+import {initMidiSong} from './init_midi';
 
 
 let songId = 0,
@@ -52,48 +53,27 @@ class Song{
     this.midiInputs = {};
     this.midiOutputs = {};
 
-    console.log(config.get('activeSongs')[this.id]);
-/*
-    initMidi(this);
 
-    this.bpm = config.bpm || 120;
-    this.ppq = config.ppq || sequencer.defaultPPQ;
-    this.bars = config.bars || 30; //default song duration is 30 bars @ 120 bpm is 1 minute
+    initMidiSong(this);
+
     this.lastBar = this.bars;
-    this.lowestNote = config.lowestNote || 0;
-    this.highestNote = config.highestNote || 127;
     this.pitchRange = this.highestNote - this.lowestNote + 1;
-    this.nominator = config.nominator || 4;
-    this.denominator = config.denominator || 4;
     this.factor = 4/this.denominator;
     this.ticksPerBeat = this.ppq * this.factor;
     this.ticksPerBar = this.ticksPerBeat * this.nominator;
     this.millisPerTick = (60000/this.bpm/this.ppq);
-    this.quantizeValue = config.quantizeValue || '8';
-    this.fixedLengthValue = config.fixedLengthValue || false;
-    this.positionType = config.positionType || 'all';
-    this.useMetronome = config.useMetronome;
-    this.autoSize = config.autoSize === undefined ? true : config.autoSize === true;
-    this.playbackSpeed = 1;
-    this.defaultInstrument = config.defaultInstrument || sequencer.defaultInstrument;
     this.recordId = -1;
-    this.autoQuantize = false;
-    this.loop = config.loop || false;
     this.doLoop = false;
     this.illegalLoop = true;
     this.loopStart = 0;
     this.loopEnd = 0;
     this.loopDuration = 0;
     this.audioRecordingLatency = 0;
-
-    //console.log('PPQ song', this.ppq)
-
-    if(this.useMetronome !== true && this.useMetronome !== false){
-      this.useMetronome = false;
-    }
-    //console.log(this.useMetronome);
-
     this.grid = undefined;
+
+    console.log(this);
+
+/*
 
     if(config.timeEvents && config.timeEvents.length > 0){
       this.timeEvents = [].concat(config.timeEvents);

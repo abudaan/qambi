@@ -5,10 +5,8 @@
 'use strict';
 
 let data = {};
-let inputs = [];
-let outputs = [];
-let inputById = [];
-let outputById = [];
+let inputs = new Map();
+let outputs = new Map();
 let numInputs = 0;
 let numOutputs = 0;
 
@@ -16,7 +14,7 @@ function initMidi(){
 
   return new Promise(function executor(resolve, reject){
 
-    let iterator, item, port;
+    let iterator, item, port, tmp;
 
     if(navigator.requestMIDIAccess !== undefined){
 
@@ -41,13 +39,13 @@ function initMidi(){
           // inputs
 
           iterator = midi.inputs.values();
-
+          tmp = [];
           while((item = iterator.next()).done === false){
             port = item.value;
-            inputs.push(port);
+            tmp.push(port);
           }
 
-          inputs.sort(function(a, b){
+          tmp.sort(function(a, b){
             let nameA = a.name.toLowerCase(),
               nameB = b.name.toLowerCase();
             if(nameA < nameB){ //sort string ascending
@@ -58,19 +56,22 @@ function initMidi(){
             return 0; //default return value (no sorting)
           });
 
-          numInputs = inputs.length;
+          for(let port of tmp){
+            inputs.set(port.id, port);
+          }
+          numInputs = inputs.size;
 
 
           // outputs
 
           iterator = midi.outputs.values();
-
+          tmp = [];
           while((item = iterator.next()).done === false){
             port = item.value;
-            outputs.push(port);
+            tmp.push(port);
           }
 
-          outputs.sort(function(a, b){
+          tmp.sort(function(a, b){
             let nameA = a.name.toLowerCase(),
               nameB = b.name.toLowerCase();
             if(nameA < nameB){ //sort string ascending
@@ -81,7 +82,10 @@ function initMidi(){
             return 0; //default return value (no sorting)
           });
 
-          numOutputs = outputs.length;
+          for(let port of tmp){
+            outputs.set(port.id, port);
+          }
+          numOutputs = outputs.size;
 
 
           // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
@@ -118,26 +122,27 @@ function initMidi(){
 
 
 
-function initMidiSong(song){
-  songMidiEventListener = function(e){
+export function initMidiSong(song){
+  let songMidiEventListener = function(e){
     //console.log(e);
     handleMidiMessageSong(e, song, this);
   };
 
   // by default a song listens to all available midi-in ports
-  midiInputs.forEach(function(port){
+  inputs.forEach(function(port){
     port.addEventListener('midimessage', songMidiEventListener);
     song.midiInputs[port.id] = port;
-    //console.log(port);
+    //console.log('input', port);
   });
   //console.log(sequencer.midiInputs);
 
-  midiOutputs.forEach(function(port){
+  outputs.forEach(function(port){
     song.midiOutputs[port.id] = port;
+    //console.log('output', port);
   });
 
-  song.numMidiInputs = numMidiInputs;
-  song.numMidiOutputs = numMidiOutputs;
+  song.numMidiInputs = numInputs;
+  song.numMidiOutputs = numOutputs;
 }
 
 

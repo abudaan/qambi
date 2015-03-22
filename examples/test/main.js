@@ -21,6 +21,7 @@ window.onload = function() {
   //console.log(sequencer.getNoteNumber('F4'));
   //console.log(sequencer.getNoteNumber('A-1'));
 
+
   sequencer.init().then(
 
     function onFulFilled(){

@@ -54,6 +54,8 @@ function getConfig(){
   defaultSong.set('useMetronome', false);
   defaultSong.set('autoSize', true);
   defaultSong.set('loop', false);
+  defaultSong.set('playbackSpeed', 1);
+  defaultSong.set('autoQuantize', false);
   config.set('defaultSong', defaultSong);
 
 
