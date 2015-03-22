@@ -4,17 +4,21 @@
 
 'use strict';
 
+
+import {log, info, warn, error, typeString} from './util';
+
+
 let data = {};
 let inputs = new Map();
 let outputs = new Map();
-let numInputs = 0;
-let numOutputs = 0;
+
+let songMidiEventListener;
 
 function initMidi(){
 
   return new Promise(function executor(resolve, reject){
 
-    let iterator, item, port, tmp;
+    let tmp;
 
     if(navigator.requestMIDIAccess !== undefined){
 
@@ -36,73 +40,41 @@ function initMidi(){
           }
 
 
-          // inputs
+          // get inputs
+          tmp = Array.from(midi.inputs.values());
 
-          iterator = midi.inputs.values();
-          tmp = [];
-          while((item = iterator.next()).done === false){
-            port = item.value;
-            tmp.push(port);
-          }
-
-          tmp.sort(function(a, b){
-            let nameA = a.name.toLowerCase(),
-              nameB = b.name.toLowerCase();
-            if(nameA < nameB){ //sort string ascending
-              return -1;
-            }else if (nameA > nameB){
-              return 1;
-            }
-            return 0; //default return value (no sorting)
-          });
+          //sort ports by name ascending
+          tmp.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1);
 
           for(let port of tmp){
             inputs.set(port.id, port);
           }
-          numInputs = inputs.size;
 
 
-          // outputs
+          // get outputs
+          tmp = Array.from(midi.outputs.values());
 
-          iterator = midi.outputs.values();
-          tmp = [];
-          while((item = iterator.next()).done === false){
-            port = item.value;
-            tmp.push(port);
-          }
-
-          tmp.sort(function(a, b){
-            let nameA = a.name.toLowerCase(),
-              nameB = b.name.toLowerCase();
-            if(nameA < nameB){ //sort string ascending
-              return -1;
-            }else if (nameA > nameB){
-              return 1;
-            }
-            return 0; //default return value (no sorting)
-          });
+          //sort ports by name ascending
+          tmp.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1);
 
           for(let port of tmp){
             outputs.set(port.id, port);
           }
-          numOutputs = outputs.size;
 
 
           // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
           midi.addEventListener('onconnect', function(e){
-            console.log('device connected', e);
+            log('device connected', e);
           }, false);
 
           midi.addEventListener('ondisconnect', function(e){
-            console.log('device disconnected', e);
+            log('device disconnected', e);
           }, false);
 
 
           // export
           data.inputs = inputs;
           data.outputs = outputs;
-          data.numInputs = numInputs;
-          data.numOutputs = numOutputs;
 
           resolve(data);
         },
@@ -123,7 +95,8 @@ function initMidi(){
 
 
 export function initMidiSong(song){
-  let songMidiEventListener = function(e){
+
+  songMidiEventListener = function(e){
     //console.log(e);
     handleMidiMessageSong(e, song, this);
   };
@@ -131,55 +104,39 @@ export function initMidiSong(song){
   // by default a song listens to all available midi-in ports
   inputs.forEach(function(port){
     port.addEventListener('midimessage', songMidiEventListener);
-    song.midiInputs[port.id] = port;
-    //console.log('input', port);
+    song.midiInputs.set(port.id, port);
   });
-  //console.log(sequencer.midiInputs);
 
   outputs.forEach(function(port){
-    song.midiOutputs[port.id] = port;
-    //console.log('output', port);
+    song.midiOutputs.set(port.id, port);
   });
-
-  song.numMidiInputs = numInputs;
-  song.numMidiOutputs = numOutputs;
 }
 
 
 
-function setMidiInputSong(id, flag, song){
-  var input = sequencer.midiInputs[id],
-    tracks = song.tracks,
-    maxi = song.numTracks - 1,
-    i, track;
-
-  flag = flag === undefined ? true : flag;
+export function setMidiInputSong(song, id, flag){
+  let input = inputs.get(id);
 
   if(input === undefined){
-    if(sequencer.debug === true){
-      console.log('no midi input with id', id,'found');
-    }
+    warn('no midi input with id', id,'found');
     return;
   }
 
   if(flag === false){
-    delete song.midiInputs[id];
+    song.midiInputs.delete(id);
     input.removeEventListener('midimessage', songMidiEventListener);
-    song.numMidiInputs--;
-  }else if(input !== undefined){
-    song.midiInputs[id] = input;
+  }else{
+    song.midiInputs.set(id, input);
     input.addEventListener('midimessage', songMidiEventListener);
-    song.numMidiInputs++;
   }
 
-  for(i = maxi; i >= 0; i--){
-    track = tracks[i];
+  let tracks = song.tracks;
+  for(let track of tracks){
     track.setMidiInput(id, flag);
-    // if(flag === false){
-    //     delete track.midiInputs[id];
-    // }
   }
 }
+
+
 
 function setMidiOutputSong(id, flag, song){
   var output = sequencer.midiOutputs[id],

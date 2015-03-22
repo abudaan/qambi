@@ -3,7 +3,7 @@
 import {addEventListener, removeEventListener, dispatchEvent} from './song_add_eventlistener';
 import {log, info, warn, error, typeString} from './util';
 import getConfig from './config';
-import {initMidiSong} from './init_midi';
+import {initMidiSong, setMidiInputSong} from './init_midi';
 
 
 let songId = 0,
@@ -20,6 +20,7 @@ class Song{
 
     this.id = 'S' + songId++ + new Date().getTime();
     this.name = this.id;
+    this.tracks = new Map();
 
     // first add all settings from the default song
 ///*
@@ -47,14 +48,10 @@ class Song{
       }, this);
     }
 
-
-    config.get('activeSongs')[this.id] = this;
-
-    this.midiInputs = {};
-    this.midiOutputs = {};
-
-
-    initMidiSong(this);
+    // initialize midi for this song: add Maps for midi in- and outputs, and add eventlisteners to the midi inputs
+    this.midiInputs = new Map();
+    this.midiOutputs = new Map();
+    initMidiSong(this); // @see: init_midi.js
 
     this.lastBar = this.bars;
     this.pitchRange = this.highestNote - this.lowestNote + 1;
@@ -71,8 +68,9 @@ class Song{
     this.audioRecordingLatency = 0;
     this.grid = undefined;
 
-    console.log(this);
+    config.get('activeSongs')[this.id] = this;
 
+    console.log(this);
 /*
 
     if(config.timeEvents && config.timeEvents.length > 0){
@@ -221,6 +219,10 @@ class Song{
 
   play(){
     dispatchEvent('play');
+  }
+
+  setMidiInput(id, flag = true){
+    setMidiInputSong(this, id, flag);
   }
 }
 
