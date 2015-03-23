@@ -6,6 +6,7 @@
 
 
 import {log, info, warn, error, typeString} from './util';
+import MidiEvent from './midi_event';
 
 
 let data = {};
@@ -13,6 +14,7 @@ let inputs = new Map();
 let outputs = new Map();
 
 let songMidiEventListener;
+let midiEventListenerId = 0;
 
 function initMidi(){
 
@@ -98,7 +100,7 @@ export function initMidiSong(song){
 
   songMidiEventListener = function(e){
     //console.log(e);
-    handleMidiMessageSong(e, song, this);
+    handleMidiMessageSong(song, e, this);
   };
 
   // by default a song listens to all available midi-in ports
@@ -118,7 +120,7 @@ export function setMidiInputSong(song, id, flag){
   let input = inputs.get(id);
 
   if(input === undefined){
-    warn('no midi input with id', id,'found');
+    warn('no midi input with id', id, 'found');
     return;
   }
 
@@ -138,54 +140,38 @@ export function setMidiInputSong(song, id, flag){
 
 
 
-function setMidiOutputSong(id, flag, song){
-  var output = sequencer.midiOutputs[id],
-    tracks = song.tracks,
-    maxi = song.numTracks - 1,
-    i, track, time;
-
-  flag = flag === undefined ? true : flag;
+export function setMidiOutputSong(song, id, flag){
+  let output = outputs.get(id);
 
   if(output === undefined){
-    if(sequencer.debug === true){
-      console.log('no midi output with id', id,'found');
-    }
+    warn('no midi output with id', id, 'found');
     return;
   }
 
   if(flag === false){
-    delete song.midiOutputs[id];
-    song.numMidiOutputs--;
-    time = song.scheduler.lastEventTime + 100;
+    song.midiOutputs.delete(id);
+    let time = song.scheduler.lastEventTime + 100;
     output.send([0xB0, 0x7B, 0x00], time); // stop all notes
     output.send([0xB0, 0x79, 0x00], time); // reset all controllers
-  }else if(output !== undefined){
-    song.midiOutputs[id] = output;
-    song.numMidiOutputs++;
+  }else{
+    song.midiOutputs.set(id, output);
   }
 
-  for(i = maxi; i >= 0; i--){
-    track = tracks[i];
+  let tracks = song.tracks;
+  for(let track of tracks){
     track.setMidiOutput(id, flag);
-    // if(flag === false){
-    //     delete track.midiOutputs[id];
-    // }
   }
 }
 
-function handleMidiMessageSong(midiMessageEvent, song, input){
-  var data = midiMessageEvent.data,
-    i, track,
-    tracks = song.tracks,
-    numTracks = song.numTracks,
-    midiEvent,
-    listeners;
+
+
+function handleMidiMessageSong(song, midiMessageEvent, input){
+  let midiEvent = new MidiEvent(song.ticks, ...midiMessageEvent.data);
 
   //console.log(midiMessageEvent.data);
-  midiEvent = createMidiEvent(song.ticks, data[0], data[1], data[2]);
 
-  for(i = 0; i < numTracks; i++){
-    track = tracks[i];
+  let tracks = song.tracks;
+  for(let track of tracks){
     //console.log(track.midiInputs, input);
     /*
     if(midiEvent.channel === track.channel || track.channel === 0 || track.channel === 'any'){
@@ -197,25 +183,23 @@ function handleMidiMessageSong(midiMessageEvent, song, input){
     // note that track.monitor is by default set to false and that track.monitor is automatically set to true
     // if you are recording on that track
     //console.log(track.monitor, track.id, input.id);
-    if(track.monitor === true && track.midiInputs[input.id] !== undefined){
+    if(track.monitor === true && track.midiInputs.get(input.id) !== undefined){
       handleMidiMessageTrack(midiEvent, track, input);
     }
   }
 
-  listeners = song.midiEventListeners[midiEvent.type];
-  if(listeners === undefined){
-    return;
+  let listeners = song.midiEventListeners.get(midiEvent.type);
+  if(listeners !== undefined){
+    for(let listener of listeners){
+      listener(midiEvent, input);
+    }
   }
-
-  objectForEach(listeners, function(listener){
-    listener(midiEvent, input);
-  });
 }
 
 
-//function handleMidiMessageTrack(midiMessageEvent, track, input){
-function handleMidiMessageTrack(midiEvent, track, input){
-  var song = track.song,
+
+function handleMidiMessageTrack(track, midiEvent, input){
+  let song = track.song,
     note, listeners, channel;
     //data = midiMessageEvent.data,
     //midiEvent = createMidiEvent(song.ticks, data[0], data[1], data[2]);
@@ -290,24 +274,22 @@ function handleMidiMessageTrack(midiEvent, track, input){
 }
 
 
-function addMidiEventListener(args, obj){ // obj can be a track or a song
-  args = slice.call(args);
+function addMidiEventListener(...args){ // caller can be a track or a song
 
-  var id = midiEventListenerId++,
+  let id = midiEventListenerId++;
+  let listener;
     types = {},
     ids = [],
-    listener,
     loop;
 
 
   // should I inline this?
-  loop = function(args, i, maxi){
-    for(i = 0; i < maxi; i++){
-      var arg = args[i],
-        type = typeString(arg);
+  loop = function(args){
+    for(let arg of args){
+      let type = typeString(arg);
       //console.log(type);
       if(type === 'array'){
-        loop(arg, 0, arg.length);
+        loop(arg);
       }else if(type === 'function'){
         listener = arg;
       }else if(isNaN(arg) === false){

@@ -10,6 +10,10 @@ let Track = {
             value: id
         });
     }
-}
+};
 
-export default Track;
+export default function createTrack(){
+  var t = Object.create(Track);
+  t.init(arguments);
+  return t;
+}

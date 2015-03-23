@@ -3,7 +3,8 @@
 import {addEventListener, removeEventListener, dispatchEvent} from './song_add_eventlistener';
 import {log, info, warn, error, typeString} from './util';
 import getConfig from './config';
-import {initMidiSong, setMidiInputSong} from './init_midi';
+import createMidiEvent from './midi_event';
+import {initMidiSong, setMidiInputSong, setMidiOutputSong} from './init_midi';
 
 
 let songId = 0,
@@ -21,6 +22,10 @@ class Song{
     this.id = 'S' + songId++ + new Date().getTime();
     this.name = this.id;
     this.tracks = new Map();
+    this.parts = new Map();
+    this.events = []; // all midi and audio events
+    this.allEvents = []; //
+    this.timeEvents = []; // all tempo and time signature events
 
     // first add all settings from the default song
 ///*
@@ -72,9 +77,8 @@ class Song{
 
     console.log(this);
 /*
-
-    if(config.timeEvents && config.timeEvents.length > 0){
-      this.timeEvents = [].concat(config.timeEvents);
+    if(settings.timeEvents && settings.timeEvents.length > 0){
+      this.timeEvents = [].concat(settings.timeEvents);
 
       this.tempoEvent = getTimeEvents(sequencer.TEMPO, this)[0];
       this.timeSignatureEvent = getTimeEvents(sequencer.TIME_SIGNATURE, this)[0];
@@ -224,10 +228,21 @@ class Song{
   setMidiInput(id, flag = true){
     setMidiInputSong(this, id, flag);
   }
+
+  setMidiOutput(id, flag = true){
+    setMidiOutputSong(this, id, flag);
+  }
+
+  addMidiEventListener(...args){
+    addMidiEventListener(this, ...args);
+  }
 }
 
 Song.prototype.addEventListener = addEventListener;
 Song.prototype.removeEventListener = removeEventListener;
 Song.prototype.dispatchEvent = dispatchEvent;
 
-export default Song;
+
+export default function createSong(settings){
+  return new Song(settings);
+}

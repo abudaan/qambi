@@ -317,5 +317,6 @@ class MidiEvent{
   }
 }
 
-
-export default MidiEvent;
+export default function createMidiEvent(){
+  return new MidiEvent(...arguments);
+}

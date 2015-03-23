@@ -7,8 +7,7 @@
 import getConfig from './config';
 
 let
-  slice = Array.prototype.slice,
-
+  console = window.console,
   mPow = Math.pow,
   mRound = Math.round,
   mFloor = Math.floor,
@@ -257,29 +256,59 @@ function base64ToBinary(input){
 
 
 export function error(){
-  if(config.debugLevel >= 1){
-    console.error(slice.call(arguments).join(' '));
+  if(config.get('debugLevel') >= 1){
+    console.error(...arguments);
     //console.trace();
   }
 }
 
 export function warn(){
-  if(config.debugLevel >= 2){
-    console.warn(slice.call(arguments).join(' '));
-    //console.trace();
+  if(config.get('debugLevel') >= 2){
+    //console.warn(...arguments);
+    console.trace('WARNING', ...arguments);
   }
 }
 
 export function info(){
-  if(config.debugLevel >= 3){
-    console.info(slice.call(arguments).join(' '));
-    //console.trace();
+  if(config.get('debugLevel') >= 3){
+    //console.info(...arguments);
+    console.trace('INFO', ...arguments);
   }
 }
 
 export function log(){
-  if(config.debugLevel >= 4){
-    console.log(slice.call(arguments).join(' '));
-    //console.trace();
+  if(config.get('debugLevel') >= 4){
+    //console.log(...arguments);
+    console.trace('LOG', ...arguments);
   }
+}
+
+
+export function getNiceTime(millis){
+  let h, m, s, ms,
+      seconds,
+      timeAsString = '';
+
+  seconds = millis/1000; // → millis to seconds
+  h = mFloor(seconds / (60 * 60));
+  m = mFloor((seconds % (60 * 60)) / 60);
+  s = mFloor(seconds % (60));
+  ms = mRound((seconds - (h * 3600) - (m * 60) - s) * 1000);
+
+  timeAsString += h + ':';
+  timeAsString += m < 10 ? '0' + m : m;
+  timeAsString += ':';
+  timeAsString += s < 10 ? '0' + s : s;
+  timeAsString += ':';
+  timeAsString += ms === 0 ? '000' : ms < 10 ? '00' + ms : ms < 100 ? '0' + ms : ms;
+
+  //console.log(h, m, s, ms);
+  return {
+      hour: h,
+      minute: m,
+      second: s,
+      millisecond: ms,
+      timeAsString: timeAsString,
+      timeAsArray: [h, m, s, ms]
+  };
 }

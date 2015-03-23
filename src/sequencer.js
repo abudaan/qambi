@@ -10,9 +10,9 @@ require('babelify/polyfill');
 import getConfig from './config.js';
 import initAudio from './init_audio.js';
 import initMidi from './init_midi.js';
-import Song from './song.js';
-import Track from './track.js';
-import MidiEvent from './midi_event.js';
+import createSong from './song.js';
+import createTrack from './track.js';
+import createMidiEvent from './midi_event.js';
 import {createNote, getNoteNumber, getNoteName, getNoteOctave, getFullNoteName, getFrequency, isBlackKey} from './note.js';
 
 let sequencer = {};
@@ -127,24 +127,9 @@ Object.defineProperty(sequencer, 'debugLevel', {
 
 
 
-Object.defineProperty(sequencer, 'createMidiEvent', {value: function(...args){
-  // for some reason we can't use spread here because then the console logs the MidiEvent as an Object, probably a bug in babelify
-  //return new MidiEvent(...args);
-  return new MidiEvent(args);
-}});
-
-
-Object.defineProperty(sequencer, 'createTrack', {value: function(){
-  var t = Object.create(Track);
-  t.init();
-  return t;
-}});
-
-
-Object.defineProperty(sequencer, 'createSong', {value: function(config){
-  return new Song(config);
-}});
-
+Object.defineProperty(sequencer, 'createMidiEvent', {value: createMidiEvent});
+Object.defineProperty(sequencer, 'createTrack', {value: createTrack});
+Object.defineProperty(sequencer, 'createSong', {value: createSong});
 
 
 Object.defineProperty(sequencer, 'createNote', {value: createNote});
