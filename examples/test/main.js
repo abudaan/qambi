@@ -15,7 +15,7 @@ window.onload = function() {
   console.log(sequencer);
   //console.log(sequencer.createNote(0, 'aap'));
   //console.log(sequencer.createNote('P'));
-  //console.log(sequencer.createNote('C', 4));
+  console.log(sequencer.createNote('C', 4));
   //console.log(sequencer.getNoteNumber('C#4'));
   //console.log(sequencer.getNoteNumber('Bbb4'));
   //console.log(sequencer.getNoteNumber('F4'));

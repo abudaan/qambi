@@ -8,6 +8,7 @@
 require('babelify/polyfill');
 
 import getConfig from './config.js';
+import polyFill from './polyfill.js';
 import initAudio from './init_audio.js';
 import initMidi from './init_midi.js';
 import createSong from './song.js';
@@ -25,6 +26,7 @@ function init(){
 }
 
 function executor(resolve, reject){
+  polyfill();
   config = getConfig();
   // the debug level has been set before sequencer.init() so add it to the config object
   if(debugLevel !== undefined){
@@ -69,6 +71,7 @@ function executor(resolve, reject){
         config.hightick = data.hightick; //metronome sample
         config.masterGainNode = data.gainNode;
         config.masterCompressor = data.compressor;
+        config.getTime = data.getTime;
 
         Object.defineProperty(sequencer, 'time', {get: data.getTime});
         Object.defineProperty(sequencer, 'audioContext', {get: data.getAudioContext});

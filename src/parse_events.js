@@ -23,7 +23,9 @@ let
   ticksPerBeat,
   ticksPerBar,
   ticksPerSixteenth,
-  numSixteenth;
+  numSixteenth,
+
+  diffTicks;
 
 
 function setTickDuration(){
@@ -44,22 +46,43 @@ function setTicksPerBeat(){
 }
 
 
+function updatePosition(event){
+  diffTicks = event.ticks - ticks;
+  tick += diffTicks;
+  ticks = event.ticks;
+  //console.log(diffTicks, millisPerTick);
+  millis += diffTicks * millisPerTick;
+
+  while(tick >= ticksPerSixteenth){
+    sixteenth++;
+    tick -= ticksPerSixteenth;
+    while(sixteenth > numSixteenth){
+      sixteenth -= numSixteenth;
+      beat++;
+      while(beat > nominator){
+        beat -= nominator;
+        bar++;
+      }
+    }
+  }
+}
+
+
 export function parseTimeEvents(song){
   //console.time('parse time events ' + song.name);
   let timeEvents = song.timeEvents;
-  let bpm = song.bpm;
-  let nominator = song.nominator;
-  let denominator = song.denominator;
-
-  let bar = 1;
-  let beat = 1;
-  let sixteenth = 1;
-  let tick = 0;
-  let ticks = 0;
-  let millis = 0;
-  let diffTicks;
   let type;
   let event;
+
+  bpm = song.bpm;
+  nominator = song.nominator;
+  denominator = song.denominator;
+  bar = 1;
+  beat = 1;
+  sixteenth = 1;
+  tick = 0;
+  ticks = 0;
+  millis = 0;
 
   setTickDuration();
   setTicksPerBeat();
@@ -68,25 +91,8 @@ export function parseTimeEvents(song){
 
   for(event of timeEvents){
     event.song = song;
-    diffTicks = event.ticks - ticks;
-    tick += diffTicks;
-    ticks = event.ticks;
     type = event.type;
-    //console.log(diffTicks, millisPerTick);
-    millis += diffTicks * millisPerTick;
-
-    while(tick >= ticksPerSixteenth){
-      sixteenth++;
-      tick -= ticksPerSixteenth;
-      while(sixteenth > numSixteenth){
-        sixteenth -= numSixteenth;
-        beat++;
-        while(beat > nominator){
-          beat -= nominator;
-          bar++;
-        }
-      }
-    }
+    updatePosition(event);
 
     switch(type){
 
@@ -114,6 +120,78 @@ export function parseTimeEvents(song){
   //console.log(event);
   //console.log(timeEvents);
 }
+
+
+export function parseEvents(song, events){
+
+  let event;
+  let numEvents = events.length;
+  let startEvent = 0;
+  let lastEventTick = 0;
+
+  bpm = event.bpm;
+  factor = event.factor;
+  nominator = event.nominator;
+  denominator = event.denominator;
+
+  ticksPerBar = event.ticksPerBar;
+  ticksPerBeat = event.ticksPerBeat;
+  ticksPerSixteenth = event.ticksPerSixteenth;
+
+  numSixteenth = event.numSixteenth;
+
+  millisPerTick = event.millisPerTick;
+  secondsPerTick = event.secondsPerTick;
+
+  millis = event.millis;
+
+  bar = event.bar;
+  beat = event.beat;
+  sixteenth = event.sixteenth;
+  tick = event.tick;
+
+  events.sort(function(a, b){
+    return a.sortIndex - b.sortIndex;
+  });
+
+  for(let i = startEvent; i < numEvents; i++){
+
+    event = events[i];
+
+    switch(event.type){
+
+      case 0x51:
+        bpm = event.bpm;
+        millis = event.millis;
+        millisPerTick = event.millisPerTick;
+        secondsPerTick = event.secondsPerTick;
+        //console.log(millisPerTick,event.millisPerTick);
+        //console.log(event);
+        break;
+
+      case 0x58:
+        factor = event.factor;
+        nominator = event.nominator;
+        denominator = event.denominator;
+        numSixteenth = event.numSixteenth;
+        ticksPerBar = event.ticksPerBar;
+        ticksPerBeat = event.ticksPerBeat;
+        ticksPerSixteenth = event.ticksPerSixteenth;
+        millis = event.millis;
+        //console.log(nominator,numSixteenth,ticksPerSixteenth);
+        //console.log(event);
+        break;
+
+      default:
+        updatePosition(event);
+        updateEvent(event);
+    }
+
+    lastEventTick = event.ticks;
+  }
+  song.lastEventTmp = event;
+}
+
 
 
 
@@ -160,5 +238,3 @@ function updateEvent(event){
   event.timeAsString = timeData.timeAsString;
   event.timeAsArray = timeData.timeAsArray;
 }
-
-
