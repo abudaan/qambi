@@ -3,6 +3,23 @@
 let trackId = 0;
 
 
+class Track{
+
+  constructor(...args){
+    let id = 'P' + trackId++ + Date.now();
+
+  }
+
+
+
+}
+
+export default function createTrack(){
+  return new Track(...arguments);
+}
+
+
+/*
 let Track = {
     init: function(){
         let id = 'T' + trackId++ + new Date().getTime();
@@ -17,3 +34,5 @@ export default function createTrack(){
   t.init(arguments);
   return t;
 }
+
+*/

@@ -14,6 +14,7 @@
   "scripts": {
     "start": "ws",
     "build": "browserify src/sequencer.js --standalone sequencer -t [ babelify --sourceMapRelative ./src ] --debug | exorcist build/qambi.js.map > build/qambi.js",
-    "watch": "watchify src/sequencer.js --standalone sequencer -t babelify -o build/qambi.js --debug --verbose"
+    "watch": "watchify src/sequencer.js --standalone sequencer -t babelify -o build/qambi.js --debug --verbose",
+    "watch2": "watchify test/main.js -t babelify -o test/test.js --debug --verbose"
   }
 }

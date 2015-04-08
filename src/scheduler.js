@@ -2,7 +2,7 @@
 
 import {typeString} from './util.js';
 import getConfig from './config';
-import createMidiEvent from './midi_event';
+import createMIDIEvent from './midi_event';
 
 let config = getConfig();
 
@@ -32,12 +32,13 @@ class Scheduler{
 
 
   setIndex(millis){
-    var i;
-    for(i = 0; i < this.numEvents; i++){
-      if(this.events[i].millis >= millis){
+    let i = 0;
+    for(let event of this.events){
+      if(event.millis >= millis){
         this.index = i;
         break;
       }
+      i++;
     }
     //console.log(millis);
     this.beyondLoop = false;
@@ -58,10 +59,9 @@ class Scheduler{
     The playheadOffset is applied to the audio sample in audio_track.js
   */
   getDanglingAudioEvents(millis, events){
-    var i, event, num = 0;
+    let num = 0;
 
-    for(i = 0; i < this.numAudioEvents; i++){
-      event = this.audioEvents[i];
+    for(let event of this.audioEvents){
       if(event.millis < millis && event.endMillis > millis){
         event.playheadOffset = (millis - event.millis);
         event.time = this.startTime + event.millis - this.songStartMillis + event.playheadOffset;
@@ -126,7 +126,7 @@ class Scheduler{
               if(noteOff.millis <= this.song.loopEnd){
                 continue;
               }
-              event = createMidiEvent(endTicks, 128, noteOn.data1, 0);
+              event = createMIDIEvent(endTicks, 128, noteOn.data1, 0);
               event.millis = endMillis;
               event.part = noteOn.part;
               event.track = noteOn.track;

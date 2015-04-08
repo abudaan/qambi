@@ -37,7 +37,7 @@ let
   data2 and channel are optional but must be numbers if provided
 */
 
-class MidiEvent{
+class MIDIEvent{
   constructor(...args){
     let note;
 
@@ -317,6 +317,6 @@ class MidiEvent{
   }
 }
 
-export default function createMidiEvent(){
-  return new MidiEvent(...arguments);
+export default function createMIDIEvent(){
+  return new MIDIEvent(...arguments);
 }

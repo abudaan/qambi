@@ -22,3 +22,24 @@ instrument -> sample
   - song.startTime
   - song.metronome (for precounting)
 
+
+
+
+instrument
+
+ - parse samples, create mapping
+
+
+sample types
+
+ - sinewave
+ - simple
+ - sustained
+ - with release
+ - autopanning
+
+sample API
+
+ - start
+ - stop
+ - update (called every frame, needed for release and autopan)

@@ -63,11 +63,11 @@ export function ajax(config){
 
       if(config.responseType === 'json'){
         fileSize = request.response.length;
-        request = null;
         resolve(JSON.parse(request.response), fileSize);
-      }else{
         request = null;
+      }else{
         resolve(request.response);
+        request = null;
       }
     };
 

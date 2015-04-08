@@ -19,7 +19,7 @@ class Song{
   */
   constructor(settings){
 
-    this.id = 'S' + songId++ + new Date().getTime();
+    this.id = 'S' + songId++ + Date.now();
     this.name = this.id;
     this.tracks = new Map();
     this.parts = new Map();
@@ -44,7 +44,7 @@ class Song{
 
     // then override settings by provided settings
     if(typeString(settings) === 'object'){
-      Reflect.ownKeys(settings).forEach(function(key){
+      Object.keys(settings).forEach(function(key){
         this[key] = settings[key];
       }, this);
     }else if(settings !== undefined){
@@ -75,7 +75,7 @@ class Song{
 
     config.get('activeSongs')[this.id] = this;
 
-    console.log(this);
+    //console.log(this);
 /*
     if(settings.timeEvents && settings.timeEvents.length > 0){
       this.timeEvents = [].concat(settings.timeEvents);

@@ -8,12 +8,13 @@
 require('babelify/polyfill');
 
 import getConfig from './config.js';
-import polyFill from './polyfill.js';
+//import polyFill from './polyfill.js';
 import initAudio from './init_audio.js';
 import initMidi from './init_midi.js';
 import createSong from './song.js';
 import createTrack from './track.js';
-import createMidiEvent from './midi_event.js';
+import createMIDIEvent from './midi_event.js';
+import {start} from './heartbeat.js';
 import {createNote, getNoteNumber, getNoteName, getNoteOctave, getFullNoteName, getFrequency, isBlackKey} from './note.js';
 
 let sequencer = {};
@@ -26,7 +27,7 @@ function init(){
 }
 
 function executor(resolve, reject){
-  polyfill();
+  //polyfill();
   config = getConfig();
   // the debug level has been set before sequencer.init() so add it to the config object
   if(debugLevel !== undefined){
@@ -86,6 +87,7 @@ function executor(resolve, reject){
             Object.defineProperty(sequencer, 'midiOutputs', {value: midi.outputs});
 
             //Object.seal(sequencer);
+            start(); // start heartbeat
             resolve();
           },
           function onRejected(e){
@@ -130,7 +132,7 @@ Object.defineProperty(sequencer, 'debugLevel', {
 
 
 
-Object.defineProperty(sequencer, 'createMidiEvent', {value: createMidiEvent});
+Object.defineProperty(sequencer, 'createMIDIEvent', {value: createMIDIEvent});
 Object.defineProperty(sequencer, 'createTrack', {value: createTrack});
 Object.defineProperty(sequencer, 'createSong', {value: createSong});
 
