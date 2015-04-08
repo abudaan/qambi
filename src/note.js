@@ -291,7 +291,7 @@ export function getNoteNumber(...args){
   if(note){
     return note.number;
   }
-  return false;
+  return errorMsg;
 }
 
 
