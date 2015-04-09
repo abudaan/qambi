@@ -14,6 +14,7 @@ import initMidi from './init_midi.js';
 import createSong from './song.js';
 import createTrack from './track.js';
 import createMIDIEvent from './midi_event.js';
+import createInstrument from './instrument.js';
 import {start} from './heartbeat.js';
 import {createNote, getNoteNumber, getNoteName, getNoteOctave, getFullNoteName, getFrequency, isBlackKey} from './note.js';
 
@@ -39,6 +40,7 @@ function executor(resolve, reject){
   }else{
     // create the context and share it internally via the config object
     config.context = new window.AudioContext();
+    config.destination = config.context.destination;
     // add unlock method for ios devices
     // unlockWebAudio is called when the user called Song.play(), because we assume that the user presses a button to start the song.
     if(config.os !== 'ios'){
@@ -135,6 +137,7 @@ Object.defineProperty(sequencer, 'debugLevel', {
 Object.defineProperty(sequencer, 'createMIDIEvent', {value: createMIDIEvent});
 Object.defineProperty(sequencer, 'createTrack', {value: createTrack});
 Object.defineProperty(sequencer, 'createSong', {value: createSong});
+Object.defineProperty(sequencer, 'createInstrument', {value: createInstrument});
 
 
 Object.defineProperty(sequencer, 'createNote', {value: createNote});

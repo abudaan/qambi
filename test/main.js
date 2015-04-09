@@ -1,5 +1,6 @@
 'use strict';
 
+require('babelify/polyfill');
 import {ajax} from '../src/util';
 import parseMIDIFile from '../src/midi_parse';
 import createSongFromMIDIFile from '../src/song_from_midifile';
