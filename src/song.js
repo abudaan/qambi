@@ -23,8 +23,10 @@ export class Song{
 
     this.id = 'S' + songId++ + Date.now();
     this.name = this.id;
-    this.tracks = new Map();
-    this.parts = new Map();
+    this.tracks = [];
+    this.parts = [];
+    this._changedTracks = new Map();
+    this._tracksMap = new Map();
     this.events = []; // all midi and audio events
     this.allEvents = []; //
     this.timeEvents = []; // all tempo and time signature events
@@ -90,10 +92,6 @@ export class Song{
     this.grid = undefined;
 
     config.get('activeSongs')[this.id] = this;
-
-    this.newEventsMap = new Map();
-    this.dirtyEventsMap = new Map();
-    this.removedEventsMap = new Map();
 
 
     //console.log(this);
@@ -260,18 +258,96 @@ export class Song{
 
 
   addTrack(track){
-    if(track instanceof Track === false){
-      return;
+    if(track instanceof Track){
+      track.state = 'new';
+      track.needsUpdate = true;
+      this._tracksMap.set(track.id, track);
+      this._changedTracks.set(track.id, track);
+      this._numberOfTracksChanged = true;
     }
-    this.tracks.set(track.id, track);
+  }
+
+  removeTrack(track){
+    if(this._tracksMap.has(track.id)){
+      track.state = 'removed';
+      this._tracksMap.delete(track.id);
+      this._changedTracks.set(track.id, track);
+      this._numberOfTracksChanged = true;
+    }
   }
 
   update(){
-    for(let track of this.tracks){
-      if(track.dirty === true){
-        console.log(track);
+
+    this.changedEvents = [];
+    this.removedEvents = [];
+    this.changedParts = [];
+    this.removedParts = [];
+
+
+    // first update all tracks, this will call update on parts if necessary as well
+    for(let track of this._changedTracks.values()){
+
+      if(track.needsUpdate === true){
+        track.update();
+      }
+
+      // store changed parts
+      let changedParts = track._changedParts;
+      if(changedParts.size !== 0){
+        changedParts = changedParts.values();
+        for(let part of changedParts){
+          if(part.state === 'remove'){
+            this.removedParts.push(part);
+          }else{
+            this.changedParts.push(part);
+          }
+          part.state = 'clean';
+
+          // store changed parts
+          let changedEvents = part._changedEvents;
+          if(changedEvents.size !== 0){
+            changedEvents = changedEvents.values();
+            for(let event of changedEvents){
+              if(event.state === 'remove'){
+                this.removedEvents.push(event);
+              }else{
+                this.changedEvents.push(event);
+              }
+              event.state = 'clean';
+            }
+            part._changedEvents.clear();
+          }
+        }
+        track._changedParts.clear();
       }
     }
+
+    if(this._numberOfTracksChanged){
+      this.tracks = Array.from(this._tracksMap.values());
+      this._numberOfTracksChanged = false;
+    }
+
+
+    // _numberOfPartsChanged has been set while updating the tracks
+    if(this._numberOfPartsChanged){
+      this.parts = [];
+      for(let track of this.tracks){
+        this.parts.concat(track.parts);
+      }
+      this._numberOfPartsChanged = false;
+    }
+    this.parts.sort((a, b) => (a.ticks <= b.ticks) ? 1 : -1);
+
+
+    // _numberOfEventsChanged has been set while updating the parts
+    if(this._numberOfEventsChanged){
+      this.events = [];
+      for(let track of this.tracks){
+        this.events.concat(track.events);
+      }
+      this._numberOfEventsChanged = false;
+    }
+    this.events.sort((a, b) => (a.ticks <= b.ticks) ? 1 : -1);
   }
 }
 

@@ -9,7 +9,7 @@ let partId = 0;
 
 export class Part{
 
-  constructor(config){
+  constructor(config = {}){
     this.id = 'P' + partId++ + Date.now();
     this.events = [];
     this.needsUpdate = false;
@@ -27,14 +27,13 @@ export class Part{
   }
 
   addEvent(event){
-    if(event instanceof MIDIEvent === false && event instanceof AudioEvent === false){
-      return;
+    if(event instanceof MIDIEvent || event instanceof AudioEvent){
+      event.state = 'new';
+      this.needsUpdate = true;
+      this._eventsMap.set(event.id, event);
+      this._changedEvents.set(event.id, event);
+      this._numberOfEventsChanged = true;
     }
-    event.state = 'new';
-    this.needsUpdate = true;
-    this._eventsMap.set(event.id, event);
-    this._changedEvents.set(event.id, event);
-    this._numberOfEventsChanged = true;
   }
 
   addEvents(events){
@@ -101,38 +100,39 @@ export class Part{
 
   update(){
 
-    // repopulate the events array if necessary
-    if(this._numEventsChanged === true){
+    if(this.needsUpdate === false){
+      return;
+    }
 
+    // repopulate the events array if necessary
+    if(this._numberOfEventsChanged === true){
+      this.events = Array.from(this._eventsMap.values());
+      this._numberOfEventsChanged = false;
       // tell the track that the number of events has changed
       if(this.track){
         this._numberOfEventsChanged = true;
       }
-
-      // filter out the events that have been removed
-      let events = this._eventsMap.values();
-      this.events = events.filter(function(event){
-        return event.state !== 'removed';
-      });
-
-      this._numberOfEventsChanged = false;
     }
 
     // always sort the events
     this.events.sort((a, b) => (a.ticks <= b.ticks) ? 1 : -1);
+
     // start of part is the ticks value of its first note
     this.ticks = this.events[0].ticks;
     this.durationTicks = this.events[this.events.length - 1].ticks - this.ticks;
 
+    // create notes
     let notes = {};
+    let n = 0;
     for(let event of this.events){
       if(event.type === 144){
         notes[event.noteNumber] = event;
       }else if(event.type === 128){
         let noteOn = notes[event.noteNumber];
+        //console.log(event.noteNumber, noteOn);
         let noteOff = event;
         if(noteOn === undefined){
-          warn('no note on event!');
+          warn('no note on event!', n++);
           continue;
         }
         noteOn.noteOff = noteOff;
@@ -140,6 +140,11 @@ export class Part{
         noteOn.durationTicks = noteOff.ticks - noteOn.ticks;
         delete notes[event.noteNumber];
       }
+    }
+
+    // tell the track that the part has changed, this is only necessary if part.update is called before track.update or song.update
+    if(this._changedEvents.size !== 0 && this.track !== undefined){
+      this.track._changedParts.set(this.id, this);
     }
 
     this.needsUpdate = false;
