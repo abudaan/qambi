@@ -2,35 +2,27 @@
 
 import {log, info, warn, error, base64ToBinary, ajax} from './util.js';
 import parseMIDIFile from './midi_parse';
-import createMIDIEvent from './midi_event';
-import createPart from './part';
-import createTrack from './track';
-import createSong from './song';
+import {MIDIEvent} from './midi_event';
+import {Part} from './part';
+import {Track} from './track';
+import {Song} from './song';
 
 
-export default function createSongFromMIDIFile(config){
-  let buffer;
+export default function createSongFromMIDIFile(data){
 
-  if(config.arraybuffer !== undefined){
-    buffer = new Uint8Array(config.arraybuffer);
+  if(data instanceof ArrayBuffer === true){
+    let buffer = new Uint8Array(data);
     return toSong(parseMIDIFile(buffer));
-  }else if(config.base64 !== undefined){
-    buffer = new Uint8Array(base64ToBinary(config.base64));
-    return toSong(parseMIDIFile(buffer));
-  }else if(config.parsed !== undefined){
-    return toSong(config.parsed);
-/*
-  }else if(config.url !== undefined){
-    ajax({url: config.url, responseType: 'arraybuffer'}).then(
-      function onFulfilled(data){
-        buffer = new Uint8Array(data);
-        return toSong(parseMIDIFile(buffer));
-      },
-      function onRejected(e){
-        error(e);
-      }
-    );
-*/
+  }else if(data.header !== undefined && data.tracks !== undefined){
+    return toSong(data);
+  }else{
+    data = base64ToBinary(data);
+    if(data instanceof ArrayBuffer === true){
+      let buffer = new Uint8Array(data);
+      return toSong(parseMIDIFile(buffer));
+    }else{
+      error('wrong data');
+    }
   }
 }
 
@@ -75,11 +67,11 @@ function toSong(parsed){
           break;
 
         case 'noteOn':
-          events.push(createMIDIEvent(ticks, 0x90, event.noteNumber, event.velocity));
+          events.push(new MIDIEvent(ticks, 0x90, event.noteNumber, event.velocity));
           break;
 
         case 'noteOff':
-          events.push(createMIDIEvent(ticks, 0x80, event.noteNumber, event.velocity));
+          events.push(new MIDIEvent(ticks, 0x80, event.noteNumber, event.velocity));
           break;
 
         case 'setTempo':
@@ -95,7 +87,7 @@ function toSong(parsed){
           if(config.bpm === undefined){
             config.bpm = bpm;
           }
-          timeEvents.push(createMIDIEvent(ticks, 0x51, bpm));
+          timeEvents.push(new MIDIEvent(ticks, 0x51, bpm));
           break;
 
         case 'timeSignature':
@@ -110,20 +102,20 @@ function toSong(parsed){
             config.nominator = event.numerator;
             config.denominator = event.denominator;
           }
-          timeEvents.push(createMIDIEvent(ticks, 0x58, event.numerator, event.denominator));
+          timeEvents.push(new MIDIEvent(ticks, 0x58, event.numerator, event.denominator));
           break;
 
 
         case 'controller':
-          events.push(createMIDIEvent(ticks, 0xB0, event.controllerType, event.value));
+          events.push(new MIDIEvent(ticks, 0xB0, event.controllerType, event.value));
           break;
 
         case 'programChange':
-          events.push(createMIDIEvent(ticks, 0xC0, event.programNumber));
+          events.push(new MIDIEvent(ticks, 0xC0, event.programNumber));
           break;
 
         case 'pitchBend':
-          events.push(createMIDIEvent(ticks, 0xE0, event.value));
+          events.push(new MIDIEvent(ticks, 0xE0, event.value));
           break;
 
         default:
@@ -135,8 +127,8 @@ function toSong(parsed){
     }
 
     if(parsed.length > 0){
-      let track = createTrack();
-      let part = createPart();
+      let track = new Track();
+      let part = new Part();
       track.addPart(part);
       part.addEvents(parsed);
       config.tracks.push(track);
@@ -145,10 +137,8 @@ function toSong(parsed){
 
   config.ppq = ppq;
   config.timeEvents = timeEvents;
-  let song = createSong(config);
+  let song = new Song(config);
   song.timeEvents = timeEvents;
 
-  song.eventsMidiAudioMetronome = parsed;
-
-  //return createSong(config);
+  return song;
 }

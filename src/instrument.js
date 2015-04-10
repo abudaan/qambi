@@ -4,7 +4,7 @@ import {log, info, warn, error} from './util';
 import {getNoteNumber} from './note';
 import createSample from './sample';
 
-class Instrument{
+export class Instrument{
 
   constructor(){
     this.samplesData = new Array(128).fill(-1);
@@ -97,7 +97,6 @@ class Instrument{
   }
 }
 
-
-export default function createInstrument(){
+export function createInstrument(){
   return new Instrument(...arguments);
 }

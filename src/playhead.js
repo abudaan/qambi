@@ -6,7 +6,7 @@ import {warn} from './util.js';
 let instanceId = 0;
 let range = 10; //tricky!
 
-class Playhead{
+export class Playhead{
 
   constructor(song, type, name, data){
     this.id = 'POS' + instanceId++ + '' + new Date().getTime();

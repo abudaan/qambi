@@ -1,8 +1,8 @@
 /**
   @public
-  @class MidiEvent
+  @class MIDIEvent
   @param time {int} the time that the event is scheduled
-  @param type {int} type of MidiEvent, e.g. NOTE_ON, NOTE_OFF or, 144, 128, etc.
+  @param type {int} type of MIDIEvent, e.g. NOTE_ON, NOTE_OFF or, 144, 128, etc.
   @param data1 {int} if type is 144 or 128: note number
   @param [data2] {int} if type is 144 or 128: velocity
   @param [channel] {int} channel
@@ -10,10 +10,10 @@
 
   @example
   // plays the central c at velocity 100
-  let event = sequencer.createMidiEvent(120, sequencer.NOTE_ON, 60, 100);
+  let event = sequencer.createMIDIEvent(120, sequencer.NOTE_ON, 60, 100);
 
   // pass arguments as array
-  let event = sequencer.createMidiEvent([120, sequencer.NOTE_ON, 60, 100]);
+  let event = sequencer.createMIDIEvent([120, sequencer.NOTE_ON, 60, 100]);
 
 */
 
@@ -37,7 +37,7 @@ let
   data2 and channel are optional but must be numbers if provided
 */
 
-class MIDIEvent{
+export class MIDIEvent{
   constructor(...args){
     let note;
 
@@ -148,7 +148,7 @@ class MIDIEvent{
 
 
   clone(){
-    let event = new MidiEvent();
+    let event = new MIDIEvent();
 
     for(let property of Object.keys(this)){
       if(property !== 'id' && property !== 'eventNumber' && property !== 'midiNote'){
@@ -317,6 +317,6 @@ class MIDIEvent{
   }
 }
 
-export default function createMIDIEvent(){
+export function createMIDIEvent(){
   return new MIDIEvent(...arguments);
 }

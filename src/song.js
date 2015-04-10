@@ -12,7 +12,7 @@ let songId = 0,
   defaultSong = config.get('defaultSong');
 
 
-class Song{
+export class Song{
 
   /*
     @param settings is a Map or an Object
@@ -74,6 +74,10 @@ class Song{
     this.grid = undefined;
 
     config.get('activeSongs')[this.id] = this;
+
+    this.newEventsMap = new Map();
+    this.dirtyEventsMap = new Map();
+    this.removedEventsMap = new Map();
 
     //console.log(this);
 /*
@@ -243,6 +247,6 @@ Song.prototype.removeEventListener = removeEventListener;
 Song.prototype.dispatchEvent = dispatchEvent;
 
 
-export default function createSong(settings){
+export function createSong(settings){
   return new Song(settings);
 }

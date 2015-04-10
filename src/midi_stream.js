@@ -10,7 +10,7 @@
 
 const fcc = String.fromCharCode;
 
-class MIDIStream{
+export class MIDIStream{
 
   // buffer is Uint8Array
   constructor(buffer){

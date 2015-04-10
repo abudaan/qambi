@@ -11,11 +11,13 @@ import getConfig from './config.js';
 //import polyFill from './polyfill.js';
 import initAudio from './init_audio.js';
 import initMidi from './init_midi.js';
-import createSong from './song.js';
-import createTrack from './track.js';
-import createMIDIEvent from './midi_event.js';
-import createInstrument from './instrument.js';
+import {createSong} from './song.js';
+import {createTrack} from './track.js';
+import {createMIDIEvent} from './midi_event.js';
+import {createInstrument} from './instrument.js';
+import createSongFromMIDIFile from './song_from_midifile.js';
 import {start} from './heartbeat.js';
+import {ajax} from './util.js';
 import {createNote, getNoteNumber, getNoteName, getNoteOctave, getFullNoteName, getFrequency, isBlackKey} from './note.js';
 
 let sequencer = {};
@@ -113,7 +115,12 @@ function executor(resolve, reject){
 Object.defineProperty(sequencer, 'name', {value: 'qambi'});
 Object.defineProperty(sequencer, 'init', {value: init});
 Object.defineProperty(sequencer, 'ui', {value: {}, writable: true}); // ui functions
-Object.defineProperty(sequencer, 'util', {value: {}, writable: true}); // util functions
+
+
+// add util functions
+let util = {};
+Object.defineProperty(util, 'ajax', {value: ajax});
+Object.defineProperty(sequencer, 'util', {value: util});
 
 //TODO: create methods getSongs, removeSong and so on
 //Object.defineProperty(sequencer, 'activeSongs', {activeSongs: {}, writable: true}); // the songs that are currently loaded in memory
@@ -138,6 +145,7 @@ Object.defineProperty(sequencer, 'createMIDIEvent', {value: createMIDIEvent});
 Object.defineProperty(sequencer, 'createTrack', {value: createTrack});
 Object.defineProperty(sequencer, 'createSong', {value: createSong});
 Object.defineProperty(sequencer, 'createInstrument', {value: createInstrument});
+Object.defineProperty(sequencer, 'createSongFromMIDIFile', {value: createSongFromMIDIFile});
 
 
 Object.defineProperty(sequencer, 'createNote', {value: createNote});

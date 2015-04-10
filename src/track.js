@@ -3,18 +3,24 @@
 let trackId = 0;
 
 
-class Track{
+export class Track{
 
   constructor(...args){
     let id = 'P' + trackId++ + Date.now();
-
+    this.events = [];
+    this.newEventsMap = new Map();
+    this.removedEventsMap = new Map();
   }
 
 
-
+  update(){
+    // do stuff
+    this.newEventsMap.clear();
+    this.removedEventsMap.clear();
+  }
 }
 
-export default function createTrack(){
+export function createTrack(){
   return new Track(...arguments);
 }
 
