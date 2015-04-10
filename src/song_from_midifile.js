@@ -126,11 +126,11 @@ function toSong(parsed){
       lastTicks = ticks;
     }
 
-    if(parsed.length > 0){
+    if(events.length > 0){
       let track = new Track();
       let part = new Part();
       track.addPart(part);
-      part.addEvents(parsed);
+      part.addEvents(events);
       config.tracks.push(track);
     }
   }
@@ -138,7 +138,6 @@ function toSong(parsed){
   config.ppq = ppq;
   config.timeEvents = timeEvents;
   let song = new Song(config);
-  song.timeEvents = timeEvents;
 
   return song;
 }

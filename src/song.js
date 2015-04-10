@@ -3,7 +3,9 @@
 import {addEventListener, removeEventListener, dispatchEvent} from './song_add_eventlistener';
 import {log, info, warn, error, typeString} from './util';
 import getConfig from './config';
-import createMidiEvent from './midi_event';
+import {Track} from './track';
+import {Part} from './part';
+import {MIDIEvent} from './midi_event';
 import {initMidiSong, setMidiInputSong, setMidiOutputSong} from './init_midi';
 
 
@@ -42,6 +44,20 @@ export class Song{
     }
 */
 
+
+    if(settings.timeEvents){
+      this.timeEvents = Array.from(settings.timeEvents);
+      delete settings.timeEvents;
+    }
+
+    if(settings.tracks){
+      for(let track of settings.tracks){
+        this.addTrack(track);
+      }
+      delete settings.tracks;
+    }
+
+
     // then override settings by provided settings
     if(typeString(settings) === 'object'){
       Object.keys(settings).forEach(function(key){
@@ -79,6 +95,7 @@ export class Song{
     this.dirtyEventsMap = new Map();
     this.removedEventsMap = new Map();
 
+
     //console.log(this);
 /*
     if(settings.timeEvents && settings.timeEvents.length > 0){
@@ -88,13 +105,13 @@ export class Song{
       this.timeSignatureEvent = getTimeEvents(sequencer.TIME_SIGNATURE, this)[0];
 
       if(this.tempoEvent === undefined){
-        this.tempoEvent = createMidiEvent(0, sequencer.TEMPO, this.bpm);
+        this.tempoEvent = new MIDIEvent(0, sequencer.TEMPO, this.bpm);
         this.timeEvents.unshift(this.tempoEvent);
       }else{
         this.bpm = this.tempoEvent.bpm;
       }
       if(this.timeSignatureEvent === undefined){
-        this.timeSignatureEvent = createMidiEvent(0, sequencer.TIME_SIGNATURE, this.nominator, this.denominator);
+        this.timeSignatureEvent = new MIDIEvent(0, sequencer.TIME_SIGNATURE, this.nominator, this.denominator);
         this.timeEvents.unshift(this.timeSignatureEvent);
       }else{
         this.nominator = this.timeSignatureEvent.nominator;
@@ -103,8 +120,8 @@ export class Song{
       //console.log(1, this.nominator, this.denominator, this.bpm);
     }else{
       // there has to be a tempo and time signature event at ticks 0, otherwise the position can't be calculated, and moreover, it is dictated by the MIDI standard
-      this.tempoEvent = createMidiEvent(0, sequencer.TEMPO, this.bpm);
-      this.timeSignatureEvent = createMidiEvent(0, sequencer.TIME_SIGNATURE, this.nominator, this.denominator);
+      this.tempoEvent = new MIDIEvent(0, sequencer.TEMPO, this.bpm);
+      this.timeSignatureEvent = new MIDIEvent(0, sequencer.TIME_SIGNATURE, this.nominator, this.denominator);
       this.timeEvents = [
         this.tempoEvent,
         this.timeSignatureEvent
@@ -205,9 +222,9 @@ export class Song{
       if(config.bars === undefined){
         this.lastBar = 0;
       }
-      this.lastEvent = createMidiEvent([this.lastBar, sequencer.END_OF_TRACK]);
+      this.lastEvent = new MIDIEvent([this.lastBar, sequencer.END_OF_TRACK]);
     }else{
-      this.lastEvent = createMidiEvent([this.bars * this.ticksPerBar, sequencer.END_OF_TRACK]);
+      this.lastEvent = new MIDIEvent([this.bars * this.ticksPerBar, sequencer.END_OF_TRACK]);
     }
     //console.log('update');
     this.update(true);
@@ -239,6 +256,22 @@ export class Song{
 
   addMidiEventListener(...args){
     addMidiEventListener(this, ...args);
+  }
+
+
+  addTrack(track){
+    if(track instanceof Track === false){
+      return;
+    }
+    this.tracks.set(track.id, track);
+  }
+
+  update(){
+    for(let track of this.tracks){
+      if(track.dirty === true){
+        console.log(track);
+      }
+    }
   }
 }
 
