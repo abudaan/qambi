@@ -1,6 +1,6 @@
 'use strict';
 
-import {warn} from './util.js';
+import {info} from './util.js';
 import {MIDIEvent} from './midi_event.js';
 import {AudioEvent} from './audio_event.js';
 
@@ -132,7 +132,7 @@ export class Part{
         //console.log(event.noteNumber, noteOn);
         let noteOff = event;
         if(noteOn === undefined){
-          warn('no note on event!', n++);
+          info('no note on event!', n++);
           continue;
         }
         noteOn.noteOff = noteOff;

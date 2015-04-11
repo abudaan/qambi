@@ -257,29 +257,41 @@ function base64ToBinary(input){
 
 export function error(){
   if(config.get('debugLevel') >= 1){
-    console.error(...arguments);
+    //console.error(...arguments);
     //console.trace();
+    console.groupCollapsed('ERROR:', ...arguments);
+    console.trace();
+    console.groupEnd();
   }
 }
 
 export function warn(){
   if(config.get('debugLevel') >= 2){
     //console.warn(...arguments);
-    console.trace('WARNING', ...arguments);
+    //console.trace();
+    console.groupCollapsed('WARNING:', ...arguments);
+    console.trace();
+    console.groupEnd();
   }
 }
 
 export function info(){
   if(config.get('debugLevel') >= 3){
     //console.info(...arguments);
-    console.trace('INFO', ...arguments);
+    //console.trace('INFO', ...arguments);
+    console.groupCollapsed('INFO:', ...arguments);
+    console.trace();
+    console.groupEnd();
   }
 }
 
 export function log(){
   if(config.get('debugLevel') >= 4){
     //console.log(...arguments);
-    console.trace('LOG', ...arguments);
+    //console.trace('LOG', ...arguments);
+    console.groupCollapsed('LOG:', ...arguments);
+    console.trace();
+    console.groupEnd();
   }
 }
 

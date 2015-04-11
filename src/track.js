@@ -143,6 +143,8 @@ export class Track{
       if(this.song){
         this.song._numberOfPartsChanged = true;
       }
+      // if the number of parts has changed, then probably the number of events has changed too
+      this._numberOfEventsChanged = true;
     }
 
     // always sort parts
@@ -151,11 +153,12 @@ export class Track{
 
     // repopulate the events array if necessary
     if(this._numberOfEventsChanged){
-      this.events = [];
-      let parts = this.parts.values();
-      for(let part in parts){
-        this.events.concat(part.events);
+      let parts = this.parts;
+      let events = [];
+      for(let part of parts){
+        events = events.concat(part.events);
       }
+      this.events = Array.from(events);
       this._numberOfEventsChanged = false;
       // tell the song that the number of events has changed
       if(this.song){

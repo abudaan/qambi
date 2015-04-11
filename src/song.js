@@ -278,13 +278,14 @@ export class Song{
 
   update(){
 
+    // here we store all events and parts that have been changed since the last call to update()
     this.changedEvents = [];
     this.removedEvents = [];
     this.changedParts = [];
     this.removedParts = [];
 
 
-    // first update all tracks, this will call update on parts if necessary as well
+    // first call update on all tracks, this will call update on parts if necessary as well
     for(let track of this._changedTracks.values()){
 
       if(track.needsUpdate === true){
@@ -292,9 +293,8 @@ export class Song{
       }
 
       // store changed parts
-      let changedParts = track._changedParts;
-      if(changedParts.size !== 0){
-        changedParts = changedParts.values();
+      if(track._changedParts.size !== 0){
+        let changedParts = track._changedParts.values();
         for(let part of changedParts){
           if(part.state === 'remove'){
             this.removedParts.push(part);
@@ -304,9 +304,8 @@ export class Song{
           part.state = 'clean';
 
           // store changed parts
-          let changedEvents = part._changedEvents;
-          if(changedEvents.size !== 0){
-            changedEvents = changedEvents.values();
+          if(part._changedEvents.size !== 0){
+            let changedEvents = part._changedEvents.values();
             for(let event of changedEvents){
               if(event.state === 'remove'){
                 this.removedEvents.push(event);
@@ -322,9 +321,16 @@ export class Song{
       }
     }
 
+    this._changedTracks.clear();
+
+
+    // repopulate the tracks, parts and events array
+
     if(this._numberOfTracksChanged){
       this.tracks = Array.from(this._tracksMap.values());
       this._numberOfTracksChanged = false;
+      this._numberOfPartsChanged = true;
+      this._numberOfEventsChanged = true;
     }
 
 
