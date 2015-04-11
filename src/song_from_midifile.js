@@ -127,18 +127,13 @@ function toSong(parsed){
     }
 
     if(events.length > 0){
-      //let track = new Track().addPart(new Part().addEvents(events));
-      let track = new Track()
-      let part = new Part();
-      track.addPart(part);
-      part.addEvents(events);
-      config.tracks.push(track);
+      config.tracks.push(new Track().addPart(new Part({events:events})));
     }
   }
 
   config.ppq = ppq;
   config.timeEvents = timeEvents;
   let song = new Song(config);
-
+  song.update();
   return song;
 }

@@ -39,6 +39,7 @@ export class Part{
     for(let event of events){
       this.addEvent(event);
     }
+    return this; // make it chainable
   }
 
 
@@ -55,6 +56,7 @@ export class Part{
     for(let event of events){
       this.removeEvent(event);
     }
+    return this; // make it chainable
   }
 
 
@@ -70,6 +72,7 @@ export class Part{
     for(let event of events){
       this.moveEvent(event);
     }
+    return this; // make it chainable
   }
 
 
@@ -88,6 +91,7 @@ export class Part{
     for(let event of events){
       this.transposeEvent(event);
     }
+    return this; // make it chainable
   }
 
   getEvents(){
@@ -99,9 +103,10 @@ export class Part{
 
   update(){
 
+    // if number of events has changed update the _events array and the _eventsMap map
     if(this._numberOfEventsChanged === true){
       this._events = [];
-      Array.from(this._eventsMap.values()).every((event) => {
+      Array.from(this._eventsMap.values()).forEach((event) => {
         if(event.state === 'removed'){
           this._eventsMap.delete(event.id);
         }else{
@@ -110,6 +115,7 @@ export class Part{
       });
 
       if(this.track !== undefined){
+        // tell the track to update its events array as well, this is done when track.update() or song.update() is called
         this.track._numberOfEventsChanged = true;
       }
       this._numberOfEventsChanged = false;

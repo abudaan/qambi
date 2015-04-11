@@ -23,13 +23,15 @@ export class Song{
 
     this.id = 'S' + songId++ + Date.now();
     this.name = this.id;
-    this._tracks = [];
+    this._events = []; // all MIDI and audio events
     this._parts = [];
+    this._tracks = [];
+    this._eventsMap = new Map();
+    this._partsMap = new Map();
     this._tracksMap = new Map();
 
-    this._events = []; // all midi and audio events
-    this._allEvents = []; //
     this._timeEvents = []; // all tempo and time signature events
+    this._allEvents = []; // all tempo and time signature events, plus all MIDI and audio events
 
     this.needsUpdate = false;
 
@@ -50,17 +52,18 @@ export class Song{
 
 
     if(settings.timeEvents){
-      this.timeEvents = Array.from(settings.timeEvents);
-      delete settings.timeEvents;
+      this._timeEvents = Array.from(settings.timeEvents);
+      //delete settings.timeEvents;
     }
 
     if(settings.tracks){
       for(let track of settings.tracks){
         this.addTrack(track);
       }
-      delete settings.tracks;
+      //delete settings.tracks;
     }
 
+    //settings = null;
 
     // then override settings by provided settings
     if(typeString(settings) === 'object'){
@@ -288,9 +291,10 @@ export class Song{
 
   update(){
 
+    // update _tracks array and _tracksMap map
     if(this._numberOfTracksChanged === true){
       this._tracks = [];
-      Array.from(this._tracksMap.values()).every((track) => {
+      Array.from(this._tracksMap.values()).forEach((track) => {
         if(track.state === 'removed'){
           this._tracksMap.delete(track.id);
         }else{
@@ -301,9 +305,35 @@ export class Song{
       this._numberOfTracksChanged = false;
     }
 
+
+
+    // add all new events and parts to the array and the map in question
+    for(let track of this._tracks){
+      if(track.needsUpdate === true){
+        track.update();
+      }
+      for(let event of track._newEvents.values()){
+        this._events.push(event);
+        this._eventsMap.set(event.id, event);
+      }
+      // we can clear the _newEvents map now; it will be populated again as soon as new events are added
+      track._newEvents.clear();
+
+      for(let part of track._newParts.values()){
+        this._parts.push(part);
+        this._partsMap.set(part.id, part);
+      }
+      // we can clear the _newParts map now; it will be populated again as soon as new parts are added
+      track._newParts.clear();
+    }
+
+
+
+    // update _parts array and _partsMap map
     if(this._numberOfPartsChanged === true){
       this._parts = [];
-      Array.from(this._partsMap.values()).every((part) => {
+      Array.from(this._partsMap.values()).forEach((part) => {
+        // the state of a part gets set to 'removed' when track.removePart() is called
         if(part.state === 'removed'){
           this._partsMap.delete(part.id);
         }else{
@@ -314,10 +344,14 @@ export class Song{
       this._numberOfPartsChanged = false;
     }
 
+
+
+    // update _events array and _eventsMap map
     if(this._numberOfEventsChanged === true){
       this._events = [];
-      Array.from(this._eventsMap.values()).every((event) => {
+      Array.from(this._eventsMap.values()).forEach((event) => {
         if(event.state === 'removed'){
+        // the state of a event gets set to 'removed' when part.removeEvent() or track.removeEvent() is called
           this._eventsMap.delete(event.id);
         }else{
           event.state = 'clean';
@@ -326,21 +360,6 @@ export class Song{
       });
       this._numberOfEventsChanged = false;
     }
-
-
-    for(let track of this._tracks){
-      for(let event of track._newEvents){
-        this._events.push(event);
-      }
-      track._newEvents.clear();
-
-      for(let part of track._newParts){
-        this._parts.push(part);
-      }
-      track._newParts.clear();
-    }
-
-
     this._parts.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
     this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
 
