@@ -261,8 +261,8 @@ export class Song{
 
   addTrack(track){
     if(track instanceof Track){
+      track.song = this;
       track.state = 'new';
-      track.needsUpdate = true;
       this.needsUpdate = true;
       this._tracksMap.set(track.id, track);
       this._numberOfTracksChanged = true;
@@ -283,7 +283,7 @@ export class Song{
     if(this.needsUpdate){
       this.update();
     }
-    return _tracks;
+    return this._tracks;
   }
 
   update(){
@@ -320,7 +320,7 @@ export class Song{
         if(event.state === 'removed'){
           this._eventsMap.delete(event.id);
         }else{
-          part.state = 'clean';
+          event.state = 'clean';
           this._events.push(event);
         }
       });
@@ -329,12 +329,12 @@ export class Song{
 
 
     for(let track of this._tracks){
-      for(let event in track._newEvents){
+      for(let event of track._newEvents){
         this._events.push(event);
       }
       track._newEvents.clear();
 
-      for(let part in track._newParts){
+      for(let part of track._newParts){
         this._parts.push(part);
       }
       track._newParts.clear();

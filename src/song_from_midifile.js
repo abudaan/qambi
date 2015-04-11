@@ -127,7 +127,11 @@ function toSong(parsed){
     }
 
     if(events.length > 0){
-      let track = new Track().addPart(new Part().addEvents(events));
+      //let track = new Track().addPart(new Part().addEvents(events));
+      let track = new Track()
+      let part = new Part();
+      track.addPart(part);
+      part.addEvents(events);
       config.tracks.push(track);
     }
   }

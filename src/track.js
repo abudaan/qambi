@@ -101,7 +101,7 @@ export class Track{
   moveParts(parts, ticks){
     for(let part in parts){
       this.movePart(part, ticks);
-    }_numberOfEventsChanged
+    }
   }
 
 
@@ -125,14 +125,14 @@ export class Track{
 
   getEvents(){
     if(this.needsUpdate){
-      update();
+      this.update();
     }
     return this._events;
   }
 
   getParts(){
     if(this.needsUpdate){
-      update();
+      this.update();
     }
     return this._parts;
   }
@@ -161,10 +161,10 @@ export class Track{
 
     for(let part of this._parts){
       // part.getEvents() also triggers part.update() if necessary
-      let newEvents = part.getEvents().filter(fuction(event){
+      let newEvents = part.getEvents().filter(function(event){
         return event.state === 'new';
       });
-      for(let event in newEvents){
+      for(let event of newEvents){
         this._eventsMap.set(event.id, event);
         this._newEvents.set(event.id, event);
       }
