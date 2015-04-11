@@ -97,7 +97,7 @@ export class Song{
     //console.log(this);
 /*
     if(settings.timeEvents && settings.timeEvents.length > 0){
-      this.timeEvents = [].concat(settings.timeEvents);
+      this.timeEvents = Array.from(settings.timeEvents);
 
       this.tempoEvent = getTimeEvents(sequencer.TEMPO, this)[0];
       this.timeSignatureEvent = getTimeEvents(sequencer.TIME_SIGNATURE, this)[0];
@@ -264,6 +264,7 @@ export class Song{
       this._tracksMap.set(track.id, track);
       this._changedTracks.set(track.id, track);
       this._numberOfTracksChanged = true;
+      return this; // make it chainable
     }
   }
 
@@ -273,6 +274,7 @@ export class Song{
       this._tracksMap.delete(track.id);
       this._changedTracks.set(track.id, track);
       this._numberOfTracksChanged = true;
+      return this; // make it chainable
     }
   }
 
@@ -342,7 +344,7 @@ export class Song{
       }
       this._numberOfPartsChanged = false;
     }
-    this.parts.sort((a, b) => (a.ticks <= b.ticks) ? 1 : -1);
+    this.parts.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
 
 
     // _numberOfEventsChanged has been set while updating the parts
@@ -353,7 +355,7 @@ export class Song{
       }
       this._numberOfEventsChanged = false;
     }
-    this.events.sort((a, b) => (a.ticks <= b.ticks) ? 1 : -1);
+    this.events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
   }
 }
 

@@ -194,7 +194,7 @@ export class Playhead{
         }
       }
 
-      this.activeEvents = [].concat(stillActiveEvents);
+      this.activeEvents = Array.from(stillActiveEvents);
 
       // find and add new active events
       for(i = collectedEvents.length - 1; i >= 0; i--){
@@ -261,7 +261,7 @@ export class Playhead{
 
 
       // add the still active notes back to the active notes array
-      this.activeNotes = [].concat(stillActiveNotes);
+      this.activeNotes = Array.from(stillActiveNotes);
 
 
       // find and add new active notes
@@ -322,7 +322,7 @@ export class Playhead{
         }
       }
 
-      this.activeParts = [].concat(newParts);
+      this.activeParts = Array.from(newParts);
 
       for(i = collectedParts.length - 1; i >= 0; i--){
         part = collectedParts[i];

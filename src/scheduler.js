@@ -225,7 +225,7 @@ class Scheduler{
     if(this.song.precounting === true){
       this.songMillis = this.song.metronome.millis;
       this.maxtime = this.songMillis + (config.bufferTime * 1000);
-      events = [].concat(this.song.metronome.getPrecountEvents(this.maxtime));
+      events = Array.from(this.song.metronome.getPrecountEvents(this.maxtime));
 
       if(this.maxtime > this.song.metronome.endMillis){
         // start scheduling events of the song -> add the first events of the song

@@ -87,7 +87,7 @@ export function parseTimeEvents(song){
   setTickDuration();
   setTicksPerBeat();
 
-  timeEvents.sort((a, b) => (a.ticks <= b.ticks) ? 1 : -1);
+  timeEvents.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
 
   for(event of timeEvents){
     event.song = song;
