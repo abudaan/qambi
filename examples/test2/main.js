@@ -16,10 +16,12 @@ window.onload = function() {
   sequencer.init().then(
     function onFulFilled(){
       sequencer.unlockWebAudio();
+
       sequencer.util.ajax({url:'../../data/mozk545a.mid', responseType: 'arraybuffer'}).then(
         function onFulfilled(data){
+          //song = sequencer.parseMIDIFile(data);
           song = sequencer.createSongFromMIDIFile(data);
-          debugger;
+          //debugger;
         },
         function onRejected(e){
           console.error(e);

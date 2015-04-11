@@ -15,6 +15,7 @@ import {createSong} from './song.js';
 import {createTrack} from './track.js';
 import {createMIDIEvent} from './midi_event.js';
 import {createInstrument} from './instrument.js';
+import parseMIDIFile from './midi_parse.js';
 import createSongFromMIDIFile from './song_from_midifile.js';
 import {start} from './heartbeat.js';
 import {ajax} from './util.js';
@@ -145,6 +146,7 @@ Object.defineProperty(sequencer, 'createMIDIEvent', {value: createMIDIEvent});
 Object.defineProperty(sequencer, 'createTrack', {value: createTrack});
 Object.defineProperty(sequencer, 'createSong', {value: createSong});
 Object.defineProperty(sequencer, 'createInstrument', {value: createInstrument});
+Object.defineProperty(sequencer, 'parseMIDIFile', {value: parseMIDIFile});
 Object.defineProperty(sequencer, 'createSongFromMIDIFile', {value: createSongFromMIDIFile});
 
 
