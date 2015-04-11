@@ -11,13 +11,11 @@ export class Part{
 
   constructor(config = {}){
     this.id = 'P' + partId++ + Date.now();
-    this.events = [];
+    this._events = [];
     this.needsUpdate = false;
     this.ticks = 0;
 
     this._eventsMap = new Map();
-    this._changedEvents = new Map();
-    this._removedEvents = new Map();
     this._numberOfEventsChanged = false;
 
     if(config.events){
@@ -33,7 +31,6 @@ export class Part{
       this.needsUpdate = true;
       this._numberOfEventsChanged = true;
       this._eventsMap.set(event.id, event);
-      this._changedEvents.set(event.id, event);
       return this; // make it chainable
     }
   }
@@ -50,8 +47,6 @@ export class Part{
       event.reset(true, false, false);
       this.needsUpdate = true;
       this._numberOfEventsChanged = true;
-      this._eventsMap.delete(event.id);
-      this._changedEvents.set(event.id, event);
       return this; // make it chainable
     }
   }
@@ -67,7 +62,6 @@ export class Part{
     if(this._eventsMap.has(event.id)){
       event.move(ticks);
       this.needsUpdate = true;
-      this._changedEvents.set(event.id, event);
       return this; // make it chainable
     }
   }
@@ -85,7 +79,6 @@ export class Part{
         return;
       }
       event.transpose(semitones);
-      this._changedEvents.set(event.id, event);
       // no need to set needsUpdate to true!
       return this; // make it chainable
     }
@@ -97,41 +90,37 @@ export class Part{
     }
   }
 
+  getEvents(){
+    if(this.needsUpdate){
+      this.update();
+    }
+    return this._events;
+  }
+
   update(){
 
-    // notify the track that there have been changes: this is only necessary if part.update is called before track.update or song.update
-    if(this.track !== undefined){
-      // tell the track that the part has changed
-      if(this._changedEvents.size !== 0){
-        this.track._changedParts.set(this.id, this);
-      }
-      // tell the track that the number of events has changed
-      if(this._numberOfEventsChanged === true){
+    if(this._numberOfEventsChanged === true){
+      this._events = [];
+      Array.from(this._eventsMap.values()).every((event) => {
+        if(event.state === 'removed'){
+          this._eventsMap.delete(event.id);
+        }else{
+          this._events.push(event);
+        }
+      });
+
+      if(this.track !== undefined){
         this.track._numberOfEventsChanged = true;
       }
+      this._numberOfEventsChanged = false;
     }
 
-    if(this.needsUpdate === false){
-      return;
-    }
-
-    // repopulate the events array if necessary
-    if(this._numberOfEventsChanged === true){
-      this.events = Array.from(this._eventsMap.values());
-    }
-
-    // always sort the events
-    this.events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
-
-    // set the duration of the part based on its first and last event
-    this.ticks = this.events[0].ticks;
-    let lastEvent = this.events[this.events.length - 1];
-    this.durationTicks = lastEvent.ticks - this.ticks;
+    this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
 
     // create notes
     let notes = {};
     let n = 0;
-    for(let event of this.events){
+    for(let event of this._events){
       if(event.type === 144){
         notes[event.noteNumber] = event;
       }else if(event.type === 128){
@@ -149,7 +138,6 @@ export class Part{
       }
     }
 
-    this._numberOfEventsChanged = false;
     this.needsUpdate = false;
   }
 }

@@ -205,9 +205,7 @@ export class MIDIEvent{
     if(this.state !== 'new'){
       this.state = 'transposed';
     }
-    if(this.part !== undefined){
-      this.part.needsUpdate = true;
-    }
+    this.update();
   }
 
 
@@ -243,9 +241,7 @@ export class MIDIEvent{
     if(this.state !== 'new'){
       this.state = 'transposed';
     }
-    if(this.part !== undefined){
-      this.part.needsUpdate = true;
-    }
+    this.update();
   }
 
 
@@ -260,9 +256,7 @@ export class MIDIEvent{
     if(this.state !== 'new'){
       this.state = 'moved';
     }
-    if(this.part !== undefined){
-      this.part.needsUpdate = true;
-    }
+    this.update();
   }
 
 
@@ -285,12 +279,7 @@ export class MIDIEvent{
     if(this.state !== 'new'){
       this.state = 'moved';
     }
-    if(this.part !== undefined){
-      this.part.needsUpdate = true;
-    }
-    if(this.part !== undefined){
-      this.part.needsUpdate = true;
-    }
+    this.update();
   }
 
 
@@ -309,15 +298,14 @@ export class MIDIEvent{
       this.song = undefined;
     }
     this.state = 'removed';
-    if(this.part !== undefined){
-      this.part.needsUpdate = true;
-    }
+    this.update();
   }
 
 
-
-  // implemented because of the common interface of midi and audio events
   update(){
+    if(this.part !== undefined){
+      this.part._changedEvents.set(this.id, this);
+    }
   }
 }
 
