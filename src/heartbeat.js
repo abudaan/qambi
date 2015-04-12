@@ -1,21 +1,20 @@
 'use strict';
 
-import getConfig from './config.js';
+import sequencer from './sequencer.js';
 
 
 let timedTasks = new Map();
 let repetitiveTasks = new Map();
 let scheduledTasks = new Map();
 let tasks = new Map();
-let config = getConfig();
 let lastTimeStamp;
 
 
 function heartbeat(timestamp){
-  let now = config.getTime();
+  let now = sequencer.time;
 
   // for instance: the callback of sample.unschedule;
-  for(let [key, task] in timedTasks){
+  for(let [key, task] of timedTasks){
     if(task.time >= now){
       task.execute(now);
       timedTasks.delete(key);
@@ -24,12 +23,12 @@ function heartbeat(timestamp){
 
 
   // for instance: song.update();
-  for(let task in scheduledTasks.values){
+  for(let task of scheduledTasks.values()){
     task(now);
   }
 
   // for instance: song.pulse();
-  for(let task in repetitiveTasks.values){
+  for(let task of repetitiveTasks.values()){
     task(now);
   }
 /*

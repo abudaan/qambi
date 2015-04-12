@@ -15,23 +15,35 @@ window.onload = function() {
 
   sequencer.init().then(
     function onFulFilled(){
-      sequencer.unlockWebAudio();
-
-      sequencer.util.ajax({url:'../../data/mozk545a.mid', responseType: 'arraybuffer'}).then(
-        function onFulfilled(data){
-          //song = sequencer.parseMIDIFile(data);
-          song = sequencer.createSongFromMIDIFile(data);
-          //debugger;
-        },
-        function onRejected(e){
-          console.error(e);
-        }
-      );
-
+      init();
     },
-
     function onRejected(e){
       alert(e);
     }
   );
+
+  function init(){
+    sequencer.util.ajax({url:'../../data/mozk545a.mid', responseType: 'arraybuffer'}).then(
+      function onFulfilled(data){
+        //song = sequencer.parseMIDIFile(data);
+        song = sequencer.createSongFromMIDIFile(data);
+        initUI();
+        //debugger;
+      },
+      function onRejected(e){
+        console.error(e);
+      }
+    );
+
+  }
+
+  function initUI(){
+    btnPlay.addEventListener('click', function(){
+      song.play();
+    });
+
+    btnStop.addEventListener('click', function(){
+      song.stop();
+    });
+  }
 };

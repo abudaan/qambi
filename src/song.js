@@ -1,12 +1,17 @@
 'use strict';
 
+import sequencer from './sequencer';
 import {addEventListener, removeEventListener, dispatchEvent} from './song_add_eventlistener';
 import {log, info, warn, error, typeString} from './util';
 import getConfig from './config';
 import {Track} from './track';
 import {Part} from './part';
 import {MIDIEvent} from './midi_event';
+import {AudioEvent} from './audio_event';
+import Scheduler from './scheduler';
 import {initMidiSong, setMidiInputSong, setMidiOutputSong} from './init_midi';
+import {addTask, removeTask} from './heartbeat';
+import {parseTimeEvents, parseEvents} from './parse_events';
 
 
 let songId = 0,
@@ -24,6 +29,7 @@ export class Song{
     this.id = 'S' + songId++ + Date.now();
     this.name = this.id;
     this._events = []; // all MIDI and audio events
+    this._audioEvents = []; // only audio events
     this._parts = [];
     this._tracks = [];
     this._eventsMap = new Map();
@@ -34,13 +40,12 @@ export class Song{
     this._allEvents = []; // all tempo and time signature events, plus all MIDI and audio events
 
     this.needsUpdate = false;
+    this.millis = 0;
 
     // first add all settings from the default song
-///*
     defaultSong.forEach(function(value, key){
       this[key] = value;
     }, this);
-//*/
 /*
     // or:
     for(let[value, key] of defaultSong.entries()){
@@ -50,20 +55,16 @@ export class Song{
     }
 */
 
-
     if(settings.timeEvents){
-      this._timeEvents = Array.from(settings.timeEvents);
-      //delete settings.timeEvents;
+      this.addTimeEvents(settings.timeEvents);
+      delete settings.timeEvents;
     }
 
     if(settings.tracks){
-      for(let track of settings.tracks){
-        this.addTrack(track);
-      }
-      //delete settings.tracks;
+      this.addTracks(settings.tracks);
+      delete settings.tracks;
     }
 
-    //settings = null;
 
     // then override settings by provided settings
     if(typeString(settings) === 'object'){
@@ -98,154 +99,23 @@ export class Song{
 
     config.get('activeSongs')[this.id] = this;
 
-
-    //console.log(this);
-/*
-    if(settings.timeEvents && settings.timeEvents.length > 0){
-      this.timeEvents = Array.from(settings.timeEvents);
-
-      this.tempoEvent = getTimeEvents(sequencer.TEMPO, this)[0];
-      this.timeSignatureEvent = getTimeEvents(sequencer.TIME_SIGNATURE, this)[0];
-
-      if(this.tempoEvent === undefined){
-        this.tempoEvent = new MIDIEvent(0, sequencer.TEMPO, this.bpm);
-        this.timeEvents.unshift(this.tempoEvent);
-      }else{
-        this.bpm = this.tempoEvent.bpm;
-      }
-      if(this.timeSignatureEvent === undefined){
-        this.timeSignatureEvent = new MIDIEvent(0, sequencer.TIME_SIGNATURE, this.nominator, this.denominator);
-        this.timeEvents.unshift(this.timeSignatureEvent);
-      }else{
-        this.nominator = this.timeSignatureEvent.nominator;
-        this.denominator = this.timeSignatureEvent.denominator;
-      }
-      //console.log(1, this.nominator, this.denominator, this.bpm);
-    }else{
-      // there has to be a tempo and time signature event at ticks 0, otherwise the position can't be calculated, and moreover, it is dictated by the MIDI standard
-      this.tempoEvent = new MIDIEvent(0, sequencer.TEMPO, this.bpm);
-      this.timeSignatureEvent = new MIDIEvent(0, sequencer.TIME_SIGNATURE, this.nominator, this.denominator);
-      this.timeEvents = [
-        this.tempoEvent,
-        this.timeSignatureEvent
-      ];
-    }
-
-    // TODO: A value for bpm, nominator and denominator in the config overrules the time events specified in the config -> maybe this should be the other way round
-
-    // if a value for bpm is set in the config, and this value is different from the bpm value of the first
-    // tempo event, all tempo events will be updated to the bpm value in the config.
-    if(config.timeEvents !== undefined && config.bpm !== undefined){
-      if(this.bpm !== config.bpm){
-        this.setTempo(config.bpm, false);
-      }
-    }
-
-    // if a value for nominator and/or denominator is set in the config, and this/these value(s) is/are different from the values
-    // of the first time signature event, all time signature events will be updated to the values in the config.
-    // @TODO: maybe only the first time signature event should be updated?
-    if(config.timeEvents !== undefined && (config.nominator !== undefined || config.denominator !== undefined)){
-      if(this.nominator !== config.nominator || this.denominator !== config.denominator){
-        this.setTimeSignature(config.nominator || this.nominator, config.denominator || this.denominator, false);
-      }
-    }
-
-    //console.log(2, this.nominator, this.denominator, this.bpm);
-
-    this.tracks = [];
-    this.parts = [];
-    this.notes = [];
-    this.events = [];//.concat(this.timeEvents);
-    this.allEvents = []; // all events plus metronome ticks
-
-    this.tracksById = {};
-    this.tracksByName = {};
-    this.partsById = {};
-    this.notesById = {};
-    this.eventsById = {};
-
-    this.activeEvents = null;
-    this.activeNotes = null;
-    this.activeParts = null;
-
-    this.recordedNotes = [];
-    this.recordedEvents = [];
-    this.recordingNotes = {}; // notes that don't have their note off events yet
-
-    this.numTracks = 0;
-    this.numParts = 0;
-    this.numNotes = 0;
-    this.numEvents = 0;
-    this.instruments = [];
-
-    this.playing = false;
-    this.paused = false;
-    this.stopped = true;
-    this.recording = false;
-    this.prerolling = false;
-    this.precounting = false;
-    this.preroll = true;
-    this.precount = 0;
-    this.listeners = {};
-
-    this.playhead = createPlayhead(this, this.positionType, this.id, this);//, this.position);
-    this.playheadRecording = createPlayhead(this, 'all', this.id + '_recording');
-    this.scheduler = createScheduler(this);
-    this.followEvent = createFollowEvent(this);
-
-    this.volume = 1;
-    this.gainNode = context.createGainNode();
-    this.gainNode.gain.value = this.volume;
-    this.metronome = createMetronome(this, dispatchEvent);
-    this.connect();
-
-
-    if(config.className === 'MidiFile' && config.loaded === false){
-      if(sequencer.debug){
-        console.warn('midifile', config.name, 'has not yet been loaded!');
-      }
-    }
-
-    //if(config.tracks && config.tracks.length > 0){
-    if(config.tracks){
-      this.addTracks(config.tracks);
-    }
-
-    if(config.parts){
-      this.addParts(config.parts);
-    }
-
-    if(config.events){
-      this.addEvents(config.events);
-    }
-
-    if(config.events || config.parts || config.tracks){
-      //console.log(config.events, config.parts, config.tracks)
-      // the length of the song will be determined by the events, parts and/or tracks that are added to the song
-      if(config.bars === undefined){
-        this.lastBar = 0;
-      }
-      this.lastEvent = new MIDIEvent([this.lastBar, sequencer.END_OF_TRACK]);
-    }else{
-      this.lastEvent = new MIDIEvent([this.bars * this.ticksPerBar, sequencer.END_OF_TRACK]);
-    }
-    //console.log('update');
-    this.update(true);
-
-    this.numTimeEvents = this.timeEvents.length;
-    this.playhead.set('ticks', 0);
-    this.midiEventListeners = {};
-    //console.log(this.timeEvents);
-
-*/
+    this.scheduler = new Scheduler(this);
   }
 
 
   stop(){
+    removeTask('repetitive', this.id);
+    this.millis = 0;
     dispatchEvent('stop');
   }
 
   play(){
+    sequencer.unlockWebAudio();
+    this.scheduler.firstRun = true;
+    this.timeStamp = sequencer.time * 1000;
+    //this.startMillis = this.millis; // this.millis is set by playhead, use 0 for now
+    this.startMillis = 0;
+    addTask('repetitive', this.id, () => {pulse(this);});
     dispatchEvent('play');
   }
 
@@ -269,8 +139,15 @@ export class Song{
       this.needsUpdate = true;
       this._tracksMap.set(track.id, track);
       this._numberOfTracksChanged = true;
-      return this; // make it chainable
     }
+    return this; // make it chainable
+  }
+
+  addTracks(tracks){
+    for(let track of tracks){
+      this.addTrack(track);
+    }
+    return this; // make it chainable
   }
 
   removeTrack(track){
@@ -278,8 +155,15 @@ export class Song{
       track.state = 'removed';
       this.needsUpdate = true;
       this._numberOfTracksChanged = true;
-      return this; // make it chainable
     }
+    return this; // make it chainable
+  }
+
+  removeTracks(tracks){
+    for(let track of tracks){
+      this.removeTrack(track);
+    }
+    return this; // make it chainable
   }
 
   getTracks(){
@@ -287,6 +171,54 @@ export class Song{
       this.update();
     }
     return this._tracks;
+  }
+
+  getTrack(idOrName){
+
+  }
+
+  getParts(){
+    if(this.needsUpdate){
+      this.update();
+    }
+    return this._parts;
+  }
+
+  getEvents(){
+    if(this.needsUpdate){
+      this.update();
+    }
+    return this._events;
+  }
+
+  getAudioEvents(){
+    if(this.needsUpdate){
+      this.update();
+    }
+    return this._audioEvents;
+  }
+
+  getTimeEvents(){
+    return this._timeEvents;
+  }
+
+  addTimeEvent(event, parse = true){
+    // 1) check if event is time event
+    // 2) set time signature event on the first count
+    // 3) parse time events
+    this._timeEvents.push(event);
+    if(parse === true){
+      parseTimeEvents(this);
+    }
+  }
+
+  addTimeEvents(events){
+    for(let event of events){
+      this.addTimeEvent(event, false);
+    }
+    parseTimeEvents(this);
+    debugger
+    return this;
   }
 
   update(){
@@ -363,7 +295,12 @@ export class Song{
     this._parts.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
     this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
 
+    this._audioEvents = this._events.filter(function(event){
+      return event instanceof AudioEvent;
+    });
+
     this.needsUpdate = false;
+    this.scheduler.updateSong();
   }
 }
 
@@ -374,4 +311,15 @@ Song.prototype.dispatchEvent = dispatchEvent;
 
 export function createSong(settings){
   return new Song(settings);
+}
+
+
+function pulse(song){
+  let
+    now = sequencer.time * 1000,
+    diff = now - song.timeStamp;
+
+  song.millis += diff;
+  song.timeStamp = now;
+  song.scheduler.update();
 }

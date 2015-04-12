@@ -70,7 +70,7 @@ function updatePosition(event){
 
 export function parseTimeEvents(song){
   //console.time('parse time events ' + song.name);
-  let timeEvents = song.timeEvents;
+  let timeEvents = song._timeEvents;
   let type;
   let event;
 

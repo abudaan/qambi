@@ -6,7 +6,7 @@ import createMIDIEvent from './midi_event';
 
 let config = getConfig();
 
-class Scheduler{
+export default class Scheduler{
 
   constructor(song){
     this.song = song;
@@ -17,12 +17,13 @@ class Scheduler{
 
 
   updateSong(){
-    this.events = this.song.eventsMidiAudioMetronome;
+    //this.events = this.song.eventsMidiAudioMetronome;
+    this.events = this.song.getEvents();
     this.numEvents = this.events.length;
     this.index = 0;
     this.maxtime = 0;
     this.notes = {};
-    this.audioEvents = this.song.audioEvents;
+    this.audioEvents = this.song.getAudioEvents();
     this.numAudioEvents = this.audioEvents.length;
     this.scheduledAudioEvents = {};
     this.looped = false;
@@ -31,6 +32,7 @@ class Scheduler{
   }
 
 
+  // get the index of the event that has its millis value at or right after the provided millis value
   setIndex(millis){
     let i = 0;
     for(let event of this.events){
@@ -343,9 +345,4 @@ class Scheduler{
       track.instrument.reschedule(this.song);
     }
   }
-}
-
-
-export function createScheduler(song) {
-  return new Scheduler(song);
 }
