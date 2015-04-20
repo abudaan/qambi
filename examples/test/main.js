@@ -33,7 +33,7 @@ window.onload = function() {
       //   ppq: 480
       // });
 
-      song = sequencer.createSong(new Map().set('name', 'apenliedje').set('ppq', 480));
+      song = sequencer.createSong(new Map().set('name', 'my song').set('ppq', 480));
       //console.log(song);
 
       track1 = sequencer.createTrack();

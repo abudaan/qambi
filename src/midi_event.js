@@ -202,10 +202,10 @@ export class MIDIEvent{
       this.midiNote.pitch = this.data1;
     }
 
-    if(this.state !== 'new'){
-      this.state = 'transposed';
+    if(this._state !== 'new'){
+      this._state = 'transposed';
     }
-    this.update();
+    this._update();
   }
 
 
@@ -238,10 +238,10 @@ export class MIDIEvent{
     if(this.midiNote !== undefined){
       this.midiNote.pitch = this.data1;
     }
-    if(this.state !== 'new'){
-      this.state = 'transposed';
+    if(this._state !== 'new'){
+      this._state = 'transposed';
     }
-    this.update();
+    this._update();
   }
 
 
@@ -253,10 +253,10 @@ export class MIDIEvent{
     }
     this.ticks += parseInt(ticks, 10);
     //@todo: set duration of midi note
-    if(this.state !== 'new'){
-      this.state = 'moved';
+    if(this._state !== 'new'){
+      this._state = 'moved';
     }
-    this.update();
+    this._update();
   }
 
 
@@ -276,10 +276,10 @@ export class MIDIEvent{
       }
     }
 
-    if(this.state !== 'new'){
-      this.state = 'moved';
+    if(this._state !== 'new'){
+      this._state = 'moved';
     }
-    this.update();
+    this._update();
   }
 
 
@@ -297,14 +297,14 @@ export class MIDIEvent{
     if(fromSong){
       this.song = undefined;
     }
-    this.state = 'removed';
-    this.update();
+    this._state = 'removed';
+    this._update();
   }
 
 
   update(){
     if(this.part !== undefined){
-      this.part._changedEvents.set(this.id, this);
+      this.part._needsUpdate = true;
     }
   }
 }

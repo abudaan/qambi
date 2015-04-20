@@ -12,11 +12,14 @@ export class Part{
   constructor(config = {}){
     this.id = 'P' + partId++ + Date.now();
     this._events = [];
-    this.needsUpdate = false;
+    this._needsUpdate = false;
     this.ticks = 0;
 
     this._eventsMap = new Map();
-    this._numberOfEventsChanged = false;
+    this._newEvents = new Map();
+    //this._movedEvents = new Map();
+    //this._removedEvents = new Map();
+    //this._transposedEvents = new Map();
 
     if(config.events){
       this.addEvents(config.events);
@@ -28,8 +31,7 @@ export class Part{
   addEvent(event){
     if(event instanceof MIDIEvent || event instanceof AudioEvent){
       event.state = 'new';
-      this.needsUpdate = true;
-      this._numberOfEventsChanged = true;
+      this._needsUpdate = true;
       this._eventsMap.set(event.id, event);
       return this; // make it chainable
     }
@@ -46,8 +48,7 @@ export class Part{
   removeEvent(event){
     if(this._eventsMap.has(event.id)){
       event.reset(true, false, false);
-      this.needsUpdate = true;
-      this._numberOfEventsChanged = true;
+      this._needsUpdate = true;
       return this; // make it chainable
     }
   }
@@ -63,7 +64,7 @@ export class Part{
   moveEvent(event, ticks){
     if(this._eventsMap.has(event.id)){
       event.move(ticks);
-      this.needsUpdate = true;
+      this._needsUpdate = true;
       return this; // make it chainable
     }
   }
@@ -82,7 +83,7 @@ export class Part{
         return;
       }
       event.transpose(semitones);
-      // no need to set needsUpdate to true!
+      this._needsUpdate = true;
       return this; // make it chainable
     }
   }
@@ -95,7 +96,7 @@ export class Part{
   }
 
   getEvents(){
-    if(this.needsUpdate){
+    if(this._needsUpdate){
       this.update();
     }
     return this._events;
@@ -103,27 +104,59 @@ export class Part{
 
   update(){
 
-    // if number of events has changed update the _events array and the _eventsMap map
-    if(this._numberOfEventsChanged === true){
-      this._events = [];
-      Array.from(this._eventsMap.values()).forEach((event) => {
-        if(event.state === 'removed'){
-          this._eventsMap.delete(event.id);
-        }else{
-          this._events.push(event);
-        }
-      });
-
-      if(this.track !== undefined){
-        // tell the track to update its events array as well, this is done when track.update() or song.update() is called
-        this.track._numberOfEventsChanged = true;
-      }
-      this._numberOfEventsChanged = false;
+    if(this._needsUpdate === false){
+      return;
     }
 
-    this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
+    let numberOfEventsHasChanged = false;
+    let updateEvents = false;
+/*
+    Array.from(this._eventsMap.values()).forEach((event) => {
+      if(event.state === 'removed'){
+        this._eventsMap.delete(event.id);
+        this._removedEvents.set(event.id, event);
+        numberOfEventsHasChanged = true;
+      }else if(event.state === 'new'){
+        this._eventsMap.set(event.id, event);
+        this._newEvents.set(event.id, event);
+        numberOfEventsHasChanged = true;
+      }else if(event.state === 'moved'){
+        this._movedEvents.set(event.id, event);
+      }else if(event.state === 'transposed'){
+        this._transposedEvents.set(event.id, event);
+      }
+      event.state = 'clean';
+    });
+*/
+    Array.from(this._eventsMap.values()).forEach((event) => {
+      if(event.state === 'removed'){
+        this._eventsMap.delete(event.id);
+        // in case a new event gets deleted before part.update() is called
+        this._newEvents.delete(event.id);
+        numberOfEventsHasChanged = true;
+      }else if(event.state === 'new'){
+        this._eventsMap.set(event.id, event);
+        this._newEvents.set(event.id, event);
+        numberOfEventsHasChanged = true;
+      }else if(event.state !== 'clean'){
+        updateEvents = true;
+      }
+    });
 
-    // create notes
+    // if number of events has changed update the _events array and the _eventsMap map
+    if(numberOfEventsHasChanged === true){
+      this._events = [];
+      Array.from(this._eventsMap.values()).forEach((event) => {
+        this._events.push(event);
+      });
+    }
+
+
+    if(numberOfEventsHasChanged === true || updateEvents === true){
+      this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
+    }
+
+    // create notes -> @TODO: only necessary if number of events has changed
     let notes = {};
     let n = 0;
     for(let event of this._events){
@@ -144,7 +177,7 @@ export class Part{
       }
     }
 
-    this.needsUpdate = false;
+    this._needsUpdate = false;
   }
 }
 

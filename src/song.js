@@ -1,4 +1,4 @@
-'use strict';
+  'use strict';
 
 import sequencer from './sequencer';
 import {addEventListener, removeEventListener, dispatchEvent} from './song_add_eventlistener';
@@ -36,10 +36,23 @@ export class Song{
     this._partsMap = new Map();
     this._tracksMap = new Map();
 
+    this._newTracks = [];
+    this._removedTracks = [];
+    //this._changedTracks = [];
+
+    this._newParts = [];
+    this._removedParts = [];
+    this._changedParts = [];
+
+    this._newEvents = [];
+    this._removedEvents = [];
+    this._changedEvents = [];
+
+
     this._timeEvents = []; // all tempo and time signature events
     this._allEvents = []; // all tempo and time signature events, plus all MIDI and audio events
 
-    this.needsUpdate = false;
+    this._needsUpdate = false;
     this.millis = 0;
 
     // first add all settings from the default song
@@ -99,7 +112,7 @@ export class Song{
 
     config.get('activeSongs')[this.id] = this;
 
-    this.scheduler = new Scheduler(this);
+    this._scheduler = new Scheduler(this);
   }
 
 
@@ -111,7 +124,7 @@ export class Song{
 
   play(){
     sequencer.unlockWebAudio();
-    this.scheduler.firstRun = true;
+    this._scheduler.firstRun = true;
     this.timeStamp = sequencer.time * 1000;
     //this.startMillis = this.millis; // this.millis is set by playhead, use 0 for now
     this.startMillis = 0;
@@ -136,9 +149,7 @@ export class Song{
     if(track instanceof Track){
       track.song = this;
       track.state = 'new';
-      this.needsUpdate = true;
       this._tracksMap.set(track.id, track);
-      this._numberOfTracksChanged = true;
     }
     return this; // make it chainable
   }
@@ -153,8 +164,7 @@ export class Song{
   removeTrack(track){
     if(this._tracksMap.has(track.id)){
       track.state = 'removed';
-      this.needsUpdate = true;
-      this._numberOfTracksChanged = true;
+      track.reset();
     }
     return this; // make it chainable
   }
@@ -167,7 +177,7 @@ export class Song{
   }
 
   getTracks(){
-    if(this.needsUpdate){
+    if(this._needsUpdate){
       this.update();
     }
     return this._tracks;
@@ -178,21 +188,21 @@ export class Song{
   }
 
   getParts(){
-    if(this.needsUpdate){
+    if(this._needsUpdate){
       this.update();
     }
     return this._parts;
   }
 
   getEvents(){
-    if(this.needsUpdate){
+    if(this._needsUpdate){
       this.update();
     }
     return this._events;
   }
 
   getAudioEvents(){
-    if(this.needsUpdate){
+    if(this._needsUpdate){
       this.update();
     }
     return this._audioEvents;
@@ -217,90 +227,132 @@ export class Song{
       this.addTimeEvent(event, false);
     }
     parseTimeEvents(this);
-    debugger
     return this;
   }
 
   update(){
 
-    // update _tracks array and _tracksMap map
-    if(this._numberOfTracksChanged === true){
-      this._tracks = [];
-      Array.from(this._tracksMap.values()).forEach((track) => {
-        if(track.state === 'removed'){
-          this._tracksMap.delete(track.id);
-        }else{
-          track.state = 'clean';
-          this._tracks.push(track);
+    this._newTracks = [];
+    //this._changedTracks = [];
+    this._removedTracks = [];
+
+    this._newParts = [];
+    this._changedParts = [];
+    this._removedParts = [];
+
+    this._newEvents = [];
+    this._changedEvents = [];
+    this._removedEvents = [];
+
+    let sortEvents = false;
+    let sortParts = false;
+    let numberOfPartsHasChanged = false;
+    let numberOfEventsHasChanged = false;
+    let eventsToBeParsed = [].concat(this._timeEvents);
+    let partsToBeParsed = [];
+
+
+    for(let track of this._tracksMap.values()){
+      if(track.state === 'removed'){
+        this._removedTracks.push(track.id);
+        this._tracksMap.delete(track.id);
+        continue;
+      }else if(track.state === 'new'){
+        this._newTracks.push(track);
+      }
+
+      // track.getParts() triggers track.update()
+      let parts = track.getParts();
+
+      // get all the new parts
+      if(track._newParts.size > 0){
+        numberOfPartsHasChanged = true;
+        for(let newPart of track._newParts.values()){
+          this._partsMap.set(newPart.id, newPart);
         }
-      });
-      this._numberOfTracksChanged = false;
-    }
-
-
-
-    // add all new events and parts to the array and the map in question
-    for(let track of this._tracks){
-      if(track.needsUpdate === true){
-        track.update();
       }
-      for(let event of track._newEvents.values()){
-        this._events.push(event);
-        this._eventsMap.set(event.id, event);
-      }
-      // we can clear the _newEvents map now; it will be populated again as soon as new events are added
-      track._newEvents.clear();
 
-      for(let part of track._newParts.values()){
-        this._parts.push(part);
-        this._partsMap.set(part.id, part);
-      }
-      // we can clear the _newParts map now; it will be populated again as soon as new parts are added
-      track._newParts.clear();
-    }
-
-
-
-    // update _parts array and _partsMap map
-    if(this._numberOfPartsChanged === true){
-      this._parts = [];
-      Array.from(this._partsMap.values()).forEach((part) => {
-        // the state of a part gets set to 'removed' when track.removePart() is called
-        if(part.state === 'removed'){
-          this._partsMap.delete(part.id);
-        }else{
-          part.state = 'clean';
-          this._parts.push(part);
+      for(let part of parts){
+        part.update();
+        if(part._newEvents.size > 0){
+          numberOfEventsHasChanged = true;
+          for(let newEvent of part._newEvents.values()){
+            this._eventsMap.set(newEvent.id, newEvent);
+          }
         }
-      });
-      this._numberOfPartsChanged = false;
+      }
+
+      track.state = 'clean';
     }
 
 
+    for(let event of this._eventsMap.values()){
+      if(event.state === 'removed'){
+        this._removedEvents.push(event);
+        this._eventsMap.delete(event.id);
+        numberOfEventsHasChanged = true;
+      }else if(event.state === 'new'){
+        this._newEvents.push(event);
+        eventsToBeParsed.push(event);
+        numberOfEventsHasChanged = true;
+      }else if(event.state !== 'clean'){
+        this._changedEvents.push(event);
+        eventsToBeParsed.push(event);
+        sortEvents = true;
+      }
+      event.state = 'clean';
+    }
 
-    // update _events array and _eventsMap map
-    if(this._numberOfEventsChanged === true){
+    if(numberOfEventsHasChanged === true){
       this._events = [];
       Array.from(this._eventsMap.values()).forEach((event) => {
-        if(event.state === 'removed'){
-        // the state of a event gets set to 'removed' when part.removeEvent() or track.removeEvent() is called
-          this._eventsMap.delete(event.id);
-        }else{
-          event.state = 'clean';
-          this._events.push(event);
-        }
+        this._events.push(event);
       });
-      this._numberOfEventsChanged = false;
     }
-    this._parts.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
-    this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
+
+    if(numberOfEventsHasChanged === true || sortEvents === true){
+      // @TODO: sort on sortIndex!!
+      this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
+    }
+
+
+
+    for(let part of this._partsMap.values()){
+      if(part.state === 'removed'){
+        this._removedParts.push(part);
+        this._partsMap.delete(part.id);
+        numberOfPartsHasChanged = true;
+      }else if(part.state === 'new'){
+        this._newParts.push(part);
+        partsToBeParsed.push(part);
+        numberOfPartsHasChanged = true;
+      }else if(part.state !== 'clean'){
+        this._changedParts.push(part);
+        partsToBeParsed.push(part);
+        sortEvents = true;
+      }
+      part.state = 'clean';
+    }
+
+    if(numberOfPartsHasChanged === true){
+      this._parts = [];
+      Array.from(this._partsMap.values()).forEach((part) => {
+        this._parts.push(part);
+      });
+    }
+
+    if(numberOfPartsHasChanged === true || sortParts === true){
+      // @TODO: sort on sortIndex!!
+      this._parts.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
+    }
 
     this._audioEvents = this._events.filter(function(event){
       return event instanceof AudioEvent;
     });
 
-    this.needsUpdate = false;
-    this.scheduler.updateSong();
+    this._needsUpdate = false;
+    this._scheduler.updateSong();
+    debugger;
   }
 }
 

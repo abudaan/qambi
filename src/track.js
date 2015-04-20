@@ -15,12 +15,12 @@ export class Track{
 
     this._partsMap = new Map();
     this._eventsMap = new Map();
-    this._newEvents = new Map();
     this._newParts = new Map();
+    //this._movedParts = new Map();
+    //this._removedParts = new Map();
+    //this._transposedParts = new Map();
 
-    this.needsUpdate = false;
-    this._numberOfPartsChanged = false;
-    this._numberOfEventsChanged = false;
+    this._needsUpdate = false;
 
     if(config.parts){
       this.addParts(config.parts);
@@ -37,7 +37,7 @@ export class Track{
     part.addEvent(event);
     this._partsMap.set(part.id, part);
     this.numberOfPartsChanged = true;
-    this.needsUpdate = true;
+    this._needsUpdate = true;
   }
 
   addEvents(events){
@@ -46,7 +46,7 @@ export class Track{
     part.addEvents(events);
     this._partsMap.set(part.id, part);
     this.numberOfPartsChanged = true;
-    this.needsUpdate = true;
+    this._needsUpdate = true;
   }
 */
 
@@ -55,9 +55,7 @@ export class Track{
       part.track = this;
       part.state = 'new';
       this._partsMap.set(part.id, part);
-      this._numberOfEventsChanged = true;
-      this._numberOfPartsChanged = true;
-      this.needsUpdate = true;
+      this._needsUpdate = true;
     }
     return this; // make it chainable
   }
@@ -72,11 +70,9 @@ export class Track{
 
   removePart(part){
     if(this._partsMap.has(part.id)){
-      //@todo: part.reset() here, just like event.reset()?
+      //@todo: part.reset() here, just like event.reset() -> YES!
       part.state = 'removed';
-      this._numberOfEventsChanged = true;
-      this._numberOfPartsChanged = true;
-      this.needsUpdate = true;
+      this._needsUpdate = true;
     }
     return this; // make it chainable
   }
@@ -95,7 +91,7 @@ export class Track{
       if(part.state !== 'new'){
         part.state = 'moved';
       }
-      this.needsUpdate = true;
+      this._needsUpdate = true;
     }
     return this; // make it chainable
   }
@@ -114,7 +110,7 @@ export class Track{
       if(part.state !== 'new'){
         part.state = 'transposed';
       }
-      // no need to set needsUpdate to true!
+      this._needsUpdate = true;
     }
     return this; // make it chainable
   }
@@ -128,84 +124,89 @@ export class Track{
 
 
   getEvents(){
-    if(this.needsUpdate){
+    if(this._needsUpdate){
       this.update();
     }
     return this._events;
   }
 
   getParts(){
-    if(this.needsUpdate){
+    if(this._needsUpdate){
       this.update();
     }
     return this._parts;
   }
 
+
+  reset(){
+
+  }
+
   update(){
 
-    // if number of parts has changed update the _parts array and the _partsMap map
-    if(this._numberOfPartsChanged === true){
-      this._parts = [];
-      Array.from(this._partsMap.values()).forEach((part) => {
-        if(part.state === 'removed'){
-          this._partsMap.delete(part.id);
-        }else{
-          this._parts.push(part);
-        }
-      });
+    // if(this._needsUpdate === false){
+    //   return;
+    // }
 
-      if(this.song !== undefined){
-        // tell the song to update its parts array as well, this is done when song.update() is called
-        this.song._numberOfPartsChanged = true;
-      }
-      this._numberOfPartsChanged = false;
-    }
-
-    this._parts.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
-
-
-    // 1) reap all new events and add them to _eventsMap
-    // 2) store new events in _newEvents, and new parts in _newParts so the new events and parts are available for song.update() as well
-    for(let part of this._parts){
-      // part.getEvents() also triggers part.update() if necessary
-      let newEvents = part.getEvents().filter(function(event){
-        return event.state === 'new';
-      });
-      for(let event of newEvents){
-        this._eventsMap.set(event.id, event);
-        this._newEvents.set(event.id, event);
-        event.state = 'clean';
-      }
-      if(part.state === 'new'){
+    let numberOfPartsHasChanged = false;
+    let updateParts = false;
+/*
+    Array.from(this._eventsMap.values()).forEach((part) => {
+      if(part.state === 'removed'){
+        this._partsMap.delete(part.id);
+        this._removedParts.set(part.id, part);
+        numberOfPartsHasChanged = true;
+      }else if(part.state === 'new'){
+        this._partsMap.set(part.id, part);
         this._newParts.set(part.id, part);
-        part.state = 'clean';
+        numberOfPartsHasChanged = true;
+      }else if(part.state === 'moved'){
+        this._movedParts.set(part.id, part);
+      }else if(part.state === 'transposed'){
+        this._transposedParts.set(part.id, part);
+      }
+      part.state = 'clean';
+    });
+*/
+    for(let part of this._partsMap.values()){
+
+      // part.getEvents() triggers part.update();
+      let events = part.getEvents();
+      // @TODO: get part._newEvents;
+
+
+      if(part.state === 'removed'){
+        this._partsMap.delete(part.id);
+        // in case a new part gets deleted before track.update() is called
+        this._newParts.delete(part.id);
+        numberOfPartsHasChanged = true;
+      }else if(part.state === 'new'){
+        this._partsMap.set(part.id, part);
+        this._newParts.set(part.id, part);
+        numberOfPartsHasChanged = true;
+      }else if(part.state !== 'clean'){
+        updateParts = true;
       }
     }
 
-
-
-    // if number of events has changed update the _events array and the _eventsMap map
-    if(this._numberOfEventsChanged === true){
+    if(numberOfPartsHasChanged === true){
+      this._parts = [];
       this._events = [];
-      Array.from(this._eventsMap.values()).forEach((event) => {
-        if(event.state === 'removed'){
-          this._eventsMap.delete(event.id);
-        }else{
-          this._events.push(event);
-        }
+      for(let part of this._partsMap.values()){
+        this._parts.push(part);
+        this._events = this._events.concat(part.getEvents());
+      };
+      this._events.forEach(function(event){
+        this._eventsMap.set(event.id, event);
       });
-
-      if(this.song !== undefined){
-        // tell the song to update its events array as well, this is done when song.update() is called
-        this.song._numberOfEventsChanged = true;
-      }
-      this._numberOfEventsChanged = false;
     }
 
-    this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
+    if(numberOfPartsHasChanged === true || updateParts === true){
+      this._parts.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
+      this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
+    }
 
-
-    this.needsUpdate = false;
+    this._needsUpdate = false;
   }
 }
 

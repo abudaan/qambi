@@ -74,9 +74,11 @@ export function parseTimeEvents(song){
   let type;
   let event;
 
+  ppq = song.ppq;
   bpm = song.bpm;
   nominator = song.nominator;
   denominator = song.denominator;
+  playbackSpeed = song.playbackSpeed;
   bar = 1;
   beat = 1;
   sixteenth = 1;
@@ -129,6 +131,11 @@ export function parseEvents(song, events){
   let startEvent = 0;
   let lastEventTick = 0;
 
+  events.sort(function(a, b){
+    return a.sortIndex - b.sortIndex;
+  });
+  event = events[0];
+
   bpm = event.bpm;
   factor = event.factor;
   nominator = event.nominator;
@@ -150,9 +157,6 @@ export function parseEvents(song, events){
   sixteenth = event.sixteenth;
   tick = event.tick;
 
-  events.sort(function(a, b){
-    return a.sortIndex - b.sortIndex;
-  });
 
   for(let i = startEvent; i < numEvents; i++){
 
