@@ -251,8 +251,8 @@ export class Song{
     let eventsToBeParsed = [].concat(this._timeEvents);
     let partsToBeParsed = [];
 
-
-    for(let track of this._tracksMap.values()){
+    let tracks = this._tracksMap.values();
+    for(let track of tracks){
       if(track.state === 'removed'){
         this._removedTracks.push(track.id);
         this._tracksMap.delete(track.id);
@@ -261,25 +261,51 @@ export class Song{
         this._newTracks.push(track);
       }
 
-      // track.getParts() triggers track.update()
-      let parts = track.getParts();
+      track.update();
 
       // get all the new parts
       if(track._newParts.size > 0){
-        numberOfPartsHasChanged = true;
-        for(let newPart of track._newParts.values()){
+        let newParts = track._newParts.values();
+        for(let newPart of newParts){
           this._partsMap.set(newPart.id, newPart);
+          this._newParts.push(newPart);
+          partsToBeParsed.push(newPart);
         }
+        track._newParts.clear();
+        numberOfPartsHasChanged = true;
       }
 
-      for(let part of parts){
-        part.update();
-        if(part._newEvents.size > 0){
-          numberOfEventsHasChanged = true;
-          for(let newEvent of part._newEvents.values()){
-            this._eventsMap.set(newEvent.id, newEvent);
-          }
+      // get all the changed parts
+      if(track._changedParts.size > 0){
+        let changedParts = track._changedParts.values();
+        for(let changedPart of changedParts){
+          this._changedParts.push(changedPart);
         }
+        track._changedParts.clear();
+        sortParts = true;
+      }
+
+
+      // get all the new events
+      if(track._newEvents.size > 0){
+        let newEvents = track._newEvents.values();
+        for(let newEvent of newEvents){
+          this._eventsMap.set(newEvent.id, newEvent);
+          this._newEvents.push(newEvent);
+          eventsToBeParsed.push(newEvent);
+        }
+        track._newEvents.clear();
+        numberOfEventsHasChanged = true;
+      }
+
+      // get all the changed events
+      if(track._changedEvents.size > 0){
+        let changedEvents = track._changedEvents.values();
+        for(let changedEvent of changedEvents){
+          this._changedEvents.push(changedEvent);
+        }
+        track._changedEvents.clear();
+        sortEvents = true;
       }
 
       track.state = 'clean';
@@ -291,23 +317,15 @@ export class Song{
         this._removedEvents.push(event);
         this._eventsMap.delete(event.id);
         numberOfEventsHasChanged = true;
-      }else if(event.state === 'new'){
-        this._newEvents.push(event);
-        eventsToBeParsed.push(event);
-        numberOfEventsHasChanged = true;
-      }else if(event.state !== 'clean'){
-        this._changedEvents.push(event);
-        eventsToBeParsed.push(event);
-        sortEvents = true;
       }
-      event.state = 'clean';
     }
 
     if(numberOfEventsHasChanged === true){
       this._events = [];
-      Array.from(this._eventsMap.values()).forEach((event) => {
+      let events = this._eventsMap.values();
+      for(let event of events){
         this._events.push(event);
-      });
+      }
     }
 
     if(numberOfEventsHasChanged === true || sortEvents === true){
@@ -322,23 +340,15 @@ export class Song{
         this._removedParts.push(part);
         this._partsMap.delete(part.id);
         numberOfPartsHasChanged = true;
-      }else if(part.state === 'new'){
-        this._newParts.push(part);
-        partsToBeParsed.push(part);
-        numberOfPartsHasChanged = true;
-      }else if(part.state !== 'clean'){
-        this._changedParts.push(part);
-        partsToBeParsed.push(part);
-        sortEvents = true;
       }
-      part.state = 'clean';
     }
 
     if(numberOfPartsHasChanged === true){
       this._parts = [];
-      Array.from(this._partsMap.values()).forEach((part) => {
+      let parts = this._partsMap.values();
+      for(let part of parts){
         this._parts.push(part);
-      });
+      }
     }
 
     if(numberOfPartsHasChanged === true || sortParts === true){
@@ -350,8 +360,9 @@ export class Song{
       return event instanceof AudioEvent;
     });
 
-    this._needsUpdate = false;
+    parseEvents(this, eventsToBeParsed);
     this._scheduler.updateSong();
+    this._needsUpdate = false;
     debugger;
   }
 }

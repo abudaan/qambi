@@ -17,6 +17,7 @@ export class Part{
 
     this._eventsMap = new Map();
     this._newEvents = new Map();
+    this._changedEvents = new Map();
     //this._movedEvents = new Map();
     //this._removedEvents = new Map();
     //this._transposedEvents = new Map();
@@ -109,50 +110,42 @@ export class Part{
     }
 
     let numberOfEventsHasChanged = false;
-    let updateEvents = false;
-/*
-    Array.from(this._eventsMap.values()).forEach((event) => {
+    let sortEvents = false;
+
+    let events = this._eventsMap.values();
+    for(let event of events){
       if(event.state === 'removed'){
         this._eventsMap.delete(event.id);
-        this._removedEvents.set(event.id, event);
-        numberOfEventsHasChanged = true;
-      }else if(event.state === 'new'){
-        this._eventsMap.set(event.id, event);
-        this._newEvents.set(event.id, event);
-        numberOfEventsHasChanged = true;
-      }else if(event.state === 'moved'){
-        this._movedEvents.set(event.id, event);
-      }else if(event.state === 'transposed'){
-        this._transposedEvents.set(event.id, event);
-      }
-      event.state = 'clean';
-    });
-*/
-    Array.from(this._eventsMap.values()).forEach((event) => {
-      if(event.state === 'removed'){
-        this._eventsMap.delete(event.id);
-        // in case a new event gets deleted before part.update() is called
-        this._newEvents.delete(event.id);
+        // in case a new or changed event gets deleted before part.update() is called
+        if(this._newEvents.has(event.id)){
+          this._newEvents.delete(event.id);
+        }
+        if(this._changedEvents.has(event.id)){
+          this._changedEvents.delete(event.id);
+        }
         numberOfEventsHasChanged = true;
       }else if(event.state === 'new'){
         this._eventsMap.set(event.id, event);
         this._newEvents.set(event.id, event);
         numberOfEventsHasChanged = true;
       }else if(event.state !== 'clean'){
-        updateEvents = true;
+        this._changedEvents.set(event.id, event);
+        sortEvents = true;
       }
-    });
+      event.state = 'clean';
+    }
 
     // if number of events has changed update the _events array and the _eventsMap map
     if(numberOfEventsHasChanged === true){
       this._events = [];
-      Array.from(this._eventsMap.values()).forEach((event) => {
+      let events = this._eventsMap.values();
+      for(let event of events){
         this._events.push(event);
-      });
+      }
     }
 
 
-    if(numberOfEventsHasChanged === true || updateEvents === true){
+    if(numberOfEventsHasChanged === true || sortEvents === true){
       this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
     }
 

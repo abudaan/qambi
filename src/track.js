@@ -16,6 +16,9 @@ export class Track{
     this._partsMap = new Map();
     this._eventsMap = new Map();
     this._newParts = new Map();
+    this._changedParts = new Map();
+    this._newEvents = new Map();
+    this._changedEvents = new Map();
     //this._movedParts = new Map();
     //this._removedParts = new Map();
     //this._transposedParts = new Map();
@@ -148,44 +151,49 @@ export class Track{
     //   return;
     // }
 
+    let numberOfEventsHasChanged = false;
     let numberOfPartsHasChanged = false;
-    let updateParts = false;
-/*
-    Array.from(this._eventsMap.values()).forEach((part) => {
-      if(part.state === 'removed'){
-        this._partsMap.delete(part.id);
-        this._removedParts.set(part.id, part);
-        numberOfPartsHasChanged = true;
-      }else if(part.state === 'new'){
-        this._partsMap.set(part.id, part);
-        this._newParts.set(part.id, part);
-        numberOfPartsHasChanged = true;
-      }else if(part.state === 'moved'){
-        this._movedParts.set(part.id, part);
-      }else if(part.state === 'transposed'){
-        this._transposedParts.set(part.id, part);
+    let sortEvents = false;
+    let sortParts = false;
+
+    let parts = this._partsMap.values();
+    for(let part of parts){
+
+      part.update();
+
+      if(part._newEvents.size > 0){
+        let newEvents = part._newEvents.values();
+        for(let newEvent in newEvents){
+          this._newEvents.set(newEvent.id, newEvent);
+          this._eventsMap.set(newEvent.id, newEvent);
+        }
+        numberOfEventsHasChanged = true;
+        part._newEvents.clear();
       }
-      part.state = 'clean';
-    });
-*/
-    for(let part of this._partsMap.values()){
 
-      // part.getEvents() triggers part.update();
-      let events = part.getEvents();
-      // @TODO: get part._newEvents;
+      if(part._changedEvents.size > 0){
+        let changedEvents = part._changedEvents.values();
+        for(let changedEvent in changedEvents){
+          this._changedEvents.set(changedEvent.id, changedEvent);
+        }
+        sortEvents = true;
+        part._changedEvents.clear();
+      }
 
 
       if(part.state === 'removed'){
         this._partsMap.delete(part.id);
-        // in case a new part gets deleted before track.update() is called
+        // in case a new or changed part gets deleted before track.update() is called
         this._newParts.delete(part.id);
+        this._changedParts.delete(part.id);
         numberOfPartsHasChanged = true;
       }else if(part.state === 'new'){
         this._partsMap.set(part.id, part);
         this._newParts.set(part.id, part);
         numberOfPartsHasChanged = true;
       }else if(part.state !== 'clean'){
-        updateParts = true;
+        this._changedParts.set(part.id, part);
+        sortParts = true;
       }
     }
 
@@ -195,14 +203,27 @@ export class Track{
       for(let part of this._partsMap.values()){
         this._parts.push(part);
         this._events = this._events.concat(part.getEvents());
-      };
-      this._events.forEach(function(event){
+      }
+      this._eventsMap.clear();
+
+      for(let event in this._events){
         this._eventsMap.set(event.id, event);
-      });
+      }
+    }else if(numberOfEventsHasChanged === true){
+      for(let part of this._partsMap.values()){
+        this._parts.push(part);
+        this._events = this._events.concat(part.getEvents());
+      }
+      this._eventsMap.clear();
+      for(let event in this._events){
+        this._eventsMap.set(event.id, event);
+      }
     }
 
-    if(numberOfPartsHasChanged === true || updateParts === true){
+    if(numberOfPartsHasChanged === true || sortParts === true){
       this._parts.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
+      this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
+    }else if(numberOfEventsHasChanged === true || sortEvents === true){
       this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
     }
 
