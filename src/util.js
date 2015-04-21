@@ -175,10 +175,10 @@ export function parseSamples(mapping, every = false){
       if(mapping.hasOwnProperty(key)){
         sample = mapping[key];
         // @TODO: not good enough! -> implement better check for url or base64
-        if(sample.indexOf('http://') === -1){
-          promises.push(parseSample(base64ToBinary(sample), key, every));
+        if(sample.indexOf('url=') === 0){
+          promises.push(loadAndParseSample(sample.substring(4), key, every));
         }else{
-          promises.push(loadAndParseSample(sample, key, every));
+          promises.push(parseSample(base64ToBinary(sample), key, every));
         }
       }
     }
