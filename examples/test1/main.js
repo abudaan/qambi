@@ -3,14 +3,7 @@ window.onload = function() {
   'use strict';
 
   var
-    // satisfy jslint
-    sequencer = window.sequencer,
-    console = window.console,
-    song,
-    track1, track2,
-    event1, event2,
-    btnPlay = document.getElementById('play'),
-    btnStop = document.getElementById('stop');
+    sequencer = window.sequencer;
 
 
   sequencer.init().then(
@@ -18,13 +11,12 @@ window.onload = function() {
     function onFulFilled(){
 
       sequencer.unlockWebAudio();
-      var i = sequencer.createInstrument();
-      i.addSampleData(60, 'audioBuffer', {sustain: [0]});
 
-      var e = sequencer.createMIDIEvent(0, 144, 60, 123);
-      e.midiNote = {id:'aap'};
-      i.processEvent(e);
-      i.processEvent(e);
+      var instrument = sequencer.createInstrument();
+      instrument.addSampleData(60, 'audioBuffer', {sustain: [0]});
+
+      var event = sequencer.createMIDIEvent(0, 144, 60, 123);
+      instrument.processEvent(event);
     },
 
     function onRejected(e){
