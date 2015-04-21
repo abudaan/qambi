@@ -324,3 +324,12 @@ export function getNiceTime(millis){
       timeAsArray: [h, m, s, ms]
   };
 }
+
+
+export function createState(state = 'clean'){
+  return {
+    part: state,
+    track: state,
+    song: state
+  };
+}

@@ -21,7 +21,7 @@
 'use strict';
 
 
-import {log, info, warn, error, typeString} from './util';
+import {log, info, warn, error, typeString, createState} from './util';
 import {createNote} from './note.js';
 
 
@@ -45,6 +45,7 @@ export class MIDIEvent{
     this.eventNumber = midiEventId;
     this.time = 0;
     this.muted = false;
+    this._state = createState();
 
 
     if(args === undefined || args.length === 0){
@@ -82,7 +83,7 @@ export class MIDIEvent{
       this.channel = args[4] || 1;
     }
 
-    this.sortIndex = this.type + this.ticks; // note off events come before note on events
+    this._sortIndex = this.type + this.ticks; // note off events come before note on events
 
     switch(this.type){
       case 0x0:
@@ -202,8 +203,8 @@ export class MIDIEvent{
       this.midiNote.pitch = this.data1;
     }
 
-    if(this._state !== 'new'){
-      this._state = 'transposed';
+    if(this._state.part !== 'new'){
+      this._state.part = 'transposed';
     }
     this._update();
   }
@@ -238,8 +239,8 @@ export class MIDIEvent{
     if(this.midiNote !== undefined){
       this.midiNote.pitch = this.data1;
     }
-    if(this._state !== 'new'){
-      this._state = 'transposed';
+    if(this._state.part !== 'new'){
+      this._state.part = 'transposed';
     }
     this._update();
   }
@@ -252,9 +253,10 @@ export class MIDIEvent{
       return;
     }
     this.ticks += parseInt(ticks, 10);
+    this._sortIndex = this.type + this.ticks
     //@todo: set duration of midi note
-    if(this._state !== 'new'){
-      this._state = 'moved';
+    if(this._state.part !== 'new'){
+      this._state.part = 'moved';
     }
     this._update();
   }
@@ -275,9 +277,9 @@ export class MIDIEvent{
         this.ticks = position.ticks;
       }
     }
-
-    if(this._state !== 'new'){
-      this._state = 'moved';
+    this._sortIndex = this.type + this.ticks
+    if(this._state.part !== 'new'){
+      this._state.part = 'moved';
     }
     this._update();
   }
@@ -297,7 +299,7 @@ export class MIDIEvent{
     if(fromSong){
       this.song = undefined;
     }
-    this._state = 'removed';
+    this._state.part = 'removed';
     this._update();
   }
 

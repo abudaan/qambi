@@ -148,7 +148,7 @@ export class Song{
   addTrack(track){
     if(track instanceof Track){
       track.song = this;
-      track.state = 'new';
+      track._state.song = 'new';
       this._tracksMap.set(track.id, track);
     }
     return this; // make it chainable
@@ -163,7 +163,7 @@ export class Song{
 
   removeTrack(track){
     if(this._tracksMap.has(track.id)){
-      track.state = 'removed';
+      track._state.song = 'removed';
       track.reset();
     }
     return this; // make it chainable
@@ -253,11 +253,11 @@ export class Song{
 
     let tracks = this._tracksMap.values();
     for(let track of tracks){
-      if(track.state === 'removed'){
+      if(track._state.song === 'removed'){
         this._removedTracks.push(track.id);
         this._tracksMap.delete(track.id);
         continue;
-      }else if(track.state === 'new'){
+      }else if(track._state.song === 'new'){
         this._newTracks.push(track);
       }
 
@@ -275,17 +275,6 @@ export class Song{
         numberOfPartsHasChanged = true;
       }
 
-      // get all the changed parts
-      if(track._changedParts.size > 0){
-        let changedParts = track._changedParts.values();
-        for(let changedPart of changedParts){
-          this._changedParts.push(changedPart);
-        }
-        track._changedParts.clear();
-        sortParts = true;
-      }
-
-
       // get all the new events
       if(track._newEvents.size > 0){
         let newEvents = track._newEvents.values();
@@ -298,26 +287,44 @@ export class Song{
         numberOfEventsHasChanged = true;
       }
 
-      // get all the changed events
-      if(track._changedEvents.size > 0){
-        let changedEvents = track._changedEvents.values();
-        for(let changedEvent of changedEvents){
-          this._changedEvents.push(changedEvent);
-        }
-        track._changedEvents.clear();
-        sortEvents = true;
-      }
+      track._state.song = 'clean';
+    }
 
-      track.state = 'clean';
+    for(let part of this._partsMap.values()){
+      if(part._state.song === 'removed'){
+        this._removedParts.push(part);
+        this._partsMap.delete(part.id);
+        numberOfPartsHasChanged = true;
+      }else if(part_state.song !== 'new'){
+        this._changedParts.push(part);
+      }
+      part._state.song = 'clean';
+    }
+
+
+    if(numberOfPartsHasChanged === true){
+      this._parts = [];
+
+      let parts = this._partsMap.values();
+      for(let part of parts){
+        this._parts.push(part);
+      }
+    }
+
+    if(numberOfPartsHasChanged === true || sortParts === true){
+      this._parts.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
     }
 
 
     for(let event of this._eventsMap.values()){
-      if(event.state === 'removed'){
+      if(event._state.song === 'removed'){
         this._removedEvents.push(event);
         this._eventsMap.delete(event.id);
         numberOfEventsHasChanged = true;
+      }else if(event_state.song !== 'new'){
+        this._changedEvents.push(events);
       }
+      event._state.song = 'clean';
     }
 
     if(numberOfEventsHasChanged === true){
@@ -329,31 +336,7 @@ export class Song{
     }
 
     if(numberOfEventsHasChanged === true || sortEvents === true){
-      // @TODO: sort on sortIndex!!
-      this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
-    }
-
-
-
-    for(let part of this._partsMap.values()){
-      if(part.state === 'removed'){
-        this._removedParts.push(part);
-        this._partsMap.delete(part.id);
-        numberOfPartsHasChanged = true;
-      }
-    }
-
-    if(numberOfPartsHasChanged === true){
-      this._parts = [];
-      let parts = this._partsMap.values();
-      for(let part of parts){
-        this._parts.push(part);
-      }
-    }
-
-    if(numberOfPartsHasChanged === true || sortParts === true){
-      // @TODO: sort on sortIndex!!
-      this._parts.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
+      this._events.sort((a, b) => (a._sortIndex <= b._sortIndex) ? -1 : 1);
     }
 
     this._audioEvents = this._events.filter(function(event){
@@ -363,7 +346,6 @@ export class Song{
     parseEvents(this, eventsToBeParsed);
     this._scheduler.updateSong();
     this._needsUpdate = false;
-    debugger;
   }
 }
 

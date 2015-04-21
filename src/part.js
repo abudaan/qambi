@@ -1,6 +1,6 @@
 'use strict';
 
-import {info} from './util.js';
+import {info, createState} from './util.js';
 import {MIDIEvent} from './midi_event.js';
 import {AudioEvent} from './audio_event.js';
 
@@ -17,10 +17,7 @@ export class Part{
 
     this._eventsMap = new Map();
     this._newEvents = new Map();
-    this._changedEvents = new Map();
-    //this._movedEvents = new Map();
-    //this._removedEvents = new Map();
-    //this._transposedEvents = new Map();
+    this._state = createState();
 
     if(config.events){
       this.addEvents(config.events);
@@ -31,7 +28,7 @@ export class Part{
 
   addEvent(event){
     if(event instanceof MIDIEvent || event instanceof AudioEvent){
-      event.state = 'new';
+      event._state.part = 'new';
       this._needsUpdate = true;
       this._eventsMap.set(event.id, event);
       return this; // make it chainable
@@ -114,25 +111,20 @@ export class Part{
 
     let events = this._eventsMap.values();
     for(let event of events){
-      if(event.state === 'removed'){
+      if(event._state.part === 'removed'){
         this._eventsMap.delete(event.id);
-        // in case a new or changed event gets deleted before part.update() is called
+        // in case a new event gets deleted before part.update() is called
         if(this._newEvents.has(event.id)){
           this._newEvents.delete(event.id);
         }
-        if(this._changedEvents.has(event.id)){
-          this._changedEvents.delete(event.id);
-        }
         numberOfEventsHasChanged = true;
-      }else if(event.state === 'new'){
-        this._eventsMap.set(event.id, event);
+      }else if(event._state.part === 'new'){
         this._newEvents.set(event.id, event);
         numberOfEventsHasChanged = true;
-      }else if(event.state !== 'clean'){
-        this._changedEvents.set(event.id, event);
+      }else if(event._state.part !== 'clean'){
         sortEvents = true;
       }
-      event.state = 'clean';
+      event._state.part = 'clean';
     }
 
     // if number of events has changed update the _events array and the _eventsMap map
@@ -146,7 +138,7 @@ export class Part{
 
 
     if(numberOfEventsHasChanged === true || sortEvents === true){
-      this._events.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
+      this._events.sort((a, b) => (a._sortIndex <= b._sortIndex) ? -1 : 1);
     }
 
     // create notes -> @TODO: only necessary if number of events has changed

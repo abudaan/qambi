@@ -132,7 +132,7 @@ export function parseEvents(song, events){
   let lastEventTick = 0;
 
   events.sort(function(a, b){
-    return a.sortIndex - b.sortIndex;
+    return a._sortIndex - b._sortIndex;
   });
   event = events[0];
 
