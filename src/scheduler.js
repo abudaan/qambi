@@ -85,7 +85,7 @@ export default class Scheduler{
   getEvents(){
     var i, event, events = [], note, noteOn, noteOff, endMillis, endTicks, diff, buffertime, audioEvent;
 
-    buffertime = config.bufferTime * 1000;
+    buffertime = config.get('bufferTime') * 1000;
     if(this.song.doLoop === true && this.song.loopDuration < buffertime){
       this.maxtime = this.songMillis + this.song.loopDuration - 1;
       //console.log(maxtime, this.song.loopDuration);
@@ -175,14 +175,16 @@ export default class Scheduler{
         event.time = this.startTime + event.millis - this.songStartMillis;
 
         if(event.type === 144 || event.type === 128){
-          if(event.midiNote !== undefined && event.midiNote.noteOff !== undefined){
+          //if(event.midiNote !== undefined && event.midiNote.noteOff !== undefined){
+          //if(event.noteOff !== undefined){
             if(event.type === 144){
-              this.notes[event.midiNote.id] = event.midiNote;
+              //this.notes[event.midiNote.id] = event.midiNote;
+              this.notes[event.id] = event.id;
             }else if(event.type === 128){
-              delete this.notes[event.midiNote.id];
+              delete this.notes[event.noteOn.id];
             }
             events.push(event);
-          }
+          //}
         }else if(event.type === 'audio'){
           if(this.scheduledAudioEvents[event.id] !== undefined){
             // @TODO: delete the entry in this.scheduledAudioEvents after the sample has finished
@@ -226,13 +228,13 @@ export default class Scheduler{
 
     if(this.song.precounting === true){
       this.songMillis = this.song.metronome.millis;
-      this.maxtime = this.songMillis + (config.bufferTime * 1000);
+      this.maxtime = this.songMillis + (config.get('bufferTime') * 1000);
       events = Array.from(this.song.metronome.getPrecountEvents(this.maxtime));
 
       if(this.maxtime > this.song.metronome.endMillis){
         // start scheduling events of the song -> add the first events of the song
         this.songMillis = 0;//this.song.millis;
-        this.maxtime = this.song.millis + (config.bufferTime * 1000);
+        this.maxtime = this.song.millis + (config.get('bufferTime') * 1000);
         this.startTime = this.song.startTime;
         this.startTime2 = this.song.startTime2;
         this.songStartMillis = this.song.startMillis;
@@ -240,7 +242,7 @@ export default class Scheduler{
       }
     }else{
       this.songMillis = this.song.millis;
-      this.maxtime = this.songMillis + (config.bufferTime * 1000);
+      this.maxtime = this.songMillis + (config.get('bufferTime') * 1000);
       this.startTime = this.song.startTime;
       this.startTime2 = this.song.startTime2;
       this.songStartMillis = this.song.startMillis;
@@ -253,7 +255,7 @@ export default class Scheduler{
     for(i = 0; i < numEvents; i++){
       event = events[i];
       track = event.track;
-      //console.log(track);
+
       if(
         track === undefined ||
         event.mute === true ||
@@ -269,7 +271,6 @@ export default class Scheduler{
         event.time /= 1000;
         track.audio.processEvent(event);
       }else{
-
         if(track.routeToMidiOut === false){
           // if(event.type === 144){
           //     console.log(event.time/1000, sequencer.getTime(), event.time/1000 - sequencer.getTime());

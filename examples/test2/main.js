@@ -7,6 +7,7 @@ window.onload = function() {
     sequencer = window.sequencer,
     console = window.console,
     song,
+    instrument,
     track1, track2,
     event1, event2,
     btnPlay = document.getElementById('play'),

@@ -24,7 +24,7 @@ export class Song{
   /*
     @param settings is a Map or an Object
   */
-  constructor(settings){
+  constructor(settings = {}){
 
     this.id = 'S' + songId++ + Date.now();
     this.name = this.id;
@@ -71,6 +71,11 @@ export class Song{
     if(settings.timeEvents){
       this.addTimeEvents(settings.timeEvents);
       delete settings.timeEvents;
+    }else{
+      this.addTimeEvents([
+        new MIDIEvent(0, sequencer.TEMPO, settings.bpm || this.bpm),
+        new MIDIEvent(0, sequencer.TIME_SIGNATURE, settings.nominator || this.nominator, settings.denominator || this.denominator)
+      ]);
     }
 
     if(settings.tracks){
@@ -89,6 +94,7 @@ export class Song{
         this[key] = value;
       }, this);
     }
+
 
     // initialize midi for this song: add Maps for midi in- and outputs, and add eventlisteners to the midi inputs
     this.midiInputs = new Map();
@@ -126,6 +132,7 @@ export class Song{
     sequencer.unlockWebAudio();
     this._scheduler.firstRun = true;
     this.timeStamp = sequencer.time * 1000;
+    this.startTime = this.timeStamp;
     //this.startMillis = this.millis; // this.millis is set by playhead, use 0 for now
     this.startMillis = 0;
     addTask('repetitive', this.id, () => {pulse(this);});
@@ -295,7 +302,7 @@ export class Song{
         this._removedParts.push(part);
         this._partsMap.delete(part.id);
         numberOfPartsHasChanged = true;
-      }else if(part_state.song !== 'new'){
+      }else if(part._state.song !== 'new'){
         this._changedParts.push(part);
       }
       part._state.song = 'clean';
@@ -321,8 +328,8 @@ export class Song{
         this._removedEvents.push(event);
         this._eventsMap.delete(event.id);
         numberOfEventsHasChanged = true;
-      }else if(event_state.song !== 'new'){
-        this._changedEvents.push(events);
+      }else if(event._state.song !== 'new'){
+        this._changedEvents.push(event);
       }
       event._state.song = 'clean';
     }
@@ -346,6 +353,7 @@ export class Song{
     parseEvents(this, eventsToBeParsed);
     this._scheduler.updateSong();
     this._needsUpdate = false;
+    return this;
   }
 }
 
@@ -366,5 +374,5 @@ function pulse(song){
 
   song.millis += diff;
   song.timeStamp = now;
-  song.scheduler.update();
+  song._scheduler.update();
 }

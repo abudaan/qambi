@@ -17,9 +17,14 @@ class Sample{
     }
   }
 
-  start(){
-    console.log(this.source);
-    this.source.start();
+  start(time){
+    //console.log(this.source);
+    this.source.start(time);
+  }
+
+  stop(time, cb){
+    this.source.stop(time);
+    this.source.onended = cb;
   }
 }
 

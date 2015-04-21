@@ -13,6 +13,7 @@ import initAudio from './init_audio.js';
 import initMidi from './init_midi.js';
 import {createSong} from './song.js';
 import {createTrack} from './track.js';
+import {createPart} from './part.js';
 import {createMIDIEvent} from './midi_event.js';
 import {createInstrument} from './instrument.js';
 import parseMIDIFile from './midi_parse.js';
@@ -144,6 +145,7 @@ Object.defineProperty(sequencer, 'debugLevel', {
 
 Object.defineProperty(sequencer, 'createMIDIEvent', {value: createMIDIEvent});
 Object.defineProperty(sequencer, 'createTrack', {value: createTrack});
+Object.defineProperty(sequencer, 'createPart', {value: createPart});
 Object.defineProperty(sequencer, 'createSong', {value: createSong});
 Object.defineProperty(sequencer, 'createInstrument', {value: createInstrument});
 Object.defineProperty(sequencer, 'parseMIDIFile', {value: parseMIDIFile});

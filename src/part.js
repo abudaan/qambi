@@ -29,6 +29,7 @@ export class Part{
   addEvent(event){
     if(event instanceof MIDIEvent || event instanceof AudioEvent){
       event._state.part = 'new';
+      event.part = this;
       this._needsUpdate = true;
       this._eventsMap.set(event.id, event);
       return this; // make it chainable

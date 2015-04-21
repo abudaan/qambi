@@ -7,6 +7,7 @@ import createSample from './sample';
 export class Instrument{
 
   constructor(){
+    // create a samples data object for all 128 velocity levels of all 128 notes
     this.samplesData = new Array(128).fill(-1);
     this.samplesData = this.samplesData.map(function(){
       return new Array(128).fill(-1);
@@ -15,23 +16,28 @@ export class Instrument{
   }
 
   processEvent(event){
+    //console.log(event);
     if(event.type === 128){
       // stop sample
-      if(event.midiNote === undefined){
+      if(event.noteOn === undefined){
         return;
       }
-      let id = event.midiNote.id;
+      let id = event.noteOn.id;
       let sample = this.scheduledSamples.get(id);
       sample.stop(event.time, () => this.scheduledSamples.delete(id));
+      //console.log('stop', event.time);
     }else if(event.type === 144){
       // start sample
-      if(event.midiNote === undefined){
+      if(event.noteOff === undefined){
         return;
       }
       let sampleData = this.samplesData[event.noteNumber][event.velocity];
       let sample = createSample(sampleData, event);
-      this.scheduledSamples.set(event.midiNote.id, sample);
-      sample.start();
+      this.scheduledSamples.set(event.id, sample);
+      //console.log('start', event.time);
+      sample.start(event.time);
+    }else if(event.type === 176){
+      // @TODO: handle controller events
     }
   }
 

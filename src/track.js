@@ -1,6 +1,7 @@
 'use strict';
 
 import {createState} from './util';
+import {createInstrument} from './instrument';
 import {Part} from './part';
 
 let trackId = 0;
@@ -21,6 +22,12 @@ export class Track{
 
     this._needsUpdate = false;
     this._state = createState();
+
+    //@TODO: do something useful here
+    this.midiInputs = {};
+    this.midiOutputs = {};
+    this.routeToMidiOut = false;
+    this.instrument = createInstrument();
 
     if(config.parts){
       this.addParts(config.parts);
@@ -173,6 +180,7 @@ export class Track{
       if(part._newEvents.size > 0){
         let newEvents = part._newEvents.values();
         for(let newEvent of newEvents){
+          newEvent.track = this;
           this._newEvents.set(newEvent.id, newEvent);
           this._eventsMap.set(newEvent.id, newEvent);
         }

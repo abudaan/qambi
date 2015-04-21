@@ -133,7 +133,5 @@ function toSong(parsed){
 
   config.ppq = ppq;
   config.timeEvents = timeEvents;
-  let song = new Song(config);
-  song.update();
-  return song;
+  return new Song(config).update();
 }
