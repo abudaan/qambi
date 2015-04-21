@@ -1,5 +1,7 @@
 'use strict';
 
+//import sequencer from './sequencer';
+import getConfig from './config';
 import {log, info, warn, error, base64ToBinary, ajax} from './util.js';
 import parseMIDIFile from './midi_parse';
 import {MIDIEvent} from './midi_event';
@@ -7,8 +9,13 @@ import {Part} from './part';
 import {Track} from './track';
 import {Song} from './song';
 
+let config;
 
 export default function createSongFromMIDIFile(data){
+
+  if(config === undefined){
+    config = getConfig();
+  }
 
   if(data instanceof ArrayBuffer === true){
     let buffer = new Uint8Array(data);
@@ -30,8 +37,9 @@ export default function createSongFromMIDIFile(data){
 function toSong(parsed){
   let tracks = parsed.tracks;
   let ppq = parsed.header.ticksPerBeat;
+  let ppqFactor = config.get('defaultPPQ')/ppq;
   let timeEvents = [];
-  let config = {
+  let songConfig = {
     tracks: []
   };
   let events;
@@ -44,8 +52,8 @@ function toSong(parsed){
     events = [];
 
     for(let event of track){
-      ticks += (event.deltaTime * ppq);
-      //console.log(event.subtype, event.deltaTime, tmpTicks);
+      ticks += (event.deltaTime * ppqFactor);
+      //console.log(event.deltaTime, ticks, ppq);
 
       if(channel === -1 && event.channel !== undefined){
         channel = event.channel;
@@ -84,8 +92,8 @@ function toSong(parsed){
             timeEvents.pop();
           }
 
-          if(config.bpm === undefined){
-            config.bpm = bpm;
+          if(songConfig.bpm === undefined){
+            songConfig.bpm = bpm;
           }
           timeEvents.push(new MIDIEvent(ticks, 0x51, bpm));
           break;
@@ -98,9 +106,9 @@ function toSong(parsed){
             timeEvents.pop();
           }
 
-          if(config.nominator === undefined){
-            config.nominator = event.numerator;
-            config.denominator = event.denominator;
+          if(songConfig.nominator === undefined){
+            songConfig.nominator = event.numerator;
+            songConfig.denominator = event.denominator;
           }
           timeEvents.push(new MIDIEvent(ticks, 0x58, event.numerator, event.denominator));
           break;
@@ -127,11 +135,11 @@ function toSong(parsed){
     }
 
     if(events.length > 0){
-      config.tracks.push(new Track().addPart(new Part({events:events})));
+      songConfig.tracks.push(new Track().addPart(new Part({events:events})));
     }
   }
 
-  config.ppq = ppq;
-  config.timeEvents = timeEvents;
-  return new Song(config).update();
+  songConfig.ppq = ppq;
+  songConfig.timeEvents = timeEvents;
+  return new Song(songConfig).update();
 }

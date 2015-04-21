@@ -13,7 +13,13 @@ class Sample{
       this.source = config.context.createOscillator();
       this.source.type = 'sine';
       this.source.frequency.value = event.frequency;
-      this.source.connect(config.destination);
+      //this.source.connect(config.destination);
+
+      // tmp!
+      let volume = config.context.createGain();
+      volume.gain.value = 0.3;
+      this.source.connect(volume);
+      volume.connect(config.destination);
     }
   }
 

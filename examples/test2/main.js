@@ -29,7 +29,6 @@ window.onload = function() {
         //song = sequencer.parseMIDIFile(data);
         song = sequencer.createSongFromMIDIFile(data);
         initUI();
-        //debugger;
       },
       function onRejected(e){
         console.error(e);

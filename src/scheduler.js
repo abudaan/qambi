@@ -167,7 +167,6 @@ export default class Scheduler{
 
     for(i = this.index; i < this.numEvents; i++){
       event = this.events[i];
-
       if(event.millis < this.maxtime){
         // if(this.song.bar >= 6 && event.track.name === 'Sonata # 3'){
         //     console.log('  song:', this.song.millis, 'event:', event.millis, ('(' + event.type + ')'), 'max:', maxtime, 'id:', event.midiNote.id);
@@ -255,7 +254,6 @@ export default class Scheduler{
     for(i = 0; i < numEvents; i++){
       event = events[i];
       track = event.track;
-
       if(
         track === undefined ||
         event.mute === true ||
