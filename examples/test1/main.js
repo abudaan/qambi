@@ -3,7 +3,13 @@ window.onload = function() {
   'use strict';
 
   var
-    sequencer = window.sequencer;
+    sequencer = window.sequencer,
+    noteOn,
+    noteOff,
+    instrument,
+    btnPlay = document.getElementById('play'),
+    btnStop = document.getElementById('stop'),
+    btnLoad = document.getElementById('load');
 
 
   sequencer.init().then(
@@ -12,15 +18,43 @@ window.onload = function() {
 
       sequencer.unlockWebAudio();
 
-      var instrument = sequencer.createInstrument();
-      instrument.addSampleData(60, 'audioBuffer', {sustain: [0]});
+      instrument = sequencer.createInstrument();
 
-      var event = sequencer.createMIDIEvent(0, 144, 60, 123);
-      instrument.processEvent(event);
+      noteOn = sequencer.createMIDIEvent(0, 144, 60, 123);
+      noteOff = sequencer.createMIDIEvent(500, 128, 60, 0);
+      noteOn.noteOff = noteOff;
+      noteOff.noteOn = noteOn;
+
+      initUI();
     },
 
     function onRejected(e){
-      alert(e);
+      window.alert(e);
     }
   );
+
+
+  function initUI(){
+    btnPlay.addEventListener('click', function(){
+      instrument.processEvent(noteOn);
+    });
+
+    btnStop.addEventListener('click', function(){
+      instrument.processEvent(noteOff);
+    });
+
+    btnLoad.addEventListener('click', function(){
+      sequencer.util.parseSamples({
+        'c4': 'https://abudaan.github.io/qambi/data/TP01d-ElectricPiano-000-060-c3.wav'
+      }).then(
+        function onFulfilled(buffers){
+          //console.log(buffers);
+          instrument.addSampleData(60, buffers.c4, {sustain: [0]});
+        },
+        function onRejected(e){
+          window.alert(e);
+        }
+      );
+    });
+  }
 };

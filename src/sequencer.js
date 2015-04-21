@@ -19,7 +19,7 @@ import {createInstrument} from './instrument.js';
 import parseMIDIFile from './midi_parse.js';
 import createSongFromMIDIFile from './song_from_midifile.js';
 import {start} from './heartbeat.js';
-import {ajax} from './util.js';
+import {ajax, parseSamples} from './util.js';
 import {createNote, getNoteNumber, getNoteName, getNoteOctave, getFullNoteName, getFrequency, isBlackKey} from './note.js';
 
 let sequencer = {};
@@ -122,6 +122,7 @@ Object.defineProperty(sequencer, 'ui', {value: {}, writable: true}); // ui funct
 // add util functions
 let util = {};
 Object.defineProperty(util, 'ajax', {value: ajax});
+Object.defineProperty(util, 'parseSamples', {value: parseSamples});
 Object.defineProperty(sequencer, 'util', {value: util});
 
 //TODO: create methods getSongs, removeSong and so on

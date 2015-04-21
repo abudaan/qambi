@@ -34,7 +34,7 @@ export class Instrument{
       let sampleData = this.samplesData[event.noteNumber][event.velocity];
       let sample = createSample(sampleData, event);
       this.scheduledSamples.set(event.id, sample);
-      console.log('start', event.time);
+      //console.log('start', event.time);
       sample.start(event.time);
     }else if(event.type === 176){
       // @TODO: handle controller events
