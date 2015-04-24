@@ -45,7 +45,7 @@ window.onload = function() {
 
     btnLoad.addEventListener('click', function(){
       sequencer.util.parseSamples({
-        'c4': 'url=../../data/TP01d-ElectricPiano-000-060-c3.wav'
+        'c4': '../../data/TP01d-ElectricPiano-000-060-c3.wav'
       }).then(
         function onFulfilled(buffers){
           //console.log(buffers);

@@ -174,18 +174,17 @@ export function parseSamples(mapping, every = false){
     for(key in mapping){
       if(mapping.hasOwnProperty(key)){
         sample = mapping[key];
-        // @TODO: not good enough! -> implement better check for url or base64
-        if(sample.indexOf('url=') === 0){
-          promises.push(loadAndParseSample(sample.substring(4), key, every));
-        }else{
+        if(checkIfBase64(sample)){
           promises.push(parseSample(base64ToBinary(sample), key, every));
+        }else{
+          promises.push(loadAndParseSample(sample, key, every));
         }
       }
     }
   }else if(type === 'array'){
     mapping.forEach(function(sample){
-      if(sample.indexOf('http://') === -1){
-        promises.push(parseSample(base64ToBinary(sample), every));
+      if(checkIfBase64(sample)){
+        promises.push(parseSample(sample, every));
       }else{
         promises.push(loadAndParseSample(sample, every));
       }
@@ -213,6 +212,16 @@ export function parseSamples(mapping, every = false){
   });
 }
 
+
+function checkIfBase64(data){
+  let passed = true;
+  try{
+    atob(data);
+  }catch(e){
+    passed = false;
+  }
+  return passed;
+}
 
 
 // adapted version of https://github.com/danguer/blog-examples/blob/master/js/base64-binary.js
