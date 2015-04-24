@@ -15,6 +15,7 @@ import {createSong} from './song.js';
 import {createTrack} from './track.js';
 import {createPart} from './part.js';
 import {createMIDIEvent} from './midi_event.js';
+import {createMIDINote} from './midi_note.js';
 import {createInstrument} from './instrument.js';
 import parseMIDIFile from './midi_parse.js';
 import createSongFromMIDIFile from './song_from_midifile.js';
@@ -145,6 +146,7 @@ Object.defineProperty(sequencer, 'debugLevel', {
 
 
 Object.defineProperty(sequencer, 'createMIDIEvent', {value: createMIDIEvent});
+Object.defineProperty(sequencer, 'createMIDINote', {value: createMIDINote});
 Object.defineProperty(sequencer, 'createTrack', {value: createTrack});
 Object.defineProperty(sequencer, 'createPart', {value: createPart});
 Object.defineProperty(sequencer, 'createSong', {value: createSong});
@@ -168,6 +170,8 @@ Object.defineProperty(sequencer, 'SHARP', {value: 'sharp'});
 Object.defineProperty(sequencer, 'FLAT', {value: 'flat'});
 Object.defineProperty(sequencer, 'ENHARMONIC_SHARP', {value: 'enharmonic-sharp'});
 Object.defineProperty(sequencer, 'ENHARMONIC_FLAT', {value: 'enharmonic-flat'});
+
+Object.defineProperty(sequencer, 'MIDI_NOTE', {value: 'midi note'});
 
 
 // standard MIDI events

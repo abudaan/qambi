@@ -2,6 +2,7 @@
 
 import {info, createState} from './util.js';
 import {MIDIEvent} from './midi_event.js';
+import {MIDINote} from './midi_note.js';
 import {AudioEvent} from './audio_event.js';
 
 let partId = 0;
@@ -16,6 +17,7 @@ export class Part{
     this.ticks = 0;
 
     this._eventsMap = new Map();
+    this._notesMap = new Map();
     this._newEvents = new Map();
     this._state = createState();
 
@@ -156,9 +158,8 @@ export class Part{
           info('no note on event!', n++);
           continue;
         }
-        noteOn.noteOff = noteOff;
-        noteOff.noteOn = noteOn;
-        noteOn.durationTicks = noteOff.ticks - noteOn.ticks;
+        let midiNote = new MIDINote(noteOn, noteOff);
+        this._notesMap.set(midiNote.id, midiNote);
         delete notes[event.noteNumber];
       }
     }

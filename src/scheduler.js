@@ -174,16 +174,15 @@ export default class Scheduler{
         event.time = this.startTime + event.millis - this.songStartMillis;
 
         if(event.type === 144 || event.type === 128){
-          //if(event.midiNote !== undefined && event.midiNote.noteOff !== undefined){
-          //if(event.noteOff !== undefined){
+          if(event.midiNote !== undefined && event.midiNote.endless === false){
             if(event.type === 144){
               //this.notes[event.midiNote.id] = event.midiNote;
               this.notes[event.id] = event.id;
             }else if(event.type === 128){
-              delete this.notes[event.noteOn.id];
+              delete this.notes[event.midiNote.id];
             }
             events.push(event);
-          //}
+          }
         }else if(event.type === 'audio'){
           if(this.scheduledAudioEvents[event.id] !== undefined){
             // @TODO: delete the entry in this.scheduledAudioEvents after the sample has finished

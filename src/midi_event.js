@@ -41,7 +41,7 @@ export class MIDIEvent{
   constructor(...args){
     let note;
 
-    this.id = 'M' + midiEventId++ + new Date().getTime();
+    this.id = 'M' + midiEventId++ + Date.now();
     this.eventNumber = midiEventId;
     this.time = 0;
     this.muted = false;

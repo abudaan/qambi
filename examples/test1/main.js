@@ -22,8 +22,8 @@ window.onload = function() {
 
       noteOn = sequencer.createMIDIEvent(0, 144, 60, 123);
       noteOff = sequencer.createMIDIEvent(500, 128, 60, 0);
-      noteOn.noteOff = noteOff;
-      noteOff.noteOn = noteOn;
+
+      sequencer.createMIDINote(noteOn, noteOff);
 
       initUI();
     },

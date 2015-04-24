@@ -19,21 +19,21 @@ export class Instrument{
     //console.log(event);
     if(event.type === 128){
       // stop sample
-      if(event.noteOn === undefined){
+      if(event.midiNote === undefined){
         return;
       }
-      let id = event.noteOn.id;
+      let id = event.midiNote.id;
       let sample = this.scheduledSamples.get(id);
       sample.stop(event.time, () => this.scheduledSamples.delete(id));
       //console.log('stop', event.time);
     }else if(event.type === 144){
       // start sample
-      if(event.noteOff === undefined){
+      if(event.midiNote === undefined){
         return;
       }
       let sampleData = this.samplesData[event.noteNumber][event.velocity];
       let sample = createSample(sampleData, event);
-      this.scheduledSamples.set(event.id, sample);
+      this.scheduledSamples.set(event.midiNote.id, sample);
       //console.log('start', event.time);
       sample.start(event.time);
     }else if(event.type === 176){
