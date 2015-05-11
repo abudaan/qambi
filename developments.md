@@ -12,26 +12,27 @@ You can divide qambi into the following functional modules:
 1. scheduling of MIDI and audio events
 2. editing and manipulating the sequence
 3. instruments / generating sound
-4. recording
-5. import and export
-6. GUI components
+4. routing, mixing and effects
+5. recording
+6. import and export
+7. GUI components
 
 
-#####1. scheduling of MIDI and audio event
+#####1. scheduling of MIDI and audio events
 
-This is the 'heartbeat' of qambi. The pulse can be controlled by `onEnterFrame()` (default) or `setTimeout()`. On every pulse (frame) qambi calculates the following:
+This is the 'heartbeat' of qambi. The pulse can be controlled by `onEnterFrame()` (default) or `setTimeout()`. On every pulse or frame qambi calculates the following:
 
 - the current position in bars and beats format and in time format
 - the new events that are currently under the playhead
 - the events that were under the playhead in the former frame
 - the new notes and parts that are currently under the playhead
 - the notes and parts that were under the playhead in the former frame and still are under the playhead
-- the notes and parts that were under the playhead in the former frame, but aren't in the current frame
+- the notes and parts that were under the playhead in the former frame, but aren't anymore in the current frame
 
 
 #####2. editing and manipulating the sequence
 
-This is the actual sequencing part and includes functions like `createAudioEvent()`, `addEvents()`, `movePart()`, `deleteTrack()`, and so on.
+This is the actual sequencing functionality and includes functions like `createAudioEvent()`, `addEvents()`, `movePart()`, `deleteTrack()`, and so on.
 
 
 #####3. instruments / generating sound
@@ -42,17 +43,22 @@ The scheduler (see point 1.) sends events to instruments. Instruments can be:
 - external software instruments connected via virtual MIDI ports (virmidi on Linux, IAC on Mac, LoopBe on Windows)
 - external hardware instruments connected via MIDI out
 
-The internal qambi instrument can be divided in sample instruments and sound generating instruments. The former require audio samples to be loaded into qambi, the latter requires computing power. Instruments that use both samples and sound synthesis are possible as well.
+The internal qambi instruments can be divided in sample instruments and sound generating instruments. The former requires audio samples to be loaded into qambi, the latter requires computing power. Instruments that use both samples and sound synthesis are possible as well.
 
-Some instruments type require to be update by the scheduler every frame, for instance instruments that have a release envelope and instruments that have effects like autopan.
+Some instruments require to be updated by the scheduler every frame, for instance instruments that have a release envelope and instruments that have effects like autopan.
 
 
-#####4. recording
+#####4. routing, mixing and effects
+
+This includes the routing of the audio signal through effects. Every track has a separate output bus that can be mixed by the mixer of the song that the track belongs to.
+
+
+#####5. recording
 
 This includes both MIDI and audio recording. When recording audio a waveform image of the recording will be generated. Optionally a mp3 or ogg version of the recording can be generated, see next point.
 
 
-#####5. import and export
+#####6. import and export
 
 Includes import of and export to the following formats:
 
@@ -64,6 +70,10 @@ Includes import of and export to the following formats:
 And all these formats in base64 encoded form.
 
 
-#####6. GUI components
+#####7. GUI components
 
-The key editor, the waveform editor and a score editor. All GUI components will have the option to run headless, which means that you can use helper functions to generate your own GUI component. For instance an iterator function that helps you to generate a grid for your key editor: `getNextGridLine()`.
+The key editor, the waveform editor and a score editor. All GUI components will have the option to run headless, which means that you can use helper functions to generate your own GUI component. For instance an iterator function that helps you to generate a grid for your key editor: `getNextGridLine()`, `getPlayheadPostionAtX()`, and so on.
+
+
+####native vs web
+
