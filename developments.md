@@ -137,7 +137,7 @@ Music applications perform better in native code. With asm.js you run native cod
 
 ####links for further exploration
 
- - [asm.js vs pnacl](http://games.greggman.com/game/thoughts-on-asm-js-vs-pnacl/) -> read the comments as well!
+ - [asm.js vs pnacl](http://games.greggman.com/game/thoughts-on-asm-js-vs-pnacl/) (the comments are very interesting as well)
  - [asm.js official site](http://asmjs.org/)
  - [asm.js](http://mozakai.blogspot.nl/2013/06/what-asmjs-is-and-what-asmjs-isnt.html)
  - [asm.js AOT compiler benchmarks](https://blog.mozilla.org/luke/2014/01/14/asm-js-aot-compilation-and-startup-performance/)
