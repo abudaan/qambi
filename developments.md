@@ -1,11 +1,11 @@
 ####heartbeat
 
-Heartbeat is a more or less monolithic structure packed with functionality. This makes the code hard to maintain, test and debug, and to extend with external modules. Therefor I have decided to stop the further development of heartbeat and to start with a new codebase under a new name: qambi.
+Heartbeat is a more or less monolithic structure packed with functionality. This makes the code hard to maintain, test and debug, and to extend with external or additional modules. Therefor I have decided to stop the further development of heartbeat and to start with a new codebase under a new name: qambi.
 
 
 ####qambi
 
-Qambi is written in es6 and takes full advantage of the [modules](http://www.2ality.com/2014/09/es6-modules-final.html). Therefor qambi is much better split up into separate modules. The change of the name was necessary because the term 'heartbeat' generally refers to the state of a program, see [wikipedia](http://en.wikipedia.org/wiki/Heartbeat_(computing)). Qambi is a Zulu word meaning creator, inventor or composer.
+Qambi is written in es6 and takes full advantage of the [modules](http://www.2ality.com/2014/09/es6-modules-final.html). The change of the name was necessary because the term 'heartbeat' generally refers to the state of a program, see [wikipedia](http://en.wikipedia.org/wiki/Heartbeat_(computing)). Qambi is a Zulu word meaning creator, inventor or composer.
 
 You can divide qambi into the following functional modules:
 
