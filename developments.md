@@ -7,7 +7,7 @@ Heartbeat is a more or less monolithic structure packed with functionality. This
 
 Qambi is written in es6 and takes full advantage of the [modules](http://www.2ality.com/2014/09/es6-modules-final.html). The change of the name was necessary because the term 'heartbeat' generally refers to the state of a program, see [wikipedia](http://en.wikipedia.org/wiki/Heartbeat_(computing)). Qambi is a Zulu word meaning creator, inventor or composer.
 
-You can divide qambi into the following functional modules:
+You can divide qambi in the following categories of functional modules:
 
 1. scheduling of MIDI and audio events
 2. editing and manipulating the sequence
@@ -37,7 +37,7 @@ This is the actual sequencing functionality and includes functions like `createA
 
 #####3. instruments / generating sound
 
-The scheduler (see point 1.) sends events to instruments. Instruments can be:
+The scheduler (see category 1.) sends events to instruments. Instruments can be:
 
 - internal qambi instruments
 - external software instruments connected via virtual MIDI ports (virmidi on Linux, IAC on Mac, LoopBe on Windows)
@@ -55,7 +55,7 @@ This includes the routing of the audio signal through effects. Every track has a
 
 #####5. recording
 
-This includes both MIDI and audio recording. When recording audio a waveform image of the recording will be generated. Optionally a mp3 or ogg version of the recording can be generated, see next point.
+This includes both MIDI and audio recording. When recording audio a waveform image of the recording will be generated. Optionally a mp3 or ogg version of the recording can be generated, see next category.
 
 
 #####6. import and export
@@ -77,3 +77,13 @@ The key editor, the waveform editor and a score editor. All GUI components will 
 
 ####native vs web
 
+You can use web technologies to create native apps and vice versa, use native technologies to create web apps. However if it comes to apps that rely on performance, native code still holds the best cards.
+
+Techniques:
+
+- PNaCL
+- asm.js
+
+Write native, compile to asm.js for Firefox and Edge, compile to PNaCL for Chrome.
+
+Browsers that don't support asm.js and PNaCL (Opera, Safari) can still run the asm.js code albeit slower compared to asm.js enabled browsers.
