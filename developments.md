@@ -132,7 +132,7 @@ Modules can be replaced by C/C++ versions on the way until at some point in the 
 
 ####summary
 
-Music applications perform better in native code. With asm.js you can run native code in a browser and mix it with regular javascript. All browsers support asm.js and the 3 major vendors are putting effort in making asm.js run faster in their browsers.
+Music applications perform better when written in native code. With asm.js you can run native code in a browser and mix it with regular javascript. All browsers support asm.js and the 3 major vendors are putting effort in making asm.js run faster in their browsers.
 
 
 
