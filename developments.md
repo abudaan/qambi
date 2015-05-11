@@ -1,11 +1,11 @@
 ####heartbeat
 
-Heartbeat is a more or less monolithic structure packed with functionality. This makes the code a bit hard to maintain, test and debug, and quite hard to extend with external or additional modules. Therefor I have decided to stop the further development of heartbeat and to start with a new codebase under a new name: qambi.
+Heartbeat has become a more or less monolithic structure packed with functionality. This makes the code a bit hard to maintain, test and debug, and quite hard to extend with external or additional modules. Therefor I have decided to stop the further development of heartbeat and to start with a new codebase under a new name: qambi.
 
 
 ####qambi
 
-Qambi is work in progress, I think (hope) it will be finished by the end of this summer. Not all functionality of heartbeat will be ported to qambi. For instance heartbeat has a lot of functions to load assets such as instruments, assetpacks and samplepacks. All this functionality will be completely removed; qambi does not impose a certain format on your assets, you are free to choose a format that suits your needs the best, and write your own loading methods for your assets.
+Qambi is work in progress, I think (I hope) it will be finished by the end of this summer. Not all functionality of heartbeat will be ported to qambi. For instance heartbeat has a lot of functions to load assets such as instruments, assetpacks and samplepacks. All this functionality will be completely removed; qambi does not impose a certain format on your assets, you are free to choose a format that suits your needs the best, and write your own loading methods for your assets.
 
 Qambi is written in es6 and takes full advantage of its [modules](http://www.2ality.com/2014/09/es6-modules-final.html). The change of the name was necessary because the term 'heartbeat' generally refers to the state of a program, see [wikipedia](http://en.wikipedia.org/wiki/Heartbeat_(computing)). Qambi is a Zulu word meaning creator, inventor or composer.
 
@@ -14,13 +14,13 @@ You can divide qambi in the following categories of functionality:
 1. scheduling of MIDI and audio events
 2. editing and manipulating the sequence
 3. instruments / generating sound
-4. routing, mixing and effects
+4. routing, mixing and channel effects
 5. recording
 6. import and export
 7. GUI components
 8. utilities
 
-Each of this categories consists of one or more modules. Some categories are more likely to be extended by third party modules than other, but all categories are open for additional modules. Apart from that, the existing modules are easy to extend.
+Each of this categories consists of one or more modules. Some categories are more likely to be extended by third party modules than other, but all categories are open for additional modules. Moreover, the existing modules are easy to extend.
 
 Apart from these categories, there are a few core modules that bundle all modules together.
 
@@ -29,6 +29,7 @@ Apart from these categories, there are a few core modules that bundle all module
 This is the 'heartbeat' of qambi. The pulse can be controlled by `onEnterFrame()` (default) or `setTimeout()`. On every pulse or frame qambi calculates the following:
 
 - the current position in bars and beats format and in time format
+- the events that need to be scheduled (ie send events to instruments)
 - the new events that are currently under the playhead
 - the events that were under the playhead in the former frame
 - the new notes and parts that are currently under the playhead
@@ -84,26 +85,26 @@ Current module: MIDIStream.
 
 #####7. GUI components
 
-The key editor, the waveform editor and a score editor. All GUI components will have the option to run headless, which means that you can use helper functions to generate your own GUI component. For instance an iterator function that helps you to generate a grid for your key editor: `getNextGridLine()`, `getPlayheadPostionAtX()`, and so on.
+The key editor, the waveform editor and the score editor. All GUI components will have the option to run headless, which means that you can use helper functions to generate your own GUI component. For instance an iterator function that helps you to generate a grid for your key editor: `getNextGridLine()`, `getPlayheadPostionAtX()`, and so on.
 
 Not yet implemented in qambi.
 
 #####8. utilities
 
-This category contains any type of functionality that you may find handy in the codebase. Currently there are for instance utility functions for loading files, decoding audio data, converting data from base64 to binary and so on.
+This category contains any type of functionality that you may find handy. Currently there are for instance utility functions for loading files, decoding audio data, converting data from base64 to binary and so on.
 
 Current modules: Note, Polyfill and Util (a collection of non-related utilities).
 
 ####native vs web
 
-You can use web technologies to create native apps and vice versa, use native technologies to create web apps. However when it comes to applications that rely on performance such as running complex waveshaping algorithms, native code still holds the best cards.
+The border between web and native apps has become a bit blurry: you can use web technologies to create native apps and vice versa, use native technologies to create web apps. However when it comes to applications that rely on performance such as running complex waveshaping algorithms, native code holds the best cards.
 
 There are 2 main lines of development that allow native code to run in a browser:
 
 - asm.js (Mozilla)
 - PNaCL (Google)
 
-Both technologies run native code in the browser about 1,5 to 2 times slower compared to running directly on the OS.
+Both technologies run native code about 1,5 to 2 times slower compared to running the code directly on the OS (this is *very* fast).
 
 Asm.js is a subset of javascript and therefor it runs in any browser. PNaCL (Portable Native Client) is a bitcode executable that runs inside Chrome's native client (NaCL). NaCL is enabled by default since Chrome 31 but it only works in the desktop version of the browser.
 
@@ -113,14 +114,14 @@ The big advantage of PNaCL that it supports multi-threaded C/C++ code. You can m
 
 The big advantage of asm.js is that it runs in any browser and all major browser vendors are working on optimizations for asm.js to make it run faster. Firefox, Chrome and Edge even have a special directive `'use asm';` that instructs the JIT compiler of the browser to skip the bytecode optimization loop and to generate the intermediate representation (IR) directly, which is much faster.
 
-For regular javascript the bytecode optimization loop performs type interference which is necessary because javascipt is a dynamically typed language. Simply put: the compiler deducts the type of your variables by running the code a few times. For a more in depth explanation see the links below.
+For regular javascript the bytecode optimization loop performs type interference, which is necessary because javascipt is a dynamically typed language. Simply put: the compiler deducts the type of your variables by running the code a few times and then optimizes the code based on the deducted type. For a more in-depth explanation see the links below.
 
-Another advantage of code in C/C++ is that you can compile it to a native application as well, if necessary. For instance: because there is no support for MIDI i/o in any browser on iOS, you could compile the full C/C++ codebase to a native iOS app that can interact with connected MIDI devices.
+Another advantage of code in C/C++ is that you can compile it to a native application as well if necessary. For instance: because there is no support for MIDI i/o in any browser on iOS, you could compile the full C/C++ codebase to a native iOS app that can interact with connected MIDI devices.
 
 
 ####asm.js and qambi
 
-Because qambi has been set up very modular, it is very easy to integrate C/C++ modules. Actually, heartbeat already uses a C++ module for the conversion of wav files to mp3; this is done by an [asm.js port of libmp3lame](https://github.com/akrennmair/libmp3lame-js).
+Because qambi has been set up in a modular way, it is very easy to integrate C/C++ modules. Actually, heartbeat already uses a C++ module for the conversion of wav files to mp3; this is done by an [asm.js port of libmp3lame](https://github.com/akrennmair/libmp3lame-js).
 
 Modules that would benefit the most from being ported to C/C++ are modules that perform heavy operations like transposing samples. By transposing samples on the client you don't need to load every sample from the server, which can decrease load and parse times significantly.
 
@@ -131,7 +132,7 @@ Modules can be replaced by C/C++ versions on the way until at some point in the 
 
 ####summary
 
-Music applications perform better in native code. With asm.js you run native code in a browser and mix it with regular javascript. All browsers support asm.js and the 3 major vendors are putting effort in making asm.js run faster in their browsers.
+Music applications perform better in native code. With asm.js you can run native code in a browser and mix it with regular javascript. All browsers support asm.js and the 3 major vendors are putting effort in making asm.js run faster in their browsers.
 
 
 
