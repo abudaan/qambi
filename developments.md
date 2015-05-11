@@ -134,7 +134,7 @@ Modules that would benefit the most form being ported to asm.js are the Schedule
  - [asm.js AOT compiler benchmarks](https://blog.mozilla.org/luke/2014/01/14/asm-js-aot-compilation-and-startup-performance/)
  - [asm.js on Wikipedia](http://en.wikipedia.org/wiki/Asm.js)
  - [asm.js performance in all browsers](https://hacks.mozilla.org/2015/03/asm-speedups-everywhere/)
- - [asm.js support in Chrome and Edge]
+ - [asm.js support in Chrome and Edge](http://jaxenter.com/ie-chrome-set-support-asm-js-114783.html)
  - [JIT](http://en.wikipedia.org/wiki/Just-in-time_compilation)
  - [type interference](http://en.wikipedia.org/wiki/Type_inference)
  - [intermediate representation](http://cs.lmu.edu/~ray/notes/ir/)
