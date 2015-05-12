@@ -112,9 +112,7 @@ Both technologies offer a toolchain for compiling C/C++ code, both technologies 
 
 The big advantage of PNaCL that it supports multi-threaded C/C++ code. You can make your asm.js code multi-threaded as well by using webworkers but you can not compile multi-threaded C/C++ code directly to multi-threaded asm.js.
 
-The big advantage of asm.js is that it runs in any browser and all major browser vendors are working on optimizations for asm.js to make it run faster. Firefox, Chrome and Edge even have a special directive `'use asm';` that instructs the JIT compiler of the browser to skip the bytecode optimization loop and to generate the intermediate representation (IR) directly, which is much faster.
-
-For regular javascript the bytecode optimization loop performs type interference, which is necessary because javascipt is a dynamically typed language. Simply put: the compiler deducts the type of your variables by running the code a few times and then optimizes the code based on the deducted type. For a more in-depth explanation see the links below.
+The big advantage of asm.js is that it runs in any browser and all major browser vendors are working on optimizations for asm.js to make it run faster. The fact that Microsoft has chosen to support asm.js in their new browser Edge will most likely speed up the development of asm.js optimization.
 
 Another advantage of code in C/C++ is that you can compile it to a native application as well if necessary. For instance: because there is no support for MIDI i/o in any browser on iOS, you could compile the full C/C++ codebase to a native iOS app that can interact with connected MIDI devices.
 
@@ -134,6 +132,7 @@ Modules can be replaced by C/C++ versions on the way until at some point in the 
 
 Music applications perform better when written in native code. With asm.js you can run native code in a browser and mix it with regular javascript. All browsers support asm.js and the 3 major vendors are putting effort in making asm.js run faster in their browsers.
 
+A C/C++ codebase has multiple compile targets: besides compiling to asm.js you can compile it to PNaCL and to a native application.
 
 
 ####links for further exploration
@@ -150,3 +149,12 @@ Music applications perform better when written in native code. With asm.js you c
  - [intermediate representation](http://cs.lmu.edu/~ray/notes/ir/)
  - [baseline compiler in Firefox](https://blog.mozilla.org/javascript/2013/04/05/the-baseline-compiler-has-landed/)
  - [crankshaft compiler in Chrome](http://jayconrod.com/posts/54/a-tour-of-v8-crankshaft-the-optimizing-compiler)
+
+
+<!--
+
+Firefox, Chrome and Edge even have a special directive `'use asm';` that instructs the JIT compiler of the browser to skip the bytecode optimization loop and to generate the intermediate representation (IR) directly, which is much faster.
+
+For regular javascript the bytecode optimization loop performs type interference, which is necessary because javascipt is a dynamically typed language. Simply put: the compiler deducts the type of your variables by running the code a few times and then optimizes the code based on the deducted type. For a more in-depth explanation see the links below.
+
+-->
