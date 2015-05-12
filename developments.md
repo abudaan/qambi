@@ -97,40 +97,42 @@ Current modules: Note, Polyfill and Util (a collection of non-related utilities)
 
 ####native vs web
 
-The border between web and native apps has become a bit blurry: you can use web technologies to create native apps and vice versa, use native technologies to create web apps. However when it comes to applications that rely on performance such as running complex waveshaping algorithms, native code holds the best cards.
+The border between web and native apps has become a bit blurry: you can use web technologies to create native apps and native technologies to create web apps. However when it comes to applications that rely on performance such as running complex waveshaping algorithms, native code holds the best cards.
 
 There are 2 main lines of development that allow native code to run in a browser:
 
 - asm.js (Mozilla)
 - PNaCL (Google)
 
+<!--
 Both technologies run native code about 1,5 to 2 times slower compared to running the code directly on the OS (this is *very* fast because regular javascript is at least 5 times slower than native code).
+-->
 
-Asm.js is a subset of javascript and therefor it runs in any browser. PNaCL (Portable Native Client) is a bitcode executable that runs inside Chrome's native client (NaCL). NaCL is enabled by default since Chrome 31 but it only works in the desktop version of the browser.
+Asm.js is a subset of javascript and runs in every browser. PNaCL (Portable Native Client) is a bitcode executable that runs inside Chrome's native client (NaCL). NaCL is enabled by default since Chrome 31 but it only works in the desktop version of the browser.
 
 Both technologies offer a toolchain for compiling C/C++ code, both technologies are open source.
 
+PNaCL runs native code at near native speed. Asm.js is a bit behind: it runs native code at a factor of 1,3 - 2 slowdown over native speed, but browser vendors are working hard to make asm.js run faster.
+
 The big advantage of PNaCL that it supports multi-threaded C/C++ code. You can make your asm.js code multi-threaded as well by using webworkers but you can not compile multi-threaded C/C++ code directly to multi-threaded asm.js.
 
-The big advantage of asm.js is that it runs in any browser and all major browser vendors are working on optimizations for asm.js to make it run faster. The fact that Microsoft has chosen to support asm.js in their new browser Edge will most likely speed up the development of asm.js optimization.
+The big advantage of asm.js is that it runs in any browser and that all major browser vendors are working on optimizations for asm.js to make it run faster. The fact that Microsoft has chosen to support asm.js in their new browser Edge will most likely stir up the competition between vendors and speed up further optimization of asm.js.
 
-Another advantage of code in C/C++ is that you can compile it to a native application as well if necessary. For instance: because there is no support for MIDI i/o in any browser on iOS, you could compile the full C/C++ codebase to a native iOS app that can interact with connected MIDI devices.
+An additional advantage of code in C/C++ is that you can compile it to a native application as well. For instance: because there is no support for MIDI i/o in any browser on iOS, you could compile the full C/C++ codebase to a native iOS app that can interact with connected MIDI devices.
 
 
 ####asm.js and qambi
 
 Because qambi has been set up in a modular way, it is very easy to integrate C/C++ modules. Actually, heartbeat already uses a C++ module for the conversion of wav files to mp3; this is done by an [asm.js port of libmp3lame](https://github.com/akrennmair/libmp3lame-js).
 
-Modules that would benefit the most from being ported to C/C++ are modules that perform heavy operations like transposing samples. By transposing samples on the client you don't need to load every sample from the server, which can decrease load and parse times significantly.
-
-Another example are channel effect modules that perform real time audio manipulations, but also the Scheduler will probably be more efficient when written in C/C++.
+Modules that would benefit the most from being ported to C/C++ are modules that perform heavy operations. For instance instruments that transpose samples instead of loading a sample for every note from the server, or channel effect modules that perform real time audio manipulations. But also the Scheduler will probably be more efficient when written in C/C++.
 
 Modules can be replaced by C/C++ versions on the way until at some point in the future the whole codebase is written in C/C++
 
 
 ####summary
 
-Music applications perform better when written in native code. With asm.js you can run native code in a browser and mix it with regular javascript. All browsers support asm.js and the 3 major vendors are putting effort in making asm.js run faster in their browsers.
+Music applications perform better when written in native code. With asm.js you can run native code in a browser and mix it with regular javascript. All browsers support asm.js and the 3 major vendors are putting effort into making asm.js run faster in their browsers.
 
 A C/C++ codebase has multiple compile targets: besides compiling to asm.js you can compile it to PNaCL and to a native application.
 
