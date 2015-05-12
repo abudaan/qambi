@@ -104,7 +104,7 @@ There are 2 main lines of development that allow native code to run in a browser
 - asm.js (Mozilla)
 - PNaCL (Google)
 
-Both technologies run native code about 1,5 to 2 times slower compared to running the code directly on the OS (this is *very* fast).
+Both technologies run native code about 1,5 to 2 times slower compared to running the code directly on the OS (this is *very* fast because regular javascript is at least 5 times slower than native code).
 
 Asm.js is a subset of javascript and therefor it runs in any browser. PNaCL (Portable Native Client) is a bitcode executable that runs inside Chrome's native client (NaCL). NaCL is enabled by default since Chrome 31 but it only works in the desktop version of the browser.
 
