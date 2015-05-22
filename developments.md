@@ -151,6 +151,7 @@ A C/C++ codebase has multiple compile targets: besides compiling to asm.js you c
  - [intermediate representation](http://cs.lmu.edu/~ray/notes/ir/)
  - [baseline compiler in Firefox](https://blog.mozilla.org/javascript/2013/04/05/the-baseline-compiler-has-landed/)
  - [crankshaft compiler in Chrome](http://jayconrod.com/posts/54/a-tour-of-v8-crankshaft-the-optimizing-compiler)
+ - [javascript performance](http://www.javaworld.com/article/2078869/mobile-java/dan-bricklin--javascript-beats-native-code-for-mobile.html)
 
 
 <!--

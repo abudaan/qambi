@@ -24,6 +24,9 @@ window.onload = function() {
   );
 
   function init(){
+
+    sequencer.somethingVeryUseful('it sure is!');
+
     sequencer.util.ajax({url:'../../data/mozk545a.mid', responseType: 'arraybuffer'}).then(
       function onFulfilled(data){
         //song = sequencer.parseMIDIFile(data);

@@ -1,4 +1,4 @@
-  'use strict';
+'use strict';
 
 import sequencer from './sequencer';
 import {addEventListener, removeEventListener, dispatchEvent} from './song_add_eventlistener';
@@ -226,6 +226,7 @@ export class Song{
     this._timeEvents.push(event);
     if(parse === true){
       parseTimeEvents(this);
+      // then call song.update();
     }
   }
 
@@ -251,13 +252,12 @@ export class Song{
     this._changedEvents = [];
     this._removedEvents = [];
 
-    let sortEvents = false;
-    let sortParts = false;
     let numberOfPartsHasChanged = false;
     let numberOfEventsHasChanged = false;
     let eventsToBeParsed = [].concat(this._timeEvents);
     let partsToBeParsed = [];
 
+    // filter removed and new tracks
     let tracks = this._tracksMap.values();
     for(let track of tracks){
       if(track._state.song === 'removed'){
@@ -297,6 +297,7 @@ export class Song{
       track._state.song = 'clean';
     }
 
+    // filter removed and new parts
     for(let part of this._partsMap.values()){
       if(part._state.song === 'removed'){
         this._removedParts.push(part);
@@ -318,11 +319,12 @@ export class Song{
       }
     }
 
-    if(numberOfPartsHasChanged === true || sortParts === true){
+    if(numberOfPartsHasChanged === true){
       this._parts.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
     }
 
 
+    // filter all removed and new events
     for(let event of this._eventsMap.values()){
       if(event._state.song === 'removed'){
         this._removedEvents.push(event);
@@ -342,7 +344,7 @@ export class Song{
       }
     }
 
-    if(numberOfEventsHasChanged === true || sortEvents === true){
+    if(numberOfEventsHasChanged === true){
       this._events.sort((a, b) => (a._sortIndex <= b._sortIndex) ? -1 : 1);
     }
 

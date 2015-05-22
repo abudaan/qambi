@@ -23,6 +23,11 @@ import {start} from './heartbeat.js';
 import {ajax, parseSamples} from './util.js';
 import {createNote, getNoteNumber, getNoteName, getNoteOctave, getFullNoteName, getFrequency, isBlackKey} from './note.js';
 
+// import third party modules
+import {somethingVeryUseful} from './third_party_module.js';
+
+
+
 let sequencer = {};
 let config;
 let debugLevel;
@@ -199,6 +204,12 @@ Object.defineProperty(sequencer, 'SYSTEM_RESET', {value: 255});
 Object.defineProperty(sequencer, 'TEMPO', {value: 0x51});
 Object.defineProperty(sequencer, 'TIME_SIGNATURE', {value: 0x58});
 Object.defineProperty(sequencer, 'END_OF_TRACK', {value: 0x2F});
+
+
+
+// third party modules can be added here
+Object.defineProperty(sequencer, 'somethingVeryUseful', {value: somethingVeryUseful});
+
 
 
 export default sequencer;

@@ -52,11 +52,11 @@ export default class Scheduler{
   }
 
   /*
-    A dangling audio event start before, and ends after the current position of the playhead. We have to calculate the difference between
+    A dangling audio event starts before, and ends after the current position of the playhead. We have to calculate the difference between
     the start of the sample (event.millis) and the position of the playhead (song.millis). This value is the playheadOffset, and the sample
     starts the number of seconds of the playheadOffset into the sample.
 
-    Also the audio event is scheduled the number of milliseconds of the playhead later to keep it in sync with the rest of the song.
+    Also the audio event is scheduled the current number of milliseconds of the playhead later to keep it in sync with the rest of the song.
 
     The playheadOffset is applied to the audio sample in audio_track.js
   */
@@ -165,12 +165,12 @@ export default class Scheduler{
       this.firstRun = false;
     }
 
+
+    // main loop
     for(i = this.index; i < this.numEvents; i++){
       event = this.events[i];
       if(event.millis < this.maxtime){
-        // if(this.song.bar >= 6 && event.track.name === 'Sonata # 3'){
-        //     console.log('  song:', this.song.millis, 'event:', event.millis, ('(' + event.type + ')'), 'max:', maxtime, 'id:', event.midiNote.id);
-        // }
+
         event.time = this.startTime + event.millis - this.songStartMillis;
 
         if(event.type === 144 || event.type === 128){
@@ -234,7 +234,6 @@ export default class Scheduler{
         this.songMillis = 0;//this.song.millis;
         this.maxtime = this.song.millis + (config.get('bufferTime') * 1000);
         this.startTime = this.song.startTime;
-        this.startTime2 = this.song.startTime2;
         this.songStartMillis = this.song.startMillis;
         events = this.getEvents();
       }
@@ -242,14 +241,12 @@ export default class Scheduler{
       this.songMillis = this.song.millis;
       this.maxtime = this.songMillis + (config.get('bufferTime') * 1000);
       this.startTime = this.song.startTime;
-      this.startTime2 = this.song.startTime2;
       this.songStartMillis = this.song.startMillis;
       events = this.getEvents();
     }
 
     numEvents = events.length;
 
-    //for(i = events.length - 1; i >= 0; i--){
     for(i = 0; i < numEvents; i++){
       event = events[i];
       track = event.track;
