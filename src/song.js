@@ -2,6 +2,7 @@
 
 import sequencer from './sequencer';
 import getConfig from './config';
+import {getPosition} from './position';
 import {addEventListener, removeEventListener, dispatchEvent} from './song_add_eventlistener';
 import {log, info, warn, error, typeString} from './util';
 import {Track} from './track';
@@ -363,6 +364,8 @@ export class Song{
     parseEvents(this, eventsToBeParsed);
     this._scheduler.updateSong();
     this._needsUpdate = false;
+    this._duration = getDuration(this, this._events[this._events.length - 1]);
+    //console.log(this._duration, numberOfEventsHasChanged, this._events.length, this._events[this._events.length - 1]);
     return this;
   }
 }
@@ -385,4 +388,15 @@ function pulse(song){
   song.millis += diff;
   song.timeStamp = now;
   song._scheduler.update();
+}
+
+function getDuration(song, event){
+  let lastBar = event.bar + 1;
+  // check if the event is at the first beat, sixteenth and tick of a bar
+  if(event.beat === 1 && event.sixteenth === 1 && event.tick === 0){
+    lastBar = event.bar;
+  }
+  song.lastBar = lastBar;
+  console.log(event.nominator, event.numSixteenth, event.ticksPerSixteenth);
+  let position = getPosition(song, 'barsandbeats', lastBar - 1, event.nominator, event.numSixteenth, event.ticksPerSixteenth, true);
 }

@@ -402,7 +402,7 @@ function checkBarsAndBeats(value, isTick){
 function checkPosition(args){
   returnType = 'all';
   beyondEndOfSong = true;
-  //console.log('----> checkPosition:', args);
+  //console.log('----> checkPosition:', args, typeString(args));
 
   if(typeString(args) === 'array'){
     let
@@ -457,7 +457,7 @@ function checkPosition(args){
 }
 
 
-export function getPosition(song, args){
+export function getPosition(song, ...args){
   //console.log('getPosition', args);
 
   let position = checkPosition(args),
