@@ -1,9 +1,9 @@
 'use strict';
 
 import sequencer from './sequencer';
+import getConfig from './config';
 import {addEventListener, removeEventListener, dispatchEvent} from './song_add_eventlistener';
 import {log, info, warn, error, typeString} from './util';
-import getConfig from './config';
 import {Track} from './track';
 import {Part} from './part';
 import {MIDIEvent} from './midi_event';
@@ -12,6 +12,7 @@ import Scheduler from './scheduler';
 import {initMidiSong, setMidiInputSong, setMidiOutputSong} from './init_midi';
 import {addTask, removeTask} from './heartbeat';
 import {parseTimeEvents, parseEvents} from './parse_events';
+import {Metronome} from './metronome';
 
 
 let songId = 0,
@@ -28,6 +29,12 @@ export class Song{
 
     this.id = 'S' + songId++ + Date.now();
     this.name = this.id;
+
+    this._volume = 0.5;
+    this._input = sequencer.audioContext.createGainNode();
+    this._input.gain.value = this._volume;
+    this._input.connect(config.masterGainNode); // the main/master output
+
     this._events = []; // all MIDI and audio events
     this._audioEvents = []; // only audio events
     this._parts = [];
@@ -68,6 +75,7 @@ export class Song{
     }
 */
 
+
     if(settings.timeEvents){
       this.addTimeEvents(settings.timeEvents);
       delete settings.timeEvents;
@@ -82,7 +90,6 @@ export class Song{
       this.addTracks(settings.tracks);
       delete settings.tracks;
     }
-
 
     // then override settings by provided settings
     if(typeString(settings) === 'object'){
@@ -100,6 +107,9 @@ export class Song{
     this.midiInputs = new Map();
     this.midiOutputs = new Map();
     initMidiSong(this); // @see: init_midi.js
+
+
+    //this._metronome = new Metronome();
 
     this.lastBar = this.bars;
     this.pitchRange = this.highestNote - this.lowestNote + 1;
@@ -157,6 +167,7 @@ export class Song{
       track.song = this;
       track._state.song = 'new';
       this._tracksMap.set(track.id, track);
+      track._output.connect(this._input);
     }
     return this; // make it chainable
   }
@@ -170,6 +181,7 @@ export class Song{
 
   removeTrack(track){
     if(this._tracksMap.has(track.id)){
+      track._output.disconnect();
       track._state.song = 'removed';
       track.reset();
     }
@@ -317,9 +329,7 @@ export class Song{
       for(let part of parts){
         this._parts.push(part);
       }
-    }
 
-    if(numberOfPartsHasChanged === true){
       this._parts.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
     }
 
@@ -338,13 +348,11 @@ export class Song{
 
     if(numberOfEventsHasChanged === true){
       this._events = [];
+      //this._events = this._metronome.getEvents();
       let events = this._eventsMap.values();
       for(let event of events){
         this._events.push(event);
       }
-    }
-
-    if(numberOfEventsHasChanged === true){
       this._events.sort((a, b) => (a._sortIndex <= b._sortIndex) ? -1 : 1);
     }
 

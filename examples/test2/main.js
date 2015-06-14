@@ -31,6 +31,7 @@ window.onload = function() {
       function onFulfilled(data){
         //song = sequencer.parseMIDIFile(data);
         song = sequencer.createSongFromMIDIFile(data);
+        console.log(sequencer.volume, song.volume);
         initUI();
       },
       function onRejected(e){

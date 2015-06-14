@@ -1,8 +1,11 @@
 'use strict';
 
+import getConfig from './config';
 import {log, info, warn, error} from './util';
 import {getNoteNumber} from './note';
 import createSample from './sample';
+
+let config = getConfig();
 
 export class Instrument{
 
@@ -13,6 +16,8 @@ export class Instrument{
       return new Array(128).fill(-1);
     });
     this.scheduledSamples = new Map();
+    this._track = null;
+    this._output = config.masterGainNode;
   }
 
   processEvent(event){
@@ -32,7 +37,7 @@ export class Instrument{
         return;
       }
       let sampleData = this.samplesData[event.noteNumber][event.velocity];
-      let sample = createSample(sampleData, event);
+      let sample = createSample(sampleData, event, this._output);
       this.scheduledSamples.set(event.midiNote.id, sample);
       //console.log('start', event.time);
       sample.start(event.time);

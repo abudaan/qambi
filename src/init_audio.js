@@ -26,9 +26,6 @@ const
 function initAudio(ctx){
   context = ctx;
   return new Promise(function executor(resolve, reject){
-    context = new window.AudioContext();
-    data.context = context;
-
     if(context.createGainNode === undefined){
       context.createGainNode = context.createGain;
     }
@@ -44,7 +41,7 @@ function initAudio(ctx){
     compressor.connect(context.destination);
     gainNode = context.createGainNode();
     gainNode.connect(context.destination);
-    gainNode.gain.value = 1;
+    gainNode.gain.value = 0.5;
 
     data.masterGainNode = gainNode;
     data.masterCompressor = compressor;

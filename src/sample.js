@@ -7,7 +7,7 @@ let config = getConfig();
 
 class Sample{
 
-  constructor(sampleData, event){
+  constructor(sampleData, event, output){
     if(sampleData === -1){
       // create simple synth sample
       this.source = config.context.createOscillator();
@@ -17,14 +17,8 @@ class Sample{
       this.source = config.context.createBufferSource()
       this.source.buffer = sampleData.d;
     }
-
-    //this.source.connect(config.destination);
-
-    // tmp!
-    let volume = config.context.createGain();
-    volume.gain.value = 0.3;
-    this.source.connect(volume);
-    volume.connect(config.destination);
+    output.gain.value = event.velocity/127;
+    this.source.connect(output);
   }
 
   start(time){
@@ -39,6 +33,6 @@ class Sample{
 }
 
 
-export default function createSample(sampleData, event){
-  return new Sample(sampleData, event);
+export default function createSample(...args){
+  return new Sample(...args);
 }

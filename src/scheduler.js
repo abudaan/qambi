@@ -272,7 +272,7 @@ export default class Scheduler{
           event.time /= 1000;
           //console.log('scheduled', event.type, event.time, event.midiNote.id);
           //console.log(track.instrument.processEvent);
-          track.instrument.processEvent(event);
+          track._instrument.processEvent(event);
         }else{
           channel = track.channel;
           if(channel === 'any' || channel === undefined || isNaN(channel) === true){
@@ -322,7 +322,7 @@ export default class Scheduler{
     for(i = events.length - 1; i >= 0; i--){
       e = events[i];
       track = e.track;
-      instrument = track.instrument;
+      instrument = track._instrument;
       if(instrument){
         instrument.unscheduleEvent(e);
       }
@@ -337,7 +337,7 @@ export default class Scheduler{
 
     for(i = 0; i < numTracks; i++){
       track = tracks[i];
-      track.instrument.reschedule(this.song);
+      track._instrument.reschedule(this.song);
     }
   }
 }

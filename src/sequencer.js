@@ -82,13 +82,13 @@ function executor(resolve, reject){
         config.legacy = data.legacy; // true if the browser uses an older version of the WebAudio API, source.noteOn() and source.noteOff instead of source.start() and source.stop()
         config.lowtick = data.lowtick; // metronome sample
         config.hightick = data.hightick; //metronome sample
-        config.masterGainNode = data.gainNode;
-        config.masterCompressor = data.compressor;
+        config.masterGainNode = data.masterGainNode;
+        config.masterCompressor = data.masterCompressor;
         config.getTime = data.getTime;
 
         Object.defineProperty(sequencer, 'time', {get: data.getTime});
         Object.defineProperty(sequencer, 'audioContext', {get: data.getAudioContext});
-        Object.defineProperty(sequencer, 'masterVolume', {get: data.getMasterVolume, set: data.setMasterVolume});
+        Object.defineProperty(sequencer, 'volume', {get: data.getMasterVolume, set: data.setMasterVolume});
         Object.defineProperty(sequencer, 'enableMasterCompressor', {value: data.enableMasterCompressor});
         Object.defineProperty(sequencer, 'configureMasterCompressor', {value: data.configureMasterCompressor});
 

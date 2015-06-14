@@ -1,10 +1,13 @@
 'use strict';
 
-import {createState} from './util';
-import {createInstrument} from './instrument';
+import sequencer from './sequencer';
+import getConfig from './config';
+import {createState, warn} from './util';
+import {createInstrument, Instrument} from './instrument';
 import {Part} from './part';
 
-let trackId = 0;
+let trackId = 0,
+  config = getConfig();
 
 
 export class Track{
@@ -13,7 +16,6 @@ export class Track{
     this.id = 'T' + trackId++ + Date.now();
     this._parts = [];
     this._events = [];
-    this.state = 'clean';
 
     this._partsMap = new Map();
     this._eventsMap = new Map();
@@ -24,10 +26,25 @@ export class Track{
     this._state = createState();
 
     //@TODO: do something useful here
-    this.midiInputs = {};
-    this.midiOutputs = {};
+    this._midiInputs = {};
+    this._midiOutputs = {};
     this.routeToMidiOut = false;
-    this.instrument = createInstrument();
+
+    this._volume = 0.5;
+
+    // instrument -> sample -> track._input
+    this._input = sequencer.audioContext.createGainNode();
+    this._input.gain.value = this._volume; // this._volume is controlled by track.setVolume();
+
+    this._output = sequencer.audioContext.createGainNode();
+    this._output.gain.value = 0; // volume of output is controlled by velocity of note
+
+    // track._input -> fx1 -> fx2 -> fxn -> panner -> track._output
+    this._input.connect(this._output);
+
+    this._instrument = createInstrument();
+    this.setInstrument(this._instrument);
+
 
     if(config.parts){
       this.addParts(config.parts);
@@ -202,27 +219,43 @@ export class Track{
 
 
     let events = this._eventsMap.values();
-    for(let event of events){
-      if(event._state.track === 'removed'){
-        this._eventsMap.delete(event.id);
+    for(let evt of events){
+      if(evt._state.track === 'removed'){
+        this._eventsMap.delete(evt.id);
         numberOfEventsHasChanged = true;
       }else{
-        this._events.push(event);
+        this._events.push(evt);
       }
-      event._state.track = 'clean';
+      evt._state.track = 'clean';
     }
 
 
     if(numberOfEventsHasChanged === true){
       this._events = [];
       let events = this._eventsMap.values();
-      for(let event of events){
-        this._events.push(event);
+      for(let evt of events){
+        this._events.push(evt);
       }
       this._events.sort((a, b) => (a._sortIndex <= b._sortIndex) ? -1 : 1);
     }
 
     this._needsUpdate = false;
+  }
+
+  setInstrument(instrument){
+    if(instrument instanceof Instrument === false){
+      warn(instrument, 'is not an instrument');
+    }
+    // disconnect
+    this._instrument._track = null;
+    this._instrument._output = config.masterGainNode;
+
+    // connect
+    this._instrument = instrument;
+    this._instrument._track = this;
+    this._instrument._output = this._output;
+
+    return this;
   }
 }
 

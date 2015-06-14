@@ -343,3 +343,16 @@ export function createState(state = 'clean'){
     song: state
   };
 }
+
+export function checkMIDINumber(value){
+  //console.log(value);
+  if(isNaN(value)){
+    warn('please provide a number');
+    return false;
+  }
+  if(value < 0 || value > 127){
+    warn('please provide a number between 0 and 127');
+    return false;
+  }
+  return value;
+}

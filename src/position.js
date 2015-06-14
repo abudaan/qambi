@@ -1,6 +1,6 @@
 'use strict';
 
-import {getNiceTime, typeString, error} from './utils';
+import {getNiceTime, typeString, error} from './util';
 
 const
   supportedTypes = 'barsandbeats barsbeats time millis ticks perc percentage',

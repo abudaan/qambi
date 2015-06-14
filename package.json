@@ -4,7 +4,7 @@
   "devDependencies": {
     "babelify": ">=6.0.0",
     "browserify": ">=8.1.1",
-    "exorcist": "^0.1.6",
+    "exorcist": ">=0.4.0",
     "local-web-server": "^0.5.16",
     "watchify": ">=1.0.1"
   },
@@ -16,5 +16,9 @@
     "build": "browserify src/sequencer.js --standalone sequencer -t [ babelify --sourceMapRelative ./src ] --debug | exorcist build/qambi.js.map > build/qambi.js",
     "watch": "watchify src/sequencer.js --standalone sequencer -t babelify -o build/qambi.js --debug --verbose",
     "watch2": "watchify test/main.js -t babelify -o test/test.js --debug --verbose"
+  },
+  "dependencies": {
+    "brace-expansion": "^1.1.0",
+    "wrappy": "^1.0.1"
   }
 }

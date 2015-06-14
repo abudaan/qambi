@@ -43,3 +43,10 @@ sample API
  - start
  - stop
  - update (called every frame, needed for release and autopan)
+
+
+
+
+routing
+
+sequencer.masterGainNode -> song._gainNode [song.setVolume()] -> track.
