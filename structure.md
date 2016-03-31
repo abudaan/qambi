@@ -50,3 +50,9 @@ sample API
 routing
 
 sequencer.masterGainNode -> song._gainNode [song.setVolume()] -> track.
+
+
+
+
+
+http://rosettacode.org/wiki/Sorting_algorithms/Quicksort#JavaScript

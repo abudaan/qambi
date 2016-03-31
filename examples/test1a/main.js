@@ -13,16 +13,27 @@ window.onload = function() {
 
     function onFulFilled(){
 
-      song = sequencer.createSong()
-        .addTrack(sequencer.createTrack() // song.addTrack() returns song
-          .addPart(sequencer.createPart() // track.addPart() returns track
-            .addEvents([                  // part.addEvents() returns part
-              sequencer.createMIDIEvent(0, 144, 60, 123),
-              sequencer.createMIDIEvent(400, 128, 60, 0)
-            ])
-          )
-        ).update(); // song.update() returns song
+      // song = sequencer.createSong()
+      //   .addTrack(sequencer.createTrack() // song.addTrack() returns song
+      //     .addPart(sequencer.createPart() // track.addPart() returns track
+      //       .addEvents([                  // part.addEvents() returns part
+      //         sequencer.createMIDIEvent(0, 144, 60, 123),
+      //         sequencer.createMIDIEvent(400, 128, 60, 0)
+      //       ])
+      //     )
+      //   ).update(); // song.update() returns song
 
+      song = sequencer.createSong()
+      let track = sequencer.createTrack()
+      let part = sequencer.createPart()
+
+      song.addTrack(track)
+      track.addPart(part)
+      part.addEvents([
+        sequencer.createMIDIEvent(0, 144, 60, 123),
+        sequencer.createMIDIEvent(400, 128, 60, 0)
+      ])
+      song.update()
       initUI();
       //debugger;
     },

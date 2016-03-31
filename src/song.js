@@ -252,6 +252,25 @@ export class Song{
   }
 
   update(){
+    this._needsUpdate = false
+    this._events = []
+    this._eventsMap.forEach((event) => {
+      this._events.push(event)
+    })
+    parseEvents(this, this._events);
+    this._scheduler.updateSong();
+    this._duration = getDuration(this, this._events[this._events.length - 1]);
+    return this;
+  }
+
+  update2(){
+
+    /*
+      @TODO: when events are removed -> use filter to remove them from array
+
+      test: don't sort events at all and use filter() in the Scheduler to find the events that are between {last maxtime} and {maxtime}
+      then add song.getEvents(sorted = true | false);
+    */
 
     this._newTracks = [];
     //this._changedTracks = [];
@@ -267,7 +286,7 @@ export class Song{
 
     let numberOfPartsHasChanged = false;
     let numberOfEventsHasChanged = false;
-    let eventsToBeParsed = [].concat(this._timeEvents);
+    let eventsToBeParsed = []; //[].concat(this._timeEvents);
     let partsToBeParsed = [];
 
     // filter removed and new tracks
@@ -364,6 +383,7 @@ export class Song{
     parseEvents(this, eventsToBeParsed);
     this._scheduler.updateSong();
     this._needsUpdate = false;
+    //console.log(this._events[this._events.length - 1])
     this._duration = getDuration(this, this._events[this._events.length - 1]);
     //console.log(this._duration, numberOfEventsHasChanged, this._events.length, this._events[this._events.length - 1]);
     return this;
@@ -373,6 +393,19 @@ export class Song{
 Song.prototype.addEventListener = addEventListener;
 Song.prototype.removeEventListener = removeEventListener;
 Song.prototype.dispatchEvent = dispatchEvent;
+
+
+// encapsulation
+
+let song = Song.prototype;
+Object.defineProperty(song, 'volume', {
+  get: function(){
+    return this._volume;
+  },
+  set: function(v){
+    this.setVolume(v);
+  }
+});
 
 
 export function createSong(settings){
@@ -390,6 +423,7 @@ function pulse(song){
   song._scheduler.update();
 }
 
+
 function getDuration(song, event){
   let lastBar = event.bar + 1;
   // check if the event is at the first beat, sixteenth and tick of a bar
@@ -397,6 +431,8 @@ function getDuration(song, event){
     lastBar = event.bar;
   }
   song.lastBar = lastBar;
-  console.log(event.nominator, event.numSixteenth, event.ticksPerSixteenth);
   let position = getPosition(song, 'barsandbeats', lastBar - 1, event.nominator, event.numSixteenth, event.ticksPerSixteenth, true);
+  song.durationTicks = position.ticks;
+  song.durationMillis = position.millis;
+  console.log(song.durationMillis);
 }

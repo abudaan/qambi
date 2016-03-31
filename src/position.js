@@ -42,7 +42,7 @@ let
 
 function getTimeEvent(song, unit, target){
   // finds the time event that comes the closest before the target position
-  let timeEvents = song.timeEvents,
+  let timeEvents = song._timeEvents,
     i, event;
 
   for(i = timeEvents.length - 1; i >= 0; i--){
@@ -206,7 +206,7 @@ function fromBars(song, targetBar, targetBeat, targetSixteenth, targetTick, even
 
   event = getTimeEvent(song, 'bar', targetBar, index);
   for(i = index; i >= 0; i--){
-    event = song.timeEvents[i];
+    event = song._timeEvents[i];
     if(event.bar <= targetBar){
       getDataFromEvent(event);
       break;

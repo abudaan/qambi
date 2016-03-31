@@ -124,13 +124,15 @@ export function parseTimeEvents(song){
 }
 
 
-export function parseEvents(song, events){
-
+export function parseEvents(song, evts){
+  //console.log(events)
   let event;
-  let numEvents = events.length;
   let startEvent = 0;
   let lastEventTick = 0;
 
+  let events = [].concat(evts, song._timeEvents);
+  let numEvents = events.length;
+  //console.log(events)
   events.sort(function(a, b){
     return a._sortIndex - b._sortIndex;
   });
@@ -161,6 +163,7 @@ export function parseEvents(song, events){
   for(let i = startEvent; i < numEvents; i++){
 
     event = events[i];
+    //console.log(event.ticks, event.type)
 
     switch(event.type){
 
@@ -200,7 +203,7 @@ export function parseEvents(song, events){
 
 
 function updateEvent(event){
-
+  //console.log(bar, beat, ticks)
   //console.log(event, bpm, millisPerTick, ticks, millis);
 
   event.bpm = bpm;

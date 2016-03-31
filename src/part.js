@@ -32,8 +32,18 @@ export class Part{
     if(event instanceof MIDIEvent || event instanceof AudioEvent){
       event._state.part = 'new';
       event.part = this;
+      //console.log('track', this.track)
+      if(this.track){
+        event.track = this.track
+        //console.log('song', this.track.song)
+        if(this.track.song){
+          event.song = this.track.song
+          event.song._eventsMap.set(event.id, event)
+        }
+      }
       this._needsUpdate = true;
       this._eventsMap.set(event.id, event);
+      this.update()
       return this; // make it chainable
     }
   }

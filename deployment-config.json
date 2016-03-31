@@ -1,0 +1,9 @@
+{
+    "type": "ftp",
+    "host": "",
+    "username": "",
+    "password": "",
+    "port": 21,
+    "remotePath": "",
+    "uploadOnSave": false
+}

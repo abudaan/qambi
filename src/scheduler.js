@@ -169,6 +169,7 @@ export default class Scheduler{
     // main loop
     for(i = this.index; i < this.numEvents; i++){
       event = this.events[i];
+      //console.log(event.millis, this.maxtime)
       if(event.millis < this.maxtime){
 
         event.time = this.startTime + event.millis - this.songStartMillis;
@@ -250,6 +251,7 @@ export default class Scheduler{
     for(i = 0; i < numEvents; i++){
       event = events[i];
       track = event.track;
+      console.log(event)
       if(
         track === undefined ||
         event.mute === true ||

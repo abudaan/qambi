@@ -7,11 +7,11 @@ import {checkMIDINumber, warn} from './util';
 import {getPosition} from './position';
 import {parseEvents} from './parse_events';
 import {createInstrument} from './instrument';
+import getConfig from './config';
 
 
 let
-
-  parseMetronomeEvents, //defined in song_update.js
+  config = getConfig(),
 
   methodMap = new Map([
     ['volume', 'setVolume'],
@@ -96,7 +96,7 @@ export class Metronome{
     }
     this.createEvents(startBar, endBar);
     this.bars = this.song.bars;
-    parseMetronomeEvents(this.song, this.events);
+    parseEvents(this.song, this.events);
   }
 
 
