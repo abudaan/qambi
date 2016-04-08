@@ -55,6 +55,9 @@ export function moveMIDIEventTo(id: string, ticks: number){
       ticks,
     }
   })
+  if(typeof event === 'undefined'){
+    return
+  }
   // if the event is part of a midi note, update it
   let note_id = event.note
   if(note_id){
