@@ -62,11 +62,12 @@ function parts(state = {}, action){
 function midiEvents(state = {}, action){
   switch(action.type){
     case CREATE_MIDI_EVENT:
-      state = Object.assign({}, state, {[action.payload.id]: action.payload})
+      state = {...state, [action.payload.id]: action.payload}
+      //state = Object.assign({}, state, {[action.payload.id]: action.payload})
       break
 
     case UPDATE_MIDI_EVENT:
-      state = Object.assign({}, state)
+      state = {...state}
       let event = state[action.payload.id];
       ({
         ticks: event.ticks = event.ticks,
@@ -78,7 +79,7 @@ function midiEvents(state = {}, action){
     case CREATE_MIDI_NOTE:
       let noteon = action.payload.noteon
       let noteoff = action.payload.noteoff
-      state = Object.assign({}, state)
+      state = {...state}
       state[noteon].note = action.payload.id
       state[noteoff].note = action.payload.id
       break
@@ -92,13 +93,12 @@ function midiEvents(state = {}, action){
 function midiNotes(state = {}, action){
   switch(action.type){
     case CREATE_MIDI_NOTE:
-      state = Object.assign({}, state)
-      state[action.payload.id] = action.payload
+      state = {...state, [action.payload.id]: action.payload}
       //console.log(state)
       break
 
     case UPDATE_MIDI_NOTE:
-      state = Object.assign({}, state)
+      state = {...state}
       let note = state[action.payload.id];
       ({
         start: note.start = note.start,
