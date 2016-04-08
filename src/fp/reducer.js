@@ -47,24 +47,38 @@ function song(state = initialState, action){
   return state
 }
 
-function track(state = {}, action){
+function tracks(state = {}, action){
   return state
 }
 
-function midiEvent(state = initialState, action){
+function midiEvents(state = {}, action){
   switch(action.type){
     case CREATE_MIDI_EVENT:
-      //console.log('create MIDI event', action.payload)
-      state = Object.assign(
-        {},
-        state,
-        {
-          midievents: Object.assign({}, state.midievents, {[action.payload.id]: action.payload})
-        }
-      )
-      //state.midievents = Object.assign({}, state.midievents, {[action.payload.id]: action.payload})
-      //console.log(action.payload.id, state.midievents)
+      state = Object.assign({}, state, {[action.payload.id]: action.payload})
       break
+
+    case CREATE_MIDI_NOTE:
+      let noteon = action.payload.noteon
+      let noteoff = action.payload.noteoff
+      state = Object.assign({}, state)
+      delete state[noteon]
+      delete state[noteoff]
+      break
+
+    default:
+      // do nothing
+  }
+  return state
+}
+
+function midiNotes(state = {}, action){
+  switch(action.type){
+    case CREATE_MIDI_NOTE:
+      state = Object.assign({}, state)
+      state[action.payload.id] = action.payload
+      //console.log(state)
+      break
+
     default:
       // do nothing
   }
@@ -73,8 +87,9 @@ function midiEvent(state = initialState, action){
 
 const sequencerApp = combineReducers({
   song,
-  track,
-  midiEvent,
+  tracks,
+  midiEvents,
+  midiNotes,
 })
 
 export default sequencerApp
