@@ -4,3 +4,6 @@ export const ADD_TRACK = 'add_track'
 export const ADD_PART = 'add_part'
 
 export const CREATE_MIDI_EVENT = 'create_midi_event'
+export const CREATE_MIDI_NOTE = 'create_midi_note'
+
+

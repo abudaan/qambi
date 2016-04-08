@@ -3,6 +3,7 @@ import {
   ADD_MIDI_NOTES,
   ADD_TIME_EVENTS,
   CREATE_MIDI_EVENT,
+  CREATE_MIDI_NOTE,
 } from './action_types'
 
 const initialState = {
@@ -27,6 +28,7 @@ const initialState = {
   tracks: {},
   parts: {},
   midinotes: {},
+  midievents: {},
 }
 
 
@@ -49,10 +51,19 @@ function track(state = {}, action){
   return state
 }
 
-function midiEvent(state = {}, action){
+function midiEvent(state = initialState, action){
   switch(action.type){
     case CREATE_MIDI_EVENT:
-      console.log('create MIDI event', action.payload)
+      //console.log('create MIDI event', action.payload)
+      state = Object.assign(
+        {},
+        state,
+        {
+          midievents: Object.assign({}, state.midievents, {[action.payload.id]: action.payload})
+        }
+      )
+      //state.midievents = Object.assign({}, state.midievents, {[action.payload.id]: action.payload})
+      //console.log(action.payload.id, state.midievents)
       break
     default:
       // do nothing
