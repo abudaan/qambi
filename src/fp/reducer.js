@@ -1,5 +1,6 @@
 import {combineReducers} from 'redux'
 import {
+  CREATE_SONG,
   ADD_MIDI_NOTES,
   ADD_TIME_EVENTS,
   CREATE_MIDI_EVENT,
@@ -9,32 +10,12 @@ import {
   UPDATE_MIDI_NOTE,
 } from './action_types'
 
-const initialState = {
-  ppq: 960,
-  bpm: 120,
-  bars: 30,
-  lowestNote: 0,
-  highestNote: 127,
-  nominator: 4,
-  denominator: 4,
-  quantizeValue: 8,
-  fixedLengthValue: false,
-  positionType: 'all',
-  useMetronome: false,
-  autoSize: true,
-  loop: false,
-  playbackSpeed: 1,
-  autoQuantize: false,
-  timeEvents: [],
-  midiEvents: [],
-  parts: [],
-  tracks: [],
-}
 
-
-function song(state = initialState, action){
-
+function songs(state = {}, action){
   switch(action.type){
+    case CREATE_SONG:
+      state = {...state, [action.payload.id]: action.payload.settings}
+      break
     case ADD_MIDI_NOTES:
       console.log('adding MIDI notes')
       break
@@ -44,10 +25,6 @@ function song(state = initialState, action){
     default:
       // do nothing
   }
-  return state
-}
-
-function songs(state = {}, action){
   return state
 }
 
@@ -101,6 +78,7 @@ function midiNotes(state = {}, action){
       state = {...state}
       let note = state[action.payload.id];
       ({
+        // if the payload has a value for 'start' it will be assigned to note.start, otherwise note.start will keep its current value
         start: note.start = note.start,
         end: note.end = note.end,
         durationTicks: note.durationTicks = note.durationTicks
@@ -114,7 +92,7 @@ function midiNotes(state = {}, action){
 }
 
 const sequencerApp = combineReducers({
-  song,
+  songs,
   tracks,
   midiEvents,
   midiNotes,

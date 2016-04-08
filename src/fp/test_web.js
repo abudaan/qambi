@@ -6,13 +6,16 @@ import {
 import{
   createMIDINote
 } from './midi_note'
+import{
+  createSong
+} from './song'
 
 
 document.addEventListener('DOMContentLoaded', function(){
 
   let button = document.getElementById('next')
   let buttonClicked = 0
-  let noteon, noteoff, note
+  let noteon, noteoff, note, song
   button.addEventListener('click', function(){
     switch(buttonClicked){
       case 0:
@@ -29,6 +32,9 @@ document.addEventListener('DOMContentLoaded', function(){
         break;
       case 4:
         moveMIDIEventTo(noteoff, 260)
+        break;
+      case 5:
+        song = createSong({playbackSpeed: 100, loop: true})
         break;
       default:
     }
