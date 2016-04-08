@@ -1,13 +1,13 @@
 [ignore]
 .*/build/.*
 .*/js/.*
+.*/src/.*
 .*/lib/.*
 .*/node_modules/.*
 
 [include]
-.*/src/.*
+.*/src/fp/.*
 
 [libs]
 
 [options]
-//esproposal.class_instance_fields=enable
