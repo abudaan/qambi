@@ -1,3 +1,5 @@
+// @flow
+
 'use strict';
 
 import sequencer from './sequencer';
@@ -30,8 +32,8 @@ export class Song{
 
     this.id = 'S' + songId++ + Date.now();
     this.name = this.id;
-
     this._volume = 0.5;
+
     this._input = sequencer.audioContext.createGainNode();
     this._input.gain.value = this._volume;
     this._input.connect(config.masterGainNode); // the main/master output
