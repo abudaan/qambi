@@ -112,3 +112,21 @@ export function addMIDIEventsToSong(song_id: string, midi_events: Array<{ticks: 
   })
 }
 
+export function updateSong(song_id: string){
+  let state = store.getState().sequencer
+  let song = state.songs[song_id]
+  if(song){
+    let midiEvents = []
+    let midiEventIds = song.midiEvents
+    midiEventIds.forEach(function(event_id){
+      let event = state.midiEvents[event_id]
+      if(event){
+        midiEvents.push({...event})
+      }
+    })
+    midiEvents.sort((a, b) => (a.sortIndex <= b.sortIndex) ? -1 : 1)
+  }else{
+    console.warn(`no song found with id ${song_id}`)
+  }
+}
+

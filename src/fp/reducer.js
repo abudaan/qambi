@@ -13,6 +13,7 @@ import {
   ADD_EVENTS_TO_SONG,
   UPDATE_MIDI_EVENT,
   UPDATE_MIDI_NOTE,
+  UPDATE_SONG,
 } from './action_types'
 
 const initialState = {
@@ -25,6 +26,11 @@ const initialState = {
 
 
 function sequencer(state = initialState, action){
+
+  let
+    event, eventId,
+    song, songId
+
   switch(action.type){
 
     case CREATE_SONG:
@@ -59,8 +65,8 @@ function sequencer(state = initialState, action){
 
     case ADD_TRACKS:
       state = {...state}
-      let songId = action.payload.song_id
-      let song = state.songs[songId]
+      songId = action.payload.song_id
+      song = state.songs[songId]
       if(song){
         let trackIds = action.payload.track_ids
         trackIds.forEach(function(id){
@@ -68,6 +74,13 @@ function sequencer(state = initialState, action){
           if(track){
             song.tracks.push(id)
             track.song = songId
+            let midiEventIds = []
+            track.parts.forEach(function(part_id){
+              let part = state.parts[part_id]
+              song.parts.push(part_id)
+              midiEventIds.push(...part.midiEvents)
+            })
+            song.midiEvents.push(midiEventIds)
           }else{
             console.warn(`no track with id ${id}`)
           }
@@ -124,8 +137,8 @@ function sequencer(state = initialState, action){
 
     case UPDATE_MIDI_EVENT:
       state = {...state}
-      let eventId = action.payload.id
-      let event = state.midiEvents[eventId];
+      eventId = action.payload.id
+      event = state.midiEvents[eventId];
       if(event){
         ({
           ticks: event.ticks = event.ticks,
@@ -150,6 +163,12 @@ function sequencer(state = initialState, action){
       break
 
 
+    case UPDATE_SONG:
+      state = {...state}
+      songId = action.payload.id
+      break
+
+
     default:
       // do nothing
   }
@@ -160,5 +179,6 @@ function sequencer(state = initialState, action){
 const sequencerApp = combineReducers({
   sequencer,
 })
+
 
 export default sequencerApp

@@ -19,7 +19,8 @@ export function createMIDIEvent(ticks: number, type: number, data1: number, data
       ticks,
       type,
       data1,
-      data2
+      data2,
+      sortIndex: ticks + type
     }
   })
   return id
@@ -36,6 +37,7 @@ export function moveMIDIEvent(id: string, ticks_to_move: number){
     payload: {
       id,
       ticks,
+      sortIndex: ticks + event.type
     }
   })
   // if the event is part of a midi note, update it
@@ -53,6 +55,7 @@ export function moveMIDIEventTo(id: string, ticks: number){
     payload: {
       id,
       ticks,
+      sortIndex: ticks + event.type
     }
   })
   if(typeof event === 'undefined'){
