@@ -52,10 +52,6 @@ export function createSong(settings){
     loop: s.loop = defaultSong.loop,
     playbackSpeed: s.playbackSpeed = defaultSong.playbackSpeed,
     autoQuantize: s.autoQuantize = defaultSong.autoQuantize,
-    timeEvents: s.timeEvents = defaultSong.timeEvents,
-    midiEvents: s.midiEvents = defaultSong.midiEvents,
-    parts: s.parts = defaultSong.parts,
-    tracks: s.tracks = defaultSong.tracks,
   } = settings)
 
   let{
