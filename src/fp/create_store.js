@@ -5,7 +5,7 @@ import sequencerApp from './reducer'
 
 const logger = createLogger();
 const store = createStore(sequencerApp, {}, compose(
-  applyMiddleware(logger),
+  //applyMiddleware(logger),
   typeof window === 'object' && typeof window.devToolsExtension !== 'undefined' ? window.devToolsExtension() : f => f
 ));
 export function getStore(){

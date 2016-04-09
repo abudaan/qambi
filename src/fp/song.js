@@ -3,6 +3,7 @@
 import {getStore} from './create_store'
 import {
   CREATE_SONG,
+  ADD_TRACKS,
   ADD_MIDI_EVENTS_TO_SONG,
 } from './action_types'
 
@@ -35,6 +36,7 @@ export function createSong(settings){
   let id = `S_${songIndex++}_${new Date().getTime()}`
   let s = {};
   ({
+    name: s.name = id,
     ppq: s.ppq = defaultSong.ppq,
     bpm: s.bpm = defaultSong.bpm,
     bars: s.bars = defaultSong.bars,
@@ -56,15 +58,38 @@ export function createSong(settings){
     tracks: s.tracks = defaultSong.tracks,
   } = settings)
 
+  let{
+    timeEvents: timeEvents = defaultSong.timeEvents,
+    midiEvents: midiEvents = defaultSong.midiEvents,
+    parts: parts = defaultSong.parts,
+    tracks: tracks = defaultSong.tracks,
+  } = settings
+
   store.dispatch({
     type: CREATE_SONG,
     payload: {
       id,
+      timeEvents,
+      midiEvents,
+      parts,
+      tracks,
       settings: s
     }
   })
   return id
 }
+
+
+export function addTracks(song_id: string, ...track_ids:string){
+  store.dispatch({
+    type: ADD_TRACKS,
+    payload: {
+      song_id,
+      track_ids,
+    }
+  })
+}
+
 
 export function addMIDIEvents(
   settings: {song_id: string, track_id: string, part_id: string},

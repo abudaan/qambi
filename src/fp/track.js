@@ -3,7 +3,7 @@
 import {getStore} from './create_store'
 import {
   CREATE_TRACK,
-  ADD_PART,
+  ADD_PARTS,
 } from './action_types'
 
 const store = getStore()
@@ -34,9 +34,9 @@ export function createTrack(
 }
 
 
-export function addPart(track_id: string, ...part_ids:string){
+export function addParts(track_id: string, ...part_ids:string){
   store.dispatch({
-    type: ADD_PART,
+    type: ADD_PARTS,
     payload: {
       track_id,
       part_ids,

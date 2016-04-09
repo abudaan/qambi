@@ -35,3 +35,13 @@ export function createPart(
   })
   return id
 }
+
+export function addMIDIEvents(part_id: string, ...midi_event_ids: string){
+  store.dispatch({
+    type: ADD_MIDI_EVENTS,
+    payload: {
+      part_id,
+      midi_event_ids
+    }
+  })
+}

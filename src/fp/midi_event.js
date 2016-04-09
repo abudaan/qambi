@@ -26,7 +26,7 @@ export function createMIDIEvent(ticks: number, type: number, data1: number, data
 }
 
 export function moveMIDIEvent(id: string, ticks_to_move: number){
-  let state = store.getState()
+  let state = store.getState().sequencer
   let event = state.midiEvents[id]
   let ticks = event.ticks + ticks_to_move
   ticks = ticks < 0 ? 0 : ticks
@@ -46,7 +46,7 @@ export function moveMIDIEvent(id: string, ticks_to_move: number){
 }
 
 export function moveMIDIEventTo(id: string, ticks: number){
-  let state = store.getState()
+  let state = store.getState().sequencer
   let event = state.midiEvents[id]
   store.dispatch({
     type: UPDATE_MIDI_EVENT,

@@ -3,8 +3,10 @@ import {
   CREATE_SONG,
   CREATE_TRACK,
   CREATE_PART,
-  ADD_PART,
+  ADD_PARTS,
+  ADD_TRACKS,
   ADD_MIDI_NOTES,
+  ADD_MIDI_EVENTS,
   ADD_TIME_EVENTS,
   CREATE_MIDI_EVENT,
   CREATE_MIDI_NOTE,
@@ -13,108 +15,132 @@ import {
   UPDATE_MIDI_NOTE,
 } from './action_types'
 
-
-function songs(state = {}, action){
-  switch(action.type){
-    case CREATE_SONG:
-      state = {...state, [action.payload.id]: action.payload.settings}
-      break
-    case ADD_MIDI_NOTES:
-      console.log('adding MIDI notes')
-      break
-    case ADD_TIME_EVENTS:
-      console.log('adding time events')
-      break
-    default:
-      // do nothing
-  }
-  return state
+const initialState = {
+  songs: {},
+  tracks: {},
+  parts: {},
+  midiEvents: {},
+  midiNotes: {},
 }
 
-function tracks(state = {}, action){
+
+function sequencer(state = initialState, action){
   switch(action.type){
-    case CREATE_TRACK:
-      state = {...state, [action.payload.id]: action.payload}
+
+    case CREATE_SONG:
+      state = {...state}
+      state.songs[action.payload.id] = action.payload
       break
 
-    case ADD_PART:
+
+    case CREATE_TRACK:
       state = {...state}
-      let track = state[action.payload.track_id]
-      if(track){
-        track.parts.push(...action.payload.part_ids)
+      state.tracks[action.payload.id] = action.payload
+      break
+
+
+    case CREATE_PART:
+      state = {...state}
+      state.parts[action.payload.id] = action.payload
+      break
+
+
+    case CREATE_MIDI_EVENT:
+      state = {...state}
+      state.midiEvents[action.payload.id] = action.payload
+      break
+
+
+    case CREATE_MIDI_NOTE:
+      state = {...state}
+      state.midiNotes[action.payload.id] = action.payload
+      break
+
+
+    case ADD_TRACKS:
+      state = {...state}
+      let songId = action.payload.song_id
+      let song = state.songs[songId]
+      if(song){
+        let trackIds = action.payload.track_ids
+        trackIds.forEach(function(id){
+          let track = state.tracks[id]
+          if(track){
+            song.tracks.push(id)
+            track.song = songId
+          }else{
+            console.warn(`no track with id ${id}`)
+          }
+        })
+      }else{
+        console.warn(`no song found with id ${songId}`)
       }
       break
 
-    default:
-      // do nothing
-  }
-  return state
-}
 
-function parts(state = {}, action){
-  switch(action.type){
-
-    case CREATE_PART:
-      state = {...state, [action.payload.id]: action.payload}
-      break
-
-    case ADD_PART:
+    case ADD_PARTS:
       state = {...state}
-      let partIds = action.payload.part_ids
       let trackId = action.payload.track_id
-      partIds.forEach(function(id){
-        let part = state[id]
-        part.track = trackId
-      })
+      let track = state.tracks[trackId]
+      if(track){
+        //track.parts.push(...action.payload.part_ids)
+        let partIds = action.payload.part_ids
+        partIds.forEach(function(id){
+          let part = state.parts[id]
+          if(part){
+            track.parts.push(id)
+            part.track = trackId
+          }else{
+            console.warn(`no part with id ${id}`)
+          }
+        })
+      }else{
+        console.warn(`no track found with id ${trackId}`)
+      }
       break
 
-    default:
-      // do nothing
-  }
-  return state
-}
 
-function midiEvents(state = {}, action){
-  switch(action.type){
-    case CREATE_MIDI_EVENT:
-      state = {...state, [action.payload.id]: action.payload}
-      //state = Object.assign({}, state, {[action.payload.id]: action.payload})
+    case ADD_MIDI_EVENTS:
+      state = {...state}
+      let partId = action.payload.part_id
+      let part = state.parts[partId]
+      if(part){
+        //part.midiEvents.push(...action.payload.midi_event_ids)
+        let midiEventIds = action.payload.midi_event_ids
+        midiEventIds.forEach(function(id){
+          let midiEvent = state.midiEvents[id]
+          if(midiEvent){
+            part.midiEvents.push(id)
+            midiEvent.part = partId
+          }else{
+            console.warn(`no MIDI event found with id ${id}`)
+          }
+        })
+      }else{
+        console.warn(`no part found with id ${partId}`)
+      }
       break
+
 
     case UPDATE_MIDI_EVENT:
       state = {...state}
-      let event = state[action.payload.id];
-      ({
-        ticks: event.ticks = event.ticks,
-        data1: event.data1 = event.data1,
-        data2: event.data2 = event.data2,
-      } = action.payload)
+      let eventId = action.payload.id
+      let event = state.midiEvents[eventId];
+      if(event){
+        ({
+          ticks: event.ticks = event.ticks,
+          data1: event.data1 = event.data1,
+          data2: event.data2 = event.data2,
+        } = action.payload)
+      }else{
+        console.warn(`no MIDI event found with id ${eventId}`)
+      }
       break
 
-    case CREATE_MIDI_NOTE:
-      let noteon = action.payload.noteon
-      let noteoff = action.payload.noteoff
-      state = {...state}
-      state[noteon].note = action.payload.id
-      state[noteoff].note = action.payload.id
-      break
-
-    default:
-      // do nothing
-  }
-  return state
-}
-
-function midiNotes(state = {}, action){
-  switch(action.type){
-    case CREATE_MIDI_NOTE:
-      state = {...state, [action.payload.id]: action.payload}
-      //console.log(state)
-      break
 
     case UPDATE_MIDI_NOTE:
       state = {...state}
-      let note = state[action.payload.id];
+      let note = state.midiNotes[action.payload.id];
       ({
         // if the payload has a value for 'start' it will be assigned to note.start, otherwise note.start will keep its current value
         start: note.start = note.start,
@@ -123,18 +149,16 @@ function midiNotes(state = {}, action){
       } = action.payload)
       break
 
+
     default:
       // do nothing
   }
   return state
 }
 
+
 const sequencerApp = combineReducers({
-  songs,
-  tracks,
-  parts,
-  midiEvents,
-  midiNotes,
+  sequencer,
 })
 
 export default sequencerApp

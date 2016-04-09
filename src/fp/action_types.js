@@ -1,9 +1,11 @@
 export const ADD_MIDI_NOTES = 'add_midi_notes'
+export const ADD_MIDI_EVENTS = 'add_midi_events'
 //export const ADD_TRACK = 'add_track'
 //export const ADD_PART = 'add_part'
 
 export const CREATE_TRACK = 'create_track'
-export const ADD_PART = 'add_part'
+export const ADD_PARTS = 'add_parts'
+export const ADD_TRACKS = 'add_tracks'
 
 export const CREATE_PART = 'create_part'
 export const ADD_TIME_EVENTS = 'add_time_events'
