@@ -1,5 +1,5 @@
-//import sequencer from './sequencer'
-import sequencer, {
+
+import qambi, {
   createMIDIEvent,
   moveMIDIEvent,
   moveMIDIEventTo,
@@ -11,10 +11,12 @@ import sequencer, {
   createPart,
   addMIDIEvents,
   updateSong,
-} from './sequencer'
+  startSong,
+  stopSong,
+} from './qambi'
 
-console.log(sequencer.id)
-sequencer.log('functions')
+console.log(qambi.version)
+qambi.log('functions')
 
 document.addEventListener('DOMContentLoaded', function(){
 
@@ -35,6 +37,11 @@ document.addEventListener('DOMContentLoaded', function(){
   addParts(track, part1, part2)
   addTracks(song, track)
   updateSong(song)
+  startSong(song)
+
+  setTimeout(function(){
+    stopSong(song)
+  }, 1000)
 
   button.addEventListener('click', function(){
     switch(buttonClicked){

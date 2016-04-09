@@ -3,13 +3,15 @@
 import {getStore} from './create_store'
 import {parseTimeEvents, parseEvents} from './parse_events'
 import {getMIDIEventId} from './midi_event'
+import {addTask, removeTask} from './heartbeat'
+import {context} from './io'
 import {
   CREATE_SONG,
   ADD_TRACKS,
   UPDATE_SONG,
   ADD_MIDI_EVENTS_TO_SONG,
 } from './action_types'
-import sequencer from './sequencer'
+import {MIDI} from './qambi'
 
 const store = getStore()
 let songIndex = 0
@@ -57,8 +59,8 @@ export function createSong(settings){
 
   let{
     timeEvents: timeEvents = [
-      {id: getMIDIEventId(), song: id, ticks: 0, type: sequencer.TEMPO, data1: s.bpm},
-      {id: getMIDIEventId(), song: id, ticks: 0, type: sequencer.TIME_SIGNATURE, data1: s.nominator, data2: s.denominator}
+      {id: getMIDIEventId(), song: id, ticks: 0, type: MIDI.TEMPO, data1: s.bpm},
+      {id: getMIDIEventId(), song: id, ticks: 0, type: MIDI.TIME_SIGNATURE, data1: s.nominator, data2: s.denominator}
     ],
     midiEventIds: midiEventIds = [],
     partIds: partIds = [],
@@ -147,6 +149,23 @@ export function updateSong(song_id: string){
 }
 
 
-export function startSong(song_id: string, position){
+export function startSong(song_id: string, position: number = 0){
+  let timeStamp = context.currentTime
+  let millis = position
 
+  addTask('repetitive', song_id, function(){
+    let
+      now = context.currentTime * 1000,
+      diff = now - timeStamp
+
+    millis += diff
+    timeStamp = now
+    console.log(diff)
+    //@TODO: how to connect a scheduler to a song?
+    //song._scheduler.update();
+  })
+}
+
+export function stopSong(song_id: string){
+  removeTask('repetitive', song_id)
 }
