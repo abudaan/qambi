@@ -1,24 +1,19 @@
-import {
+//import sequencer from './sequencer'
+import sequencer, {
   createMIDIEvent,
   moveMIDIEvent,
   moveMIDIEventTo,
-} from './midi_event'
-import{
-  createMIDINote
-} from './midi_note'
-import{
+  createMIDINote,
   createSong,
-  addTracks
-} from './song'
-import{
+  addTracks,
   createTrack,
-  addParts
-} from './track'
-import{
+  addParts,
   createPart,
-  addMIDIEvents
-} from './part'
+  addMIDIEvents,
+} from './sequencer'
 
+console.log(sequencer.id)
+sequencer.log('functions')
 
 document.addEventListener('DOMContentLoaded', function(){
 
