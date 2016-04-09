@@ -7,8 +7,13 @@ import {
 import{
   createMIDINote
 } from './midi_note'
+import{
+  createTrack
+} from './track'
 
 const store = getStore()
+
+let track = createTrack()
 
 let noteon = createMIDIEvent(120, 144, 60, 100)
 let noteoff = createMIDIEvent(240, 128, 60, 100)

@@ -66,6 +66,20 @@ export function createSong(settings){
   return id
 }
 
+export function addMIDIEvents(
+  settings: {song_id: string, track_id: string, part_id: string},
+  midi_events: Array<{ticks: number, type: number, data1: number, data2: number}>
+){
+  //@todo: create part, add events to part, create track, add part to track, add track to song
+  store.dispatch({
+    type: ADD_MIDI_EVENTS_TO_SONG,
+    payload: {
+//      id: song_id,
+      midi_events
+    }
+  })
+}
+
 export function addMIDIEventsToSong(song_id: string, midi_events: Array<{ticks: number, type: number, data1: number, data2: number}>){
   //@todo: create part, add events to part, create track, add part to track, add track to song
   store.dispatch({

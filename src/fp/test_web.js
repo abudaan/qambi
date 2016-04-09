@@ -9,13 +9,28 @@ import{
 import{
   createSong
 } from './song'
+import{
+  createTrack,
+  addPart
+} from './track'
+import{
+  createPart
+} from './part'
 
 
 document.addEventListener('DOMContentLoaded', function(){
 
   let button = document.getElementById('next')
   let buttonClicked = 0
-  let noteon, noteoff, note, song
+  let noteon, noteoff, note, song, track, part1, part2
+
+  song = createSong({playbackSpeed: 100, loop: true})
+  track = createTrack({name: 'guitar', song})
+  part1 = createPart({name: 'solo1', track})
+  part2 = createPart({name: 'solo2', track})
+
+  addPart(track, part1, part2)
+
   button.addEventListener('click', function(){
     switch(buttonClicked){
       case 0:
@@ -32,9 +47,6 @@ document.addEventListener('DOMContentLoaded', function(){
         break;
       case 4:
         moveMIDIEventTo(noteoff, 260)
-        break;
-      case 5:
-        song = createSong({playbackSpeed: 100, loop: true})
         break;
       default:
     }

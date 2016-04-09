@@ -1,6 +1,9 @@
 import {combineReducers} from 'redux'
 import {
   CREATE_SONG,
+  CREATE_TRACK,
+  CREATE_PART,
+  ADD_PART,
   ADD_MIDI_NOTES,
   ADD_TIME_EVENTS,
   CREATE_MIDI_EVENT,
@@ -29,10 +32,45 @@ function songs(state = {}, action){
 }
 
 function tracks(state = {}, action){
+  switch(action.type){
+    case CREATE_TRACK:
+      state = {...state, [action.payload.id]: action.payload}
+      break
+
+    case ADD_PART:
+      state = {...state}
+      let track = state[action.payload.track_id]
+      if(track){
+        track.parts.push(...action.payload.part_ids)
+      }
+      break
+
+    default:
+      // do nothing
+  }
   return state
 }
 
 function parts(state = {}, action){
+  switch(action.type){
+
+    case CREATE_PART:
+      state = {...state, [action.payload.id]: action.payload}
+      break
+
+    case ADD_PART:
+      state = {...state}
+      let partIds = action.payload.part_ids
+      let trackId = action.payload.track_id
+      partIds.forEach(function(id){
+        let part = state[id]
+        part.track = trackId
+      })
+      break
+
+    default:
+      // do nothing
+  }
   return state
 }
 
@@ -94,6 +132,7 @@ function midiNotes(state = {}, action){
 const sequencerApp = combineReducers({
   songs,
   tracks,
+  parts,
   midiEvents,
   midiNotes,
 })
