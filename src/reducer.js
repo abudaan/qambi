@@ -29,7 +29,8 @@ function sequencer(state = initialState, action){
 
   let
     event, eventId,
-    song, songId
+    song, songId,
+    midiEvents
 
   switch(action.type){
 
@@ -69,20 +70,20 @@ function sequencer(state = initialState, action){
       song = state.songs[songId]
       if(song){
         let trackIds = action.payload.track_ids
-        trackIds.forEach(function(id){
-          let track = state.tracks[id]
+        trackIds.forEach(function(trackId){
+          let track = state.tracks[trackId]
           if(track){
-            song.tracks.push(id)
-            track.song = songId
+            song.trackIds.push(trackId)
+            track.songId = songId
             let midiEventIds = []
-            track.parts.forEach(function(part_id){
-              let part = state.parts[part_id]
-              song.parts.push(part_id)
-              midiEventIds.push(...part.midiEvents)
+            track.partIds.forEach(function(partId){
+              let part = state.parts[partId]
+              song.partIds.push(partId)
+              midiEventIds.push(...part.midiEventIds)
             })
-            song.midiEvents.push(midiEventIds)
+            song.midiEventIds.push(...midiEventIds)
           }else{
-            console.warn(`no track with id ${id}`)
+            console.warn(`no track with id ${trackId}`)
           }
         })
       }else{
@@ -101,8 +102,8 @@ function sequencer(state = initialState, action){
         partIds.forEach(function(id){
           let part = state.parts[id]
           if(part){
-            track.parts.push(id)
-            part.track = trackId
+            track.partIds.push(id)
+            part.trackId = trackId
           }else{
             console.warn(`no part with id ${id}`)
           }
@@ -123,8 +124,8 @@ function sequencer(state = initialState, action){
         midiEventIds.forEach(function(id){
           let midiEvent = state.midiEvents[id]
           if(midiEvent){
-            part.midiEvents.push(id)
-            midiEvent.part = partId
+            part.midiEventIds.push(id)
+            midiEvent.partId = partId
           }else{
             console.warn(`no MIDI event found with id ${id}`)
           }
@@ -164,8 +165,14 @@ function sequencer(state = initialState, action){
 
 
     case UPDATE_SONG:
-      state = {...state}
-      songId = action.payload.id
+      state = {...state};
+      ({song_id: songId, midi_events: midiEvents} = action.payload)
+      song = state.songs[songId]
+      song.midiEventIds = []
+      midiEvents.forEach(function(event){
+        song.midiEventIds.push(event.id)
+        state.midiEvents[event.id] = event
+      })
       break
 
 

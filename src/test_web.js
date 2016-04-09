@@ -10,6 +10,7 @@ import sequencer, {
   addParts,
   createPart,
   addMIDIEvents,
+  updateSong,
 } from './sequencer'
 
 console.log(sequencer.id)
@@ -21,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function(){
   let buttonClicked = 0
   let noteon, noteoff, note, song, track, part1, part2
 
-  song = createSong({name: 'My First Song', playbackSpeed: 100, loop: true})
+  song = createSong({name: 'My First Song', playbackSpeed: 100, loop: true, bpm: 90})
   track = createTrack({name: 'guitar', song})
   part1 = createPart({name: 'solo1', track})
   part2 = createPart({name: 'solo2', track})
@@ -33,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function(){
   addMIDIEvents(part1, noteon, noteoff, 'beer', 'konijn')
   addParts(track, part1, part2)
   addTracks(song, track)
+  updateSong(song)
 
   button.addEventListener('click', function(){
     switch(buttonClicked){

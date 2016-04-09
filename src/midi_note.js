@@ -1,84 +1,51 @@
-'use strict';
+// @flow
 
+import {getStore} from './create_store'
+import {
+  UPDATE_MIDI_NOTE,
+  CREATE_MIDI_NOTE,
+} from './action_types'
 
-import {log, info, warn, error} from './util';
-import {MIDIEvent} from './midi_event';
-import sequencer from './sequencer.js';
+const store = getStore()
+let midiNoteIndex = 0
 
-let
-  midiNoteId = 0;
+export function updateMIDINote(id, state = store.getState()){
+  let note = state.midiNotes[id]
+  let events = state.midiEvents
+  let start = events[note.noteon]
+  let end = events[note.noteoff]
 
-
-export class MIDINote{
-  constructor(noteOn, noteOff){
-    if(noteOn instanceof MIDIEvent){
-      this.noteOn = noteOn;
-      noteOn.midiNote = this;
+  store.dispatch({
+    type: UPDATE_MIDI_NOTE,
+    payload: {
+      id,
+      start: start.ticks,
+      end: end.ticks,
+      durationTicks: end.ticks - start.ticks
     }
-
-    if(noteOff instanceof MIDIEvent){
-      this.noteOff = noteOff;
-      noteOff.midiNote = this;
-      this.endless = false;
-      this.durationTicks = noteOff.ticks - noteOn.ticks;
-      this.durationMillis = noteOff.millis - noteOn.millis;
-    }else{
-      this.endless = true;
-    }
-
-    this.id = 'N' + midiNoteId++ + Date.now();
-    this.note = noteOn.note;
-    this.number = noteOn.noteNumber;
-    this.ticks = noteOn.ticks;
-    this.pitch = noteOn.data1;
-    this.velocity = noteOn.velocity;
-    this.name = noteOn.noteName;
-    this.type = sequencer.MIDI_NOTE;
-  }
-
-
-  addNoteOff(noteOff){
-    if(noteOff.data1 !==  noteOn.data1){
-      warn('noteOn and noteOff must have the same note number');
-      return;
-    }
-    if(this.noteOff !== undefined){
-      log(noteOff.ticks, noteOff.noteNumber, this.id, 'override note off event');
-      this.noteOff.midiNote = undefined;
-    }
-    var noteOn = this.noteOn;
-    noteOff.midiNote = this;
-    this.endless = false;
-    this.noteOff = noteOff;
-    this.durationTicks = noteOff.ticks - noteOn.ticks;
-    this.durationMillis = noteOff.millis - noteOn.millis;
-  }
-
-
-  setPitch(pitch){
-    if(pitch < 0 || pitch > 127){
-      return;
-    }
-    this.noteOn.setPitch(pitch);
-    if(this.endless === false){
-      this.noteOff.setPitch(pitch);
-    }
-    this.number = this.noteOn.noteNumber;
-    this.name = this.noteOn.noteName;
-    this.pitch = pitch;
-  }
-
-
-  mute(flag){
-    if(flag !== undefined){
-      this.mute = flag === true ? true : false;
-    }else{
-      this.mute = !this.mute;
-    }
-  }
+  })
 }
 
+export function createMIDINote(noteon: string, noteoff: string){
+  let events = store.getState().sequencer.midiEvents
+  let on = events[noteon]
+  let off = events[noteoff]
+  if(on.data1 !== off.data1){
+    console.error('can\'t create MIDI note: events must have the same data1 value, i.e. the same pitch')
+    return -1;
+  }
 
-export function createMIDINote(noteOn, noteOff){
-  return new MIDINote(noteOn, noteOff);
+  let id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
+  store.dispatch({
+    type: CREATE_MIDI_NOTE,
+    payload: {
+      id,
+      noteon,
+      noteoff,
+      start: on.ticks,
+      end: off.ticks,
+      durationTicks: off.ticks - on.ticks
+    }
+  })
+  return id
 }

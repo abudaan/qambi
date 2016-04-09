@@ -1,183 +1,47 @@
-'use strict';
+import {getStore} from './create_store'
+import {
+  CREATE_PART,
+  ADD_MIDI_EVENTS,
+} from './action_types'
 
-import {info, createState} from './util.js';
-import {MIDIEvent} from './midi_event.js';
-import {MIDINote} from './midi_note.js';
-import {AudioEvent} from './audio_event.js';
+const store = getStore()
+let partIndex = 0
 
-let partId = 0;
+export function createPart(
+  settings: {
+    name: string,
+    trackId: string,
+    midiEventIds:Array<string>,
+    midiNoteIds:Array<string>,
+  } = {}
+){
+  let id = `MP_${partIndex++}_${new Date().getTime()}`
+  let {
+    name = id,
+    midiEventIds = [],
+    midiNoteIds = [],
+    trackId = 'none'
+  } = settings
 
-
-export class Part{
-
-  constructor(config = {}){
-    this.id = 'P' + partId++ + Date.now();
-    this._events = [];
-    this._needsUpdate = false;
-    this.ticks = 0;
-
-    this._eventsMap = new Map();
-    this._notesMap = new Map();
-    this._newEvents = new Map();
-    this._state = createState();
-
-    if(config.events){
-      this.addEvents(config.events);
+  store.dispatch({
+    type: CREATE_PART,
+    payload: {
+      id,
+      name,
+      midiEventIds,
+      midiNoteIds,
+      trackId
     }
-    this.name = config.name || this.id;
-    config = null;
-  }
-
-  addEvent(event){
-    if(event instanceof MIDIEvent || event instanceof AudioEvent){
-      event._state.part = 'new';
-      event.part = this;
-      //console.log('track', this.track)
-      if(this.track){
-        event.track = this.track
-        //console.log('song', this.track.song)
-        if(this.track.song){
-          event.song = this.track.song
-          event.song._eventsMap.set(event.id, event)
-        }
-      }
-      this._needsUpdate = true;
-      this._eventsMap.set(event.id, event);
-      this.update()
-      return this; // make it chainable
-    }
-  }
-
-  addEvents(events){
-    for(let event of events){
-      this.addEvent(event);
-    }
-    return this; // make it chainable
-  }
-
-
-  removeEvent(event){
-    if(this._eventsMap.has(event.id)){
-      event.reset(true, false, false);
-      this._needsUpdate = true;
-      return this; // make it chainable
-    }
-  }
-
-  removeEvents(events){
-    for(let event of events){
-      this.removeEvent(event);
-    }
-    return this; // make it chainable
-  }
-
-
-  moveEvent(event, ticks){
-    if(this._eventsMap.has(event.id)){
-      event.move(ticks);
-      this._needsUpdate = true;
-      return this; // make it chainable
-    }
-  }
-
-  moveEvents(events){
-    for(let event of events){
-      this.moveEvent(event);
-    }
-    return this; // make it chainable
-  }
-
-
-  transposeEvent(event, semitones){
-    if(this._eventsMap.has(event.id)){
-      if(event.type !== 128 && event.type !== 144){
-        return;
-      }
-      event.transpose(semitones);
-      this._needsUpdate = true;
-      return this; // make it chainable
-    }
-  }
-
-  transposeEvents(events){
-    for(let event of events){
-      this.transposeEvent(event);
-    }
-    return this; // make it chainable
-  }
-
-  getEvents(){
-    if(this._needsUpdate){
-      this.update();
-    }
-    return this._events;
-  }
-
-  update(){
-
-    if(this._needsUpdate === false){
-      return;
-    }
-
-    let numberOfEventsHasChanged = false;
-    let sortEvents = false;
-
-    let events = this._eventsMap.values();
-    for(let event of events){
-      if(event._state.part === 'removed'){
-        this._eventsMap.delete(event.id);
-        // in case a new event gets deleted before part.update() is called
-        if(this._newEvents.has(event.id)){
-          this._newEvents.delete(event.id);
-        }
-        numberOfEventsHasChanged = true;
-      }else if(event._state.part === 'new'){
-        this._newEvents.set(event.id, event);
-        numberOfEventsHasChanged = true;
-      }else if(event._state.part !== 'clean'){
-        sortEvents = true;
-      }
-      event._state.part = 'clean';
-    }
-
-    // if number of events has changed update the _events array and the _eventsMap map
-    if(numberOfEventsHasChanged === true){
-      this._events = [];
-      let events = this._eventsMap.values();
-      for(let event of events){
-        this._events.push(event);
-      }
-    }
-
-
-    if(numberOfEventsHasChanged === true || sortEvents === true){
-      this._events.sort((a, b) => (a._sortIndex <= b._sortIndex) ? -1 : 1);
-    }
-
-    // create notes -> @TODO: only necessary if number of events has changed
-    let notes = {};
-    let n = 0;
-    for(let event of this._events){
-      if(event.type === 144){
-        notes[event.noteNumber] = event;
-      }else if(event.type === 128){
-        let noteOn = notes[event.noteNumber];
-        //console.log(event.noteNumber, noteOn);
-        let noteOff = event;
-        if(noteOn === undefined){
-          info('no note on event!', n++);
-          continue;
-        }
-        let midiNote = new MIDINote(noteOn, noteOff);
-        this._notesMap.set(midiNote.id, midiNote);
-        delete notes[event.noteNumber];
-      }
-    }
-
-    this._needsUpdate = false;
-  }
+  })
+  return id
 }
 
-export function createPart(config){
-  return new Part(config);
+export function addMIDIEvents(part_id: string, ...midi_event_ids: string){
+  store.dispatch({
+    type: ADD_MIDI_EVENTS,
+    payload: {
+      part_id,
+      midi_event_ids
+    }
+  })
 }

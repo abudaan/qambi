@@ -29,7 +29,7 @@ let
 
 
 function setTickDuration(){
-  secondsPerTick = (1 / playbackSpeed * 60) / bpm / ppq;
+  secondsPerTick = (1/playbackSpeed * 60)/bpm/ppq;
   millisPerTick = secondsPerTick * 1000;
   //console.log(millisPerTick, bpm, ppq, playbackSpeed, (ppq * millisPerTick));
   //console.log(ppq);
@@ -37,11 +37,11 @@ function setTickDuration(){
 
 
 function setTicksPerBeat(){
-  factor = (4 / denominator);
+  factor = (4/denominator);
   numSixteenth = factor * 4;
   ticksPerBeat = ppq * factor;
   ticksPerBar = ticksPerBeat * nominator;
-  ticksPerSixteenth = ppq / 4;
+  ticksPerSixteenth = ppq/4;
   //console.log(denominator, factor, numSixteenth, ticksPerBeat, ticksPerBar, ticksPerSixteenth);
 }
 
@@ -68,16 +68,17 @@ function updatePosition(event){
 }
 
 
-export function parseTimeEvents(settings, timeEvents){
+export function parseTimeEvents(song){
   //console.time('parse time events ' + song.name);
+  let timeEvents = song._timeEvents;
   let type;
   let event;
 
-  ppq = settings.ppq;
-  bpm = settings.bpm;
-  nominator = settings.nominator;
-  denominator = settings.denominator;
-  playbackSpeed = settings.playbackSpeed;
+  ppq = song.ppq;
+  bpm = song.bpm;
+  nominator = song.nominator;
+  denominator = song.denominator;
+  playbackSpeed = song.playbackSpeed;
   bar = 1;
   beat = 1;
   sixteenth = 1;
@@ -91,20 +92,20 @@ export function parseTimeEvents(settings, timeEvents){
   timeEvents.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
 
   for(event of timeEvents){
-    //event.song = song;
+    event.song = song;
     type = event.type;
     updatePosition(event);
 
     switch(type){
 
       case 0x51:
-        bpm = event.data1;
+        bpm = event.bpm;
         setTickDuration();
         break;
 
       case 0x58:
-        nominator = event.data1;
-        denominator = event.data2;
+        nominator = event.nominator;
+        denominator = event.denominator;
         setTicksPerBeat();
         break;
 
@@ -117,20 +118,19 @@ export function parseTimeEvents(settings, timeEvents){
     //console.log(event.barsAsString);
   }
 
-  //song.lastEventTmp = event;
+  song.lastEventTmp = event;
   //console.log(event);
   //console.log(timeEvents);
 }
 
 
-//export function parseEvents(song, events){
-export function parseEvents(events){
+export function parseEvents(song, evts){
+  //console.log(events)
   let event;
   let startEvent = 0;
   let lastEventTick = 0;
-  let result = []
 
-  //let events = [].concat(evts, song._timeEvents);
+  let events = [].concat(evts, song._timeEvents);
   let numEvents = events.length;
   //console.log(events)
   events.sort(function(a, b){
@@ -168,7 +168,7 @@ export function parseEvents(events){
     switch(event.type){
 
       case 0x51:
-        bpm = event.data1;
+        bpm = event.bpm;
         millis = event.millis;
         millisPerTick = event.millisPerTick;
         secondsPerTick = event.secondsPerTick;
@@ -178,8 +178,8 @@ export function parseEvents(events){
 
       case 0x58:
         factor = event.factor;
-        nominator = event.data1;
-        denominator = event.data2;
+        nominator = event.nominator;
+        denominator = event.denominator;
         numSixteenth = event.numSixteenth;
         ticksPerBar = event.ticksPerBar;
         ticksPerBeat = event.ticksPerBeat;
@@ -192,14 +192,14 @@ export function parseEvents(events){
       default:
         updatePosition(event);
         updateEvent(event);
-        result.push(event)
     }
 
     lastEventTick = event.ticks;
   }
-  return result;
-  //song.lastEventTmp = event;
+  song.lastEventTmp = event;
 }
+
+
 
 
 function updateEvent(event){
@@ -223,7 +223,7 @@ function updateEvent(event){
   event.ticks = ticks;
 
   event.millis = millis;
-  event.seconds = millis / 1000;
+  event.seconds = millis/1000;
 
 
   event.bar = bar;
