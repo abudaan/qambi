@@ -134,7 +134,7 @@ export function parseEvents(events){
   let numEvents = events.length;
   //console.log(events)
   events.sort(function(a, b){
-    return a._sortIndex - b._sortIndex;
+    return a.sortIndex - b.sortIndex;
   });
   event = events[0];
 
@@ -259,7 +259,12 @@ export function parseMIDINotes(events){
       }
       notes[event.trackId][event.data1] = event
     }else if(event.type === 128){
-      let noteOn = notes[event.trackId][event.data1]
+      let notesInTrack = notes[event.trackId]
+      if(typeof notesInTrack === 'undefined'){
+        console.info('no note on found event for ', event)
+        continue
+      }
+      let noteOn = notesInTrack[event.data1]
       //console.log(event.noteNumber, noteOn);
       let noteOff = event
       if(typeof noteOn === 'undefined'){

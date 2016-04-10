@@ -38,7 +38,7 @@ export default class Scheduler{
     let events = []
     // main loop
     for(let i = this.index; i < this.numEvents; i++){
-      event = this.events[i];
+      let event = this.events[i];
       if(event.millis < this.maxtime){
 
         //event.time = this.timeStamp + event.millis - this.songStartPosition;
@@ -87,7 +87,9 @@ export default class Scheduler{
         instrument.processMIDIEvent(event, time, this.tracks[event.trackId].output)
       }
     }
-
-    return this.index >= this.numEvents // end of song
+    //console.log(this.index, this.numEvents)
+    return this.index >= 10
+    //return this.index >= this.numEvents // end of song
   }
 }
+

@@ -8,7 +8,7 @@ class Sample{
       // create simple synth sample
       this.source = context.createOscillator();
       this.source.type = 'sine';
-      this.source.frequency.value = event.frequency;
+      this.source.frequency.value = event.frequency
     }else{
       this.source = context.createBufferSource()
       this.source.buffer = sampleData.d;

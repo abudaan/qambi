@@ -13,7 +13,7 @@ import {
   SONG_POSITION,
   ADD_MIDI_EVENTS_TO_SONG,
 } from './action_types'
-import {MIDI} from './qambi'
+import qambi from './qambi'
 
 const store = getStore()
 let songIndex = 0
@@ -61,15 +61,15 @@ export function createSong(settings = {}){
 
   let{
     timeEvents: timeEvents = [
-      {id: getMIDIEventId(), song: id, ticks: 0, type: MIDI.TEMPO, data1: s.bpm},
-      {id: getMIDIEventId(), song: id, ticks: 0, type: MIDI.TIME_SIGNATURE, data1: s.nominator, data2: s.denominator}
+      {id: getMIDIEventId(), song: id, ticks: 0, type: qambi.TEMPO, data1: s.bpm},
+      {id: getMIDIEventId(), song: id, ticks: 0, type: qambi.TIME_SIGNATURE, data1: s.nominator, data2: s.denominator}
     ],
     midiEventIds: midiEventIds = [],
     partIds: partIds = [],
     trackIds: trackIds = [],
   } = settings
 
-  parseTimeEvents(s, timeEvents)
+  //parseTimeEvents(s, timeEvents)
 
   store.dispatch({
     type: CREATE_SONG,
@@ -107,6 +107,7 @@ export function updateSong(song_id: string){
   let state = store.getState().editor
   let song = state.songs[song_id]
   if(song){
+    parseTimeEvents(song.settings, song.timeEvents)
     let midiEvents = [...song.timeEvents]
     song.midiEventIds.forEach(function(event_id){
       let event = state.midiEvents[event_id]
@@ -155,7 +156,7 @@ export function startSong(song_id: string, start_position: number = 0){
     })
 
     let position = start_position
-    let timeStamp = context.currentTime // -> should be performance.now()?
+    let timeStamp = context.currentTime * 1000 // -> should be performance.now()? -> ERROR!!
     let scheduler = new Scheduler({
       song_id,
       start_position,
