@@ -5,10 +5,12 @@ import {parseTimeEvents, parseEvents} from './parse_events'
 import {getMIDIEventId} from './midi_event'
 import {addTask, removeTask} from './heartbeat'
 import {context} from './io'
+import Scheduler from './scheduler'
 import {
   CREATE_SONG,
   ADD_TRACKS,
   UPDATE_SONG,
+  SONG_POSITION,
   ADD_MIDI_EVENTS_TO_SONG,
 } from './action_types'
 import {MIDI} from './qambi'
@@ -35,7 +37,7 @@ const defaultSong = {
 }
 
 
-export function createSong(settings){
+export function createSong(settings = {}){
   let id = `S_${songIndex++}_${new Date().getTime()}`
   let s = {};
   ({
@@ -125,7 +127,7 @@ export function addMIDIEventsToSong(song_id: string, midi_events: Array<{ticks: 
 }
 
 export function updateSong(song_id: string){
-  let state = store.getState().sequencer
+  let state = store.getState().editor
   let song = state.songs[song_id]
   if(song){
     let midiEvents = [...song.timeEvents]
@@ -140,7 +142,8 @@ export function updateSong(song_id: string){
       type: UPDATE_SONG,
       payload: {
         song_id,
-        midi_events: midiEvents
+        midi_events: midiEvents,
+        settings: song.settings // needed for the sequencer reducer
       }
     })
   }else{
@@ -149,23 +152,40 @@ export function updateSong(song_id: string){
 }
 
 
-export function startSong(song_id: string, position: number = 0){
-  let timeStamp = context.currentTime
-  let millis = position
+export function startSong(song_id: string, start_position: number = 0){
 
-  addTask('repetitive', song_id, function(){
-    let
-      now = context.currentTime * 1000,
-      diff = now - timeStamp
+  function createScheduler(){
+    let timeStamp = context.currentTime // -> should be performance.now()
+    let songData = store.getState().sequencer.songs[song_id]
+    let scheduler = new Scheduler(songData, timeStamp, start_position)
+    let position = start_position
 
-    millis += diff
-    timeStamp = now
-    console.log(diff)
-    //@TODO: how to connect a scheduler to a song?
-    //song._scheduler.update();
-  })
+    return function(){
+      let
+        now = context.currentTime * 1000,
+        diff = now - timeStamp,
+        endOfSong
+
+      position += diff // position is in millis
+      timeStamp = now
+      endOfSong = scheduler.update(position)
+      if(endOfSong){
+        stopSong(song_id)
+      }
+      store.dispatch({
+        type: SONG_POSITION,
+        payload: {
+          song_id,
+          position
+        }
+      })
+    }
+  }
+
+  addTask('repetitive', song_id, createScheduler())
 }
 
 export function stopSong(song_id: string){
+  console.log('stop song', song_id)
   removeTask('repetitive', song_id)
 }

@@ -21,4 +21,10 @@ export const UPDATE_MIDI_NOTE = 'update_midi_note'
 
 export const UPDATE_SONG = 'update_song'
 
+// sequencer actions
+export const SONG_POSITION = 'song_position'
+export const PLAY_SONG = 'play_song'
+export const PAUSE_SONG = 'pause_song'
+export const STOP_SONG = 'stop_song'
+
 

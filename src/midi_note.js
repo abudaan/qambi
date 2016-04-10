@@ -27,7 +27,7 @@ export function updateMIDINote(id, state = store.getState()){
 }
 
 export function createMIDINote(noteon: string, noteoff: string){
-  let events = store.getState().sequencer.midiEvents
+  let events = store.getState().editor.midiEvents
   let on = events[noteon]
   let off = events[noteoff]
   if(on.data1 !== off.data1){

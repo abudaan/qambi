@@ -1,5 +1,6 @@
 import {combineReducers} from 'redux'
 import {
+  // for editor
   CREATE_SONG,
   CREATE_TRACK,
   CREATE_PART,
@@ -14,6 +15,8 @@ import {
   UPDATE_MIDI_EVENT,
   UPDATE_MIDI_NOTE,
   UPDATE_SONG,
+  // for sequencer only
+  SONG_POSITION,
 } from './action_types'
 
 const initialState = {
@@ -25,7 +28,7 @@ const initialState = {
 }
 
 
-function sequencer(state = initialState, action){
+function editor(state = initialState, action){
 
   let
     event, eventId,
@@ -182,8 +185,37 @@ function sequencer(state = initialState, action){
   return state
 }
 
+// state when a song is playing
+function sequencer(state = {songs: {}}, action){
+  switch(action.type){
+
+    case UPDATE_SONG:
+      state = {...state}
+      state.songs[action.payload.song_id] = action.payload
+      break
+
+
+    case SONG_POSITION:
+      state = {...state}
+      state.songs[action.payload.song_id].position = action.payload.position
+      break
+
+
+    default:
+      // do nothing
+  }
+  return state;
+}
+
+
+function gui(state = {}, action){
+  return state;
+}
+
 
 const sequencerApp = combineReducers({
+  gui,
+  editor,
   sequencer,
 })
 
