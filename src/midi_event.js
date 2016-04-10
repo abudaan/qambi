@@ -2,6 +2,7 @@
 
 import {getStore} from './create_store'
 import {updateMIDINote} from './midi_note'
+//import {createNote} from './note.js';
 import {
   CREATE_MIDI_EVENT,
   UPDATE_MIDI_EVENT,
@@ -20,6 +21,7 @@ export function createMIDIEvent(ticks: number, type: number, data1: number, data
       type,
       data1,
       data2,
+      frequency: 440 * Math.pow(2, (data1 - 69) / 12),
       sortIndex: ticks + type
     }
   })

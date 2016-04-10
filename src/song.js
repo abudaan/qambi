@@ -126,6 +126,7 @@ export function addMIDIEventsToSong(song_id: string, midi_events: Array<{ticks: 
   })
 }
 
+// prepare song events for playback
 export function updateSong(song_id: string){
   let state = store.getState().editor
   let song = state.songs[song_id]
@@ -170,16 +171,18 @@ export function startSong(song_id: string, start_position: number = 0){
         tracks[event.trackId] = track = state.editor.tracks[event.trackId]
         instruments[track.instrumentId] = state.instruments[track.instrumentId]
       }
+      // quickfix -> move this to updateSong
+      event.instrumentId = track.instrumentId
       return (!event.mute && !part.mute && !track.mute)
     })
 
     let position = start_position
     let timeStamp = context.currentTime // -> should be performance.now()
     let scheduler = new Scheduler({
-      timeStamp,
+      song_id,
       start_position,
+      timeStamp,
       instruments,
-      songId: songData.song_id,
       settings: songData.settings,
       midiEvents: midiEvents,
     })

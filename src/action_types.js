@@ -28,3 +28,6 @@ export const PAUSE_SONG = 'pause_song'
 export const STOP_SONG = 'stop_song'
 
 
+// instrument actions
+export const CREATE_INSTRUMENT = 'create_instrument'
+

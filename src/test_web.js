@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   note = createMIDINote(noteon, noteoff)
 
-  addMIDIEvents(part1, noteon, noteoff)
+  addMIDIEvents(part1, noteon, noteoff, createMIDIEvent(600, 144, 67, 10))
   addParts(track, part1, part2)
   addTracks(song, track)
   updateSong(song)

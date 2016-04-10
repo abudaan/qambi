@@ -1,6 +1,7 @@
 // @flow
 
 import {getStore} from './create_store'
+import {createInstrument} from './instrument'
 import {
   CREATE_TRACK,
   ADD_PARTS,
@@ -29,7 +30,7 @@ export function createTrack(
       partIds,
       songId,
       mute: false,
-      instrumentId: 'sinewave'
+      instrumentId: createInstrument('sinewave')
     }
   })
   return id

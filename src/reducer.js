@@ -15,8 +15,12 @@ import {
   UPDATE_MIDI_EVENT,
   UPDATE_MIDI_NOTE,
   UPDATE_SONG,
+
   // for sequencer only
   SONG_POSITION,
+
+  // for instrument only
+  CREATE_INSTRUMENT,
 } from './action_types'
 
 const initialState = {
@@ -177,8 +181,12 @@ function editor(state = initialState, action){
       song = state.songs[songId]
       song.midiEventIds = []
       midiEvents.forEach(function(event){
+        // put midi event ids in correct order
         song.midiEventIds.push(event.id)
-        state.midiEvents[event.id] = event
+        // let midiEvent = state.midiEvents[event.id];
+        // ({
+        //   millis: midiEvent.millis
+        // } = event)
       })
       break
 
@@ -218,6 +226,15 @@ function gui(state = {}, action){
 
 
 function instruments(state = {}, action){
+  switch(action.type){
+    case CREATE_INSTRUMENT:
+      state = {...state}
+      state[action.payload.id] = action.payload.instrument
+      //state = {...state, ...{[action.payload.id]: action.payload.instrument}}
+      break
+
+    default:
+  }
   return state;
 }
 
