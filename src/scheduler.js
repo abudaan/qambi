@@ -10,6 +10,7 @@ export default class Scheduler{
       midiEvents: this.events,
       timeStamp: this.timeStamp,
       instruments: this.instruments,
+      tracks: this.tracks,
       settings: {
         bars: this.bars,
         loop: this.loop
@@ -81,8 +82,9 @@ export default class Scheduler{
       }else if(instrument.type === 'external'){
         // to be implemented: route to external midi instrument
       }else{
+        //this.scheduled[event.id] = instrument.getSample(event)
         let time = this.timeStamp + event.millis - this.songStartPosition
-        instrument.processMIDIEvent(event, time)
+        instrument.processMIDIEvent(event, time, this.tracks[event.trackId].output)
       }
     }
 

@@ -1,5 +1,6 @@
 // @flow
 
+import {context} from './io'
 import {getStore} from './create_store'
 import {createInstrument} from './instrument'
 import {
@@ -22,6 +23,11 @@ export function createTrack(
     partIds = [],
     songId = 'none'
   } = settings
+  let volume = 0.5
+  let output = context.createGain()
+  output.gain.value = volume
+  output.connect(context.destination) //@TODO: route to master compressor first!
+
   store.dispatch({
     type: CREATE_TRACK,
     payload: {
@@ -29,8 +35,10 @@ export function createTrack(
       name,
       partIds,
       songId,
+      volume,
+      output,
       mute: false,
-      instrumentId: createInstrument('sinewave')
+      instrumentId: createInstrument('sinewave'),
     }
   })
   return id
@@ -48,6 +56,16 @@ export function addParts(track_id: string, ...part_ids:string){
 }
 
 
-export function mute(flag: boolean){
+export function muteTrack(flag: boolean){
+
+}
+
+
+export function setVolumeTrack(flag: boolean){
+
+}
+
+
+export function setPanningTrack(flag: boolean){
 
 }

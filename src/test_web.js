@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function(){
   part1 = createPart({name: 'solo1', track})
   part2 = createPart({name: 'solo2', track})
   noteon = createMIDIEvent(120, 144, 60, 100)
-  noteoff = createMIDIEvent(100000, 128, 60, 0)
+  noteoff = createMIDIEvent(240, 128, 60, 0)
 
   note = createMIDINote(noteon, noteoff)
 

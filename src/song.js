@@ -1,7 +1,7 @@
 // @flow
 
 import {getStore} from './create_store'
-import {parseTimeEvents, parseEvents} from './parse_events'
+import {parseTimeEvents, parseEvents, parseMIDINotes} from './parse_events'
 import {getMIDIEventId} from './midi_event'
 import {addTask, removeTask} from './heartbeat'
 import {context} from './io'
@@ -101,30 +101,6 @@ export function addTimeEvents(...time_events){
 
 }
 
-export function addMIDIEvents(
-  settings: {song_id: string, track_id: string, part_id: string},
-  midi_events: Array<{ticks: number, type: number, data1: number, data2: number}>
-){
-  //@todo: create part, add events to part, create track, add part to track, add track to song
-  store.dispatch({
-    type: ADD_MIDI_EVENTS_TO_SONG,
-    payload: {
-//      id: song_id,
-      midi_events
-    }
-  })
-}
-
-export function addMIDIEventsToSong(song_id: string, midi_events: Array<{ticks: number, type: number, data1: number, data2: number}>){
-  //@todo: create part, add events to part, create track, add part to track, add track to song
-  store.dispatch({
-    type: ADD_MIDI_EVENTS_TO_SONG,
-    payload: {
-      id: song_id,
-      midi_events
-    }
-  })
-}
 
 // prepare song events for playback
 export function updateSong(song_id: string){
@@ -139,6 +115,7 @@ export function updateSong(song_id: string){
       }
     })
     midiEvents = parseEvents(midiEvents)
+    parseMIDINotes(midiEvents)
     store.dispatch({
       type: UPDATE_SONG,
       payload: {
@@ -161,7 +138,10 @@ export function startSong(song_id: string, start_position: number = 0){
     let parts = {}
     let tracks = {}
     let instruments = {}
-    let midiEvents = songData.midi_events.filter(function(event){
+    let midiEvents = songData.midiEvents.filter(function(event){
+      if(typeof event.midiNoteId === 'undefined'){
+        return false
+      }
       let part = parts[event.partId]
       let track = tracks[event.trackId]
       if(typeof part === 'undefined'){
@@ -171,17 +151,16 @@ export function startSong(song_id: string, start_position: number = 0){
         tracks[event.trackId] = track = state.editor.tracks[event.trackId]
         instruments[track.instrumentId] = state.instruments[track.instrumentId]
       }
-      // quickfix -> move this to updateSong
-      event.instrumentId = track.instrumentId
       return (!event.mute && !part.mute && !track.mute)
     })
 
     let position = start_position
-    let timeStamp = context.currentTime // -> should be performance.now()
+    let timeStamp = context.currentTime // -> should be performance.now()?
     let scheduler = new Scheduler({
       song_id,
       start_position,
       timeStamp,
+      tracks,
       instruments,
       settings: songData.settings,
       midiEvents: midiEvents,
@@ -216,3 +195,31 @@ export function stopSong(song_id: string){
   console.log('stop song', song_id)
   removeTask('repetitive', song_id)
 }
+
+
+/*
+export function addMIDIEvents(
+  settings: {song_id: string, track_id: string, part_id: string},
+  midi_events: Array<{ticks: number, type: number, data1: number, data2: number}>
+){
+  //@todo: create part, add events to part, create track, add part to track, add track to song
+  store.dispatch({
+    type: ADD_MIDI_EVENTS_TO_SONG,
+    payload: {
+//      id: song_id,
+      midi_events
+    }
+  })
+}
+
+export function addMIDIEventsToSong(song_id: string, midi_events: Array<{ticks: number, type: number, data1: number, data2: number}>){
+  //@todo: create part, add events to part, create track, add part to track, add track to song
+  store.dispatch({
+    type: ADD_MIDI_EVENTS_TO_SONG,
+    payload: {
+      id: song_id,
+      midi_events
+    }
+  })
+}
+*/

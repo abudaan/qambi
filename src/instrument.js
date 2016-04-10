@@ -13,18 +13,23 @@ class Instrument{
   constructor(id: string, type: string){
     this.id = id
     this.type = type
-    this.output = context.createGain() // quick and dirty -> set up proper routing via track
-    this.output.connect(context.destination)
     this.scheduled = {}
   }
 
-  processMIDIEvent(event, time){
+  processMIDIEvent(event, time, output){
     //console.log(event)
+    let sample
     if(event.type === 144){
-      let sample = createSample(-1, event, this.output)
-      //this.scheduled[event.id]
-      //console.log(time)
+      sample = createSample(-1, event, this.output)
+      this.scheduled[event.midiNoteId] = sample
+      sample.output.connect(output)
       sample.start(time)
+    }else if(event.type === 128){
+      sample = this.scheduled[event.midiNoteId]
+      sample.stop(time, () => {
+        //console.log('stop!')
+        delete this.scheduled[event.midiNoteId]
+      })
     }
   }
 }

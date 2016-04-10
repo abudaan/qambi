@@ -3,7 +3,7 @@ import {context} from './io.js';
 
 class Sample{
 
-  constructor(sampleData, event, output){
+  constructor(sampleData, event){
     if(sampleData === -1){
       // create simple synth sample
       this.source = context.createOscillator();
@@ -13,8 +13,10 @@ class Sample{
       this.source = context.createBufferSource()
       this.source.buffer = sampleData.d;
     }
-    output.gain.value = event.data2 / 127
-    this.source.connect(output)
+    this.output = context.createGain()
+    this.output.gain.value = event.data2 / 127
+    this.source.connect(this.output)
+    //this.output.connect(context.destination)
   }
 
   start(time){

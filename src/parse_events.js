@@ -245,3 +245,33 @@ function updateEvent(event){
   event.timeAsString = timeData.timeAsString;
   event.timeAsArray = timeData.timeAsArray;
 }
+
+
+let midiNoteIndex = 0
+
+export function parseMIDINotes(events){
+  let notes = {}
+  let n = 0
+  for(let event of events){
+    if(event.type === 144){
+      if(!notes[event.trackId]){
+        notes[event.trackId] = {}
+      }
+      notes[event.trackId][event.data1] = event
+    }else if(event.type === 128){
+      let noteOn = notes[event.trackId][event.data1]
+      //console.log(event.noteNumber, noteOn);
+      let noteOff = event
+      if(typeof noteOn === 'undefined'){
+        console.info('no note on event!', n++)
+        continue
+      }
+      //let midiNote = new MIDINote(noteOn, noteOff);
+      //this._notesMap.set(midiNote.id, midiNote);
+      let id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
+      noteOn.midiNoteId = id
+      noteOff.midiNoteId = id
+      delete notes[event.noteNumber]
+    }
+  }
+}

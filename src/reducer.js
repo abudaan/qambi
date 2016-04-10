@@ -114,6 +114,7 @@ function editor(state = initialState, action){
             part.midiEventIds.forEach(function(id){
               event = state.midiEvents[id]
               event.trackId = trackId
+              event.instrumentId = track.instrumentId
             })
           }else{
             console.warn(`no part with id ${id}`)
@@ -183,10 +184,8 @@ function editor(state = initialState, action){
       midiEvents.forEach(function(event){
         // put midi event ids in correct order
         song.midiEventIds.push(event.id)
-        // let midiEvent = state.midiEvents[event.id];
-        // ({
-        //   millis: midiEvent.millis
-        // } = event)
+        // replace event with updated event
+        state.midiEvents[event.id] = event;
       })
       break
 
@@ -203,7 +202,11 @@ function sequencer(state = {songs: {}}, action){
 
     case UPDATE_SONG:
       state = {...state}
-      state.songs[action.payload.song_id] = action.payload
+      state.songs[action.payload.song_id] = {
+        songId: action.payload.song_id,
+        midiEvents: action.payload.midi_events,
+        settings: action.payload.settings,
+      }
       break
 
 
