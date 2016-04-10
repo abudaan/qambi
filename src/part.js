@@ -30,7 +30,8 @@ export function createPart(
       name,
       midiEventIds,
       midiNoteIds,
-      trackId
+      trackId,
+      mute: false
     }
   })
   return id

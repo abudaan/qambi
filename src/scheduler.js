@@ -5,9 +5,10 @@ export default class Scheduler{
 
   constructor(songData, timeStamp, startPosition){
     ({
-      song_id: this.songId,
-      midi_events: this.events,
-      settings:{
+      songId: this.songId,
+      midiEvents: this.events,
+      instruments: this.instrument,
+      settings: {
         bars: this.bars,
         loop: this.loop
       }
@@ -17,6 +18,7 @@ export default class Scheduler{
     this.timeStamp = timeStamp
     this.index = 0
     this.setIndex(songData.position)
+    debugger
   }
 
   // get the index of the event that has its millis value at or right after the provided millis value
@@ -86,16 +88,6 @@ export default class Scheduler{
       track = event.track
       console.log(position, event)
       /*
-      if(
-        track === undefined ||
-        event.mute === true ||
-        event.part.mute === true ||
-        event.track.mute === true ||
-        (event.track.type === 'metronome' && this.song.useMetronome === false)
-        )
-      {
-        continue;
-      }
 
       if(event.type === 'audio'){
         // to be implemented

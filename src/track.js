@@ -27,7 +27,9 @@ export function createTrack(
       id,
       name,
       partIds,
-      songId
+      songId,
+      mute: false,
+      instrumentId: 'sinewave'
     }
   })
   return id
@@ -42,4 +44,9 @@ export function addParts(track_id: string, ...part_ids:string){
       part_ids,
     }
   })
+}
+
+
+export function mute(flag: boolean){
+
 }

@@ -107,6 +107,10 @@ function editor(state = initialState, action){
           if(part){
             track.partIds.push(id)
             part.trackId = trackId
+            part.midiEventIds.forEach(function(id){
+              event = state.midiEvents[id]
+              event.trackId = trackId
+            })
           }else{
             console.warn(`no part with id ${id}`)
           }
@@ -213,10 +217,16 @@ function gui(state = {}, action){
 }
 
 
+function instruments(state = {}, action){
+  return state;
+}
+
+
 const sequencerApp = combineReducers({
   gui,
   editor,
   sequencer,
+  instruments,
 })
 
 

@@ -155,10 +155,34 @@ export function updateSong(song_id: string){
 export function startSong(song_id: string, start_position: number = 0){
 
   function createScheduler(){
-    let timeStamp = context.currentTime // -> should be performance.now()
-    let songData = store.getState().sequencer.songs[song_id]
-    let scheduler = new Scheduler(songData, timeStamp, start_position)
+    let state = store.getState()
+    let songData = state.sequencer.songs[song_id]
+    let parts = {}
+    let tracks = {}
+    let instruments = {}
+    let midiEvents = songData.midi_events.filter(function(event){
+      let part = parts[event.partId]
+      let track = tracks[event.trackId]
+      if(typeof part === 'undefined'){
+        parts[event.partId] = part = state.editor.parts[event.partId]
+      }
+      if(typeof track === 'undefined'){
+        tracks[event.trackId] = track = state.editor.tracks[event.trackId]
+        instruments[track.instrumentId] = state.instruments[track.instrumentId]
+      }
+      return (!event.mute && !part.mute && !track.mute)
+    })
+
     let position = start_position
+    let timeStamp = context.currentTime // -> should be performance.now()
+    let scheduler = new Scheduler({
+      timeStamp,
+      start_position,
+      instruments,
+      songId: songData.song_id,
+      settings: songData.settings,
+      midiEvents: midiEvents,
+    })
 
     return function(){
       let
