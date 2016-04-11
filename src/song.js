@@ -12,6 +12,8 @@ import {
   UPDATE_SONG,
   SONG_POSITION,
   ADD_MIDI_EVENTS_TO_SONG,
+  START_SCHEDULER,
+  STOP_SCHEDULER,
 } from './action_types'
 import qambi from './qambi'
 
@@ -156,7 +158,7 @@ export function startSong(song_id: string, start_position: number = 0){
     })
 
     let position = start_position
-    let timeStamp = context.currentTime * 1000 // -> should be performance.now()? -> ERROR!!
+    let timeStamp = context.currentTime * 1000 // -> convert to millis
     let scheduler = new Scheduler({
       song_id,
       start_position,
@@ -165,6 +167,14 @@ export function startSong(song_id: string, start_position: number = 0){
       instruments,
       settings: songData.settings,
       midiEvents: midiEvents,
+    })
+
+    store.dispatch({
+      type: START_SCHEDULER,
+      payload: {
+        song_id,
+        scheduler
+      }
     })
 
     return function(){
@@ -193,8 +203,20 @@ export function startSong(song_id: string, start_position: number = 0){
 }
 
 export function stopSong(song_id: string){
-  console.log('stop song', song_id)
   removeTask('repetitive', song_id)
+  let state = store.getState()
+  let songData = state.sequencer.songs[song_id]
+  if(songData){
+    songData.scheduler.stopAllSounds()
+    store.dispatch({
+      type: STOP_SCHEDULER,
+      payload: {
+        song_id
+      }
+    })
+  }else{
+    console.error(`no song found with id ${song_id}`)
+  }
 }
 
 

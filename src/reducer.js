@@ -18,6 +18,8 @@ import {
 
   // for sequencer only
   SONG_POSITION,
+  START_SCHEDULER,
+  STOP_SCHEDULER,
 
   // for instrument only
   CREATE_INSTRUMENT,
@@ -207,6 +209,18 @@ function sequencer(state = {songs: {}}, action){
         midiEvents: action.payload.midi_events,
         settings: action.payload.settings,
       }
+      break
+
+
+    case START_SCHEDULER:
+      state = {...state}
+      state.songs[action.payload.song_id].scheduler = action.payload.scheduler
+      break
+
+
+    case STOP_SCHEDULER:
+      state = {...state}
+      delete state.songs[action.payload.song_id].scheduler
       break
 
 

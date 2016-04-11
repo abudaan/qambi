@@ -18,15 +18,14 @@ class Instrument{
 
   processMIDIEvent(event, time, output){
     let sample
-    // time = 1000
     if(event.type === 144){
-      //console.log(144, ':', time, event.millis, event.ticks)
-      sample = createSample(-1, event, this.output)
+      //console.log(144, ':', time, context.currentTime, event.millis)
+      sample = createSample(-1, event)
       this.scheduled[event.midiNoteId] = sample
       sample.output.connect(output)
       sample.start(time)
     }else if(event.type === 128){
-      //console.log(128, ':', time, event.millis)
+      //console.log(128, ':', time, context.currentTime, event.millis)
       sample = this.scheduled[event.midiNoteId]
       if(typeof sample === 'undefined'){
         console.error('sample not found for event', event)
@@ -37,6 +36,14 @@ class Instrument{
         delete this.scheduled[event.midiNoteId]
       })
     }
+  }
+
+  stopAllSounds(){
+    Object.keys(this.scheduled).forEach((sampleId) => {
+      this.scheduled[sampleId].stop(0, () => {
+        delete this.scheduled[sampleId]
+      })
+    })
   }
 }
 

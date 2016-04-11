@@ -26,6 +26,8 @@ export const SONG_POSITION = 'song_position'
 export const PLAY_SONG = 'play_song'
 export const PAUSE_SONG = 'pause_song'
 export const STOP_SONG = 'stop_song'
+export const START_SCHEDULER = 'START_SCHEDULER'
+export const STOP_SCHEDULER = 'STOP_SCHEDULER'
 
 
 // instrument actions

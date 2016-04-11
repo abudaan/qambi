@@ -7,8 +7,8 @@ export default class Scheduler{
     ({
       song_id: this.songId,
       start_position: this.songStartPosition,
-      midiEvents: this.events,
       timeStamp: this.timeStamp,
+      midiEvents: this.events,
       instruments: this.instruments,
       tracks: this.tracks,
       settings: {
@@ -82,14 +82,22 @@ export default class Scheduler{
       }else if(instrument.type === 'external'){
         // to be implemented: route to external midi instrument
       }else{
-        //this.scheduled[event.id] = instrument.getSample(event)
-        let time = this.timeStamp + event.millis - this.songStartPosition
+        let time = (this.timeStamp + event.millis - this.songStartPosition)
+        time /= 1000 // convert to seconds because the audio context uses seconds for scheduling
         instrument.processMIDIEvent(event, time, this.tracks[event.trackId].output)
       }
     }
     //console.log(this.index, this.numEvents)
-    return this.index >= 10
-    //return this.index >= this.numEvents // end of song
+    //return this.index >= 10
+    return this.index >= this.numEvents // end of song
   }
+
+
+  stopAllSounds(){
+    Object.keys(this.instruments).forEach((instrumentId) => {
+      this.instruments[instrumentId].stopAllSounds()
+    })
+  }
+
 }
 

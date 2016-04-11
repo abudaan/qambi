@@ -30,6 +30,7 @@ let
 
 function setTickDuration(){
   secondsPerTick = (1 / playbackSpeed * 60) / bpm / ppq;
+  //secondsPerTick = bpm / 60 / ppq;
   millisPerTick = secondsPerTick * 1000;
   //console.log(millisPerTick, bpm, ppq, playbackSpeed, (ppq * millisPerTick));
   //console.log(ppq);

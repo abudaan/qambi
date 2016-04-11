@@ -6,7 +6,7 @@ import {createPart, addMIDIEvents} from './part'
 import {createTrack, addParts} from './track'
 import {createSong, addTracks, updateSong} from './song'
 
-export function songFromMIDIFile(data){
+export function songFromMIDIFile(data, settings = {}){
 
   if(data instanceof ArrayBuffer === true){
     let buffer = new Uint8Array(data);
@@ -22,13 +22,19 @@ export function songFromMIDIFile(data){
   //     error('wrong data');
   //   }
   }
+
+  // {
+  //   ppq = newPPQ,
+  //   bpm = newBPM,
+  //   playbackSpeed = newPlaybackSpeed,
+  // } = settings
 }
 
 
 function toSong(parsed){
   let tracks = parsed.tracks
   let ppq = parsed.header.ticksPerBeat
-  let ppqFactor = 960 / ppq //@TODO: get ppq from config
+  let ppqFactor = 1//ppq / 960 //@TODO: get ppq from config -> only necessary if you want to change the ppq of the MIDI file !
   let timeEvents = []
   let eventIds
   let bpm = -1
