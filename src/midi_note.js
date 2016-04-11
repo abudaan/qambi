@@ -1,4 +1,3 @@
-// @flow
 
 import {getStore} from './create_store'
 import {

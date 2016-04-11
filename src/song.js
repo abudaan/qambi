@@ -1,4 +1,4 @@
-// @flow
+//@ flow
 
 import {getStore} from './create_store'
 import {parseTimeEvents, parseEvents, parseMIDINotes} from './parse_events'
@@ -37,9 +37,28 @@ const defaultSong = {
   playbackSpeed: 1,
   autoQuantize: false
 }
+/*
+type songSettings = {
+  name: string,
+  ppq: number,
+  bpm: number,
+  bars: number,
+  lowestNote: number,
+  highestNote: number,
+  nominator: number,
+  denominator: number,
+  quantizeValue: number,
+  fixedLengthValue: number,
+  positionType: string,
+  useMetronome: boolean,
+  autoSize: boolean,
+  loop: boolean,
+  playbackSpeed: number,
+  autoQuantize: boolean
+}
+*/
 
-
-export function createSong(settings = {}){
+export function createSong(settings: {} = {}): string{
   let id = `S_${songIndex++}_${new Date().getTime()}`
   let s = {};
   ({
@@ -88,7 +107,7 @@ export function createSong(settings = {}){
 }
 
 
-export function addTracks(song_id: string, ...track_ids:string){
+export function addTracks(song_id: string, ...track_ids: string[]): void{
   store.dispatch({
     type: ADD_TRACKS,
     payload: {
@@ -99,13 +118,13 @@ export function addTracks(song_id: string, ...track_ids:string){
 }
 
 
-export function addTimeEvents(...time_events){
+export function addTimeEvents(...time_events: string[]): void{
 
 }
 
 
 // prepare song events for playback
-export function updateSong(song_id: string){
+export function updateSong(song_id: string): void{
   let state = store.getState().editor
   let song = state.songs[song_id]
   if(song){
@@ -134,7 +153,7 @@ export function updateSong(song_id: string){
 }
 
 
-export function startSong(song_id: string, start_position: number = 0){
+export function startSong(song_id: string, start_position: number = 0): void{
 
   function createScheduler(){
     let state = store.getState()
@@ -206,7 +225,7 @@ export function startSong(song_id: string, start_position: number = 0){
   addTask('repetitive', song_id, createScheduler())
 }
 
-export function stopSong(song_id: string){
+export function stopSong(song_id: string): void{
   removeTask('repetitive', song_id)
   let state = store.getState()
   let songData = state.sequencer.songs[song_id]

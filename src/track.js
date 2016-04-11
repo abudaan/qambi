@@ -1,4 +1,4 @@
-// @flow
+
 
 import {context} from './io'
 import {getStore} from './create_store'

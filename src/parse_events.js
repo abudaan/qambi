@@ -145,15 +145,20 @@ export function parseEvents(events){
   let numEvents = events.length;
   //console.log(events)
   events.sort(function(a, b){
-    //return a.sortIndex - b.sortIndex;
+    return a.sortIndex - b.sortIndex;
+/*
+    // noteoff comes before noteon
     if(a.ticks === b.ticks){
-      if(a.type === 128){
-        return -1
-      }else if(b.type === 128){
-        return 1
-      }
+      // if(a.type === 128){
+      //   return -1
+      // }else if(b.type === 128){
+      //   return 1
+      // }
+      // short:
+      return a.type - b.type
     }
     return a.ticks - b.ticks;
+*/
   });
   event = events[0];
   //console.log(event)

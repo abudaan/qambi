@@ -2,7 +2,7 @@
 
 import {getStore} from './create_store'
 import {updateMIDINote} from './midi_note'
-//import {createNote} from './note.js';
+
 import {
   CREATE_MIDI_EVENT,
   UPDATE_MIDI_EVENT,
@@ -11,7 +11,7 @@ import {
 const store = getStore()
 let midiEventIndex = 0
 
-export function createMIDIEvent(ticks: number, type: number, data1: number, data2: number = -1){
+export function createMIDIEvent(ticks: number, type: number, data1: number, data2: number = -1): string{
   let id = `ME_${midiEventIndex++}_${new Date().getTime()}`
   let sortIndex = ticks + type
   if(type === 144 || type === 128){
@@ -32,11 +32,11 @@ export function createMIDIEvent(ticks: number, type: number, data1: number, data
   return id
 }
 
-export function getMIDIEventId(){
+export function getMIDIEventId(): string{
   return `ME_${midiEventIndex++}_${new Date().getTime()}`
 }
 
-export function moveMIDIEvent(id: string, ticks_to_move: number){
+export function moveMIDIEvent(id: string, ticks_to_move: number): void{
   let state = store.getState().editor
   let event = state.midiEvents[id]
   let ticks = event.ticks + ticks_to_move
@@ -57,7 +57,7 @@ export function moveMIDIEvent(id: string, ticks_to_move: number){
   }
 }
 
-export function moveMIDIEventTo(id: string, ticks: number){
+export function moveMIDIEventTo(id: string, ticks: number): void{
   let state = store.getState().editor
   let event = state.midiEvents[id]
   store.dispatch({
