@@ -6,6 +6,8 @@ import {createPart, addMIDIEvents} from './part'
 import {createTrack, addParts} from './track'
 import {createSong, addTracks, updateSong} from './song'
 
+const PPQ = 960
+
 export function songFromMIDIFile(data, settings = {}){
 
   if(data instanceof ArrayBuffer === true){
@@ -34,7 +36,7 @@ export function songFromMIDIFile(data, settings = {}){
 function toSong(parsed){
   let tracks = parsed.tracks
   let ppq = parsed.header.ticksPerBeat
-  let ppqFactor = 1//ppq / 960 //@TODO: get ppq from config -> only necessary if you want to change the ppq of the MIDI file !
+  let ppqFactor = PPQ / ppq //@TODO: get ppq from config -> only necessary if you want to change the ppq of the MIDI file !
   let timeEvents = []
   let eventIds
   let bpm = -1
@@ -55,12 +57,12 @@ function toSong(parsed){
 
     for(let event of track){
       ticks += (event.deltaTime * ppqFactor);
-      //console.log(event.deltaTime, ticks, ppq);
 
       if(channel === -1 && typeof event.channel !== 'undefined'){
         channel = event.channel;
       }
       type = event.subtype;
+      //console.log(event.deltaTime, ticks, type);
 
       switch(event.subtype){
 
@@ -95,7 +97,8 @@ function toSong(parsed){
           if(bpm === -1){
             bpm = tmp;
           }
-          timeEvents.push({id: getMIDIEventId(), ticks, type: 0x51, data1: bpm});
+          timeEvents.push({id: getMIDIEventId(), sortIndex: ticks + 0x51, ticks, type: 0x51, data1: tmp});
+          //timeEvents.push({id: getMIDIEventId(), sortIndex: ticks, ticks, type: 0x51, data1: tmp});
           break;
 
         case 'timeSignature':
@@ -110,7 +113,8 @@ function toSong(parsed){
             nominator = event.numerator
             denominator = event.denominator
           }
-          timeEvents.push({id: getMIDIEventId(), ticks, type: 0x58, data1: event.numerator, data2: event.denominator});
+          timeEvents.push({id: getMIDIEventId(), sortIndex: ticks + 0x58, ticks, type: 0x58, data1: event.numerator, data2: event.denominator});
+          //timeEvents.push({id: getMIDIEventId(), sortIndex: ticks, ticks, type: 0x58, data1: event.numerator, data2: event.denominator});
           break;
 
 
@@ -146,7 +150,9 @@ function toSong(parsed){
   }
 
   songId = createSong({
-    ppq,
+    ppq: PPQ,
+    //playbackSpeed: 1,
+    //ppq,
     bpm,
     nominator,
     denominator,

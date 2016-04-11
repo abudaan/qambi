@@ -24,6 +24,7 @@ class Instrument{
       this.scheduled[event.midiNoteId] = sample
       sample.output.connect(output)
       sample.start(time)
+      //console.log('start', event.midiNoteId)
     }else if(event.type === 128){
       //console.log(128, ':', time, context.currentTime, event.millis)
       sample = this.scheduled[event.midiNoteId]
@@ -32,7 +33,7 @@ class Instrument{
         return
       }
       sample.stop(time, () => {
-        //console.log('stop!')
+        //console.log('stop', event.midiNoteId)
         delete this.scheduled[event.midiNoteId]
       })
     }

@@ -1,5 +1,5 @@
 
-const BUFFER_TIME = 350 // millis
+const BUFFER_TIME = 400 // millis
 
 export default class Scheduler{
 

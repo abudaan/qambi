@@ -2,7 +2,7 @@
 
 import {getNiceTime} from './util';
 
-let
+var
   ppq,
   bpm,
   factor,
@@ -25,7 +25,8 @@ let
   ticksPerSixteenth,
   numSixteenth,
 
-  diffTicks;
+  diffTicks,
+  previousEvent;
 
 
 function setTickDuration(){
@@ -49,8 +50,12 @@ function setTicksPerBeat(){
 
 function updatePosition(event){
   diffTicks = event.ticks - ticks;
+  if(diffTicks < 0){
+    console.log(diffTicks, event.ticks, previousEvent.ticks, previousEvent.type)
+  }
   tick += diffTicks;
   ticks = event.ticks;
+  previousEvent = event
   //console.log(diffTicks, millisPerTick);
   millis += diffTicks * millisPerTick;
 
@@ -90,8 +95,9 @@ export function parseTimeEvents(settings, timeEvents){
   setTicksPerBeat();
 
   timeEvents.sort((a, b) => (a.ticks <= b.ticks) ? -1 : 1);
-
+  let e = 0;
   for(event of timeEvents){
+    //console.log(e++, event.ticks, event.type)
     //event.song = song;
     type = event.type;
     updatePosition(event);
@@ -100,6 +106,7 @@ export function parseTimeEvents(settings, timeEvents){
 
       case 0x51:
         bpm = event.data1;
+        //console.log(event)
         setTickDuration();
         break;
 
@@ -126,18 +133,30 @@ export function parseTimeEvents(settings, timeEvents){
 
 //export function parseEvents(song, events){
 export function parseEvents(events){
+  console.log('parseEvents')
   let event;
   let startEvent = 0;
   let lastEventTick = 0;
   let result = []
 
+  ticks = 0
+
   //let events = [].concat(evts, song._timeEvents);
   let numEvents = events.length;
   //console.log(events)
   events.sort(function(a, b){
-    return a.sortIndex - b.sortIndex;
+    //return a.sortIndex - b.sortIndex;
+    if(a.ticks === b.ticks){
+      if(a.type === 128){
+        return -1
+      }else if(b.type === 128){
+        return 1
+      }
+    }
+    return a.ticks - b.ticks;
   });
   event = events[0];
+  //console.log(event)
 
   bpm = event.bpm;
   factor = event.factor;
@@ -164,7 +183,6 @@ export function parseEvents(events){
   for(let i = startEvent; i < numEvents; i++){
 
     event = events[i];
-    //console.log(event.ticks, event.type)
 
     switch(event.type){
 
@@ -173,6 +191,8 @@ export function parseEvents(events){
         millis = event.millis;
         millisPerTick = event.millisPerTick;
         secondsPerTick = event.secondsPerTick;
+
+        ticks = event.ticks
         //console.log(millisPerTick,event.millisPerTick);
         //console.log(event);
         break;
@@ -186,15 +206,27 @@ export function parseEvents(events){
         ticksPerBeat = event.ticksPerBeat;
         ticksPerSixteenth = event.ticksPerSixteenth;
         millis = event.millis;
+
+        ticks = event.ticks
         //console.log(nominator,numSixteenth,ticksPerSixteenth);
         //console.log(event);
+
+
         break;
 
       default:
+      //case 128:
+      //case 144:
         updatePosition(event);
         updateEvent(event);
         result.push(event)
     }
+
+
+    // if(i < 100 && (event.type === 81 || event.type === 144 || event.type === 128)){
+    //   //console.log(i, ticks, diffTicks, millis, millisPerTick)
+    //   console.log(event.type, event.millis, 'note', event.data1, 'velo', event.data2)
+    // }
 
     lastEventTick = event.ticks;
   }
@@ -245,6 +277,10 @@ function updateEvent(event){
   event.millisecond = timeData.millisecond;
   event.timeAsString = timeData.timeAsString;
   event.timeAsArray = timeData.timeAsArray;
+
+  // if(millis < 0){
+  //   console.log(event)
+  // }
 }
 
 
@@ -260,24 +296,29 @@ export function parseMIDINotes(events){
       }
       notes[event.trackId][event.data1] = event
     }else if(event.type === 128){
-      let notesInTrack = notes[event.trackId]
-      if(typeof notesInTrack === 'undefined'){
-        console.info('no note on found event for ', event)
-        continue
-      }
-      let noteOn = notesInTrack[event.data1]
+      // let notesInTrack = notes[event.trackId]
+      // if(typeof notesInTrack === 'undefined'){
+      //   console.info('no note on found event for ', event)
+      //   delete notesInTrack[event.data1]
+      //   continue
+      // }
+      let noteOn = notes[event.trackId][event.data1]
       //console.log(event.noteNumber, noteOn);
       let noteOff = event
       if(typeof noteOn === 'undefined'){
-        console.info('no note on event!', n++)
+        console.info(n++, 'no note on event', event)
+        delete notes[event.trackId][event.data1]
         continue
       }
       //let midiNote = new MIDINote(noteOn, noteOff);
       //this._notesMap.set(midiNote.id, midiNote);
       let id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
       noteOn.midiNoteId = id
+      noteOn.off = noteOff
       noteOff.midiNoteId = id
-      delete notes[event.noteNumber]
+      noteOff.on = noteOn
+      delete notes[event.trackId][event.data1]
     }
   }
+  console.log(notes)
 }

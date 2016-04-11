@@ -32,7 +32,7 @@ function heartbeat(timestamp){
   lastTimeStamp = timestamp;
   scheduledTasks.clear();
 
-  //setTimeout(heartbeat, 100);
+  //setTimeout(heartbeat, 10000);
   window.requestAnimationFrame(heartbeat);
 }
 

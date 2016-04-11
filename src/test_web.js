@@ -81,8 +81,8 @@ document.addEventListener('DOMContentLoaded', function(){
 */
 
   if(test === 2){
-    fetch('mozk545a.mid')
-    //fetch('minute_waltz.mid')
+    //fetch('mozk545a.mid')
+    fetch('minute_waltz.mid')
     .then(
       (response) => {
         return response.arrayBuffer()

@@ -111,6 +111,7 @@ export function updateSong(song_id: string){
   if(song){
     parseTimeEvents(song.settings, song.timeEvents)
     let midiEvents = [...song.timeEvents]
+    console.log(song)
     song.midiEventIds.forEach(function(event_id){
       let event = state.midiEvents[event_id]
       if(event){
@@ -141,8 +142,10 @@ export function startSong(song_id: string, start_position: number = 0){
     let parts = {}
     let tracks = {}
     let instruments = {}
+    let i = 0
     let midiEvents = songData.midiEvents.filter(function(event){
-      if(typeof event.midiNoteId === 'undefined'){
+      if((event.type === 144 || event.type === 128) && typeof event.midiNoteId === 'undefined'){
+        console.info(i++, 'no midiNoteId', event)
         return false
       }
       let part = parts[event.partId]
@@ -154,6 +157,7 @@ export function startSong(song_id: string, start_position: number = 0){
         tracks[event.trackId] = track = state.editor.tracks[event.trackId]
         instruments[track.instrumentId] = state.instruments[track.instrumentId]
       }
+      //console.log(event.barsAsString, event)
       return (!event.mute && !part.mute && !track.mute)
     })
 
