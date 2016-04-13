@@ -24,6 +24,7 @@ import {
 
   // for instrument only
   CREATE_INSTRUMENT,
+  STORE_SAMPLES,
 } from './action_types'
 
 const initialState = {
@@ -257,6 +258,11 @@ function instruments(state = {}, action){
       state = {...state}
       state[action.payload.id] = action.payload.instrument
       //state = {...state, ...{[action.payload.id]: action.payload.instrument}}
+      break
+
+    case STORE_SAMPLES:
+      state = {...state}
+      console.log(action.payload)
       break
 
     default:

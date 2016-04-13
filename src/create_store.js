@@ -3,6 +3,11 @@ import {createStore, applyMiddleware, compose} from 'redux'
 //import createLogger from 'redux-logger';
 import sequencerApp from './reducer'
 
+export const test = (function(){
+  console.log('run once')
+  return 'test'
+}())
+
 const store = createStore(sequencerApp);
 
 /*
@@ -15,6 +20,7 @@ const store = createStore(sequencerApp, {}, compose(
 */
 
 export function getStore(){
+  console.log('getStore() called')
   return store
 }
 

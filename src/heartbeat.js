@@ -1,5 +1,7 @@
 
-import {context} from './io.js';
+import {getAudioContext} from './init_audio';
+
+const context = getAudioContext()
 
 let timedTasks = new Map();
 let repetitiveTasks = new Map();
@@ -8,7 +10,7 @@ let tasks = new Map();
 let lastTimeStamp;
 
 function heartbeat(timestamp){
-  let now = context.time;
+  let now = context.currentTime;
 
   // for instance: the callback of sample.unschedule;
   for(let [key, task] of timedTasks){

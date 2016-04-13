@@ -41,13 +41,6 @@ export const STOP_SCHEDULER = 'STOP_SCHEDULER'
 
 // instrument actions
 export const CREATE_INSTRUMENT = 'create_instrument'
-
-
-
-
-
-
-
-
+export const STORE_SAMPLES = 'store_samples'
 
 

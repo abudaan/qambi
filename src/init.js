@@ -1,10 +1,27 @@
-import {initAudio} from './init_audio';
+import {initAudio} from './init_audio'
+import {getStore} from './create_store'
+import {STORE_SAMPLES} from './action_types'
 
-export const context = new window.AudioContext()
+const store = getStore()
 
-export function init(){
-  initAudio().then((e) => {
-    console.log(e)
+export function init(cb): void{
+  initAudio().then((data) => {
+
+    store.dispatch({
+      type: STORE_SAMPLES,
+      payload: {
+        lowTick: data.lowtick,
+        highTick: data.hightick,
+      }
+    })
+
+    cb({
+      legacy: data.legacy,
+      mp3: data.mp3,
+      ogg: data.ogg
+    })
   })
+
 }
+
 

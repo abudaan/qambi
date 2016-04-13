@@ -35,14 +35,23 @@ import {
 } from './song_from_midifile'
 
 import {
-  init
+  init,
 } from './init'
+
+import {
+  getAudioContext,
+  getMasterVolume,
+} from './init_audio'
 
 const qambi = {
   version: '0.0.1',
 
   // from ./init
   init,
+
+  // from ./init_audio
+  getAudioContext,
+  getMasterVolume,
 
   // from ./midi_event
   createMIDIEvent,
@@ -120,6 +129,10 @@ export default qambi
 export {
   // from ./init
   init,
+
+  // from ./init_audio
+  getAudioContext,
+  getMasterVolume,
 
   // from ./midi_event
   createMIDIEvent,

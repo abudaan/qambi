@@ -1,6 +1,7 @@
 
 import fetch from 'isomorphic-fetch'
 import qambi, {
+  getMasterVolume,
   createMIDIEvent,
   moveMIDIEvent,
   moveMIDIEventTo,
@@ -18,9 +19,11 @@ import qambi, {
   songFromMIDIFile,
 } from './qambi'
 
-console.log(qambi.version)
+qambi.getMasterVolume()
 qambi.log('functions')
-qambi.init()
+qambi.init(function(data){
+  console.log(data, qambi.getMasterVolume())
+})
 
 document.addEventListener('DOMContentLoaded', function(){
 

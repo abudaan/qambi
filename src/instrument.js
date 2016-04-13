@@ -1,11 +1,12 @@
 import {getStore} from './create_store'
 import {createSample} from './sample'
-import {context} from './io'
+import {getAudioContext} from './init_audio'
 import {
   CREATE_INSTRUMENT,
 } from './action_types'
 
 const store = getStore()
+const context = getAudioContext()
 let instrumentIndex = 0
 
 class Instrument{

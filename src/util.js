@@ -1,7 +1,10 @@
-import fetch from 'isomorphic-fetch'
-import {context} from './init'
 
-let
+import fetch from 'isomorphic-fetch'
+import {getAudioContext} from './init_audio'
+
+
+const
+  context = getAudioContext(),
   mPow = Math.pow,
   mRound = Math.round,
   mFloor = Math.floor,
