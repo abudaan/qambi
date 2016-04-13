@@ -2,13 +2,12 @@
   Requests MIDI access, queries all inputs and outputs and stores them in alphabetical order
 */
 
-'use strict';
-
-import {typeString} from './util';
+import {typeString} from './util'
 
 let data = {};
-let inputs = new Map();
-let outputs = new Map();
+let initialized = false
+let inputs = new Map()
+let outputs = new Map()
 
 let songMidiEventListener;
 let midiEventListenerId = 0;
@@ -18,8 +17,11 @@ export function initMIDI(){
   return new Promise(function executor(resolve, reject){
 
     let tmp;
-
-    if(typeof navigator.requestMIDIAccess !== 'undefined'){
+    if(typeof navigator === 'undefined'){
+      data.midi = false
+      initialized = true
+      resolve(data)
+    }else if(typeof navigator.requestMIDIAccess !== 'undefined'){
 
       navigator.requestMIDIAccess().then(
 
@@ -69,6 +71,7 @@ export function initMIDI(){
           data.inputs = inputs;
           data.outputs = outputs;
 
+          initialized = true
           resolve(data);
         },
 
@@ -79,11 +82,38 @@ export function initMIDI(){
       );
     // browsers without WebMIDI API
     }else{
+      initialized = true
       data.midi = false;
       resolve(data);
     }
   });
 }
+
+export let getMIDIOutputs = function(){
+  if(initialized === false){
+    console.error('please call qambi.init() first')
+  }else {
+    getMIDIOutputs = function(){
+      return outputs
+    }
+    return getMIDIOutputs()
+  }
+  return false
+}
+
+
+export let getMIDIInputs = function(){
+  if(initialized === false){
+    console.error('please call qambi.init() first')
+  }else {
+    getMIDIInputs = function(){
+      return inputs
+    }
+    return getMIDIInputs()
+  }
+  return false
+}
+
 
 /*
 export function initMidiSong(song){

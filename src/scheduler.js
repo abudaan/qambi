@@ -1,5 +1,8 @@
 
+import {getMIDIOutputs} from './init_midi'
+
 const BUFFER_TIME = 400 // millis
+const PRE_BUFFER = 400
 
 export default class Scheduler{
 
@@ -20,6 +23,7 @@ export default class Scheduler{
     this.numEvents = this.events.length
     this.index = 0
     this.setIndex(this.songStartPosition)
+    this.outputs = getMIDIOutputs()
   }
 
   // get the index of the event that has its millis value at or right after the provided millis value
@@ -92,12 +96,23 @@ export default class Scheduler{
       //   console.info(event)
       // }
 
+      let time = (this.timeStamp + event.millis - this.songStartPosition) + PRE_BUFFER
+
       if(event.type === 'audio'){
         // to be implemented
       }else if(instrument.type === 'external'){
         // to be implemented: route to external midi instrument
+        let channel = 0
+        for(let [id, port] of this.outputs){
+          if(event.type === 128 || event.type === 144 || event.type === 176){
+            //midiOutput.send([event.type, event.data1, event.data2], event.time + sequencer.midiOutLatency);
+            port.send([event.type + channel, event.data1, event.data2], time)
+          }else if(event.type === 192 || event.type === 224){
+            port.send([event.type + channel, event.data1], time)
+          }
+        }
+
       }else{
-        let time = (this.timeStamp + event.millis - this.songStartPosition)
         time /= 1000 // convert to seconds because the audio context uses seconds for scheduling
         instrument.processMIDIEvent(event, time, this.tracks[event.trackId].output)
       }
@@ -108,12 +123,16 @@ export default class Scheduler{
   }
 
 
-  stopAllSounds(){
+  stopAllSounds(time){
     Object.keys(this.instruments).forEach((instrumentId) => {
       if(instrumentId !== 'undefined'){
         this.instruments[instrumentId].stopAllSounds()
       }
     })
+    for(let [id, port] of this.outputs){
+      port.send([0xB0, 0x7B, 0x00], time + 0.5); // stop all notes
+      port.send([0xB0, 0x79, 0x00], time + 0.5); // reset all controllers
+    }
   }
 
 }

@@ -45,7 +45,7 @@ function toSong(parsed){
   let denominator = -1
   let trackIds = []
   let songId
-  let instrumentId = createInstrument()
+  let instrumentId = createInstrument('external')
 
 
   for(let track of tracks.values()){

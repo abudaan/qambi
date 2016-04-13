@@ -44,12 +44,13 @@ export function parseSample(sample, id, every){
   return new Promise(function(resolve, reject){
     try{
       context.decodeAudioData(sample,
+
         function onSuccess(buffer){
           //console.log(id, buffer);
-          if(id !== undefined){
-            resolve({'id': id, 'buffer': buffer});
+          if(typeof id !== 'undefined'){
+            resolve({id, buffer})
             if(every){
-              every({'id': id, 'buffer': buffer});
+              every({id, buffer})
             }
           }else{
             resolve(buffer);
@@ -57,27 +58,28 @@ export function parseSample(sample, id, every){
               every(buffer);
             }
           }
-      },
-      function onError(e){
-        //console.log('error decoding audiodata', id, e);
-        //reject(e); // don't use reject because we use this as a nested promise and we don't want the parent promise to reject
-        if(id !== undefined){
-          resolve({'id': id, 'buffer': undefined});
-        }else{
-          resolve(undefined);
+        },
+
+        function onError(e){
+          //console.log('error decoding audiodata', id, e);
+          //reject(e); // don't use reject because we use this as a nested promise and we don't want the parent promise to reject
+          if(typeof id !== 'undefined'){
+            resolve({id})
+          }else{
+            resolve()
+          }
         }
-      }
-    );
+      )
     }catch(e){
       //console.log('error decoding audiodata', id, e);
-      //reject(e);
-      if(id !== undefined){
-        resolve({'id': id, 'buffer': undefined});
+      //reject(e); -> do not reject, this stops parsing the ohter samples
+      if(typeof id !== 'undefined'){
+        resolve({id});
       }else{
-        resolve(undefined);
+        resolve();
       }
     }
-  });
+  })
 }
 
 
@@ -92,16 +94,17 @@ function loadAndParseSample(url, id, every){
           })
         }else{
           if(typeof id !== 'undefined'){
-            resolve({'id': id, 'buffer': undefined});
+            resolve({id})
           }else{
-            resolve(undefined);
+            resolve()
           }
         }
       }
-    );
+    )
   }
   return new Promise(executor);
 }
+
 
 export function parseSamples(mapping, every = false){
   let key, sample,
@@ -133,29 +136,21 @@ export function parseSamples(mapping, every = false){
   }
 
   return new Promise(function(resolve, reject){
-    Promise.all(promises).then(
-      function onFulfilled(values){
-        if(type === 'object'){
-          let mapping = {};
-          values.forEach(function(value){
-            mapping[value.id] = value.buffer;
-          });
-          //console.log(mapping);
-          resolve(mapping);
-        }else if(type === 'array'){
-          resolve(values);
-        }
-      },
-      function onRejected(e){
-        reject(e);
+    Promise.all(promises)
+    .then((values) => {
+      if(type === 'object'){
+        mapping = {};
+        values.forEach(function(value){
+          mapping[value.id] = value.buffer;
+        });
+        resolve(mapping);
+      }else if(type === 'array'){
+        resolve(values);
       }
-    );
-  });
+    })
+  })
 }
 
-export function poepen(){
-  console.log(context)
-}
 
 function checkIfBase64(data){
   let passed = true;

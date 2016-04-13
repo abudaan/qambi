@@ -12,11 +12,14 @@ let
 
 export let context = (function(){
   console.log('init AudioContext')
-
+  let ctx
   if(typeof window === 'object'){
-    window.AudioContext = (window.AudioContext || window.webkitAudioContext)
-    context = new window.AudioContext
-  }else{
+    let AudioContext = window.AudioContext || window.webkitAudioContext
+    if(AudioContext !== 'undefined'){
+      ctx = new AudioContext()
+    }
+  }
+  if(typeof ctx === 'undefined'){
     //@TODO: create dummy AudioContext for use in node, see: https://www.npmjs.com/package/audio-context
     context = {
       createGain: function(){
@@ -27,20 +30,20 @@ export let context = (function(){
       createOscillator: function(){},
     }
   }
-  return context
+  return ctx
 }())
 
 
 export function initAudio(){
 
-  if(context.createGainNode === undefined){
+  if(typeof context.createGainNode === 'undefined'){
     context.createGainNode = context.createGain
   }
   // check for older implementations of WebAudio
   let data = {}
   let source = context.createBufferSource()
   data.legacy = false
-  if(source.start === undefined){
+  if(typeof source.start === 'undefined'){
     data.legacy = true
   }
 

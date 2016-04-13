@@ -240,7 +240,7 @@ export function stopSong(song_id: string): void{
   if(songData){
     if(songData.playing){
       removeTask('repetitive', song_id)
-      songData.scheduler.stopAllSounds()
+      songData.scheduler.stopAllSounds(context.currentTime)
       store.dispatch({
         type: STOP_SCHEDULER,
         payload: {

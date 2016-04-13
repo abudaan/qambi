@@ -5,27 +5,66 @@ import {STORE_SAMPLES} from './action_types'
 
 const store = getStore()
 
-export function init(cb): void{
-  initAudio().then((data) => {
+export let getUserMedia = (() => {
+  if(typeof navigator !== 'undefined'){
+    return navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia
+  }
+  return function(){
+    console.warn('getUserMedia is not available')
+  }
+})()
 
-    store.dispatch({
-      type: STORE_SAMPLES,
-      payload: {
-        lowTick: data.lowtick,
-        highTick: data.hightick,
-      }
+
+export let requestAnimationFrame = (() => {
+  if(typeof navigator !== 'undefined'){
+    return window.requestAnimationFrame || window.webkitRequestAnimationFrame
+  }
+  return function(){
+    console.warn('requestAnimationFrame is not available')
+  }
+})()
+
+
+export let Blob = (() => {
+  if(typeof navigator !== 'undefined'){
+    return window.Blob || window.webkitBlob
+  }
+  return function(){
+    console.warn('Blob is not available')
+  }
+})()
+
+
+export function init(): void{
+  return new Promise((resolve, reject) => {
+
+    Promise.all([initAudio(), initMIDI()])
+    .then(
+    (data) => {
+      // parseAudio
+      let dataAudio = data[0]
+
+      store.dispatch({
+        type: STORE_SAMPLES,
+        payload: {
+          lowTick: dataAudio.lowtick,
+          highTick: dataAudio.hightick,
+        }
+      })
+
+      // parseMIDI
+      let dataMidi = data[1]
+
+      resolve({
+        legacy: dataAudio.legacy,
+        mp3: dataAudio.mp3,
+        ogg: dataAudio.ogg,
+        midi: dataMidi.midi,
+        webmidi: dataMidi.webmidi,
+      })
+    },
+    (error) => {
+      reject(error)
     })
-
-    cb({
-      legacy: data.legacy,
-      mp3: data.mp3,
-      ogg: data.ogg
-    })
-  })
-
-  initMIDI().then(function(data){
-    console.log(data)
   })
 }
-
-

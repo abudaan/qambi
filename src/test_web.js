@@ -22,7 +22,7 @@ import qambi, {
 
 qambi.getMasterVolume()
 qambi.log('functions')
-qambi.init(function(data){
+qambi.init().then(function(data){
   console.log(data, qambi.getMasterVolume())
   setMasterVolume(0.5)
 })
