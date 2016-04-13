@@ -1,6 +1,7 @@
 
 import fetch from 'isomorphic-fetch'
 import qambi, {
+  setMasterVolume,
   getMasterVolume,
   createMIDIEvent,
   moveMIDIEvent,
@@ -23,6 +24,7 @@ qambi.getMasterVolume()
 qambi.log('functions')
 qambi.init(function(data){
   console.log(data, qambi.getMasterVolume())
+  setMasterVolume(0.5)
 })
 
 document.addEventListener('DOMContentLoaded', function(){

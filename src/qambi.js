@@ -41,6 +41,7 @@ import {
 import {
   context,
   getMasterVolume,
+  setMasterVolume,
 } from './init_audio'
 
 
@@ -57,6 +58,7 @@ const qambi = {
   // from ./init_audio
   getAudioContext,
   getMasterVolume,
+  setMasterVolume,
 
   // from ./midi_event
   createMIDIEvent,
@@ -138,6 +140,7 @@ export {
   // from ./init_audio
   getAudioContext,
   getMasterVolume,
+  setMasterVolume,
 
   // from ./midi_event
   createMIDIEvent,

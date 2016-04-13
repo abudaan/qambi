@@ -83,7 +83,7 @@ let setMasterVolume = function(value: number = 0.5): void{
       if(value > 1){
         console.info('maximal volume is 1.0, volume is set to 1.0');
       }
-      value = value < 0 ? 0 : value > 1 ? 1 : value;
+      value = value < 0 ? 0 : value > 1 ? 1 : value
       masterGain.gain.value = value;
     }
     setMasterVolume(value)
@@ -164,4 +164,4 @@ let configureMasterCompressor = function(cfg): void{
   }
 }
 
-export {setMasterVolume, getMasterVolume, getCompressionReduction, enableMasterCompressor, configureMasterCompressor}
+export {masterGain, compressor as masterCompressor, setMasterVolume, getMasterVolume, getCompressionReduction, enableMasterCompressor, configureMasterCompressor}

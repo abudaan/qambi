@@ -3,6 +3,7 @@
 import {context} from './init_audio'
 import {getStore} from './create_store'
 import {createInstrument} from './instrument'
+import {masterGain} from './init_audio'
 import {
   CREATE_TRACK,
   ADD_PARTS,
@@ -27,7 +28,7 @@ export function createTrack(
   let volume = 0.5
   let output = context.createGain()
   output.gain.value = volume
-  output.connect(context.destination) //@TODO: route to master compressor first!
+  output.connect(masterGain)
 
   store.dispatch({
     type: CREATE_TRACK,
