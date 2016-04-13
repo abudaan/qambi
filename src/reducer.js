@@ -15,6 +15,7 @@ import {
   UPDATE_MIDI_EVENT,
   UPDATE_MIDI_NOTE,
   UPDATE_SONG,
+  SET_INSTRUMENT,
 
   // for sequencer only
   SONG_POSITION,
@@ -192,6 +193,11 @@ function editor(state = initialState, action){
       break
 
 
+    case SET_INSTRUMENT:
+      state = {...state};
+      state.tracks[action.payload.trackId].instrumentId = action.payload.instrumentId
+      break
+
     default:
       // do nothing
   }
@@ -208,6 +214,7 @@ function sequencer(state = {songs: {}}, action){
         songId: action.payload.song_id,
         midiEvents: action.payload.midi_events,
         settings: action.payload.settings,
+        playing: false,
       }
       break
 
@@ -215,12 +222,14 @@ function sequencer(state = {songs: {}}, action){
     case START_SCHEDULER:
       state = {...state}
       state.songs[action.payload.song_id].scheduler = action.payload.scheduler
+      state.songs[action.payload.song_id].playing = true
       break
 
 
     case STOP_SCHEDULER:
       state = {...state}
       delete state.songs[action.payload.song_id].scheduler
+      state.songs[action.payload.song_id].playing = false
       break
 
 

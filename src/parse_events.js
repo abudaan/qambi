@@ -2,7 +2,7 @@
 
 import {getNiceTime} from './util';
 
-var
+let
   ppq,
   bpm,
   factor,
@@ -31,7 +31,6 @@ var
 
 function setTickDuration(){
   secondsPerTick = (1 / playbackSpeed * 60) / bpm / ppq;
-  //secondsPerTick = bpm / 60 / ppq;
   millisPerTick = secondsPerTick * 1000;
   //console.log(millisPerTick, bpm, ppq, playbackSpeed, (ppq * millisPerTick));
   //console.log(ppq);
@@ -50,9 +49,9 @@ function setTicksPerBeat(){
 
 function updatePosition(event){
   diffTicks = event.ticks - ticks;
-  if(diffTicks < 0){
-    console.log(diffTicks, event.ticks, previousEvent.ticks, previousEvent.type)
-  }
+  // if(diffTicks < 0){
+  //   console.log(diffTicks, event.ticks, previousEvent.ticks, previousEvent.type)
+  // }
   tick += diffTicks;
   ticks = event.ticks;
   previousEvent = event
@@ -75,7 +74,7 @@ function updatePosition(event){
 
 
 export function parseTimeEvents(settings, timeEvents){
-  //console.time('parse time events ' + song.name);
+  //console.log('parse time events')
   let type;
   let event;
 
@@ -133,21 +132,24 @@ export function parseTimeEvents(settings, timeEvents){
 
 //export function parseEvents(song, events){
 export function parseEvents(events){
-  console.log('parseEvents')
+  //console.log('parseEvents')
   let event;
   let startEvent = 0;
   let lastEventTick = 0;
   let result = []
 
+  tick = 0
   ticks = 0
+  diffTicks = 0
 
   //let events = [].concat(evts, song._timeEvents);
-  let numEvents = events.length;
+  let numEvents = events.length
   //console.log(events)
   events.sort(function(a, b){
     return a.sortIndex - b.sortIndex;
 /*
     // noteoff comes before noteon
+
     if(a.ticks === b.ticks){
       // if(a.type === 128){
       //   return -1
@@ -155,12 +157,18 @@ export function parseEvents(events){
       //   return 1
       // }
       // short:
-      return a.type - b.type
+
+      let r = a.type - b.type;
+      if(a.type === 176 && b.type === 144){
+        r = -1
+      }
+      return r
     }
-    return a.ticks - b.ticks;
+
+    return a.ticks - b.ticks
 */
   });
-  event = events[0];
+  event = events[0]
   //console.log(event)
 
   bpm = event.bpm;
@@ -197,6 +205,8 @@ export function parseEvents(events){
         millisPerTick = event.millisPerTick;
         secondsPerTick = event.secondsPerTick;
 
+        diffTicks = event.ticks - ticks
+        tick += diffTicks
         ticks = event.ticks
         //console.log(millisPerTick,event.millisPerTick);
         //console.log(event);
@@ -212,6 +222,8 @@ export function parseEvents(events){
         ticksPerSixteenth = event.ticksPerSixteenth;
         millis = event.millis;
 
+        diffTicks = event.ticks - ticks
+        tick += diffTicks
         ticks = event.ticks
         //console.log(nominator,numSixteenth,ticksPerSixteenth);
         //console.log(event);
@@ -225,6 +237,11 @@ export function parseEvents(events){
         updatePosition(event);
         updateEvent(event);
         result.push(event)
+
+        // if(event.type === 176 && event.data1 === 64){
+        //   console.log(event.data2, event.barsAsString)
+        // }
+
     }
 
 
@@ -293,37 +310,76 @@ let midiNoteIndex = 0
 
 export function parseMIDINotes(events){
   let notes = {}
+  let notesInTrack
   let n = 0
   for(let event of events){
+    if(typeof event.partId === 'undefined' || typeof event.trackId === 'undefined'){
+      console.log('no part and/or track set')
+      continue
+    }
     if(event.type === 144){
-      if(!notes[event.trackId]){
-        notes[event.trackId] = {}
+      notesInTrack = notes[event.trackId]
+      if(typeof notesInTrack === 'undefined'){
+        notesInTrack = notes[event.trackId] = {}
       }
-      notes[event.trackId][event.data1] = event
+      notesInTrack[event.data1] = event
     }else if(event.type === 128){
-      // let notesInTrack = notes[event.trackId]
-      // if(typeof notesInTrack === 'undefined'){
-      //   console.info('no note on found event for ', event)
-      //   delete notesInTrack[event.data1]
-      //   continue
-      // }
-      let noteOn = notes[event.trackId][event.data1]
-      //console.log(event.noteNumber, noteOn);
+      notesInTrack = notes[event.trackId]
+      if(typeof notesInTrack === 'undefined'){
+        //console.info(n++, 'no corresponding noteon event found for event', event.id)
+        continue
+      }
+      let noteOn = notesInTrack[event.data1]
       let noteOff = event
       if(typeof noteOn === 'undefined'){
-        console.info(n++, 'no note on event', event)
+        //console.info(n++, 'no noteon event for event', event.id)
         delete notes[event.trackId][event.data1]
         continue
       }
-      //let midiNote = new MIDINote(noteOn, noteOff);
-      //this._notesMap.set(midiNote.id, midiNote);
       let id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
       noteOn.midiNoteId = id
-      noteOn.off = noteOff
+      noteOn.off = noteOff.id
       noteOff.midiNoteId = id
-      noteOff.on = noteOn
+      noteOff.on = noteOn.id
       delete notes[event.trackId][event.data1]
     }
   }
-  console.log(notes)
+  Object.keys(notes).forEach(function(key){
+    delete notes[key]
+  })
+  //console.log(notes, notesInTrack)
+}
+
+
+// not in use!
+export function filterEvents(events){
+  let sustain = {}
+  let tmpResult = {}
+  let result = []
+  for(let event of events){
+    if(event.type === 176 && event.data1 === 64){
+      if(event.data2 === 0){
+        if(typeof sustain[event.trackId] === 'undefined'){
+          continue
+        }else if(sustain[event.trackId] === event.ticks){
+          delete tmpResult[event.ticks]
+          continue
+        }
+        tmpResult[event.ticks] = event
+        delete sustain[event.trackId]
+      }else if(event.data2 === 127){
+        sustain[event.trackId] = event.ticks
+        tmpResult[event.ticks] = event
+      }
+    }else{
+      result.push(event)
+    }
+  }
+  console.log(sustain)
+  Object.keys(tmpResult).forEach(function(key){
+    let sustainEvent = tmpResult[key]
+    console.log(sustainEvent)
+    result.push(sustainEvent)
+  })
+  return result
 }

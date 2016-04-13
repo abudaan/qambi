@@ -10,6 +10,7 @@ export default class Scheduler{
       timeStamp: this.timeStamp,
       midiEvents: this.events,
       instruments: this.instruments,
+      parts: this.parts,
       tracks: this.tracks,
       settings: {
         bars: this.bars,
@@ -43,12 +44,9 @@ export default class Scheduler{
 
         //event.time = this.timeStamp + event.millis - this.songStartPosition;
 
-        if(event.type === 144 || event.type === 128){
-          events.push(event);
-        }else if(event.type === 'audio'){
+        if(event.type === 'audio'){
           // to be implemented
         }else{
-          // controller events
           events.push(event);
         }
         this.index++;
@@ -65,7 +63,6 @@ export default class Scheduler{
       event,
       numEvents,
       events,
-      track,
       instrument
 
     this.maxtime = position + BUFFER_TIME
@@ -74,8 +71,26 @@ export default class Scheduler{
 
     for(i = 0; i < numEvents; i++){
       event = events[i]
-      //track = this.tracks[event.trackId]
       instrument = this.instruments[event.instrumentId]
+
+      if(typeof instrument === 'undefined'){
+        continue
+      }
+
+      if(this.parts[event.partId].mute === true || this.tracks[event.trackId].mute === true || event.mute === true){
+        continue
+      }
+
+      if((event.type === 144 || event.type === 128) && typeof event.midiNoteId === 'undefined'){
+        // this is usually caused by the same note on the same ticks value, which is probably a bug in the midi file
+        console.info('no midiNoteId', event)
+        continue
+      }
+
+      // debug minute_waltz double events
+      // if(event.ticks > 40300){
+      //   console.info(event)
+      // }
 
       if(event.type === 'audio'){
         // to be implemented
@@ -95,7 +110,9 @@ export default class Scheduler{
 
   stopAllSounds(){
     Object.keys(this.instruments).forEach((instrumentId) => {
-      this.instruments[instrumentId].stopAllSounds()
+      if(instrumentId !== 'undefined'){
+        this.instruments[instrumentId].stopAllSounds()
+      }
     })
   }
 

@@ -3,8 +3,9 @@ import fetch from 'isomorphic-fetch'
 import parseMIDIFile from './midifile'
 import {createMIDIEvent, getMIDIEventId} from './midi_event'
 import {createPart, addMIDIEvents} from './part'
-import {createTrack, addParts} from './track'
+import {createTrack, addParts, setInstrument} from './track'
 import {createSong, addTracks, updateSong} from './song'
+import {createInstrument} from './instrument'
 
 const PPQ = 960
 
@@ -44,6 +45,7 @@ function toSong(parsed){
   let denominator = -1
   let trackIds = []
   let songId
+  let instrumentId = createInstrument()
 
 
   for(let track of tracks.values()){
@@ -140,6 +142,7 @@ function toSong(parsed){
 
     if(eventIds.length > 0){
       let trackId = createTrack({name: trackName})
+      setInstrument(trackId, instrumentId)
       //let partId = createPart({trackId, midiEventIds: eventIds})
       let partId = createPart({trackId})
       addMIDIEvents(partId, ...eventIds)

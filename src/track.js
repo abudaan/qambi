@@ -6,6 +6,7 @@ import {createInstrument} from './instrument'
 import {
   CREATE_TRACK,
   ADD_PARTS,
+  SET_INSTRUMENT,
 } from './action_types'
 
 const store = getStore()
@@ -38,7 +39,7 @@ export function createTrack(
       volume,
       output,
       mute: false,
-      instrumentId: createInstrument('sinewave'),
+      //instrumentId: createInstrument('sinewave'),
     }
   })
   return id
@@ -55,6 +56,16 @@ export function addParts(track_id: string, ...part_ids:string){
   })
 }
 
+
+export function setInstrument(trackId: string, instrumentId: string){
+  store.dispatch({
+    type: SET_INSTRUMENT,
+    payload: {
+      trackId,
+      instrumentId,
+    }
+  })
+}
 
 export function muteTrack(flag: boolean){
 

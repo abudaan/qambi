@@ -20,6 +20,7 @@ import qambi, {
 
 console.log(qambi.version)
 qambi.log('functions')
+qambi.init()
 
 document.addEventListener('DOMContentLoaded', function(){
 
@@ -95,8 +96,8 @@ document.addEventListener('DOMContentLoaded', function(){
       //songId = songFromMIDIFile(parseMIDIFile(ab))
       let mf = parseMIDIFile(ab)
       songId = songFromMIDIFile(mf)
-      console.log('header:', mf.header)
-      console.log('# tracks:', mf.tracks.size)
+      //console.log('header:', mf.header)
+      //console.log('# tracks:', mf.tracks.size)
       buttonStart.disabled = false
       buttonStop.disabled = false
     })

@@ -34,8 +34,15 @@ import {
   songFromMIDIFile
 } from './song_from_midifile'
 
+import {
+  init
+} from './init'
+
 const qambi = {
   version: '0.0.1',
+
+  // from ./init
+  init,
 
   // from ./midi_event
   createMIDIEvent,
@@ -111,6 +118,9 @@ Object.defineProperty(qambi, 'END_OF_TRACK', {value: 0x2F});
 export default qambi
 
 export {
+  // from ./init
+  init,
+
   // from ./midi_event
   createMIDIEvent,
   moveMIDIEvent,

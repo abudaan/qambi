@@ -13,19 +13,15 @@ let midiEventIndex = 0
 
 export function createMIDIEvent(ticks: number, type: number, data1: number, data2: number = -1): string{
   let id = `ME_${midiEventIndex++}_${new Date().getTime()}`
-  let sortIndex = ticks + type
-  if(type === 144 || type === 128){
-    sortIndex = ticks + type
-  }
   store.dispatch({
     type: CREATE_MIDI_EVENT,
     payload: {
       id,
       ticks,
       type,
-      sortIndex,
       data1,
       data2,
+      sortIndex: ticks + type,
       frequency: 440 * Math.pow(2, (data1 - 69) / 12),
     }
   })

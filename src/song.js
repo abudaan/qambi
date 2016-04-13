@@ -1,7 +1,7 @@
 //@ flow
 
 import {getStore} from './create_store'
-import {parseTimeEvents, parseEvents, parseMIDINotes} from './parse_events'
+import {parseTimeEvents, parseEvents, parseMIDINotes, filterEvents} from './parse_events'
 import {getMIDIEventId} from './midi_event'
 import {addTask, removeTask} from './heartbeat'
 import {context} from './io'
@@ -124,13 +124,14 @@ export function addTimeEvents(...time_events: string[]): void{
 
 
 // prepare song events for playback
-export function updateSong(song_id: string): void{
+export function updateSong(song_id: string, filter_events: boolean = false): void{
   let state = store.getState().editor
   let song = state.songs[song_id]
   if(song){
+    console.time('update song')
+    //@TODO: check if time events are updated
     parseTimeEvents(song.settings, song.timeEvents)
     let midiEvents = [...song.timeEvents]
-    console.log(song)
     song.midiEventIds.forEach(function(event_id){
       let event = state.midiEvents[event_id]
       if(event){
@@ -139,6 +140,11 @@ export function updateSong(song_id: string): void{
     })
     midiEvents = parseEvents(midiEvents)
     parseMIDINotes(midiEvents)
+    // midiEvents.forEach((e) => {
+    //   if(e.bar >= 5 && e.bar <= 6){
+    //     console.log(e.barsAsString, e.data1, e.data2, e.type)
+    //   }
+    // })
     store.dispatch({
       type: UPDATE_SONG,
       payload: {
@@ -147,6 +153,7 @@ export function updateSong(song_id: string): void{
         settings: song.settings // needed for the sequencer reducer
       }
     })
+    console.timeEnd('update song')
   }else{
     console.warn(`no song found with id ${song_id}`)
   }
@@ -163,10 +170,10 @@ export function startSong(song_id: string, start_position: number = 0): void{
     let instruments = {}
     let i = 0
     let midiEvents = songData.midiEvents.filter(function(event){
-      if((event.type === 144 || event.type === 128) && typeof event.midiNoteId === 'undefined'){
-        console.info(i++, 'no midiNoteId', event)
-        return false
-      }
+      // if((event.type === 144 || event.type === 128) && typeof event.midiNoteId === 'undefined'){
+      //   console.info(i++, 'no midiNoteId', event.ticks, event.type, event.data1, event.trackId)
+      //   return false
+      // }
       let part = parts[event.partId]
       let track = tracks[event.trackId]
       if(typeof part === 'undefined'){
@@ -176,8 +183,9 @@ export function startSong(song_id: string, start_position: number = 0): void{
         tracks[event.trackId] = track = state.editor.tracks[event.trackId]
         instruments[track.instrumentId] = state.instruments[track.instrumentId]
       }
-      //console.log(event.barsAsString, event)
-      return (!event.mute && !part.mute && !track.mute)
+      //return (!event.mute && !part.mute && !track.mute)
+      // check if a note, part or track is muted should be done in the scheduler loop
+      return true
     })
 
     let position = start_position
@@ -186,6 +194,7 @@ export function startSong(song_id: string, start_position: number = 0): void{
       song_id,
       start_position,
       timeStamp,
+      parts,
       tracks,
       instruments,
       settings: songData.settings,
@@ -226,17 +235,19 @@ export function startSong(song_id: string, start_position: number = 0): void{
 }
 
 export function stopSong(song_id: string): void{
-  removeTask('repetitive', song_id)
   let state = store.getState()
   let songData = state.sequencer.songs[song_id]
   if(songData){
-    songData.scheduler.stopAllSounds()
-    store.dispatch({
-      type: STOP_SCHEDULER,
-      payload: {
-        song_id
-      }
-    })
+    if(songData.playing){
+      removeTask('repetitive', song_id)
+      songData.scheduler.stopAllSounds()
+      store.dispatch({
+        type: STOP_SCHEDULER,
+        payload: {
+          song_id
+        }
+      })
+    }
   }else{
     console.error(`no song found with id ${song_id}`)
   }
