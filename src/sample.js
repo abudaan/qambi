@@ -1,7 +1,4 @@
-
-import {getAudioContext} from './init_audio.js';
-
-const context = getAudioContext()
+import {context} from './init_audio.js';
 
 class Sample{
 

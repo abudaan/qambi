@@ -1,6 +1,6 @@
 
 
-import {getAudioContext} from './init_audio'
+import {context} from './init_audio'
 import {getStore} from './create_store'
 import {createInstrument} from './instrument'
 import {
@@ -10,7 +10,6 @@ import {
 } from './action_types'
 
 const store = getStore()
-const context = getAudioContext()
 let trackIndex = 0
 
 export function createTrack(

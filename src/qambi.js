@@ -39,9 +39,14 @@ import {
 } from './init'
 
 import {
-  getAudioContext,
+  context,
   getMasterVolume,
 } from './init_audio'
+
+
+const getAudioContext = function(){
+  return context
+}
 
 const qambi = {
   version: '0.0.1',

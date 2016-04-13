@@ -4,7 +4,7 @@ import {getStore} from './create_store'
 import {parseTimeEvents, parseEvents, parseMIDINotes, filterEvents} from './parse_events'
 import {getMIDIEventId} from './midi_event'
 import {addTask, removeTask} from './heartbeat'
-import {getAudioContext} from './init_audio'
+import {context} from './init_audio'
 import Scheduler from './scheduler'
 import {
   CREATE_SONG,
@@ -18,7 +18,6 @@ import {
 import qambi from './qambi'
 
 const store = getStore()
-const context = getAudioContext()
 let songIndex = 0
 
 const defaultSong = {

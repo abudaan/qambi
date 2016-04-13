@@ -4,7 +4,7 @@ import {createStore, applyMiddleware, compose} from 'redux'
 import sequencerApp from './reducer'
 
 export const test = (function(){
-  console.log('run once')
+  //console.log('run once')
   return 'test'
 }())
 
@@ -20,7 +20,7 @@ const store = createStore(sequencerApp, {}, compose(
 */
 
 export function getStore(){
-  console.log('getStore() called')
+  //console.log('getStore() called')
   return store
 }
 

@@ -2,17 +2,33 @@
   Sets up the basic audio routing, tests which audio formats are supported and parses the samples for the metronome ticks.
 */
 
-
 import samples from './samples'
 import {parseSamples} from './util'
 
-
 let
-  data = {},
-  context,
   masterGain,
   compressor,
   initialized = false
+
+export let context = (function(){
+  console.log('init AudioContext')
+
+  if(typeof window === 'object'){
+    window.AudioContext = (window.AudioContext || window.webkitAudioContext)
+    context = new window.AudioContext
+  }else{
+    //@TODO: create dummy AudioContext for use in node, see: https://www.npmjs.com/package/audio-context
+    context = {
+      createGain: function(){
+        return {
+          gain: 1
+        }
+      },
+      createOscillator: function(){},
+    }
+  }
+  return context
+}())
 
 
 export function initAudio(){
@@ -21,6 +37,7 @@ export function initAudio(){
     context.createGainNode = context.createGain
   }
   // check for older implementations of WebAudio
+  let data = {}
   let source = context.createBufferSource()
   data.legacy = false
   if(source.start === undefined){
@@ -55,31 +72,6 @@ export function initAudio(){
       }
     )
   })
-}
-
-
-let getAudioContext = function(){
-  if(typeof context === 'undefined'){
-    if(typeof window === 'object'){
-      window.AudioContext = (window.AudioContext || window.webkitAudioContext)
-      context = new window.AudioContext
-    }else{
-      //@TODO: create dummy AudioContext for use in node, see: https://www.npmjs.com/package/audio-context
-      context = {
-        createGain: function(){
-          return {
-            gain: 1
-          }
-        },
-        createOscillator: function(){},
-      }
-    }
-  }
-
-  getAudioContext = function(){
-    return context
-  }
-  return context
 }
 
 
@@ -146,14 +138,14 @@ let enableMasterCompressor = function(): void{
 
 let configureMasterCompressor = function(cfg): void{
   /*
-      readonly attribute AudioParam attack; // in Seconds
-      readonly attribute AudioParam knee; // in Decibels
-      readonly attribute AudioParam ratio; // unit-less
-      readonly attribute AudioParam reduction; // in Decibels
-      readonly attribute AudioParam release; // in Seconds
-      readonly attribute AudioParam threshold; // in Decibels
+    readonly attribute AudioParam attack; // in Seconds
+    readonly attribute AudioParam knee; // in Decibels
+    readonly attribute AudioParam ratio; // unit-less
+    readonly attribute AudioParam reduction; // in Decibels
+    readonly attribute AudioParam release; // in Seconds
+    readonly attribute AudioParam threshold; // in Decibels
 
-      @see: http://webaudio.github.io/web-audio-api/#the-dynamicscompressornode-interface
+    @see: http://webaudio.github.io/web-audio-api/#the-dynamicscompressornode-interface
   */
   if(initialized === false){
     console.error('please call qambi.init() first')
@@ -172,4 +164,4 @@ let configureMasterCompressor = function(cfg): void{
   }
 }
 
-export {getAudioContext, setMasterVolume, getMasterVolume, getCompressionReduction, enableMasterCompressor, configureMasterCompressor}
+export {setMasterVolume, getMasterVolume, getCompressionReduction, enableMasterCompressor, configureMasterCompressor}

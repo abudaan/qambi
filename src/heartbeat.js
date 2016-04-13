@@ -1,7 +1,6 @@
 
-import {getAudioContext} from './init_audio';
+import {context} from './init_audio';
 
-const context = getAudioContext()
 
 let timedTasks = new Map();
 let repetitiveTasks = new Map();
