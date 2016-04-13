@@ -1,4 +1,5 @@
 import {initAudio} from './init_audio'
+import {initMIDI} from './init_midi'
 import {getStore} from './create_store'
 import {STORE_SAMPLES} from './action_types'
 
@@ -22,6 +23,9 @@ export function init(cb): void{
     })
   })
 
+  initMIDI().then(function(data){
+    console.log(data)
+  })
 }
 
 
