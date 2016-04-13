@@ -145,11 +145,14 @@ export function parseEvents(events){
   //let events = [].concat(evts, song._timeEvents);
   let numEvents = events.length
   //console.log(events)
-  events.sort(function(a, b){
-    return a.sortIndex - b.sortIndex;
-/*
-    // noteoff comes before noteon
 
+  // noteoff comes before noteon
+
+  // events.sort(function(a, b){
+  //   return a.sortIndex - b.sortIndex;
+  // })
+
+  events.sort(function(a, b){
     if(a.ticks === b.ticks){
       // if(a.type === 128){
       //   return -1
@@ -157,17 +160,15 @@ export function parseEvents(events){
       //   return 1
       // }
       // short:
-
       let r = a.type - b.type;
       if(a.type === 176 && b.type === 144){
         r = -1
       }
       return r
     }
-
     return a.ticks - b.ticks
-*/
-  });
+  })
+
   event = events[0]
   //console.log(event)
 
