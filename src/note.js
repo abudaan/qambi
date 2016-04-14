@@ -11,13 +11,11 @@
 
 'use strict';
 
-import getConfig from './config';
-import {log, info, warn, error, typeString} from './util';
+import {typeString} from './util';
 
 let
   errorMsg,
   warningMsg,
-  config = getConfig(),
   pow = Math.pow,
   floor = Math.floor;
 
@@ -134,12 +132,12 @@ export function createNote(...args){
   }
 
   if(errorMsg){
-    error(errorMsg);
+    console.error(errorMsg);
     return false;
   }
 
   if(warningMsg){
-    warn(warningMsg);
+    console.warn(warningMsg);
   }
 
   let note = {
@@ -155,7 +153,8 @@ export function createNote(...args){
 }
 
 
-function _getNoteName(number, mode = config.get('noteNameMode')) {
+//function _getNoteName(number, mode = config.get('noteNameMode')) {
+function _getNoteName(number, mode = 'sharp') {
   //let octave = Math.floor((number / 12) - 2), // → in Cubase central C = C3 instead of C4
   let octave = floor((number / 12) - 1);
   let noteName = noteNames[mode][number % 12];
@@ -187,7 +186,8 @@ function _getNoteNumber(name, octave) {
 
 
 function _getFrequency(number){
-  return config.get('pitch') * pow(2,(number - 69)/12); // midi standard, see: http://en.wikipedia.org/wiki/MIDI_Tuning_Standard
+  //return config.get('pitch') * pow(2,(number - 69)/12); // midi standard, see: http://en.wikipedia.org/wiki/MIDI_Tuning_Standard
+  return 440 * pow(2,(number - 69)/12); // midi standard, see: http://en.wikipedia.org/wiki/MIDI_Tuning_Standard
 }
 
 
@@ -201,7 +201,8 @@ function _checkNoteNameMode(mode){
   let keys = Object.keys(noteNames);
   let result = keys.find(x => x === mode) !== undefined;
   if(result === false){
-    mode = config.get('noteNameMode');
+    //mode = config.get('noteNameMode');
+    mode = 'sharp';
     warningMsg = mode + ' is not a valid note name mode, using "' + mode + '" instead';
   }
   return mode;

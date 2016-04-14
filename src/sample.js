@@ -6,7 +6,8 @@ class Sample{
 
   constructor(sampleData, event){
     this.event = event
-    if(sampleData === -1){
+    this.sampleData = sampleData
+    if(this.sampleData === -1){
       // create simple synth sample
       this.source = context.createOscillator();
       this.source.type = 'sine';
@@ -14,6 +15,7 @@ class Sample{
     }else{
       this.source = context.createBufferSource()
       this.source.buffer = sampleData.d;
+      //console.log(this.source.buffer)
     }
     this.output = context.createGain()
     this.volume = event.data2 / 127
@@ -28,11 +30,16 @@ class Sample{
   }
 
   stop(time, cb){
-    this.source.stop(time + 0.5);
-    fadeOut(this.output, {
-      releaseEnvelope: 'equal power',
-      releaseDuration: 0.5,
-    })
+    if(this.sampleData.r && this.sampleData.e){
+      this.source.stop(time + this.sampleData.r);
+      fadeOut(this.output, {
+        releaseEnvelope: this.sampleData.e,
+        releaseDuration: this.sampleData.r,
+      })
+    }else{
+      this.source.stop(time);
+    }
+
     this.source.onended = cb;
   }
 }

@@ -85,11 +85,11 @@ export function parseSample(sample, id, every){
 
 function loadAndParseSample(url, id, every){
   let executor = function(resolve, reject){
-
     fetch(url).then(
       function(response){
         if(response.ok){
-          response.blob().then(function(data){
+          response.arrayBuffer().then(function(data){
+            //console.log(data)
             parseSample(data, id, every).then(resolve, reject);
           })
         }else{

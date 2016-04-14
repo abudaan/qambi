@@ -61,6 +61,10 @@ import {
   getMIDIOutputsById,
 } from './init_midi'
 
+import {
+  parseSamples,
+} from './util'
+
 
 const getAudioContext = function(){
   return context
@@ -68,6 +72,9 @@ const getAudioContext = function(){
 
 const qambi = {
   version: '0.0.1',
+
+  // from ./util
+  parseSamples,
 
   // from ./init
   init,
@@ -166,6 +173,9 @@ Object.defineProperty(qambi, 'END_OF_TRACK', {value: 0x2F});
 export default qambi
 
 export {
+  // from ./util
+  parseSamples,
+
   // from ./init
   init,
 

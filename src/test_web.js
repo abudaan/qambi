@@ -23,6 +23,7 @@ import qambi, {
   setInstrument,
   getMIDIOutputIds,
   setMIDIOutputIds,
+  parseSamples,
 } from './qambi'
 
 qambi.getMasterVolume()
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function(){
   buttonStart.disabled = true
   buttonStop.disabled = true
 
-  let test = 2
+  let test = 3
   let noteon, noteoff, note, songId, track, part1, part2
 
   if(test === 1){
@@ -116,6 +117,31 @@ document.addEventListener('DOMContentLoaded', function(){
       buttonStart.disabled = false
       buttonStop.disabled = false
     })
+  }
+
+
+  if(test === 3){
+    let instrument = new Instrument()
+    parseSamples({
+      c4: '../data/TP01d-ElectricPiano-000-060-c3.wav'
+    }).then(
+      function onFulfilled(buffers){
+        //console.log(buffers);
+        instrument.addSampleData(60, buffers.c4, {
+          sustain: [0],
+          release: [4, 'equal power'],
+        });
+        instrument.processMIDIEvent({ticks: 0, type: 144, data1: 60, data2: 100})
+        instrument.processMIDIEvent({ticks: 200, type: 128, data1: 60, data2: 0})
+        // instrument.processMIDIEvent({ticks: 240, type: 144, data1: 60, data2: 100})
+        // instrument.processMIDIEvent({ticks: 440, type: 128, data1: 60, data2: 0})
+        // instrument.processMIDIEvent({ticks: 480, type: 144, data1: 60, data2: 100})
+        // instrument.processMIDIEvent({ticks: 720, type: 128, data1: 60, data2: 0})
+      },
+      function onRejected(e){
+        console.warn(e);
+      }
+    )
   }
 
   buttonStart.addEventListener('click', function(){
