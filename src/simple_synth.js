@@ -50,7 +50,7 @@ export class Instrument{
         }else if(event.data2 === 0){
           this.sustainPedalDown = false
           this.sustained.forEach((midiNoteId) => {
-            this.scheduled[midiNoteId].stop(time, () => {
+            this.scheduled[midiNoteId].stop(event.time, () => {
               //console.log('stop', midiNoteId)
               delete this.scheduled[midiNoteId]
             })

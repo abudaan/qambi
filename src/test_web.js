@@ -108,8 +108,8 @@ document.addEventListener('DOMContentLoaded', function(){
       songId = songFromMIDIFile(mf)
       let instrument = new Instrument()
       getTrackIds(songId).forEach(function(trackId){
-        //setInstrument(trackId, instrument)
-        setMIDIOutputIds(trackId, ...getMIDIOutputIds())
+        setInstrument(trackId, instrument)
+        //setMIDIOutputIds(trackId, ...getMIDIOutputIds())
       })
       //console.log('header:', mf.header)
       //console.log('# tracks:', mf.tracks.size)

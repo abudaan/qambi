@@ -103,7 +103,7 @@ export default class Scheduler{
       }else{
         let channel = track.channel
 
-        // send to javascript instrument
+        // send to external hardware or software instrument
         for(let portId of track.MIDIOutputIds){
           let port = getMIDIOutputById(portId)
           if(event.type === 128 || event.type === 144 || event.type === 176){
