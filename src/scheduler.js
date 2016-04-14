@@ -96,21 +96,21 @@ export default class Scheduler{
       //   console.info(event)
       // }
 
-      this.time = (this.timeStamp + event.millis - this.songStartPosition) + PRE_BUFFER
+      this.time = (this.timeStamp + event.millis - this.songStartPosition)
 
       if(event.type === 'audio'){
         // to be implemented
       }else{
         let channel = track.channel
-
+        let time = this.time + BUFFER_TIME
         // send to external hardware or software instrument
         for(let portId of track.MIDIOutputIds){
           let port = getMIDIOutputById(portId)
           if(event.type === 128 || event.type === 144 || event.type === 176){
             //midiOutput.send([event.type, event.data1, event.data2], this.time + sequencer.midiOutLatency);
-            port.send([event.type + channel, event.data1, event.data2], this.time)
+            port.send([event.type + channel, event.data1, event.data2], time)
           }else if(event.type === 192 || event.type === 224){
-            port.send([event.type + channel, event.data1], this.time)
+            port.send([event.type + channel, event.data1], time)
           }
         }
 
