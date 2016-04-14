@@ -4,94 +4,121 @@
 
 import {typeString} from './util'
 
-let data = {};
-let initialized = false
-let inputs = new Map()
-let outputs = new Map()
 
-let songMidiEventListener;
-let midiEventListenerId = 0;
+let MIDIAccess
+let initialized = false
+let inputs = []
+let outputs = []
+let inputIds = []
+let outputIds = []
+let inputsById = new Map()
+let outputsById = new Map()
+
+let songMidiEventListener
+let midiEventListenerId = 0
+
+
+function getMIDIports(){
+  inputs = Array.from(MIDIAccess.inputs.values())
+
+  //sort ports by name ascending
+  inputs.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1);
+
+  for(let port of inputs){
+    inputsById.set(port.id, port);
+    inputIds.push(port.id)
+  }
+
+  outputs = Array.from(MIDIAccess.outputs.values());
+
+  //sort ports by name ascending
+  outputs.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1);
+
+  for(let port of outputs){
+    outputsById.set(port.id, port);
+    outputIds.push(port.id)
+  }
+}
+
 
 export function initMIDI(){
 
   return new Promise(function executor(resolve, reject){
 
-    let tmp;
     if(typeof navigator === 'undefined'){
-      data.midi = false
       initialized = true
-      resolve(data)
+      resolve({midi: false})
     }else if(typeof navigator.requestMIDIAccess !== 'undefined'){
+
+      let jazz, midi, webmidi
 
       navigator.requestMIDIAccess().then(
 
-        function onFulFilled(midi){
-          if(typeof midi._jazzInstances !== 'undefined'){
-            data.jazz = midi._jazzInstances[0]._Jazz.version;
-            data.midi = true;
+        function onFulFilled(midiAccess){
+          MIDIAccess = midiAccess
+          if(typeof midiAccess._jazzInstances !== 'undefined'){
+            jazz = midiAccess._jazzInstances[0]._Jazz.version
+            midi = true
           }else{
-            data.webmidi = true;
-            data.midi = true;
+            webmidi = true
+            midi = true
           }
 
-
-          // get inputs
-          tmp = Array.from(midi.inputs.values());
-
-          //sort ports by name ascending
-          tmp.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1);
-
-          for(let port of tmp){
-            inputs.set(port.id, port);
-          }
-
-
-          // get outputs
-          tmp = Array.from(midi.outputs.values());
-
-          //sort ports by name ascending
-          tmp.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1);
-
-          for(let port of tmp){
-            outputs.set(port.id, port);
-          }
-
+          getMIDIports()
 
           // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
-          midi.addEventListener('onconnect', function(e){
-            console.log('device connected', e);
+          midiAccess.addEventListener('onconnect', function(e){
+            console.log('device connected', e)
+            getMIDIports()
           }, false);
 
-          midi.addEventListener('ondisconnect', function(e){
-            console.log('device disconnected', e);
+          midiAccess.addEventListener('ondisconnect', function(e){
+            console.log('device disconnected', e)
+            getMIDIports()
           }, false);
-
-
-          // export
-          data.inputs = inputs;
-          data.outputs = outputs;
 
           initialized = true
-          resolve(data);
+          resolve({
+            jazz,
+            midi,
+            webmidi,
+            inputs,
+            outputs,
+            inputsById,
+            outputsById,
+          });
         },
 
         function onReject(e){
           //console.log(e);
-          reject('Something went wrong while requesting MIDIAccess', e);
+          reject('Something went wrong while requesting MIDIAccess', e)
         }
       );
     // browsers without WebMIDI API
     }else{
       initialized = true
-      data.midi = false;
-      resolve(data);
+      resolve({midi: false})
     }
   });
 }
 
+
+export let getMIDIAccess = function(){
+  if(initialized === false){
+    console.warn('please call qambi.init() first')
+  }else {
+    getMIDIAccess = function(){
+      return MIDIAccess
+    }
+    return getMIDIAccess()
+  }
+  return false
+}
+
+
 export let getMIDIOutputs = function(){
   if(initialized === false){
-    console.error('please call qambi.init() first')
+    console.warn('please call qambi.init() first')
   }else {
     getMIDIOutputs = function(){
       return outputs
@@ -104,12 +131,63 @@ export let getMIDIOutputs = function(){
 
 export let getMIDIInputs = function(){
   if(initialized === false){
-    console.error('please call qambi.init() first')
+    console.warn('please call qambi.init() first')
   }else {
     getMIDIInputs = function(){
       return inputs
     }
     return getMIDIInputs()
+  }
+  return false
+}
+
+export let getMIDIOutputIds = function(){
+  if(initialized === false){
+    console.warn('please call qambi.init() first')
+  }else {
+    getMIDIOutputIds = function(){
+      return outputIds
+    }
+    return getMIDIOutputIds()
+  }
+  return false
+}
+
+
+export let getMIDIInputIds = function(){
+  if(initialized === false){
+    console.warn('please call qambi.init() first')
+  }else {
+    getMIDIInputIds = function(){
+      return inputIds
+    }
+    return getMIDIInputIds()
+  }
+  return false
+}
+
+
+export let getMIDIOutputById = function(id: string){
+  if(initialized === false){
+    console.warn('please call qambi.init() first')
+  }else {
+    getMIDIOutputById = function(){
+      return outputsById.get(id)
+    }
+    return getMIDIOutputById(id)
+  }
+  return false
+}
+
+
+export let getMIDIInputById = function(id: string){
+  if(initialized === false){
+    console.warn('please call qambi.init() first')
+  }else {
+    getMIDIInputById = function(){
+      return outputsById.get(id)
+    }
+    return getMIDIInputById(id)
   }
   return false
 }

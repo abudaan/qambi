@@ -18,6 +18,11 @@ import qambi, {
   stopSong,
   parseMIDIFile,
   songFromMIDIFile,
+  getTrackIds,
+  Instrument,
+  setInstrument,
+  getMIDIOutputIds,
+  setMIDIOutputIds,
 } from './qambi'
 
 qambi.getMasterVolume()
@@ -101,6 +106,11 @@ document.addEventListener('DOMContentLoaded', function(){
       //songId = songFromMIDIFile(parseMIDIFile(ab))
       let mf = parseMIDIFile(ab)
       songId = songFromMIDIFile(mf)
+      let instrument = new Instrument()
+      getTrackIds(songId).forEach(function(trackId){
+        //setInstrument(trackId, instrument)
+        setMIDIOutputIds(trackId, ...getMIDIOutputIds())
+      })
       //console.log('header:', mf.header)
       //console.log('# tracks:', mf.tracks.size)
       buttonStart.disabled = false

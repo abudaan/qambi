@@ -11,6 +11,7 @@
 export const CREATE_TRACK = 'create_track'
 export const ADD_PARTS = 'add_parts'
 export const SET_INSTRUMENT = 'set_instrument'
+export const SET_MIDI_OUTPUT_IDS = 'set_midi_output_ids'
 
 
 // song actions
@@ -40,7 +41,6 @@ export const STOP_SCHEDULER = 'STOP_SCHEDULER'
 
 
 // instrument actions
-export const CREATE_INSTRUMENT = 'create_instrument'
 export const STORE_SAMPLES = 'store_samples'
 
 

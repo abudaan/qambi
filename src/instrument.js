@@ -1,14 +1,7 @@
-import {getStore} from './create_store'
 import {createSample} from './sample'
 import {context} from './init_audio'
-import {
-  CREATE_INSTRUMENT,
-} from './action_types'
 
-const store = getStore()
-let instrumentIndex = 0
-
-class Instrument{
+export class Instrument{
 
   constructor(id: string, type: string){
     this.id = id
@@ -18,13 +11,17 @@ class Instrument{
     this.sustainPedalDown = false
   }
 
-  processMIDIEvent(event, time, output){
+  connect(output){
+    this.output = output
+  }
+
+  processMIDIEvent(event, time){
     let sample
     if(event.type === 144){
       //console.log(144, ':', time, context.currentTime, event.millis)
       sample = createSample(-1, event)
       this.scheduled[event.midiNoteId] = sample
-      sample.output.connect(output)
+      sample.output.connect(this.output)
       sample.start(time)
       //console.log('start', event.midiNoteId)
     }else if(event.type === 128){
@@ -78,6 +75,7 @@ class Instrument{
   }
 
   stopAllSounds(){
+    console.log('stopAllSounds')
     Object.keys(this.scheduled).forEach((sampleId) => {
       this.scheduled[sampleId].stop(0, () => {
         delete this.scheduled[sampleId]
@@ -85,18 +83,4 @@ class Instrument{
     })
   }
 }
-
-export function createInstrument(type: string){
-  let id = `IN_${instrumentIndex++}_${new Date().getTime()}`
-  let instrument = new Instrument(id, type)
-  store.dispatch({
-    type: CREATE_INSTRUMENT,
-    payload: {
-      id,
-      instrument
-    }
-  })
-  return id
-}
-
 

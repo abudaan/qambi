@@ -49,9 +49,9 @@ function setTicksPerBeat(){
 
 function updatePosition(event){
   diffTicks = event.ticks - ticks;
-  // if(diffTicks < 0){
-  //   console.log(diffTicks, event.ticks, previousEvent.ticks, previousEvent.type)
-  // }
+  if(diffTicks < 0){
+    console.log(diffTicks, event.ticks, previousEvent.ticks, previousEvent.type)
+  }
   tick += diffTicks;
   ticks = event.ticks;
   previousEvent = event
@@ -148,9 +148,11 @@ export function parseEvents(events){
 
   // noteoff comes before noteon
 
-  // events.sort(function(a, b){
-  //   return a.sortIndex - b.sortIndex;
-  // })
+/*
+  events.sort(function(a, b){
+    return a.sortIndex - b.sortIndex;
+  })
+*/
 
   events.sort(function(a, b){
     if(a.ticks === b.ticks){
@@ -168,7 +170,6 @@ export function parseEvents(events){
     }
     return a.ticks - b.ticks
   })
-
   event = events[0]
   //console.log(event)
 

@@ -1,4 +1,5 @@
 
+import {requestAnimationFrame} from './init';
 import {context} from './init_audio';
 
 
@@ -34,7 +35,7 @@ function heartbeat(timestamp){
   scheduledTasks.clear();
 
   //setTimeout(heartbeat, 10000);
-  window.requestAnimationFrame(heartbeat);
+  requestAnimationFrame(heartbeat);
 }
 
 

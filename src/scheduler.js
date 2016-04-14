@@ -1,8 +1,7 @@
+import {getMIDIOutputById} from './init_midi'
 
-import {getMIDIOutputs} from './init_midi'
-
-const BUFFER_TIME = 400 // millis
-const PRE_BUFFER = 400
+const BUFFER_TIME = 200 // millis
+const PRE_BUFFER = 200
 
 export default class Scheduler{
 
@@ -12,7 +11,6 @@ export default class Scheduler{
       start_position: this.songStartPosition,
       timeStamp: this.timeStamp,
       midiEvents: this.events,
-      instruments: this.instruments,
       parts: this.parts,
       tracks: this.tracks,
       settings: {
@@ -21,9 +19,9 @@ export default class Scheduler{
       }
     } = data)
     this.numEvents = this.events.length
+    this.time = 0
     this.index = 0
     this.setIndex(this.songStartPosition)
-    this.outputs = getMIDIOutputs()
   }
 
   // get the index of the event that has its millis value at or right after the provided millis value
@@ -66,6 +64,7 @@ export default class Scheduler{
     var i,
       event,
       numEvents,
+      track,
       events,
       instrument
 
@@ -75,13 +74,14 @@ export default class Scheduler{
 
     for(i = 0; i < numEvents; i++){
       event = events[i]
-      instrument = this.instruments[event.instrumentId]
+      track = this.tracks[event.trackId]
+      instrument = track.instrument
 
-      if(typeof instrument === 'undefined'){
-        continue
-      }
+      // if(typeof instrument === 'undefined'){
+      //   continue
+      // }
 
-      if(this.parts[event.partId].mute === true || this.tracks[event.trackId].mute === true || event.mute === true){
+      if(this.parts[event.partId].mute === true || track.mute === true || event.mute === true){
         continue
       }
 
@@ -96,25 +96,29 @@ export default class Scheduler{
       //   console.info(event)
       // }
 
-      let time = (this.timeStamp + event.millis - this.songStartPosition) + PRE_BUFFER
+      this.time = (this.timeStamp + event.millis - this.songStartPosition) + PRE_BUFFER
 
       if(event.type === 'audio'){
         // to be implemented
-      }else if(instrument.type === 'external'){
-        // to be implemented: route to external midi instrument
-        let channel = 0
-        for(let [id, port] of this.outputs){
+      }else{
+        let channel = track.channel
+
+        // send to javascript instrument
+        for(let portId of track.MIDIOutputIds){
+          let port = getMIDIOutputById(portId)
           if(event.type === 128 || event.type === 144 || event.type === 176){
-            //midiOutput.send([event.type, event.data1, event.data2], event.time + sequencer.midiOutLatency);
-            port.send([event.type + channel, event.data1, event.data2], time)
+            //midiOutput.send([event.type, event.data1, event.data2], this.time + sequencer.midiOutLatency);
+            port.send([event.type + channel, event.data1, event.data2], this.time)
           }else if(event.type === 192 || event.type === 224){
-            port.send([event.type + channel, event.data1], time)
+            port.send([event.type + channel, event.data1], this.time)
           }
         }
 
-      }else{
-        time /= 1000 // convert to seconds because the audio context uses seconds for scheduling
-        instrument.processMIDIEvent(event, time, this.tracks[event.trackId].output)
+        // send to javascript instrument
+        if(typeof instrument !== 'undefined'){
+          this.time /= 1000 // convert to seconds because the audio context uses seconds for scheduling
+          instrument.processMIDIEvent(event, this.time, this.tracks[event.trackId].output)
+        }
       }
     }
     //console.log(this.index, this.numEvents)
@@ -124,16 +128,18 @@ export default class Scheduler{
 
 
   stopAllSounds(time){
-    Object.keys(this.instruments).forEach((instrumentId) => {
-      if(instrumentId !== 'undefined'){
-        this.instruments[instrumentId].stopAllSounds()
+    Object.keys(this.tracks).forEach((trackId) => {
+      let track = this.tracks[trackId]
+      let instrument = track.instrument
+      if(typeof instrument !== 'undefined'){
+        instrument.stopAllSounds()
+      }
+      for(let portId of track.MIDIOutputIds){
+        let port = getMIDIOutputById(portId)
+        port.send([0xB0, 0x7B, 0x00], this.time + 0.0); // stop all notes
+        port.send([0xB0, 0x79, 0x00], this.time + 0.0); // reset all controllers
       }
     })
-    for(let [id, port] of this.outputs){
-      port.send([0xB0, 0x7B, 0x00], time + 0.5); // stop all notes
-      port.send([0xB0, 0x79, 0x00], time + 0.5); // reset all controllers
-    }
   }
-
 }
 

@@ -118,6 +118,17 @@ export function addTracks(song_id: string, ...track_ids: string[]): void{
 }
 
 
+export function getTrackIds(song_id: string): string[]{
+  let state = store.getState().editor
+  let song = state.songs[song_id]
+  if(typeof song === 'undefined'){
+    console.warn(`no song found with id ${song_id}`)
+    return []
+  }
+  return [...song.trackIds]
+}
+
+
 export function addTimeEvents(...time_events: string[]): void{
 
 }
@@ -167,7 +178,6 @@ export function startSong(song_id: string, start_position: number = 0): void{
     let songData = state.sequencer.songs[song_id]
     let parts = {}
     let tracks = {}
-    let instruments = {}
     let i = 0
     let midiEvents = songData.midiEvents.filter(function(event){
       // if((event.type === 144 || event.type === 128) && typeof event.midiNoteId === 'undefined'){
@@ -181,7 +191,6 @@ export function startSong(song_id: string, start_position: number = 0): void{
       }
       if(typeof track === 'undefined'){
         tracks[event.trackId] = track = state.editor.tracks[event.trackId]
-        instruments[track.instrumentId] = state.instruments[track.instrumentId]
       }
       //return (!event.mute && !part.mute && !track.mute)
       // check if a note, part or track is muted should be done in the scheduler loop
@@ -196,7 +205,6 @@ export function startSong(song_id: string, start_position: number = 0): void{
       timeStamp,
       parts,
       tracks,
-      instruments,
       settings: songData.settings,
       midiEvents: midiEvents,
     })

@@ -14,11 +14,14 @@ import{
   updateSong,
   startSong,
   stopSong,
+  getTrackIds,
 } from './song'
 
 import{
   createTrack,
   addParts,
+  setInstrument,
+  setMIDIOutputIds,
 } from './track'
 
 import{
@@ -35,6 +38,10 @@ import {
 } from './song_from_midifile'
 
 import {
+  Instrument,
+} from './instrument'
+
+import {
   init,
 } from './init'
 
@@ -43,6 +50,16 @@ import {
   getMasterVolume,
   setMasterVolume,
 } from './init_audio'
+
+import {
+  getMIDIAccess,
+  getMIDIInputs,
+  getMIDIOutputs,
+  getMIDIInputIds,
+  getMIDIOutputIds,
+  getMIDIInputsById,
+  getMIDIOutputsById,
+} from './init_midi'
 
 
 const getAudioContext = function(){
@@ -60,6 +77,15 @@ const qambi = {
   getMasterVolume,
   setMasterVolume,
 
+  // ./init_midi
+  getMIDIAccess,
+  getMIDIInputs,
+  getMIDIOutputs,
+  getMIDIInputIds,
+  getMIDIOutputIds,
+  getMIDIInputsById,
+  getMIDIOutputsById,
+
   // from ./midi_event
   createMIDIEvent,
   moveMIDIEvent,
@@ -74,14 +100,20 @@ const qambi = {
   updateSong,
   startSong,
   stopSong,
+  getTrackIds,
 
   // from ./track
   createTrack,
   addParts,
+  setInstrument,
+  setMIDIOutputIds,
 
   // from ./part
   createPart,
   addMIDIEvents,
+
+  // from ./instrument
+  Instrument,
 
   parseMIDIFile,
   songFromMIDIFile,
@@ -142,6 +174,15 @@ export {
   getMasterVolume,
   setMasterVolume,
 
+  // ./init_midi
+  getMIDIAccess,
+  getMIDIInputs,
+  getMIDIOutputs,
+  getMIDIInputIds,
+  getMIDIOutputIds,
+  getMIDIInputsById,
+  getMIDIOutputsById,
+
   // from ./midi_event
   createMIDIEvent,
   moveMIDIEvent,
@@ -156,14 +197,20 @@ export {
   updateSong,
   startSong,
   stopSong,
+  getTrackIds,
 
   // from ./track
   createTrack,
   addParts,
+  setInstrument,
+  setMIDIOutputIds,
 
   // from ./part
   createPart,
   addMIDIEvents,
+
+  // from ./instrument
+  Instrument,
 
 //  MIDI,
 

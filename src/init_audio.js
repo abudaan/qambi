@@ -80,7 +80,7 @@ export function initAudio(){
 
 let setMasterVolume = function(value: number = 0.5): void{
   if(initialized === false){
-    console.error('please call qambi.init() first')
+    console.warn('please call qambi.init() first')
   }else {
     setMasterVolume = function(value: number = 0.5){
       if(value > 1){
@@ -96,7 +96,7 @@ let setMasterVolume = function(value: number = 0.5): void{
 
 let getMasterVolume = function(): void{
   if(initialized === false){
-    console.error('please call qambi.init() first')
+    console.warn('please call qambi.init() first')
   }else {
     getMasterVolume = function(){
       return masterGain.gain.value
@@ -108,7 +108,7 @@ let getMasterVolume = function(): void{
 
 let getCompressionReduction = function(): void{
   if(initialized === false){
-    console.error('please call qambi.init() first')
+    console.warn('please call qambi.init() first')
   }else {
     getCompressionReduction = function(){
       return compressor.reduction.value
@@ -120,7 +120,7 @@ let getCompressionReduction = function(): void{
 
 let enableMasterCompressor = function(): void{
   if(initialized === false){
-    console.error('please call qambi.init() first')
+    console.warn('please call qambi.init() first')
   }else {
     enableMasterCompressor = function(flag: boolean){
       if(flag){
@@ -151,7 +151,7 @@ let configureMasterCompressor = function(cfg): void{
     @see: http://webaudio.github.io/web-audio-api/#the-dynamicscompressornode-interface
   */
   if(initialized === false){
-    console.error('please call qambi.init() first')
+    console.warn('please call qambi.init() first')
   }else {
     configureMasterCompressor = function(cfg: {}){
       ({

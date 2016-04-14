@@ -16,6 +16,7 @@ import {
   UPDATE_MIDI_NOTE,
   UPDATE_SONG,
   SET_INSTRUMENT,
+  SET_MIDI_OUTPUT_IDS,
 
   // for sequencer only
   SONG_POSITION,
@@ -196,7 +197,13 @@ function editor(state = initialState, action){
 
     case SET_INSTRUMENT:
       state = {...state};
-      state.tracks[action.payload.trackId].instrumentId = action.payload.instrumentId
+      state.tracks[action.payload.trackId].instrument = action.payload.instrument
+      break
+
+
+    case SET_MIDI_OUTPUT_IDS:
+      state = {...state};
+      state.tracks[action.payload.trackId].MIDIOutputIds = action.payload.outputIds
       break
 
     default:

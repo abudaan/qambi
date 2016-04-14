@@ -1,17 +1,26 @@
-
-
 import {context} from './init_audio'
 import {getStore} from './create_store'
-import {createInstrument} from './instrument'
 import {masterGain} from './init_audio'
+import Instrument from './instrument'
 import {
   CREATE_TRACK,
   ADD_PARTS,
   SET_INSTRUMENT,
+  SET_MIDI_OUTPUT_IDS,
 } from './action_types'
 
 const store = getStore()
 let trackIndex = 0
+
+function checkTrack(trackId: string){
+  let track = store.getState().editor.tracks[trackId]
+  if(typeof track === 'undefined'){
+    console.warn(`No track found with id ${trackId}`)
+    return false
+  }
+  return track
+}
+
 
 export function createTrack(
   settings: {name: string, partIds:Array<string>, songId: string} = {}
@@ -39,8 +48,9 @@ export function createTrack(
       songId,
       volume,
       output,
+      channel: 0,
       mute: false,
-      //instrumentId: createInstrument('sinewave'),
+      MIDIOutputIds: [],
     }
   })
   return id
@@ -58,15 +68,42 @@ export function addParts(track_id: string, ...part_ids:string){
 }
 
 
-export function setInstrument(trackId: string, instrumentId: string){
+export function setInstrument(trackId: string, instrument: Instrument){
+  let track = checkTrack(trackId)
+  if(track === false){
+    return
+  }
+
+  if(typeof instrument.connect !== 'function' || typeof instrument.processMIDIEvent !== 'function' || typeof instrument.stopAllSounds !== 'function'){
+    console.warn('An instrument should implement the methods processMIDIEvent() and stopAllSounds()')
+    return
+  }
+
+  instrument.connect(track.output)
+
   store.dispatch({
     type: SET_INSTRUMENT,
     payload: {
       trackId,
-      instrumentId,
+      instrument,
     }
   })
 }
+
+export function setMIDIOutputIds(trackId: string, ...outputIds: string){
+  if(checkTrack(trackId) === false){
+    return
+  }
+  store.dispatch({
+    type: SET_MIDI_OUTPUT_IDS,
+    payload: {
+      trackId,
+      outputIds,
+    }
+  })
+  //console.log(trackId, outputIds)
+}
+
 
 export function muteTrack(flag: boolean){
 

@@ -45,8 +45,6 @@ function toSong(parsed){
   let denominator = -1
   let trackIds = []
   let songId
-  let instrumentId = createInstrument('external')
-
 
   for(let track of tracks.values()){
     let lastTicks, lastType
@@ -142,7 +140,6 @@ function toSong(parsed){
 
     if(eventIds.length > 0){
       let trackId = createTrack({name: trackName})
-      setInstrument(trackId, instrumentId)
       //let partId = createPart({trackId, midiEventIds: eventIds})
       let partId = createPart({trackId})
       addMIDIEvents(partId, ...eventIds)
