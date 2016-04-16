@@ -34,14 +34,11 @@ export function getMIDIEventId(): string{
 
 export function moveMIDIEvent(eventId: string, ticks_to_move: number): void{
   let state = store.getState().editor
-  //let event = state.entities[id]
-
-  let song = state.entities[eventId]
-  let event = song.midiEvents[0]
-  //console.log(event)
+  let event = state.entities[eventId]
 
   let ticks = event.ticks + ticks_to_move
   ticks = ticks < 0 ? 0 : ticks
+
   let songId = event.songId || false
   if(songId){
     songId = state.entities[songId] ? songId : false
@@ -50,7 +47,7 @@ export function moveMIDIEvent(eventId: string, ticks_to_move: number): void{
   store.dispatch({
     type: UPDATE_MIDI_EVENT,
     payload: {
-      eventId: event.id,
+      eventId,
       ticks,
       songId,
     }

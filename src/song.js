@@ -157,29 +157,36 @@ export function updateSong(songId: string, filter_events: boolean = false): void
   let state = store.getState().editor
   let song = {...state.entities[songId]} // clone!
   if(typeof song !== 'undefined'){
+
+    let {updateTimeEvents, removedEventIds, newEventIds, movedEventIds, transposedEventIds} = song
+    if(updateTimeEvents === false && removedEventIds.length === 0 && newEventIds.length === 0 && movedEventIds.length === 0 && transposedEventIds.length === 0){
+      return
+    }
+
     console.group('update song')
     console.time('total')
 
     // check if time events are updated
-    if(song.updateTimeEvents === true){
+    if(updateTimeEvents === true){
       console.log('updateTimeEvents', song.timeEvents.length)
       parseTimeEvents(song.settings, song.timeEvents)
       song.updateTimeEvents = false
     }
 
-
     // only parse new and moved events
     let tobeParsed = []
 
     // filter removed events
-    song.removedEventIds.forEach(function(eventId){
+    console.log('removed %O', removedEventIds)
+    removedEventIds.forEach(function(eventId){
       song.midiEventsMap.delete(eventId)
       //delete song.midiEventsMap[eventId]
     })
 
 
     // add new events
-    song.newEventIds.forEach(function(eventId){
+    console.log('new %O', newEventIds)
+    newEventIds.forEach(function(eventId){
       let event = state.entities[eventId]
       song.midiEventsMap.set(eventId, event)
       //song.midiEventsMap[eventId] = event
@@ -193,6 +200,7 @@ export function updateSong(songId: string, filter_events: boolean = false): void
     // })
 
     // moved events need to be parsed
+    console.log('moved %O', movedEventIds)
     song.movedEventIds.forEach(function(eventId){
       let event = state.entities[eventId]
       tobeParsed.push(event)
@@ -275,11 +283,6 @@ export function updateSong(songId: string, filter_events: boolean = false): void
   }else{
     console.warn(`no song found with id ${songId}`)
   }
-}
-
-function getParts(songId: string){
-  let entities = store.getState().editor.entities
-
 }
 
 
