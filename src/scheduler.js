@@ -7,8 +7,8 @@ export default class Scheduler{
 
   constructor(data){
     ({
-      song_id: this.songId,
-      start_position: this.songStartPosition,
+      songId: this.songId,
+      startPosition: this.songStartPosition,
       timeStamp: this.timeStamp,
       midiEvents: this.events,
       parts: this.parts,

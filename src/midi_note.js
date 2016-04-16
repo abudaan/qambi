@@ -10,7 +10,7 @@ let midiNoteIndex = 0
 
 export function updateMIDINote(id, state = store.getState()){
   let note = state.midiNotes[id]
-  let events = state.midiEvents
+  let events = state.entities
   let start = events[note.noteon]
   let end = events[note.noteoff]
 
@@ -26,7 +26,7 @@ export function updateMIDINote(id, state = store.getState()){
 }
 
 export function createMIDINote(noteon: string, noteoff: string){
-  let events = store.getState().editor.midiEvents
+  let events = store.getState().editor.entities
   let on = events[noteon]
   let off = events[noteoff]
   if(on.data1 !== off.data1){

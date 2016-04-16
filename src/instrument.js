@@ -25,7 +25,7 @@ export class Instrument{
   processMIDIEvent(event, time){
     let sample, sampleData
     time = time || event.ticks * 0.0025
-    console.log(time)
+    //console.log(time)
 
     if(event.type === 144){
       //console.log(144, ':', time, context.currentTime, event.millis)

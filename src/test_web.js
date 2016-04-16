@@ -37,10 +37,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
   let buttonStart = document.getElementById('start')
   let buttonStop = document.getElementById('stop')
+  let buttonMove = document.getElementById('move')
   buttonStart.disabled = true
   buttonStop.disabled = true
 
-  let test = 3
+  let test = 4
   let noteon, noteoff, note, songId, track, part1, part2
 
   if(test === 1){
@@ -144,12 +145,49 @@ document.addEventListener('DOMContentLoaded', function(){
     )
   }
 
+  let ticks = 0
+  let midiEventId = 0
+
+  if(test === 4){
+    //fetch('mozk545a.mid')
+    fetch('minute_waltz.mid')
+    .then(
+      (response) => {
+        return response.arrayBuffer()
+      },
+      (error) => {
+        console.error(error)
+      }
+    )
+    .then((ab) => {
+      //songId = songFromMIDIFile(parseMIDIFile(ab))
+      let mf = parseMIDIFile(ab)
+      songId = songFromMIDIFile(mf)
+      let instrument = new Instrument()
+      getTrackIds(songId).forEach(function(trackId){
+        setInstrument(trackId, instrument)
+        setMIDIOutputIds(trackId, ...getMIDIOutputIds())
+      })
+      //console.log('header:', mf.header)
+      //console.log('# tracks:', mf.tracks.size)
+      buttonStart.disabled = false
+      buttonStop.disabled = false
+      //midiEventId = getEvent
+    })
+  }
+
   buttonStart.addEventListener('click', function(){
     startSong(songId, 0)
   })
 
   buttonStop.addEventListener('click', function(){
     stopSong(songId)
+  })
+
+  buttonMove.addEventListener('click', function(){
+    //moveMIDIEvent(midiEventId, ++ticks)
+    moveMIDIEvent(songId, ++ticks)
+    updateSong(songId)
   })
 
 })

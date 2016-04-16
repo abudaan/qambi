@@ -21,7 +21,6 @@ export function createMIDIEvent(ticks: number, type: number, data1: number, data
       type,
       data1,
       data2,
-      sortIndex: ticks + type,
       frequency: 440 * Math.pow(2, (data1 - 69) / 12),
     }
   })
@@ -32,18 +31,27 @@ export function getMIDIEventId(): string{
   return `ME_${midiEventIndex++}_${new Date().getTime()}`
 }
 
-export function moveMIDIEvent(id: string, ticks_to_move: number): void{
+export function moveMIDIEvent(eventId: string, ticks_to_move: number): void{
   let state = store.getState().editor
-  let event = state.midiEvents[id]
+  //let event = state.entities[id]
+
+  let song = state.entities[eventId]
+  let event = song.midiEvents[0]
+  //console.log(event)
+
   let ticks = event.ticks + ticks_to_move
   ticks = ticks < 0 ? 0 : ticks
-  //console.log(ticks, event.ticks)
+  let songId = event.songId || false
+  if(songId){
+    songId = state.entities[songId] ? songId : false
+  }
+  //console.log(ticks, songId, event)
   store.dispatch({
     type: UPDATE_MIDI_EVENT,
     payload: {
-      id,
+      eventId: event.id,
       ticks,
-      sortIndex: ticks + event.type
+      songId,
     }
   })
   // if the event is part of a midi note, update it
@@ -55,13 +63,12 @@ export function moveMIDIEvent(id: string, ticks_to_move: number): void{
 
 export function moveMIDIEventTo(id: string, ticks: number): void{
   let state = store.getState().editor
-  let event = state.midiEvents[id]
+  let event = state.entities[id]
   store.dispatch({
     type: UPDATE_MIDI_EVENT,
     payload: {
       id,
       ticks,
-      sortIndex: ticks + event.type
     }
   })
   if(typeof event === 'undefined'){

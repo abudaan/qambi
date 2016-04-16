@@ -35,6 +35,7 @@
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "test": "babel-node ./src/fp/test.js",
+    "babel-node": "babel-node",
     "start": "webpack-dev-server",
     "watch": "watchify src/test_web.js -t babelify -o src/build/app.js --debug --verbose",
     "build": "browserify test_web.js -t babelify --debug | exorcist build/app.js.map | uglifyjs -c > build/app.js"

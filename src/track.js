@@ -12,8 +12,8 @@ import {
 const store = getStore()
 let trackIndex = 0
 
-function checkTrack(trackId: string){
-  let track = store.getState().editor.tracks[trackId]
+function getTrack(trackId: string){
+  let track = store.getState().editor.entities[trackId]
   if(typeof track === 'undefined'){
     console.warn(`No track found with id ${trackId}`)
     return false
@@ -69,7 +69,7 @@ export function addParts(track_id: string, ...part_ids:string){
 
 
 export function setInstrument(trackId: string, instrument: Instrument){
-  let track = checkTrack(trackId)
+  let track = getTrack(trackId)
   if(track === false){
     return
   }
@@ -91,7 +91,7 @@ export function setInstrument(trackId: string, instrument: Instrument){
 }
 
 export function setMIDIOutputIds(trackId: string, ...outputIds: string){
-  if(checkTrack(trackId) === false){
+  if(getTrack(trackId) === false){
     return
   }
   store.dispatch({
