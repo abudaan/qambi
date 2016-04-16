@@ -12,15 +12,13 @@ export function createPart(
     name: string,
     trackId: string,
     midiEventIds:Array<string>,
-    midiNoteIds:Array<string>,
   } = {}
 ){
   let id = `MP_${partIndex++}_${new Date().getTime()}`
   let {
     name = id,
     midiEventIds = [],
-    midiNoteIds = [],
-    trackId = 'none'
+    trackId
   } = settings
 
   store.dispatch({
@@ -29,7 +27,6 @@ export function createPart(
       id,
       name,
       midiEventIds,
-      midiNoteIds,
       trackId,
       mute: false
     }
@@ -37,12 +34,12 @@ export function createPart(
   return id
 }
 
-export function addMIDIEvents(part_id: string, ...midi_event_ids){
+export function addMIDIEvents(partId: string, ...midiEventIds){
   store.dispatch({
     type: ADD_MIDI_EVENTS,
     payload: {
-      part_id,
-      midi_event_ids
+      partId,
+      midiEventIds
     }
   })
 }

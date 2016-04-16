@@ -173,6 +173,7 @@ export function parseEvents(events){
   event = events[0]
   //console.log(event)
 
+
   bpm = event.bpm;
   factor = event.factor;
   nominator = event.nominator;
@@ -254,6 +255,7 @@ export function parseEvents(events){
 
     lastEventTick = event.ticks;
   }
+  parseMIDINotes(result)
   return result;
   //song.lastEventTmp = event;
 }

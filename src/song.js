@@ -1,7 +1,7 @@
 //@ flow
 
 import {getStore} from './create_store'
-import {parseTimeEvents, parseEvents, parseMIDINotes, filterEvents} from './parse_events'
+import {parseTimeEvents, parseEvents} from './parse_events'
 import {getMIDIEventId} from './midi_event'
 import {addTask, removeTask} from './heartbeat'
 import {context} from './init_audio'
@@ -112,12 +112,11 @@ export function createSong(settings: {} = {}): string{
       midiEventsMap: new Map(),
       partIds,
       trackIds,
-      dirty: false,
       updateTimeEvents: true,
       settings: s,
       newEventIds: [],
-      newEvents: new Map(),
-      movedEvents: new Map(),
+      //newEvents: new Map(),
+      //movedEvents: new Map(),
       movedEventIds: [],
       transposedEventIds: [],
       removedEventIds: [],
@@ -127,12 +126,12 @@ export function createSong(settings: {} = {}): string{
 }
 
 
-export function addTracks(song_id: string, ...track_ids: string[]): void{
+export function addTracks(songId: string, ...trackIds: string[]): void{
   store.dispatch({
     type: ADD_TRACKS,
     payload: {
-      song_id,
-      track_ids,
+      songId,
+      trackIds,
     }
   })
 }
@@ -151,13 +150,15 @@ export function getTrackIds(songId: string): string[]{
 export function addTimeEvents(...time_events: string[]): void{
 }
 
+let newEvents = true
 
 // prepare song events for playback
 export function updateSong(songId: string, filter_events: boolean = false): void{
   let state = store.getState().editor
   let song = {...state.entities[songId]} // clone!
   if(typeof song !== 'undefined'){
-    console.time('update song')
+    console.group('update song')
+    console.time('total')
 
     // check if time events are updated
     if(song.updateTimeEvents === true){
@@ -166,9 +167,9 @@ export function updateSong(songId: string, filter_events: boolean = false): void
       song.updateTimeEvents = false
     }
 
+
     // only parse new and moved events
     let tobeParsed = []
-
 
     // filter removed events
     song.removedEventIds.forEach(function(eventId){
@@ -178,45 +179,64 @@ export function updateSong(songId: string, filter_events: boolean = false): void
 
 
     // add new events
-    // song.newEventIds.forEach(function(eventId){
-    //   let event = state.entities[eventId]
-    //   song.midiEventsMap.set(eventId, event)
-    //   //song.midiEventsMap[eventId] = event
-    //   tobeParsed.push(event)
-    // })
-
-
-    song.newEvents.forEach(function(event, eventId){
+    song.newEventIds.forEach(function(eventId){
+      let event = state.entities[eventId]
       song.midiEventsMap.set(eventId, event)
+      //song.midiEventsMap[eventId] = event
+      tobeParsed.push(event)
     })
 
-    // moved events need to be parsed
-    // song.movedEventIds.forEach(function(eventId){
-    //   let event = state.entities[eventId]
+
+    // song.newEvents.forEach(function(event, eventId){
+    //   song.midiEventsMap.set(eventId, event)
     //   tobeParsed.push(event)
     // })
 
-    tobeParsed = [...Array.from(song.newEvents.values()), ...Array.from(song.movedEvents.values())]
+    // moved events need to be parsed
+    song.movedEventIds.forEach(function(eventId){
+      let event = state.entities[eventId]
+      tobeParsed.push(event)
+    })
 
-    //console.time('parse')
+    //tobeParsed = [...tobeParsed, ...Array.from(song.movedEvents.values())]
+
+    console.time('parse')
     if(tobeParsed.length > 0){
       tobeParsed = [...tobeParsed, ...song.timeEvents]
       console.log('parseEvents', tobeParsed.length - song.timeEvents.length)
-      tobeParsed = parseEvents(tobeParsed)
-      parseMIDINotes(tobeParsed)
+      parseEvents(tobeParsed)
     }
-    //console.timeEnd('parse')
+    console.timeEnd('parse')
 
-    //console.time('sort')
+    console.time('to array')
     let midiEvents = Array.from(song.midiEventsMap.values())
-    /*
+    console.timeEnd('to array')
+/*
     let midiEvents = []
     let midiEventsMap = song.midiEventsMap
     Object.keys(midiEventsMap).forEach(function(key){
-      midiEvents.push(midiEventsMap[key])
+     midiEvents.push(midiEventsMap[key])
     })
-    */
+*/
+/*
+    let midiEvents = [...Array.from(song.newEvents.values())]
 
+    if(midiEvents.length > 0){
+      newEvents = false
+      console.time('get')
+      midiEvents = [...song.timeEvents]
+      Object.keys(state.entities).forEach(function(id){
+        let e = state.entities[id]
+        if(e && e.id.startsWith('ME_') && e.songId === songId ){
+          midiEvents.push(e)
+        }
+      })
+      midiEvents = parseEvents(midiEvents)
+      console.timeEnd('get')
+    }
+*/
+
+    console.time(`sorting ${midiEvents.length} events`)
     midiEvents.sort(function(a, b){
       if(a.ticks === b.ticks){
         let r = a.type - b.type;
@@ -227,8 +247,15 @@ export function updateSong(songId: string, filter_events: boolean = false): void
       }
       return a.ticks - b.ticks
     })
-    //console.timeEnd('sort')
+    console.timeEnd(`sorting ${midiEvents.length} events`)
 
+    console.timeEnd('total')
+    console.groupEnd('update song')
+
+/*
+    let midiEvents = parseEvents(song.midiEvents)
+    console.timeEnd('update song')
+*/
     store.dispatch({
       type: UPDATE_SONG,
       payload: {

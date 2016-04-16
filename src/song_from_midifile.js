@@ -139,6 +139,7 @@ function toSong(parsed){
     }
 
     if(eventIds.length > 0){
+      //console.count(eventIds.length)
       let trackId = createTrack({name: trackName})
       //let partId = createPart({trackId, midiEventIds: eventIds})
       let partId = createPart({trackId})

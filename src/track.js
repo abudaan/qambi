@@ -22,16 +22,12 @@ function getTrack(trackId: string){
 }
 
 
-export function createTrack(
-  settings: {name: string, partIds:Array<string>, songId: string} = {}
-  //settings: {name: string, parts:Array<string>, song: string} = {name: 'aap', parts: [], song: 'no song'}
-  //settings = {name: name = 'aap', parts: parts = [], song: song = 'no song'}
-  //settings = {name: name = 'aap', parts: parts = [], song: song = 'no song'}
-){
+export function createTrack(settings: {name: string, partIds:Array<string>, songId: string} = {}){
   let id = `MT_${trackIndex++}_${new Date().getTime()}`
   let {
     name = id,
     partIds = [],
+    midiEventIds = [],
     songId = 'none'
   } = settings
   let volume = 0.5
@@ -50,6 +46,7 @@ export function createTrack(
       output,
       channel: 0,
       mute: false,
+      midiEventIds,
       MIDIOutputIds: [],
     }
   })
@@ -57,12 +54,12 @@ export function createTrack(
 }
 
 
-export function addParts(track_id: string, ...part_ids:string){
+export function addParts(trackId: string, ...partIds:string){
   store.dispatch({
     type: ADD_PARTS,
     payload: {
-      track_id,
-      part_ids,
+      trackId,
+      partIds,
     }
   })
 }

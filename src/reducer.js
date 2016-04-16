@@ -28,6 +28,12 @@ import {
   STORE_SAMPLES,
 } from './action_types'
 
+import{
+  addTracks,
+  addParts,
+  addMIDIEvents,
+} from './reducer_helpers'
+
 const initialState = {
   entities: {},
 }
@@ -36,9 +42,8 @@ const initialState = {
 function editor(state = initialState, action){
 
   let
-    event, eventId,
-    song, songId,
-    midiEvents
+    eventId,
+    song
 
   switch(action.type){
 
@@ -51,93 +56,23 @@ function editor(state = initialState, action){
       state.entities[action.payload.id] = action.payload
       break
 
-
     case ADD_TRACKS:
-      state = {...state}
-      songId = action.payload.song_id
-      song = state.entities[songId]
-      if(song){
-        let trackIds = action.payload.track_ids
-        trackIds.forEach(function(trackId){
-          let track = state.entities[trackId]
-          if(track){
-            song.trackIds.push(trackId)
-            track.songId = songId
-            let midiEventIds = []
-            track.partIds.forEach(function(partId){
-              let part = state.entities[partId]
-              song.partIds.push(partId)
-              midiEventIds.push(...part.midiEventIds)
-            })
-            midiEventIds.forEach(function(eventId){
-              event = state.entities[eventId]
-              event.songId = songId
-              song.newEvents.set(eventId, event)
-            })
-            //song.newEventIds.push(...midiEventIds)
-          }else{
-            console.warn(`no track with id ${trackId}`)
-          }
-        })
-      }else{
-        console.warn(`no song found with id ${songId}`)
-      }
+      state = addTracks(state, action)
       break
-
 
     case ADD_PARTS:
-      state = {...state}
-      let trackId = action.payload.track_id
-      let track = state.entities[trackId]
-      if(track){
-        //track.parts.push(...action.payload.part_ids)
-        let partIds = action.payload.part_ids
-        partIds.forEach(function(id){
-          let part = state.entities[id]
-          if(part){
-            track.partIds.push(id)
-            part.trackId = trackId
-            part.midiEventIds.forEach(function(id){
-              event = state.entities[id]
-              event.trackId = trackId
-              //event.instrumentId = track.instrumentId
-            })
-          }else{
-            console.warn(`no part with id ${id}`)
-          }
-        })
-      }else{
-        console.warn(`no track found with id ${trackId}`)
-      }
+      state = addParts(state, action)
       break
 
-
     case ADD_MIDI_EVENTS:
-      state = {...state}
-      let partId = action.payload.part_id
-      let part = state.entities[partId]
-      if(part){
-        //part.midiEvents.push(...action.payload.midi_event_ids)
-        let midiEventIds = action.payload.midi_event_ids
-        midiEventIds.forEach(function(id){
-          let midiEvent = state.entities[id]
-          if(midiEvent){
-            part.midiEventIds.push(id)
-            midiEvent.partId = partId
-          }else{
-            console.warn(`no MIDI event found with id ${id}`)
-          }
-        })
-      }else{
-        console.warn(`no part found with id ${partId}`)
-      }
+      state = addMIDIEvents(state, action)
       break
 
 
     case UPDATE_MIDI_EVENT:
       state = {...state}
       eventId = action.payload.eventId
-      event = state.entities[eventId];
+      let event = state.entities[eventId];
       if(event){
         event.ticks = action.payload.ticks || event.ticks
         event.data1 = action.payload.data1 || event.data1
