@@ -142,7 +142,6 @@ function editor(state = initialState, action){
         event.ticks = action.payload.ticks || event.ticks
         event.data1 = action.payload.data1 || event.data1
         event.data2 = action.payload.data2 || event.data2
-        debugger
         // ({
         //   ticks: event.ticks = event.ticks,
         //   data1: event.data1 = event.data1,
