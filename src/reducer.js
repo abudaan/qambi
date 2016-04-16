@@ -139,11 +139,15 @@ function editor(state = initialState, action){
       eventId = action.payload.eventId
       event = state.entities[eventId];
       if(event){
-        ({
-          ticks: event.ticks = event.ticks,
-          data1: event.data1 = event.data1,
-          data2: event.data2 = event.data2,
-        } = action.payload)
+        event.ticks = action.payload.ticks || event.ticks
+        event.data1 = action.payload.data1 || event.data1
+        event.data2 = action.payload.data2 || event.data2
+        debugger
+        // ({
+        //   ticks: event.ticks = event.ticks,
+        //   data1: event.data1 = event.data1,
+        //   data2: event.data2 = event.data2,
+        // } = action.payload)
       }else{
         console.warn(`no MIDI event found with id ${eventId}`)
       }
