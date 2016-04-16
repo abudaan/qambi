@@ -72,8 +72,9 @@ function editor(state = initialState, action){
             midiEventIds.forEach(function(eventId){
               event = state.entities[eventId]
               event.songId = songId
+              song.newEvents.set(eventId, event)
             })
-            song.newEventIds.push(...midiEventIds)
+            //song.newEventIds.push(...midiEventIds)
           }else{
             console.warn(`no track with id ${trackId}`)
           }
@@ -148,7 +149,8 @@ function editor(state = initialState, action){
       }
       if(action.payload.songId !== false){
         song = state.entities[action.payload.songId]
-        song.movedEventIds.push(eventId)
+        song.movedEvents.set(eventId, event)
+        //song.movedEventIds.push(eventId)
       }
       break
 
@@ -172,6 +174,8 @@ function editor(state = initialState, action){
         updateTimeEvents: song.updateTimeEvents,
         midiEvents: song.midiEvents,
         midiEventsMap: song.midiEventsMap,
+        newEvents: song.newEvents,
+        movedEvents: song.movedEvents,
         newEventIds: song.newEventIds,
         movedEventIds: song.movedEventIds,
         removedEventIds: song.removedEventIds,

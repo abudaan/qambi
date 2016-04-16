@@ -116,6 +116,8 @@ export function createSong(settings: {} = {}): string{
       updateTimeEvents: true,
       settings: s,
       newEventIds: [],
+      newEvents: new Map(),
+      movedEvents: new Map(),
       movedEventIds: [],
       transposedEventIds: [],
       removedEventIds: [],
@@ -176,20 +178,25 @@ export function updateSong(songId: string, filter_events: boolean = false): void
 
 
     // add new events
-    song.newEventIds.forEach(function(eventId){
-      let event = state.entities[eventId]
-      song.midiEventsMap.set(eventId, event)
-      //song.midiEventsMap[eventId] = event
-      tobeParsed.push(event)
-    })
+    // song.newEventIds.forEach(function(eventId){
+    //   let event = state.entities[eventId]
+    //   song.midiEventsMap.set(eventId, event)
+    //   //song.midiEventsMap[eventId] = event
+    //   tobeParsed.push(event)
+    // })
 
+
+    song.newEvents.forEach(function(event, eventId){
+      song.midiEventsMap.set(eventId, event)
+    })
 
     // moved events need to be parsed
-    song.movedEventIds.forEach(function(eventId){
-      let event = state.entities[eventId]
-      tobeParsed.push(event)
-    })
+    // song.movedEventIds.forEach(function(eventId){
+    //   let event = state.entities[eventId]
+    //   tobeParsed.push(event)
+    // })
 
+    tobeParsed = [...Array.from(song.newEvents.values()), ...Array.from(song.movedEvents.values())]
 
     //console.time('parse')
     if(tobeParsed.length > 0){
@@ -228,6 +235,8 @@ export function updateSong(songId: string, filter_events: boolean = false): void
         songId,
         midiEvents,
         midiEventsMap: song.midiEventsMap,
+        newEvents: new Map(),
+        movedEvents: new Map(),
         newEventIds: [],
         movedEventIds: [],
         removedEventIds: [],

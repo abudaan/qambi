@@ -17,6 +17,15 @@ let o1 = {...o}
 //let o1 = {}
 //Object.assign(o1, o)
 o1.midievents.m2 = [120, 128, 60, 0]
-console.log(o1.midievents)
-console.log('-----')
-console.log(o1.songs.s1)
+//console.log(o1.midievents)
+//console.log('-----')
+//console.log(o1.songs.s1)
+
+
+let m = new Map()
+m.set(1, 'one')
+m.set(2, 'two')
+m.set(3, 'three')
+
+let a = Array.from(m.values())
+console.log(a)

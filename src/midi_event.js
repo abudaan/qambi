@@ -45,7 +45,8 @@ export function moveMIDIEvent(eventId: string, ticks_to_move: number): void{
   if(songId){
     songId = state.entities[songId] ? songId : false
   }
-  //console.log(ticks, songId, event)
+
+  console.log(event.ticks)
   store.dispatch({
     type: UPDATE_MIDI_EVENT,
     payload: {
