@@ -4,6 +4,20 @@ import {Song} from './song'
 
 const store = getStore()
 
+
+export function getData(id: string, ...keys: string[]){
+  let entities = store.getState().editor.entities
+  let entity = entities[id]
+  let result = {}
+  keys.forEach(function(key){
+    if(typeof entity[key] !== 'undefined'){
+      result[key] = entity[key]
+    }
+  })
+  return result
+}
+
+
 export function getEvents(id: string, filters: string[]){
   let entities = store.getState().editor.entities
   let entity = entities[id]

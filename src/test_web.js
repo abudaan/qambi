@@ -26,6 +26,7 @@ import qambi, {
   getMIDIOutputIds,
   setMIDIOutputIds,
   parseSamples,
+  getData,
 } from './qambi'
 
 qambi.getMasterVolume()
@@ -179,9 +180,16 @@ document.addEventListener('DOMContentLoaded', function(){
       buttonStop.disabled = false
       let s = createSong()
       updateSong(s)
-      console.log(getEvents(songId, ['data1 > 100']))
+      let r = getEvents(songId, ['data1 > 100'])
+      console.log(r)
+      let {
+        data1, data2, ticks, barsAsString
+      } = getData(r[0], 'data1', 'data2', 'ticks', 'barsAsString')
+      //console.log(getData(r[0], 'data1', 'data2', 'ticks', 'barsAsString'))
       //console.log(getEvents(songId))
+      console.log(data1, data2, ticks, barsAsString)
       //midiEventId = getEvent
+      console.log(getData(songId, 'name', 'midiEvents'))
     })
   }
 

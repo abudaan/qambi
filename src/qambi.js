@@ -4,6 +4,7 @@ import {
 
 import {
   getEvents,
+  getData,
 } from './generic_methods'
 
 import {
@@ -85,6 +86,7 @@ const qambi = {
 
   // from ./generic_methods
   getEvents,
+  getData,
 
   // from ./util
   parseSamples,
@@ -199,6 +201,7 @@ export {
 
   // from ./generic_methods
   getEvents,
+  getData,
 
   // from ./init
   init,
