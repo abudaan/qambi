@@ -68,61 +68,62 @@ function getSong(songId: string){
 }
 
 
+class Song{
+  constructor(settings: {} = {}){
+
+    this.id = `S_${songIndex++}_${new Date().getTime()}`
+
+    this.settings = {};
+    ({
+      name: this.settings.name = this.id,
+      ppq: this.settings.ppq = defaultSong.ppq,
+      bpm: this.settings.bpm = defaultSong.bpm,
+      bars: this.settings.bars = defaultSong.bars,
+      lowestNote: this.settings.lowestNote = defaultSong.lowestNote,
+      highestNote: this.settings.highestNote = defaultSong.highestNote,
+      nominator: this.settings.nominator = defaultSong.nominator,
+      denominator: this.settings.denominator = defaultSong.denominator,
+      quantizeValue: this.settings.quantizeValue = defaultSong.quantizeValue,
+      fixedLengthValue: this.settings.fixedLengthValue = defaultSong.fixedLengthValue,
+      positionType: this.settings.positionType = defaultSong.positionType,
+      useMetronome: this.settings.useMetronome = defaultSong.useMetronome,
+      autoSize: this.settings.autoSize = defaultSong.autoSize,
+      loop: this.settings.loop = defaultSong.loop,
+      playbackSpeed: this.settings.playbackSpeed = defaultSong.playbackSpeed,
+      autoQuantize: this.settings.autoQuantize = defaultSong.autoQuantize,
+    } = settings);
+
+    ({
+      timeEvents: this.timeEvents = [
+        {id: getMIDIEventId(), song: this.id, ticks: 0, type: qambi.TEMPO, data1: this.settings.bpm},
+        {id: getMIDIEventId(), song: this.id, ticks: 0, type: qambi.TIME_SIGNATURE, data1: this.settings.nominator, data2: this.settings.denominator}
+      ],
+      midiEventIds: this.midiEventIds = [], // @TODO: convert array to object if MIDIEvent ids are provided
+      partIds: this.partIds = [],
+      trackIds: this.trackIds = [],
+    } = settings);
+
+
+    this.updateTimeEvents = true
+    this.midiEvents = []
+    this.midiEventsMap = new Map()
+    this.newEventIds = []
+    //this.newEvents = new Map()
+    //this.movedEvents = new Map()
+    this.movedEventIds = []
+    this.transposedEventIds = []
+    this.removedEventIds = []
+  }
+}
+
+
 export function createSong(settings: {} = {}): string{
-  let id = `S_${songIndex++}_${new Date().getTime()}`
-  let s = {};
-  ({
-    name: s.name = id,
-    ppq: s.ppq = defaultSong.ppq,
-    bpm: s.bpm = defaultSong.bpm,
-    bars: s.bars = defaultSong.bars,
-    lowestNote: s.lowestNote = defaultSong.lowestNote,
-    highestNote: s.highestNote = defaultSong.highestNote,
-    nominator: s.nominator = defaultSong.nominator,
-    denominator: s.denominator = defaultSong.denominator,
-    quantizeValue: s.quantizeValue = defaultSong.quantizeValue,
-    fixedLengthValue: s.fixedLengthValue = defaultSong.fixedLengthValue,
-    positionType: s.positionType = defaultSong.positionType,
-    useMetronome: s.useMetronome = defaultSong.useMetronome,
-    autoSize: s.autoSize = defaultSong.autoSize,
-    loop: s.loop = defaultSong.loop,
-    playbackSpeed: s.playbackSpeed = defaultSong.playbackSpeed,
-    autoQuantize: s.autoQuantize = defaultSong.autoQuantize,
-  } = settings)
-
-  let{
-    timeEvents: timeEvents = [
-      {id: getMIDIEventId(), song: id, ticks: 0, type: qambi.TEMPO, data1: s.bpm},
-      {id: getMIDIEventId(), song: id, ticks: 0, type: qambi.TIME_SIGNATURE, data1: s.nominator, data2: s.denominator}
-    ],
-    midiEventIds: midiEventIds = {}, // @TODO: convert array to object if MIDIEvent ids are provided
-    partIds: partIds = [],
-    trackIds: trackIds = [],
-  } = settings
-
-  //parseTimeEvents(s, timeEvents)
-
+  let song = new Song(settings)
   store.dispatch({
     type: CREATE_SONG,
-    payload: {
-      id,
-      timeEvents,
-      midiEvents: [],
-      // midiEventsMap: {},
-      midiEventsMap: new Map(),
-      partIds,
-      trackIds,
-      updateTimeEvents: true,
-      settings: s,
-      newEventIds: [],
-      //newEvents: new Map(),
-      //movedEvents: new Map(),
-      movedEventIds: [],
-      transposedEventIds: [],
-      removedEventIds: [],
-    }
+    payload: [song]
   })
-  return id
+  return song.id
 }
 
 
@@ -218,6 +219,7 @@ export function updateSong(songId: string, filter_events: boolean = false): void
 
     console.time('to array')
     let midiEvents = Array.from(song.midiEventsMap.values())
+    let midiEventIds = Array.from(song.midiEventsMap.keys())
     console.timeEnd('to array')
 /*
     let midiEvents = []
@@ -257,8 +259,12 @@ export function updateSong(songId: string, filter_events: boolean = false): void
     })
     console.timeEnd(`sorting ${midiEvents.length} events`)
 
+    song.midiEvents = midiEvents
+    song.midiEventIds = midiEventIds
+
     console.timeEnd('total')
     console.groupEnd('update song')
+
 
 /*
     let midiEvents = parseEvents(song.midiEvents)
@@ -266,18 +272,7 @@ export function updateSong(songId: string, filter_events: boolean = false): void
 */
     store.dispatch({
       type: UPDATE_SONG,
-      payload: {
-        songId,
-        midiEvents,
-        midiEventsMap: song.midiEventsMap,
-        newEvents: new Map(),
-        movedEvents: new Map(),
-        newEventIds: [],
-        movedEventIds: [],
-        removedEventIds: [],
-        updateTimeEvents: false,
-        settings: song.settings // needed for the sequencer reducer
-      }
+      payload: song
     })
     console.timeEnd('update song')
   }else{

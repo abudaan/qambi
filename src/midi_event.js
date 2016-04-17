@@ -1,4 +1,4 @@
-// @flow
+// @ flow
 
 import {getStore} from './create_store'
 import {updateMIDINote} from './midi_note'
@@ -11,22 +11,43 @@ import {
 const store = getStore()
 let midiEventIndex = 0
 
+class MIDIEvent{
+  constructor(ticks: number, type: number, data1: number, data2: number = -1){
+    this.id = `ME_${midiEventIndex++}_${new Date().getTime()}`
+    this.ticks = ticks
+    this.type = type
+    this.data1 = data1
+    this.data2 = data2
+    this.frequency = 440 * Math.pow(2, (data1 - 69) / 12)
+  }
+}
+
+
 export function createMIDIEvent(ticks: number, type: number, data1: number, data2: number = -1): string{
-  let id = `ME_${midiEventIndex++}_${new Date().getTime()}`
+  let midiEvent = new MIDIEvent(ticks, type, data1, data2)
   store.dispatch({
     type: CREATE_MIDI_EVENT,
-    payload: {
-      id,
-      ticks,
-      type,
-      data1,
-      data2,
-      state: 0,
-      frequency: 440 * Math.pow(2, (data1 - 69) / 12),
-    }
+    payload: [midiEvent]
   })
-  return id
+  return midiEvent.id
 }
+
+
+export function createMIDIEvents(...args): string[]{
+  let events = []
+  let eventIds = []
+  args.forEach(function(arr){
+    let event = new MIDIEvent(arr)
+    events.push(event)
+    eventIds.push(event.id)
+  })
+  store.dispatch({
+    type: CREATE_MIDI_EVENT,
+    payload: events
+  })
+  return eventIds
+}
+
 
 export function getMIDIEventId(): string{
   return `ME_${midiEventIndex++}_${new Date().getTime()}`

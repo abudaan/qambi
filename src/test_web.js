@@ -4,6 +4,7 @@ import qambi, {
   setMasterVolume,
   getMasterVolume,
   createMIDIEvent,
+  createMIDIEvents,
   moveMIDIEvent,
   moveMIDIEventTo,
   createMIDINote,
@@ -27,7 +28,7 @@ import qambi, {
 } from './qambi'
 
 qambi.getMasterVolume()
-qambi.log('functions')
+//qambi.log('functions')
 qambi.init().then(function(data){
   console.log(data, qambi.getMasterVolume())
   setMasterVolume(0.5)
@@ -132,12 +133,14 @@ document.addEventListener('DOMContentLoaded', function(){
           sustain: [0],
           release: [4, 'equal power'],
         });
+        let e = createMIDIEvents([0, 144, 60, 100], [120, 128, 60, 0], [240, 144, 60, 100], [2400, 128, 60, 0])
         instrument.processMIDIEvent({ticks: 0, type: 144, data1: 60, data2: 100})
         instrument.processMIDIEvent({ticks: 200, type: 128, data1: 60, data2: 0})
         // instrument.processMIDIEvent({ticks: 240, type: 144, data1: 60, data2: 100})
         // instrument.processMIDIEvent({ticks: 440, type: 128, data1: 60, data2: 0})
         // instrument.processMIDIEvent({ticks: 480, type: 144, data1: 60, data2: 100})
         // instrument.processMIDIEvent({ticks: 720, type: 128, data1: 60, data2: 0})
+        qambi.log('state')
       },
       function onRejected(e){
         console.warn(e);
@@ -164,6 +167,7 @@ document.addEventListener('DOMContentLoaded', function(){
       let mf = parseMIDIFile(ab)
       songId = songFromMIDIFile(mf)
       let instrument = new Instrument()
+      qambi.log('state')
       getTrackIds(songId).forEach(function(trackId){
         setInstrument(trackId, instrument)
         setMIDIOutputIds(trackId, ...getMIDIOutputIds())

@@ -1,5 +1,9 @@
 import {
-  createMIDIEvent,
+  getStore
+} from './create_store'
+
+import {
+  createMIDIEvent,createMIDIEvents,
   moveMIDIEvent,
   moveMIDIEventTo,
 } from './midi_event'
@@ -70,6 +74,8 @@ const getAudioContext = function(){
   return context
 }
 
+const store = getStore()
+
 const qambi = {
   version: '0.0.1',
 
@@ -95,6 +101,7 @@ const qambi = {
 
   // from ./midi_event
   createMIDIEvent,
+  createMIDIEvents,
   moveMIDIEvent,
   moveMIDIEventTo,
 
@@ -126,21 +133,28 @@ const qambi = {
   songFromMIDIFile,
 
   log: function(id){
-    if(id === 'functions'){
-      console.log(`functions:
-        createMIDIEvent
-        moveMIDIEvent
-        moveMIDIEventTo
-        createMIDINote
-        createSong
-        addTracks
-        createTrack
-        addParts
-        createPart
-        addMIDIEvents
-      `)
+    switch(id){
+      case 'functions':
+        console.log(`functions:
+          createMIDIEvent
+          moveMIDIEvent
+          moveMIDIEventTo
+          createMIDINote
+          createSong
+          addTracks
+          createTrack
+          addParts
+          createPart
+          addMIDIEvents
+        `)
+        break
+      case 'state':
+        console.log('%O', store.getState())
+        //console.log(getStore().getState())
+        break
+      default:
     }
-  }
+  },
 }
 
 // standard MIDI events
@@ -195,6 +209,7 @@ export {
 
   // from ./midi_event
   createMIDIEvent,
+  createMIDIEvents,
   moveMIDIEvent,
   moveMIDIEventTo,
 

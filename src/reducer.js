@@ -53,7 +53,9 @@ function editor(state = initialState, action){
     case CREATE_MIDI_EVENT:
     case CREATE_MIDI_NOTE:
       state = {...state}
-      state.entities[action.payload.id] = action.payload
+      action.payload.forEach(function(entity){
+        state.entities[entity.id] = entity
+      })
       break
 
     case ADD_TRACKS:
@@ -74,14 +76,11 @@ function editor(state = initialState, action){
       eventId = action.payload.eventId
       let event = state.entities[eventId];
       if(event){
-        event.ticks = action.payload.ticks || event.ticks
-        event.data1 = action.payload.data1 || event.data1
-        event.data2 = action.payload.data2 || event.data2
-        // ({
-        //   ticks: event.ticks = event.ticks,
-        //   data1: event.data1 = event.data1,
-        //   data2: event.data2 = event.data2,
-        // } = action.payload)
+        ({
+          ticks: event.ticks = event.ticks,
+          data1: event.data1 = event.data1,
+          data2: event.data2 = event.data2,
+        } = action.payload)
       }else{
         console.warn(`no MIDI event found with id ${eventId}`)
       }
@@ -107,22 +106,8 @@ function editor(state = initialState, action){
 
     case UPDATE_SONG:
       state = {...state};
-      song = state.entities[action.payload.songId];
-      ({
-        updateTimeEvents: song.updateTimeEvents,
-        midiEvents: song.midiEvents,
-        midiEventsMap: song.midiEventsMap,
-        newEvents: song.newEvents,
-        movedEvents: song.movedEvents,
-        newEventIds: song.newEventIds,
-        movedEventIds: song.movedEventIds,
-        removedEventIds: song.removedEventIds,
-      } = action.payload)
-
-      // song.midiEventsMap.forEach(function(eventId, event){
-      //   // replace event with updated event
-      //   state.entities[eventId] = event;
-      // })
+      song = action.payload
+      state.entities[song.id] = song
       song.midiEvents.forEach(function(event){
         // replace event with updated event
         state.entities[event.id] = event;
@@ -153,10 +138,11 @@ function sequencer(state = {songs: {}}, action){
 
     case UPDATE_SONG:
       state = {...state}
-      state.songs[action.payload.songId] = {
-        songId: action.payload.songId,
-        midiEvents: action.payload.midiEvents,
-        settings: action.payload.settings,
+      let song = action.payload
+      state.songs[song.id] = {
+        songId: song.id,
+        midiEvents: song.midiEvents,
+        settings: song.settings,
         playing: false,
       }
       break

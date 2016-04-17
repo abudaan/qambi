@@ -1,3 +1,9 @@
 
+import {getStore} from './create_store'
 
-export function getEvents(id: string, fil)
+const store = getStore()
+
+export function getEvents(id: string, filter: string){
+  let entities = store.getState().editor.entities
+  let entity = entities[id]
+}

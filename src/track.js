@@ -22,35 +22,33 @@ function getTrack(trackId: string){
 }
 
 
-export function createTrack(settings: {name: string, partIds:Array<string>, songId: string} = {}){
-  let id = `MT_${trackIndex++}_${new Date().getTime()}`
-  let {
-    name = id,
-    partIds = [],
-    midiEventIds = [],
-    songId = 'none'
-  } = settings
-  let volume = 0.5
-  let output = context.createGain()
-  output.gain.value = volume
-  output.connect(masterGain)
+class Track{
+  constructor(settings: {name: string, partIds:Array<string>, songId: string} = {}){
+    this.id = `MT_${trackIndex++}_${new Date().getTime()}`;
+    ({
+      name: this.name = this.id,
+      partIds: this.partIds = [],
+      midiEventIds: this.midiEventIds = [],
+      songId: this.songId = false
+    } = settings)
+    this.channel = 0
+    this.mute = false
+    this.volume = 0.5
+    this.output = context.createGain()
+    this.output.gain.value = this.volume
+    this.output.connect(masterGain)
+    this.midiOutputIds = []
+  }
+}
 
+
+export function createTrack(settings: {name: string, partIds:Array<string>, songId: string} = {}){
+  let track = new Track(settings)
   store.dispatch({
     type: CREATE_TRACK,
-    payload: {
-      id,
-      name,
-      partIds,
-      songId,
-      volume,
-      output,
-      channel: 0,
-      mute: false,
-      midiEventIds,
-      MIDIOutputIds: [],
-    }
+    payload: [track]
   })
-  return id
+  return track.id
 }
 
 
