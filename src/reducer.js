@@ -54,6 +54,7 @@ function editor(state = initialState, action){
     case CREATE_MIDI_NOTE:
       state = {...state}
       action.payload.forEach(function(entity){
+        //console.log(entity)
         state.entities[entity.id] = entity
       })
       break

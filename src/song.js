@@ -68,7 +68,7 @@ function getSong(songId: string){
 }
 
 
-class Song{
+export class Song{
   constructor(settings: {} = {}){
 
     this.id = `S_${songIndex++}_${new Date().getTime()}`
@@ -123,6 +123,7 @@ export function createSong(settings: {} = {}): string{
     type: CREATE_SONG,
     payload: [song]
   })
+  //console.log(song)
   return song.id
 }
 
@@ -156,13 +157,16 @@ let newEvents = true
 // prepare song events for playback
 export function updateSong(songId: string, filter_events: boolean = false): void{
   let state = store.getState().editor
-  let song = {...state.entities[songId]} // clone!
+  // let song = {...state.entities[songId]} // clone!
+  let song = state.entities[songId] // dangerous!
   if(typeof song !== 'undefined'){
 
     let {updateTimeEvents, removedEventIds, newEventIds, movedEventIds, transposedEventIds} = song
     if(updateTimeEvents === false && removedEventIds.length === 0 && newEventIds.length === 0 && movedEventIds.length === 0 && transposedEventIds.length === 0){
       return
     }
+    //debug
+    //song.isPlaying = true
 
     console.group('update song')
     console.time('total')
@@ -170,7 +174,7 @@ export function updateSong(songId: string, filter_events: boolean = false): void
     // check if time events are updated
     if(updateTimeEvents === true){
       console.log('updateTimeEvents', song.timeEvents.length)
-      parseTimeEvents(song.settings, song.timeEvents)
+      parseTimeEvents(song.settings, song.timeEvents, song.isPlaying)
       song.updateTimeEvents = false
     }
 
@@ -213,13 +217,14 @@ export function updateSong(songId: string, filter_events: boolean = false): void
     if(tobeParsed.length > 0){
       tobeParsed = [...tobeParsed, ...song.timeEvents]
       console.log('parseEvents', tobeParsed.length - song.timeEvents.length)
-      parseEvents(tobeParsed)
+      parseEvents(tobeParsed, song.isPlaying)
     }
     console.timeEnd('parse')
 
     console.time('to array')
     let midiEvents = Array.from(song.midiEventsMap.values())
-    let midiEventIds = Array.from(song.midiEventsMap.keys())
+    //let midiEventIds = Array.from(song.midiEventsMap.keys())
+    let midiEventIds = []
     console.timeEnd('to array')
 /*
     let midiEvents = []
@@ -296,7 +301,7 @@ export function startSong(songId: string, startPosition: number = 0): void{
       tracks[trackId] = entities[trackId]
     })
 
-    let midiEvents = songData.midiEvents//Array.from(store.getState().sequencer.songs[songId].midiEvents.values())
+    let midiEvents = songData.midiEvents
     let position = startPosition
     let timeStamp = context.currentTime * 1000 // -> convert to millis
     let scheduler = new Scheduler({

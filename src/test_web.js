@@ -8,6 +8,7 @@ import qambi, {
   moveMIDIEvent,
   moveMIDIEventTo,
   createMIDINote,
+  getEvents,
   createSong,
   addTracks,
   createTrack,
@@ -176,6 +177,10 @@ document.addEventListener('DOMContentLoaded', function(){
       //console.log('# tracks:', mf.tracks.size)
       buttonStart.disabled = false
       buttonStop.disabled = false
+      let s = createSong()
+      updateSong(s)
+      console.log(getEvents(songId, ['data1 > 100']))
+      //console.log(getEvents(songId))
       //midiEventId = getEvent
     })
   }

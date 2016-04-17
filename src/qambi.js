@@ -3,6 +3,10 @@ import {
 } from './create_store'
 
 import {
+  getEvents,
+} from './generic_methods'
+
+import {
   createMIDIEvent,createMIDIEvents,
   moveMIDIEvent,
   moveMIDIEventTo,
@@ -78,6 +82,9 @@ const store = getStore()
 
 const qambi = {
   version: '0.0.1',
+
+  // from ./generic_methods
+  getEvents,
 
   // from ./util
   parseSamples,
@@ -189,6 +196,9 @@ export default qambi
 export {
   // from ./util
   parseSamples,
+
+  // from ./generic_methods
+  getEvents,
 
   // from ./init
   init,

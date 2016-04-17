@@ -47,33 +47,35 @@ function setTicksPerBeat(){
 }
 
 
-function updatePosition(event){
+function updatePosition(event, fast = false){
   diffTicks = event.ticks - ticks;
-  if(diffTicks < 0){
-    console.log(diffTicks, event.ticks, previousEvent.ticks, previousEvent.type)
-  }
+  // if(diffTicks < 0){
+  //   console.log(diffTicks, event.ticks, previousEvent.ticks, previousEvent.type)
+  // }
   tick += diffTicks;
   ticks = event.ticks;
   previousEvent = event
   //console.log(diffTicks, millisPerTick);
   millis += diffTicks * millisPerTick;
 
-  while(tick >= ticksPerSixteenth){
-    sixteenth++;
-    tick -= ticksPerSixteenth;
-    while(sixteenth > numSixteenth){
-      sixteenth -= numSixteenth;
-      beat++;
-      while(beat > nominator){
-        beat -= nominator;
-        bar++;
+  if(fast){
+    while(tick >= ticksPerSixteenth){
+      sixteenth++;
+      tick -= ticksPerSixteenth;
+      while(sixteenth > numSixteenth){
+        sixteenth -= numSixteenth;
+        beat++;
+        while(beat > nominator){
+          beat -= nominator;
+          bar++;
+        }
       }
     }
   }
 }
 
 
-export function parseTimeEvents(settings, timeEvents){
+export function parseTimeEvents(settings, timeEvents, isPlaying = false){
   //console.log('parse time events')
   let type;
   let event;
@@ -99,7 +101,7 @@ export function parseTimeEvents(settings, timeEvents){
     //console.log(e++, event.ticks, event.type)
     //event.song = song;
     type = event.type;
-    updatePosition(event);
+    updatePosition(event, isPlaying);
 
     switch(type){
 
@@ -120,7 +122,7 @@ export function parseTimeEvents(settings, timeEvents){
     }
 
     //time data of time event is valid from (and included) the position of the time event
-    updateEvent(event);
+    updateEvent(event, isPlaying);
     //console.log(event.barsAsString);
   }
 
@@ -131,7 +133,7 @@ export function parseTimeEvents(settings, timeEvents){
 
 
 //export function parseEvents(song, events){
-export function parseEvents(events){
+export function parseEvents(events, isPlaying = false){
   //console.log('parseEvents')
   let event;
   let startEvent = 0;
@@ -237,8 +239,8 @@ export function parseEvents(events){
       default:
       //case 128:
       //case 144:
-        updatePosition(event);
-        updateEvent(event);
+        updatePosition(event, isPlaying);
+        updateEvent(event, isPlaying);
         result.push(event)
 
         // if(event.type === 176 && event.data1 === 64){
@@ -261,7 +263,7 @@ export function parseEvents(events){
 }
 
 
-function updateEvent(event){
+function updateEvent(event, fast = false){
   //console.log(bar, beat, ticks)
   //console.log(event, bpm, millisPerTick, ticks, millis);
 
@@ -284,6 +286,9 @@ function updateEvent(event){
   event.millis = millis;
   event.seconds = millis / 1000;
 
+  if(fast){
+    return
+  }
 
   event.bar = bar;
   event.beat = beat;
@@ -307,6 +312,8 @@ function updateEvent(event){
   // if(millis < 0){
   //   console.log(event)
   // }
+
+
 }
 
 
