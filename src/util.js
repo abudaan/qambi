@@ -216,3 +216,18 @@ export function typeString(o){
   let internalClass = Object.prototype.toString.call(o).match(/\[object\s(\w+)\]/)[1];
   return internalClass.toLowerCase();
 }
+
+
+export function sortEvents(events){
+  events.sort(function(a, b){
+    if(a.ticks === b.ticks){
+      let r = a.type - b.type;
+      if(a.type === 176 && b.type === 144){
+        r = -1
+      }
+      return r
+    }
+    return a.ticks - b.ticks
+  })
+}
+

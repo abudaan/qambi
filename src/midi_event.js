@@ -11,11 +11,16 @@ export class MIDIEvent{
     this.data1 = data1
     this.data2 = data2
     this.frequency = 440 * Math.pow(2, (data1 - 69) / 12)
+
+    this._part = null
+    this._track = null
+    this._song = null
     //@TODO: add all other properties
   }
 
   copy(){
-    //create clone
+    let m = new MIDIEvent(this.ticks, this.type, this.data1, this.data2)
+    return m
   }
 
   transpose(amount: number){ // may be better if not a public method?
@@ -55,7 +60,7 @@ export class MIDINote{
   }
 
   copy(){
-
+    return new MIDINote(this.noteOn.copy(), this.noteOff.copy())
   }
 
   update(){ // may use another name for this method
@@ -75,6 +80,21 @@ export class MIDINote{
   moveTo(ticks: number): void{
     this.noteOn.moveTo(ticks)
     this.noteOff.moveTo(ticks)
+  }
+
+  unregister(){
+    if(this.part){
+      this.part.removeEvents(this)
+      this.part = null
+    }
+    if(this.track){
+      this.track.removeEvents(this)
+      this.track = null
+    }
+    if(this.song){
+      this.song.removeEvents(this)
+      this.song = null
+    }
   }
 
 }

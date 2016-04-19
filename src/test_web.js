@@ -6,6 +6,10 @@ import {
   deleteMIDIEvent,
 } from './midi_event'
 
+import {
+  Part
+} from './part'
+
 /*
 qambi.getMasterVolume()
 //qambi.log('functions')
@@ -26,6 +30,12 @@ document.addEventListener('DOMContentLoaded', function(){
   let off = new MIDIEvent(128, 128, 60, 0)
   let note = new MIDINote(on, off)
 
+  let p = new Part('solo')
+  p.addEvents(on, off)
+
+  let p1 = p.copy()
+
+  debugger
   buttonStart.addEventListener('click', function(){
     //console.log(note)
   })
