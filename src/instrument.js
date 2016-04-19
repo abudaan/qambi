@@ -156,5 +156,10 @@ export class Instrument{
       })
     })
   }
+
+
+  export(){
+    //return json file with base64 encoded audio
+  }
 }
 
