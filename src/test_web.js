@@ -5,6 +5,7 @@ import qambi, {
   MIDINote,
   Instrument,
   deleteMIDIEvent,
+  getMIDIOutputIds,
   Part,
   Song,
 } from './qambi'
@@ -41,11 +42,11 @@ document.addEventListener('DOMContentLoaded', function(){
       console.time('SONG')
       let song = Song.fromMIDIFile(ab)
       console.timeEnd('SONG')
-      // let instrument = new Instrument()
-      // getTrackIds(songId).forEach(function(trackId){
-      //   setInstrument(trackId, instrument)
-      //   setMIDIOutputIds(trackId, ...getMIDIOutputIds())
-      // })
+      let instrument = new Instrument()
+      song.getTracks().forEach(function(track){
+        track.setInstrument(instrument)
+        track.setMIDIOutputs(...getMIDIOutputIds())
+      })
       buttonStart.addEventListener('click', function(){
         song.start()
       })

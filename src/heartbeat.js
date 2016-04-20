@@ -48,10 +48,11 @@ export function removeTask(type, id){
   let map = tasks.get(type);
   map.delete(id);
 }
-
+/*
 (function start(){
   tasks.set('timed', timedTasks);
   tasks.set('repetitive', repetitiveTasks);
   tasks.set('scheduled', scheduledTasks);
   heartbeat();
 }())
+*/

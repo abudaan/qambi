@@ -16,3 +16,17 @@ Track
 
 
 Song
+
+
+
+
+
+
+
+Part
+
+    addEvents -> parseEvents() + notify track and song + local sort events
+
+    moveEvents / moveEventsTo -> parseEvents() + local sort events
+
+    removeEvents ->

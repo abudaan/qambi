@@ -27,6 +27,20 @@ export class Track{
     this._createEventArray = false
   }
 
+  setInstrument(instrument){
+    this._instrument = instrument
+    instrument.connect(this._output)
+  }
+
+  setMIDIOutputs(...outputIds){
+    //console.log(outputIds)
+    this._midiOutputIds.push(...outputIds)
+  }
+
+  removeMIDIOutputs(...outputs){
+    //this._midiOutputs = this._midiOutputs.filter(...outputs)
+  }
+
   copy(){
     let t = new Track(this.name + '_copy') // implement getNameOfCopy() in util (see heartbeat)
     let parts = []

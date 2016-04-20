@@ -1,7 +1,7 @@
 //@ flow
 
 import {parseTimeEvents, parseEvents} from './parse_events'
-import {addTask, removeTask} from './heartbeat'
+//import {addTask, removeTask} from './heartbeat'
 import {context} from './init_audio'
 import Scheduler from './scheduler'
 import {MIDIEvent} from './midi_event'
@@ -216,26 +216,7 @@ export class Song{
       this._events = Array.from(this._eventsById.values())
       console.timeEnd('to array')
     }
-/*
-    console.time('filter parts')
-    let partEvents = this._events.filter((e) => {
-      return (e._part === this._parts[0])
-    })
-    console.log(partEvents.length)
-    console.timeEnd('filter parts')
 
-    console.time('filter events to tracks and parts')
-    console.log(this._tracks[0]._events.length)
-    console.log(this._tracks[1]._events.length)
-    this._events.forEach((e) => {
-      this._tracksById.get(e._track.id)._events.push(e)
-      this._partsById.get(e._part.id)._events.push(e)
-    })
-    console.log(this._tracks[0]._events.length)
-    console.log(this._tracks[1]._events.length)
-    //console.log(trackEvents.length)
-    console.timeEnd('filter events to tracks and parts')
-*/
     console.time(`sorting ${this._events.length} events`)
     sortEvents(this._events)
     console.timeEnd(`sorting ${this._events.length} events`)
@@ -247,21 +228,31 @@ export class Song{
 
   start(startPosition: number = 0): void{
     this._timeStamp = context.currentTime * 1000
-    this._position = this._timeStamp
+    this._position = 0
     this._scheduler.setStartPosition(startPosition, this._timeStamp)
     this.playing = true
-    addTask('repetitive', this.id, this._pulse.bind(this))
+    this._pulse()
+    //addTask('repetitive', this.id, this._pulse.bind(this))
   }
 
   stop(): void{
     if(this.playing){
-      removeTask('repetitive', this.id)
-      this._scheduler.stopAllSounds(context.currentTime)
+      //removeTask('repetitive', this.id)
       this.playing = false
+      this._scheduler.stopAllSounds()
+    }
+  }
+
+  stopAllSounds(){
+    if(this.playing){
+      this._scheduler.stopAllSounds()
     }
   }
 
   _pulse(): void{
+    if(this.playing === false){
+      return
+    }
     let
       now = context.currentTime * 1000,
       diff = now - this._timeStamp,
@@ -273,6 +264,7 @@ export class Song{
     if(endOfSong){
       this.stop()
     }
+    requestAnimationFrame(this._pulse.bind(this))
   }
 
   getTracks(){

@@ -62,10 +62,13 @@ export class Instrument{
         }else if(event.data2 === 0){
           this.sustainPedalDown = false
           this.sustainedSamples.forEach((midiNoteId) => {
-            this.scheduledSamples[midiNoteId].stop(time, () => {
-              //console.log('stop', midiNoteId)
-              delete this.scheduledSamples[midiNoteId]
-            })
+            sample = this.scheduledSamples[midiNoteId]
+            if(sample){
+              sample.stop(time, () => {
+                //console.log('stop', midiNoteId)
+                delete this.scheduledSamples[midiNoteId]
+              })
+            }
           })
           //console.log('sustain pedal up', this.sustainedSamples)
           this.sustainedSamples = []
