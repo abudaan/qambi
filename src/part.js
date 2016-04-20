@@ -9,8 +9,9 @@ export class Part{
   constructor(name: string = null){
     this.id = `MP_${partIndex++}_${new Date().getTime()}`
     this.name = name || this.id
-    this.mute = false
+    this.muted = false
     this._track = null
+    this._song = null
     this._events = []
     this._eventsById = new Map()
     this._needsUpdate = false
@@ -41,25 +42,56 @@ export class Part{
     this._events.forEach((event) => {
       event.move(ticks)
     })
+    if(this._song){
+      this._song._movedEvents.push(...this._events)
+    }
+    this._needsUpdate = true
   }
 
   moveTo(ticks: number){
     this._events.forEach((event) => {
       event.moveTo(ticks)
     })
+    if(this._song){
+      this._song._movedEvents.push(...this._events)
+    }
     this._needsUpdate = true
   }
 
   addEvents(...events){
-    console.log(events)
     events.forEach((event) => {
       event._part = this
       this._eventsById.set(event.id, event)
       this._events.push(event)
     })
-    if(this._track){
-      this._track.addEvents(...events)
+    let track = this._track
+    if(track){
+      track._events.push(...events)
+      track._needsUpdate = true
     }
+    if(this._song){
+      this._song._newEvents.push(...events)
+    }
+    this._needsUpdate = true
+  }
+
+  removeEvents(...events){
+    let track = this._track
+    events.forEach((event) => {
+      event._part = null
+      this._eventsById.delete(event.id)
+      if(track){
+        event._track = null
+        track._eventsById.delete(event.id)
+      }
+    })
+    if(track){
+      track._needsUpdate = true
+    }
+    if(this._song){
+      this._song._removedEvents.push(...events)
+    }
+    this._createEventArray = true
     this._needsUpdate = true
   }
 
@@ -67,6 +99,9 @@ export class Part{
     events.forEach((event) => {
       event.move(ticks)
     })
+    if(this._song){
+      this._song._movedEvents.push(...this._events)
+    }
     this._needsUpdate = true
   }
 
@@ -74,26 +109,26 @@ export class Part{
     events.forEach((event) => {
       event.moveTo(ticks)
     })
-    this._needsUpdate = true
-  }
-
-  removeEvents(...events){
-    events.forEach((event) => {
-      event._part = null
-      this._eventsById.delete(event.id)
-    })
-    this._needsUpdate = true
-    this._createEventArray = true
-    if(this._track){
-      this._track.removeEvents(...events)
+    if(this._song){
+      this._song._movedEvents.push(...this._events)
     }
+    this._needsUpdate = true
   }
 
-  findEvents(filter: string[]){ // same as getEvents
+
+  getEvents(filter: string[] = null){ // can be use as findEvents
     if(this._needsUpdate){
       this.update()
     }
     return [...this._events] //@TODO implement filter -> filterEvents() should be a utility function (not a class method)
+  }
+
+  mute(flag: boolean = null){
+    if(flag){
+      this.muted = flag
+    }else{
+      this.muted = !this.muted
+    }
   }
 
   update(){

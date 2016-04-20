@@ -1,50 +1,56 @@
+import {MIDIEvent} from './midi_event'
 
-import {getStore} from './create_store'
-import {
-  UPDATE_MIDI_NOTE,
-  CREATE_MIDI_NOTE,
-} from './action_types'
-
-const store = getStore()
 let midiNoteIndex = 0
 
-export function updateMIDINote(id, state = store.getState()){
-  let note = state.midiNotes[id]
-  let events = state.entities
-  let start = events[note.noteon]
-  let end = events[note.noteoff]
+export class MIDINote{
 
-  store.dispatch({
-    type: UPDATE_MIDI_NOTE,
-    payload: {
-      id,
-      start: start.ticks,
-      end: end.ticks,
-      durationTicks: end.ticks - start.ticks
+  constructor(noteon: MIDIEvent, noteoff: MIDIEvent){
+    if(noteon.type !== 144 || noteoff.type !== 128){
+      console.warn('cannot create MIDINote')
+      return
     }
-  })
-}
-
-export function createMIDINote(noteon: string, noteoff: string){
-  let events = store.getState().editor.entities
-  let on = events[noteon]
-  let off = events[noteoff]
-  if(on.data1 !== off.data1){
-    console.error('can\'t create MIDI note: events must have the same data1 value, i.e. the same pitch')
-    return -1;
+    this.id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
+    this.noteOn = noteon
+    this.noteOff = noteoff
+    this.durationTicks = noteoff.ticks - noteon.ticks
   }
 
-  let id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
-  store.dispatch({
-    type: CREATE_MIDI_NOTE,
-    payload: {
-      id,
-      noteon,
-      noteoff,
-      start: on.ticks,
-      end: off.ticks,
-      durationTicks: off.ticks - on.ticks
+  copy(){
+    return new MIDINote(this.noteOn.copy(), this.noteOff.copy())
+  }
+
+  update(){ // may use another name for this method
+    this.durationTicks = this.noteOff.ticks - this.noteOn.ticks
+  }
+
+  transpose(amount: number): void{
+    this.noteOn.transpose(amount)
+    this.noteOff.transpose(amount)
+  }
+
+  move(ticks: number): void{
+    this.noteOn.move(ticks)
+    this.noteOff.move(ticks)
+  }
+
+  moveTo(ticks: number): void{
+    this.noteOn.moveTo(ticks)
+    this.noteOff.moveTo(ticks)
+  }
+
+  unregister(){
+    if(this.part){
+      this.part.removeEvents(this)
+      this.part = null
     }
-  })
-  return id
+    if(this.track){
+      this.track.removeEvents(this)
+      this.track = null
+    }
+    if(this.song){
+      this.song.removeEvents(this)
+      this.song = null
+    }
+  }
 }
+

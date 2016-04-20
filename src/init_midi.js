@@ -22,20 +22,20 @@ function getMIDIports(){
   inputs = Array.from(MIDIAccess.inputs.values())
 
   //sort ports by name ascending
-  inputs.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1);
+  inputs.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1)
 
   for(let port of inputs){
-    inputsById.set(port.id, port);
+    inputsById.set(port.id, port)
     inputIds.push(port.id)
   }
 
-  outputs = Array.from(MIDIAccess.outputs.values());
+  outputs = Array.from(MIDIAccess.outputs.values())
 
   //sort ports by name ascending
-  outputs.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1);
+  outputs.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1)
 
   for(let port of outputs){
-    outputsById.set(port.id, port);
+    outputsById.set(port.id, port)
     outputIds.push(port.id)
   }
 }
@@ -67,15 +67,15 @@ export function initMIDI(){
           getMIDIports()
 
           // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
-          midiAccess.addEventListener('onconnect', function(e){
+          midiAccess.onconnect = function(e){
             console.log('device connected', e)
             getMIDIports()
-          }, false);
+          }
 
-          midiAccess.addEventListener('ondisconnect', function(e){
+          midiAccess.ondisconnect = function(e){
             console.log('device disconnected', e)
             getMIDIports()
-          }, false);
+          }
 
           initialized = true
           resolve({
@@ -86,20 +86,20 @@ export function initMIDI(){
             outputs,
             inputsById,
             outputsById,
-          });
+          })
         },
 
         function onReject(e){
-          //console.log(e);
+          //console.log(e)
           reject('Something went wrong while requesting MIDIAccess', e)
         }
-      );
+      )
     // browsers without WebMIDI API
     }else{
       initialized = true
       resolve({midi: false})
     }
-  });
+  })
 }
 
 
@@ -197,7 +197,7 @@ export let getMIDIInputById = function(id: string){
 export function initMidiSong(song){
 
   songMidiEventListener = function(e){
-    //console.log(e);
+    //console.log(e)
     handleMidiMessageSong(song, e, this);
   };
 

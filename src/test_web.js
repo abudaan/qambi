@@ -1,14 +1,13 @@
 
 //import fetch from 'isomorphic-fetch'
-import {
+import qambi, {
   MIDIEvent,
   MIDINote,
+  Instrument,
   deleteMIDIEvent,
-} from './midi_event'
-
-import {
-  Part
-} from './part'
+  Part,
+  Song,
+} from './qambi'
 
 /*
 qambi.getMasterVolume()
@@ -26,9 +25,40 @@ document.addEventListener('DOMContentLoaded', function(){
   let buttonStop = document.getElementById('stop')
   let buttonMove = document.getElementById('move')
 
+
+  qambi.init()
+  .then(function(){
+    fetch('minute_waltz.mid')
+    .then(
+      (response) => {
+        return response.arrayBuffer()
+      },
+      (error) => {
+        console.error(error)
+      }
+    )
+    .then((ab) => {
+      let song = Song.fromMIDIFile(ab)
+      // let instrument = new Instrument()
+      // getTrackIds(songId).forEach(function(trackId){
+      //   setInstrument(trackId, instrument)
+      //   setMIDIOutputIds(trackId, ...getMIDIOutputIds())
+      // })
+      buttonStart.addEventListener('click', function(){
+        song.start()
+      })
+
+      buttonStop.addEventListener('click', function(){
+        song.stop()
+      })
+    })
+  })
+
+/*
   let on = new MIDIEvent(0, 144, 60, 100)
   let off = new MIDIEvent(128, 128, 60, 0)
   let note = new MIDINote(on, off)
+
 
   let p = new Part('solo')
   p.addEvents(on, off)
@@ -43,4 +73,5 @@ document.addEventListener('DOMContentLoaded', function(){
   buttonStop.addEventListener('click', function(){
     on.midiNote = null
   })
+*/
 })

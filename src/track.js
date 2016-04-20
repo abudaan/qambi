@@ -1,115 +1,202 @@
-import {context} from './init_audio'
-import {getStore} from './create_store'
-import {masterGain} from './init_audio'
-import Instrument from './instrument'
-import {
-  CREATE_TRACK,
-  ADD_PARTS,
-  SET_INSTRUMENT,
-  SET_MIDI_OUTPUT_IDS,
-} from './action_types'
+import {Part} from './part'
+import {sortEvents} from './util'
+import {context, masterGain} from './init_audio'
+import {Instrument} from './instrument'
 
-const store = getStore()
+
 let trackIndex = 0
 
-function getTrack(trackId: string){
-  let track = store.getState().editor.entities[trackId]
-  if(typeof track === 'undefined'){
-    console.warn(`No track found with id ${trackId}`)
-    return false
-  }
-  return track
-}
+export class Track{
 
-
-class Track{
-  constructor(settings: {name: string, partIds:Array<string>, songId: string} = {}){
-    this.id = `MT_${trackIndex++}_${new Date().getTime()}`;
-    ({
-      name: this.name = this.id,
-      partIds: this.partIds = [],
-      midiEventIds: this.midiEventIds = [],
-      songId: this.songId = false
-    } = settings)
+  constructor(name: string = null){
+    this.id = `TR_${trackIndex++}_${new Date().getTime()}`
+    this.name = name || this.id
     this.channel = 0
-    this.mute = false
+    this.muted = false
     this.volume = 0.5
-    this.output = context.createGain()
-    this.output.gain.value = this.volume
-    this.output.connect(masterGain)
-    this.midiOutputIds = []
+    this._output = context.createGain()
+    this._output.gain.value = this.volume
+    this._output.connect(masterGain)
+    this._midiOutputIds = []
+    this._song = null
+    this._parts = []
+    this._partsById = new Map()
+    this._events = []
+    this._eventsById = new Map()
+    this._needsUpdate = false
+
+    this.instrument = new Instrument()
   }
-}
 
+  copy(){
+    let t = new Track(this.name + '_copy') // implement getNameOfCopy() in util (see heartbeat)
+    let parts = []
+    this._parts.forEach(function(part){
+      let copy = part.copy()
+      console.log(copy)
+      parts.push(copy)
+    })
+    t.addParts(...parts)
+    t.update()
+    return t
+  }
 
-export function createTrack(settings: {name: string, partIds:Array<string>, songId: string} = {}){
-  let track = new Track(settings)
-  store.dispatch({
-    type: CREATE_TRACK,
-    payload: [track]
-  })
-  return track.id
-}
+  transpose(amount: number){
+    this._events.forEach((event) => {
+      event.transpose(amount)
+    })
+  }
 
+  addParts(...parts){
+    let song = this._song
+    parts.forEach((part) => {
+      part._track = this
+      this._partsById.set(part.id, part)
+      this._parts.push(part)
+      if(song){
+        part._song = song
+        song._newParts.push(part)
+      }
 
-export function addParts(trackId: string, ...partIds:string){
-  store.dispatch({
-    type: ADD_PARTS,
-    payload: {
-      trackId,
-      partIds,
+      let events = part.getEvents()
+      events.forEach((event) => {
+        event._track = this
+        if(song){
+          event._song = song
+          //song._newEvents.push(event)
+        }
+        this._eventsById.set(event.id, event)
+      })
+      this._events.push(...events)
+      if(song){
+        song._newEvents.push(...events)
+      }
+    })
+    this._needsUpdate = true
+  }
+
+  removeParts(...parts){
+    let song = this._song
+
+    parts.forEach((part) => {
+      part._track = null
+      this._partsById.delete(part.id, part)
+      if(song){
+        song._deletedParts.push(part)
+      }
+
+      let events = part.getEvents()
+      events.forEach(function(event){
+        event._track = null
+        if(song){
+          event._song = null
+          //song._deletedEvents.push(event)
+        }
+        this._eventsById.delete(event.id, event)
+      })
+      if(song){
+        song._deletedEvents.push(...events)
+      }
+    })
+    this._needsUpdate = true
+  }
+
+  getParts(){
+    if(this._needsUpdate){
+      this._parts = Array.from(this._partsById.values())
+      this._events = Array.from(this._eventsById.values())
+      this._needsUpdate = false
     }
-  })
-}
-
-
-export function setInstrument(trackId: string, instrument: Instrument){
-  let track = getTrack(trackId)
-  if(track === false){
-    return
+    return [...this._parts]
   }
 
-  if(typeof instrument.connect !== 'function' || typeof instrument.processMIDIEvent !== 'function' || typeof instrument.stopAllSounds !== 'function'){
-    console.warn('An instrument should implement the methods processMIDIEvent() and stopAllSounds()')
-    return
+
+  transposeParts(amount: number, ...parts){
+    parts.forEach(function(part){
+      part.transpose(amount)
+    })
   }
 
-  instrument.connect(track.output)
+  moveParts(ticks: number, ...parts){
+    parts.forEach(function(part){
+      part.move(ticks)
+    })
+  }
 
-  store.dispatch({
-    type: SET_INSTRUMENT,
-    payload: {
-      trackId,
-      instrument,
+  movePartsTo(ticks: number, ...parts){
+    parts.forEach(function(part){
+      part.moveTo(ticks)
+    })
+  }
+
+  addEvents(...events){
+    let p = new Part()
+    p.addEvents(...events)
+    this.addParts(p)
+  }
+
+  removeEvents(...events){
+    let parts = new Set()
+    events.forEach((event) => {
+      parts.set(event._part)
+      event._part = null
+      event._track = null
+      event._song = null
+      this._eventsById.delete(event.id)
+    })
+    if(this._song){
+      this._song._changedParts.push(...Array.from(parts.entries()))
+      this._song._removedEvents.push(...events)
     }
-  })
-}
-
-export function setMIDIOutputIds(trackId: string, ...outputIds: string){
-  if(getTrack(trackId) === false){
-    return
+    this._needsUpdate = true
   }
-  store.dispatch({
-    type: SET_MIDI_OUTPUT_IDS,
-    payload: {
-      trackId,
-      outputIds,
+
+  moveEvents(ticks: number, ...events){
+    let parts = new Set()
+    events.forEach((event) => {
+      event.move(ticks)
+      parts.set(event.part)
+    })
+    if(this._song){
+      this._song._changedParts.push(...Array.from(parts.entries()))
+      this._song._movedEvents.push(...events)
     }
-  })
-  //console.log(trackId, outputIds)
+  }
+
+  moveEventsTo(ticks: number, ...events){
+    let parts = new Set()
+    events.forEach((event) => {
+      event.moveTo(ticks)
+      parts.set(event.part)
+    })
+    if(this._song){
+      this._song._changedParts.push(...Array.from(parts.entries()))
+      this._song._movedEvents.push(...events)
+    }
+  }
+
+
+  getEvents(filter: string[] = null){ // can be use as findEvents
+    if(this._needsUpdate){
+      this.update()
+    }
+    return [...this._events] //@TODO implement filter -> filterEvents() should be a utility function (not a class method)
+  }
+
+  mute(flag: boolean = null){
+    if(flag){
+      this._muted = flag
+    }else{
+      this._muted = !this._muted
+    }
+  }
+
+  update(){ // you should only use this in huge songs (>100 tracks)
+    if(this._needsUpdate){
+      this._events = Array.from(this._eventsById.values())
+    }
+    sortEvents(this._events)
+    this._needsUpdate = false
+  }
 }
 
-
-export function muteTrack(flag: boolean){
-
-}
-
-
-export function setVolumeTrack(flag: boolean){
-
-}
-
-
-export function setPanningTrack(flag: boolean){
-
-}

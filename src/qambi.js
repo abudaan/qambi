@@ -1,54 +1,30 @@
 import {
-  getStore
-} from './create_store'
-
-import {
-  getEvents,
-  getData,
-} from './generic_methods'
-
-import {
-  createMIDIEvent,createMIDIEvents,
-  moveMIDIEvent,
-  moveMIDIEventTo,
+  MIDIEvent
 } from './midi_event'
 
 import{
-  createMIDINote,
+  MIDINote,
 } from './midi_note'
 
 import{
-  createSong,
-  addTracks,
-  updateSong,
-  startSong,
-  stopSong,
-  getTrackIds,
-} from './song'
-
-import{
-  createTrack,
-  addParts,
-  setInstrument,
-  setMIDIOutputIds,
-} from './track'
-
-import{
-  createPart,
-  addMIDIEvents,
+  Part,
 } from './part'
 
-import {
-  parseMIDIFile
-} from './midifile'
-
-import {
-  songFromMIDIFile
-} from './song_from_midifile'
+import{
+  Track,
+} from './track'
 
 import {
   Instrument,
 } from './instrument'
+
+import {
+  Song,
+} from './song'
+
+import {
+  parseMIDIFile
+} from './midifile'
 
 import {
   init,
@@ -79,14 +55,8 @@ const getAudioContext = function(){
   return context
 }
 
-const store = getStore()
-
 const qambi = {
-  version: '0.0.1',
-
-  // from ./generic_methods
-  getEvents,
-  getData,
+  version: '1.0.0-beta2',
 
   // from ./util
   parseSamples,
@@ -109,37 +79,24 @@ const qambi = {
   getMIDIOutputsById,
 
   // from ./midi_event
-  createMIDIEvent,
-  createMIDIEvents,
-  moveMIDIEvent,
-  moveMIDIEventTo,
+  MIDIEvent,
 
   // from ./midi_note
-  createMIDINote,
+  MIDINote,
 
   // from ./song
-  createSong,
-  addTracks,
-  updateSong,
-  startSong,
-  stopSong,
-  getTrackIds,
+  Song,
 
   // from ./track
-  createTrack,
-  addParts,
-  setInstrument,
-  setMIDIOutputIds,
+  Track,
 
   // from ./part
-  createPart,
-  addMIDIEvents,
+  Part,
 
   // from ./instrument
   Instrument,
 
   parseMIDIFile,
-  songFromMIDIFile,
 
   log: function(id){
     switch(id){
@@ -156,10 +113,6 @@ const qambi = {
           createPart
           addMIDIEvents
         `)
-        break
-      case 'state':
-        console.log('%O', store.getState())
-        //console.log(getStore().getState())
         break
       default:
     }
@@ -196,15 +149,9 @@ Object.defineProperty(qambi, 'END_OF_TRACK', {value: 0x2F});
 export default qambi
 
 export {
-  // from ./util
-  parseSamples,
-
-  // from ./generic_methods
-  getEvents,
-  getData,
-
   // from ./init
   init,
+
 
   // from ./init_audio
   getAudioContext,
@@ -220,32 +167,23 @@ export {
   getMIDIInputsById,
   getMIDIOutputsById,
 
+  // from ./util
+  parseSamples,
+
   // from ./midi_event
-  createMIDIEvent,
-  createMIDIEvents,
-  moveMIDIEvent,
-  moveMIDIEventTo,
+  MIDIEvent,
 
   // from ./midi_note
-  createMIDINote,
+  MIDINote,
 
   // from ./song
-  createSong,
-  addTracks,
-  updateSong,
-  startSong,
-  stopSong,
-  getTrackIds,
+  Song,
 
   // from ./track
-  createTrack,
-  addParts,
-  setInstrument,
-  setMIDIOutputIds,
+  Track,
 
   // from ./part
-  createPart,
-  addMIDIEvents,
+  Part,
 
   // from ./instrument
   Instrument,
@@ -253,5 +191,4 @@ export {
 //  MIDI,
 
   parseMIDIFile,
-  songFromMIDIFile,
 }

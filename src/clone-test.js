@@ -29,3 +29,8 @@ m.set(3, 'three')
 
 let a = Array.from(m.values())
 console.log(a)
+
+
+let m1 = new Map(Array.from(m.entries()))
+
+console.log(m1)

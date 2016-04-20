@@ -1,37 +1,14 @@
 
 import fetch from 'isomorphic-fetch'
-import parseMIDIFile from './midifile'
-import {createMIDIEvent, getMIDIEventId} from './midi_event'
-import {createPart, addMIDIEvents} from './part'
-import {createTrack, addParts, setInstrument} from './track'
-import {createSong, addTracks, updateSong} from './song'
-import {createInstrument} from './instrument'
+import {parseMIDIFile} from './midifile'
+import {MIDIEvent} from './midi_event'
+import {Part} from './part'
+import {Track} from './track'
+import {Song} from './song'
+import {Instrument} from './instrument'
+import {base64ToBinary} from './util'
 
 const PPQ = 960
-
-export function songFromMIDIFile(data, settings = {}){
-
-  if(data instanceof ArrayBuffer === true){
-    let buffer = new Uint8Array(data);
-    return toSong(parseMIDIFile(buffer));
-  }else if(typeof data.header !== 'undefined' && typeof data.tracks !== 'undefined'){
-    return toSong(data);
-  // }else{
-  //   data = base64ToBinary(data);
-  //   if(data instanceof ArrayBuffer === true){
-  //     let buffer = new Uint8Array(data);
-  //     return toSong(parseMIDIFile(buffer));
-  //   }else{
-  //     error('wrong data');
-  //   }
-  }
-
-  // {
-  //   ppq = newPPQ,
-  //   bpm = newBPM,
-  //   playbackSpeed = newPlaybackSpeed,
-  // } = settings
-}
 
 
 function toSong(parsed){
@@ -39,12 +16,10 @@ function toSong(parsed){
   let ppq = parsed.header.ticksPerBeat
   let ppqFactor = PPQ / ppq //@TODO: get ppq from config -> only necessary if you want to change the ppq of the MIDI file !
   let timeEvents = []
-  let eventIds
   let bpm = -1
   let nominator = -1
   let denominator = -1
-  let trackIds = []
-  let songId
+  let newTracks = []
 
   for(let track of tracks.values()){
     let lastTicks, lastType
@@ -53,7 +28,7 @@ function toSong(parsed){
     let channel = -1
     let trackName
     let trackInstrumentName
-    eventIds = [];
+    let events = [];
 
     for(let event of track){
       ticks += (event.deltaTime * ppqFactor);
@@ -77,11 +52,11 @@ function toSong(parsed){
           break;
 
         case 'noteOn':
-          eventIds.push(createMIDIEvent(ticks, 0x90, event.noteNumber, event.velocity));
+          events.push(new MIDIEvent(ticks, 0x90, event.noteNumber, event.velocity))
           break;
 
         case 'noteOff':
-          eventIds.push(createMIDIEvent(ticks, 0x80, event.noteNumber, event.velocity));
+          events.push(new MIDIEvent(ticks, 0x80, event.noteNumber, event.velocity))
           break;
 
         case 'setTempo':
@@ -97,8 +72,7 @@ function toSong(parsed){
           if(bpm === -1){
             bpm = tmp;
           }
-          timeEvents.push({id: getMIDIEventId(), sortIndex: ticks + 0x51, ticks, type: 0x51, data1: tmp});
-          //timeEvents.push({id: getMIDIEventId(), sortIndex: ticks, ticks, type: 0x51, data1: tmp});
+          timeEvents.push(new MIDIEvent(ticks, 0x51, tmp))
           break;
 
         case 'timeSignature':
@@ -113,21 +87,20 @@ function toSong(parsed){
             nominator = event.numerator
             denominator = event.denominator
           }
-          timeEvents.push({id: getMIDIEventId(), sortIndex: ticks + 0x58, ticks, type: 0x58, data1: event.numerator, data2: event.denominator});
-          //timeEvents.push({id: getMIDIEventId(), sortIndex: ticks, ticks, type: 0x58, data1: event.numerator, data2: event.denominator});
+          timeEvents.push(new MIDIEvent(ticks, 0x58, event.numerator, event.denominator))
           break;
 
 
         case 'controller':
-          eventIds.push(createMIDIEvent(ticks, 0xB0, event.controllerType, event.value));
+          events.push(new MIDIEvent(ticks, 0xB0, event.controllerType, event.value));
           break;
 
         case 'programChange':
-          eventIds.push(createMIDIEvent(ticks, 0xC0, event.programNumber));
+          events.push(new MIDIEvent(ticks, 0xC0, event.programNumber));
           break;
 
         case 'pitchBend':
-          eventIds.push(createMIDIEvent(ticks, 0xE0, event.value));
+          events.push(new MIDIEvent(ticks, 0xE0, event.value));
           break;
 
         default:
@@ -138,28 +111,52 @@ function toSong(parsed){
       lastTicks = ticks
     }
 
-    if(eventIds.length > 0){
-      //console.count(eventIds.length)
-      let trackId = createTrack({name: trackName})
-      //let partId = createPart({trackId, midiEventIds: eventIds})
-      let partId = createPart({trackId})
-      addMIDIEvents(partId, ...eventIds)
-      addParts(trackId, partId)
-      //addTracks(songId, trackId)
-      trackIds.push(trackId)
+    if(events.length > 0){
+      //console.count(events.length)
+      let newTrack = new Track(trackName)
+      let part = new Part()
+      part.addEvents(...events)
+      newTrack.addParts(part)
+      newTracks.push(newTrack)
     }
   }
 
-  songId = createSong({
+  let song = new Song({
     ppq: PPQ,
-    //playbackSpeed: 1,
+    playbackSpeed: 1,
     //ppq,
     bpm,
     nominator,
-    denominator,
-    timeEvents,
+    denominator
   })
-  addTracks(songId, ...trackIds)
-  updateSong(songId)
-  return songId
+  song.addTracks(...newTracks)
+  song.addTimeEvents(...timeEvents)
+  song.update()
+  return song
+}
+
+export function songFromMIDIFile(data, settings = {}){
+  let song = null;
+
+  if(data instanceof ArrayBuffer === true){
+    let buffer = new Uint8Array(data);
+    song = toSong(parseMIDIFile(buffer));
+  }else if(typeof data.header !== 'undefined' && typeof data.tracks !== 'undefined'){
+    song = toSong(data);
+  }else{
+    data = base64ToBinary(data);
+    if(data instanceof ArrayBuffer === true){
+      let buffer = new Uint8Array(data);
+      song = toSong(parseMIDIFile(buffer));
+    }else{
+      console.error('wrong data');
+    }
+  }
+
+  return song
+  // {
+  //   ppq = newPPQ,
+  //   bpm = newBPM,
+  //   playbackSpeed = newPlaybackSpeed,
+  // } = settings
 }
