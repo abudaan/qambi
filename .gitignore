@@ -1,4 +1,5 @@
 .gitignore
+src/build/*
 assets/*
 node_modules/*
 npm-debug.log
