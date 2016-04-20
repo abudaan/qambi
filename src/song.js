@@ -135,7 +135,7 @@ export class Song{
       return
     }
     //debug
-    //this.isPlaying = true
+    this.isPlaying = true
 
     console.group('update song')
     console.time('total')
