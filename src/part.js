@@ -87,6 +87,7 @@ export class Part{
     })
     if(track){
       track._needsUpdate = true
+      track._createEventArray = true
     }
     if(this._song){
       this._song._removedEvents.push(...events)
@@ -132,6 +133,9 @@ export class Part{
   }
 
   update(){
+    if(this._needsUpdate === false){
+      return
+    }
     if(this._createEventArray){
       this._events = Array.from(this._eventsById.values())
       this._createEventArray = false

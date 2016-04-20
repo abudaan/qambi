@@ -93,6 +93,9 @@ export class Song{
     this._events = []
     this._eventsById = new Map()
 
+    this._notes = []
+    this._notesById = new Map()
+
     this._newEvents = []
     this._movedEvents = []
     this._removedEvents = []
@@ -118,16 +121,13 @@ export class Song{
       this._tracksById.set(track.id, track)
       this._newEvents.push(...track._events)
       this._newParts.push(...track._parts)
-      track._parts.forEach((part) => {
-        part._song = this
-        this._parts.push(part)// debug
-        this._partsById.set(part.id, part)// debug
-      })
     })
   }
 
   // prepare song events for playback
   update(): void{
+
+    let createEventArray = false
 
     if(this._updateTimeEvents === false
       && this._removedEvents.length === 0
@@ -152,17 +152,45 @@ export class Song{
     // only parse new and moved events
     let tobeParsed = []
 
+
+    // filter removed parts
+    console.log('removed parts %O', this._removedParts)
+    this._removedParts.forEach((part) => {
+      this.partsById.delete(part.id)
+      this._removedEvents.push(...part._events)
+    })
+
+
+    // add new parts
+    console.log('new parts %O', this._newParts)
+    this._newParts.forEach((part) => {
+      part._song = this
+      this._partsById.set(part.id, part)
+      tobeParsed.push(...part._events)
+      part.update()
+    })
+
+
+    // update changed parts
+    console.log('changed parts %O', this._changedParts)
+    this._changedParts.forEach((part) => {
+      part.update()
+    })
+
+
     // filter removed events
-    console.log('removed %O', this._removedEvents)
+    console.log('removed events %O', this._removedEvents)
     this._removedEvents.forEach((event) => {
       this._eventsById.delete(event.id)
     })
 
+    createEventArray = this._removedEvents.length > 0
 
     // add new events
-    console.log('new %O', this._newEvents)
+    console.log('new events %O', this._newEvents)
     this._newEvents.forEach((event) => {
       this._eventsById.set(event.id, event)
+      this._events.push(event)
       tobeParsed.push(event)
     })
 
@@ -183,9 +211,11 @@ export class Song{
     }
     console.timeEnd('parse')
 
-    console.time('to array')
-    this._events = Array.from(this._eventsById.values())
-    console.timeEnd('to array')
+    if(createEventArray){
+      console.time('to array')
+      this._events = Array.from(this._eventsById.values())
+      console.timeEnd('to array')
+    }
 /*
     console.time('filter parts')
     let partEvents = this._events.filter((e) => {
@@ -243,5 +273,21 @@ export class Song{
     if(endOfSong){
       this.stop()
     }
+  }
+
+  getTracks(){
+    return [...this._tracks]
+  }
+
+  getParts(){
+    return [...this._parts]
+  }
+
+  getEvents(){
+    return [...this._events]
+  }
+
+  getNotes(){
+    return [...this._notes]
   }
 }

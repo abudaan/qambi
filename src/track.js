@@ -24,8 +24,7 @@ export class Track{
     this._events = []
     this._eventsById = new Map()
     this._needsUpdate = false
-
-    this.instrument = new Instrument()
+    this._createEventArray = false
   }
 
   copy(){
@@ -58,7 +57,7 @@ export class Track{
         song._newParts.push(part)
       }
 
-      let events = part.getEvents()
+      let events = part._events
       events.forEach((event) => {
         event._track = this
         if(song){
@@ -68,9 +67,6 @@ export class Track{
         this._eventsById.set(event.id, event)
       })
       this._events.push(...events)
-      if(song){
-        song._newEvents.push(...events)
-      }
     })
     this._needsUpdate = true
   }
@@ -85,7 +81,7 @@ export class Track{
         song._deletedParts.push(part)
       }
 
-      let events = part.getEvents()
+      let events = part._events
       events.forEach(function(event){
         event._track = null
         if(song){
@@ -94,11 +90,9 @@ export class Track{
         }
         this._eventsById.delete(event.id, event)
       })
-      if(song){
-        song._deletedEvents.push(...events)
-      }
     })
     this._needsUpdate = true
+    this._createEventArray = true
   }
 
   getParts(){
@@ -149,6 +143,7 @@ export class Track{
       this._song._removedEvents.push(...events)
     }
     this._needsUpdate = true
+    this._createEventArray = true
   }
 
   moveEvents(ticks: number, ...events){
@@ -175,7 +170,6 @@ export class Track{
     }
   }
 
-
   getEvents(filter: string[] = null){ // can be use as findEvents
     if(this._needsUpdate){
       this.update()
@@ -192,8 +186,9 @@ export class Track{
   }
 
   update(){ // you should only use this in huge songs (>100 tracks)
-    if(this._needsUpdate){
+    if(this._createEventArray){
       this._events = Array.from(this._eventsById.values())
+      this._createEventArray = false
     }
     sortEvents(this._events)
     this._needsUpdate = false
