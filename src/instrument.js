@@ -26,9 +26,10 @@ export class Instrument{
     let sample, sampleData
     time = time || event.ticks * 0.0025
     //console.log(time)
+    //time = context.currentTime
 
     if(event.type === 144){
-      //console.log(144, ':', time, context.currentTime, event.millis)
+      //console.log(144, ':', time, context.currentTime, event.millis, event.ticks)
 
       sampleData = this.samplesData[event.data1][event.data2];
       sample = createSample(sampleData, event)
@@ -37,7 +38,7 @@ export class Instrument{
       sample.start(time)
       //console.log('start', event.midiNoteId)
     }else if(event.type === 128){
-      //console.log(128, ':', time, context.currentTime, event.millis)
+      //console.log(128, ':', time, context.currentTime, event.millis, event.ticks)
       sample = this.scheduledSamples[event.midiNoteId]
       if(typeof sample === 'undefined'){
         console.error('sample not found for event', event)

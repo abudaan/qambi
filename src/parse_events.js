@@ -324,18 +324,18 @@ export function parseMIDINotes(events){
   let notesInTrack
   let n = 0
   for(let event of events){
-    if(typeof event._part === 'undefined' || typeof event._track === 'undefined'){
+    if(typeof event._part === 'undefined' || typeof event._part._track === 'undefined'){
       console.log('no part and/or track set')
       continue
     }
     if(event.type === 144){
-      notesInTrack = notes[event._track.id]
+      notesInTrack = notes[event._part._track.id]
       if(typeof notesInTrack === 'undefined'){
-        notesInTrack = notes[event._track.id] = {}
+        notesInTrack = notes[event._part._track.id] = {}
       }
       notesInTrack[event.data1] = event
     }else if(event.type === 128){
-      notesInTrack = notes[event._track.id]
+      notesInTrack = notes[event._part._track.id]
       if(typeof notesInTrack === 'undefined'){
         //console.info(n++, 'no corresponding noteon event found for event', event.id)
         continue
@@ -344,7 +344,7 @@ export function parseMIDINotes(events){
       let noteOff = event
       if(typeof noteOn === 'undefined'){
         //console.info(n++, 'no noteon event for event', event.id)
-        delete notes[event._track.id][event.data1]
+        delete notes[event._part._track.id][event.data1]
         continue
       }
       let id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
@@ -352,7 +352,7 @@ export function parseMIDINotes(events){
       noteOn.off = noteOff.id
       noteOff.midiNoteId = id
       noteOff.on = noteOn.id
-      delete notes[event._track.id][event.data1]
+      delete notes[event._part._track.id][event.data1]
     }
   }
   Object.keys(notes).forEach(function(key){

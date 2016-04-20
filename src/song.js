@@ -203,11 +203,13 @@ export class Song{
     sortEvents(this._events)
     console.timeEnd(`sorting ${this._events.length} events`)
 
+    console.log('num events', this._events.length)
+
     console.time('filter events to tracks and parts')
     console.log(this._tracks[0]._events.length)
     console.log(this._tracks[1]._events.length)
     this._events.forEach((e) => {
-      this._tracksById.get(e._track.id)._events.push(e)
+      this._tracksById.get(e._part._track.id)._events.push(e)
       this._partsById.get(e._part.id)._events.push(e)
     })
     this._parts.forEach((p) => {

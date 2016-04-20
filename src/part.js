@@ -61,14 +61,14 @@ export class Part{
   addEvents(...events){
     events.forEach((event) => {
       event._part = this
-      this._eventsById.set(event.id, event)
+      //this._eventsById.set(event.id, event)
       this._events.push(event)
     })
-    let track = this._track
-    if(track){
-      track._events.push(...events)
-      track._needsUpdate = true
-    }
+    // let track = this._track
+    // if(track){
+    //   track._events.push(...events)
+    //   track._needsUpdate = true
+    // }
     if(this._song){
       this._song._newEvents.push(...events)
     }

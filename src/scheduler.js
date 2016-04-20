@@ -70,14 +70,13 @@ export default class Scheduler{
 
     for(i = 0; i < numEvents; i++){
       event = events[i]
-      track = event._track
+      track = event._part._track
       instrument = track.instrument
 
 
       // if(typeof instrument === 'undefined'){
       //   continue
       // }
-
       if(event._part.muted === true || track.muted === true || event.muted === true){
         continue
       }
