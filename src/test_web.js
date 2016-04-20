@@ -167,7 +167,9 @@ document.addEventListener('DOMContentLoaded', function(){
     .then((ab) => {
       //songId = songFromMIDIFile(parseMIDIFile(ab))
       let mf = parseMIDIFile(ab)
+      console.time('SONG')
       songId = songFromMIDIFile(mf)
+      console.timeEnd('SONG')
       let instrument = new Instrument()
       qambi.log('state')
       getTrackIds(songId).forEach(function(trackId){

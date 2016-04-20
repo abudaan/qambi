@@ -166,7 +166,7 @@ export function updateSong(songId: string, filter_events: boolean = false): void
       return
     }
     //debug
-    song.isPlaying = true
+    //song.isPlaying = true
 
     console.group('update song')
     console.time('total')
