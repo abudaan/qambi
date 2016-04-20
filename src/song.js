@@ -118,8 +118,10 @@ export class Song{
       this._tracksById.set(track.id, track)
       this._newEvents.push(...track._events)
       this._newParts.push(...track._parts)
-      track._parts.forEach(function(part){
+      track._parts.forEach((part) => {
         part._song = this
+        this._parts.push(part)// debug
+        this._partsById.set(part.id, part)// debug
       })
     })
   }
@@ -135,7 +137,7 @@ export class Song{
       return
     }
     //debug
-    this.isPlaying = true
+    //this.isPlaying = true
 
     console.group('update song')
     console.time('total')
@@ -184,7 +186,26 @@ export class Song{
     console.time('to array')
     this._events = Array.from(this._eventsById.values())
     console.timeEnd('to array')
+/*
+    console.time('filter parts')
+    let partEvents = this._events.filter((e) => {
+      return (e._part === this._parts[0])
+    })
+    console.log(partEvents.length)
+    console.timeEnd('filter parts')
 
+    console.time('filter events to tracks and parts')
+    console.log(this._tracks[0]._events.length)
+    console.log(this._tracks[1]._events.length)
+    this._events.forEach((e) => {
+      this._tracksById.get(e._track.id)._events.push(e)
+      this._partsById.get(e._part.id)._events.push(e)
+    })
+    console.log(this._tracks[0]._events.length)
+    console.log(this._tracks[1]._events.length)
+    //console.log(trackEvents.length)
+    console.timeEnd('filter events to tracks and parts')
+*/
     console.time(`sorting ${this._events.length} events`)
     sortEvents(this._events)
     console.timeEnd(`sorting ${this._events.length} events`)

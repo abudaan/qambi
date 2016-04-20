@@ -38,7 +38,9 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     )
     .then((ab) => {
+      console.time('SONG')
       let song = Song.fromMIDIFile(ab)
+      console.timeEnd('SONG')
       // let instrument = new Instrument()
       // getTrackIds(songId).forEach(function(trackId){
       //   setInstrument(trackId, instrument)
