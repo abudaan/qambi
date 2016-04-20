@@ -116,13 +116,8 @@ export class Song{
       track._song = this
       this._tracks.push(track)
       this._tracksById.set(track.id, track)
-      this._newEvents.push(...track._events)
+
       this._newParts.push(...track._parts)
-      track._parts.forEach((part) => {
-        part._song = this
-        this._parts.push(part)// debug
-        this._partsById.set(part.id, part)// debug
-      })
     })
   }
 
@@ -151,6 +146,23 @@ export class Song{
 
     // only parse new and moved events
     let tobeParsed = []
+
+
+    // filter removed parts
+    console.log('removed parts %O', this._removedParts)
+    this._removedParts.forEach((part) => {
+      this._partsById.delete(part.id)
+    })
+
+
+    // add new events
+    console.log('new parts %O', this._newParts)
+    this._newParts.forEach((part) => {
+      this._partsById.set(part.id, part)
+      this._parts.push(part)
+      this._newEvents.push(...part._events)
+    })
+
 
     // filter removed events
     console.log('removed %O', this._removedEvents)
@@ -186,13 +198,10 @@ export class Song{
     console.time('to array')
     this._events = Array.from(this._eventsById.values())
     console.timeEnd('to array')
-/*
-    console.time('filter parts')
-    let partEvents = this._events.filter((e) => {
-      return (e._part === this._parts[0])
-    })
-    console.log(partEvents.length)
-    console.timeEnd('filter parts')
+
+    console.time(`sorting ${this._events.length} events`)
+    sortEvents(this._events)
+    console.timeEnd(`sorting ${this._events.length} events`)
 
     console.time('filter events to tracks and parts')
     console.log(this._tracks[0]._events.length)
@@ -201,14 +210,13 @@ export class Song{
       this._tracksById.get(e._track.id)._events.push(e)
       this._partsById.get(e._part.id)._events.push(e)
     })
+    this._parts.forEach((p) => {
+      this._tracksById.get(p._track.id)._parts.push(p)
+    })
     console.log(this._tracks[0]._events.length)
     console.log(this._tracks[1]._events.length)
     //console.log(trackEvents.length)
     console.timeEnd('filter events to tracks and parts')
-*/
-    console.time(`sorting ${this._events.length} events`)
-    sortEvents(this._events)
-    console.timeEnd(`sorting ${this._events.length} events`)
 
     console.timeEnd('total')
     console.groupEnd('update song')

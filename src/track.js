@@ -49,29 +49,21 @@ export class Track{
 
   addParts(...parts){
     let song = this._song
+    let events = []
     parts.forEach((part) => {
       part._track = this
-      this._partsById.set(part.id, part)
       this._parts.push(part)
-      if(song){
-        part._song = song
-        song._newParts.push(part)
-      }
-
-      let events = part.getEvents()
-      events.forEach((event) => {
-        event._track = this
-        if(song){
-          event._song = song
-          //song._newEvents.push(event)
-        }
-        this._eventsById.set(event.id, event)
-      })
-      this._events.push(...events)
-      if(song){
-        song._newEvents.push(...events)
-      }
+      events.push(...part._events)
     })
+
+    events.forEach((event) => {
+      event._track = this
+    })
+
+    if(song){
+      song._newParts.push(...parts)
+    }
+    //console.log(events.length)
     this._needsUpdate = true
   }
 
