@@ -59,12 +59,15 @@ export class Part{
   }
 
   addEvents(...events){
+    let track = this._track
     events.forEach((event) => {
       event._part = this
       this._eventsById.set(event.id, event)
       this._events.push(event)
+      if(track){
+        event._track = track
+      }
     })
-    let track = this._track
     if(track){
       track._events.push(...events)
       track._needsUpdate = true

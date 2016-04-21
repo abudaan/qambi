@@ -115,8 +115,8 @@ function toSong(parsed){
       //console.count(events.length)
       let newTrack = new Track(trackName)
       let part = new Part()
-      part.addEvents(...events)
       newTrack.addParts(part)
+      part.addEvents(...events)
       newTracks.push(newTrack)
     }
   }
