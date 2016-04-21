@@ -76,11 +76,55 @@ document.addEventListener('DOMContentLoaded', function(){
     // )
     let instrument = new Instrument()
 
-    instrument.addSampleData(60, {
-      url: '../data/TP01d-ElectricPiano-000-060-c3.wavs',
-      sustain: [0],
-      release: [4, 'equal power'],
-    })
+    // let data = {
+    //   60: new ArrayBuffer(),
+    //   61: {
+    //     url: 'url',
+    //     sustain: []
+    //   },
+    // }
+    // console.log(typeof data[60] === 'object')
+    // console.log(data[60] instanceof Object)
+    // console.log(typeof data[61] === 'object')
+
+    // instrument.addSampleData(60, {
+    //   url: '../data/TP01d-ElectricPiano-000-060-c3.wav',
+    //   sustain: [0],
+    //   release: [4, 'equal power'],
+    // })
+
+    instrument.parseSampleData({
+      60: {
+        url: '../data/TP01d-ElectricPiano-000-060-c3.wav',
+        sustain: [0],
+        release: [4, 'equal power'],
+      },
+      61: {
+        url: '../data/TP01d-ElectricPiano-000-060-c3.wav',
+        sustain: [0],
+        release: [4, 'equal power'],
+      },
+      62: {
+        url: '../data/TP01d-ElectricPiano-000-060-c3.wav',
+        sustain: [0],
+        release: [4, 'equal power'],
+      },
+      63: '../data/TP01d-ElectricPiano-000-060-c3.wav',
+      64: base64,
+    }).then(
+      function(data){
+        console.log(data)
+
+        instrument.processMIDIEvent(new MIDIEvent(0, 144, 60, 100))
+        instrument.processMIDIEvent(new MIDIEvent(200, 128, 60, 0))
+
+        instrument.processMIDIEvent(new MIDIEvent(200, 144, 61, 100))
+        instrument.processMIDIEvent(new MIDIEvent(400, 128, 61, 0))
+
+        instrument.processMIDIEvent(new MIDIEvent(400, 144, 62, 100))
+        instrument.processMIDIEvent(new MIDIEvent(600, 128, 62, 0))
+      }
+    )
   }
 
 

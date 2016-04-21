@@ -1,7 +1,7 @@
 import {createSample} from './sample'
 import {context} from './init_audio'
 import {createNote, getNoteNumber} from './note'
-import {checkIfBase64, base64ToBinary} from './util'
+import {parseSamples, checkIfBase64, base64ToBinary} from './util'
 import fetch from 'isomorphic-fetch'
 
 // local util functions
@@ -96,7 +96,6 @@ export class Instrument{
   }
 
   addSampleDatas(data){
-
   }
 
   /*
@@ -111,7 +110,22 @@ export class Instrument{
       }
   */
 
+  // load and parse
+  parseSampleData(data){
+    //@TODO: process data locally!
+    return parseSamples(data)
+    // if(data instanceof 'object' === true){
+    //   Object.keys(data).forEach((key) => {
+    //     this.addSampleData(data[key])
+    //   })
+    // }else if(data instanceof 'array' === true){
+    //   data.forEach((sample) => {
+    //     this.addSampleData(sample)
+    //   })
+    // }
+  }
 
+  // add only parsed AudioBuffers
   addSampleData(noteId, data = {}){
     let {
       sustain = [false, false],
@@ -133,16 +147,24 @@ export class Instrument{
     }
     noteId = note.number
 
-    getArrayBuffer(data)
-    .then((arrayBuffer) => {
-      return decodeAudioData(arrayBuffer)
-    },
-    () => {
-      console.log('error')
-    })
-    .then((audioBuffer) => {
+    // getArrayBuffer(data)
+    // .then((arrayBuffer) => {
+    //   return decodeAudioData(arrayBuffer)
+    // },
+    // () => {
+    //   console.log('error')
+    // })
+    data = {
+      [noteId]: data.sample || data.buffer || data.base64 || data.url
+    }
+    parseSamples(data)
+    .then((result) => {
 
-      console.log('buffer', audioBuffer)
+      let audioBuffer = result[noteId]
+      if(typeof audioBuffer === 'undefined'){
+        return
+      }
+      console.log('buffer', result)
 
       let [sustainStart, sustainEnd] = sustain
       let [releaseDuration, releaseEnvelope] = release
@@ -190,7 +212,7 @@ export class Instrument{
   }
 }
 
-
+/*
 getArrayBuffer = function({
     url = null,
     base64 = null,
@@ -221,8 +243,7 @@ getArrayBuffer = function({
         reject()
       }
     }else if(url !== null){
-      resolve(url)
-/*
+
       fetch(url)
       .then((response) => {
         return response.arrayBuffer()
@@ -239,11 +260,10 @@ getArrayBuffer = function({
         console.warn('error')
         reject()
       })
-*/
     }
   })
 }
-
+*/
 /*
 decodeAudioData = function(arrayBuffer){
   return new Promise((resolve, reject) => {

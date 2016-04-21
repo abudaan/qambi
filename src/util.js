@@ -106,38 +106,48 @@ function loadAndParseSample(url, id, every){
 }
 
 
+function getPromises(promises, sample, key, every){
+
+  const getSample = function(promises, sample, key, every){
+
+    if(sample instanceof ArrayBuffer){
+      promises.push(parseSample(sample, key, every))
+    }else if(typeString(sample) === 'string'){
+      if(checkIfBase64(sample)){
+        promises.push(parseSample(base64ToBinary(sample), key, every))
+      }else{
+        promises.push(loadAndParseSample(sample, key, every))
+      }
+    }else if(typeString(sample) === 'object'){
+      sample = sample.sample || sample.buffer || sample.base64 || sample.url
+      getSample(promises, sample, key, every)
+      //console.log(sample, promises.length)
+    }
+  }
+
+  getSample(promises, sample, key, every)
+}
+
+
 export function parseSamples(mapping, every = false){
-  let key, sample,
+  let key,
     promises = [],
     type = typeString(mapping);
 
   every = typeString(every) === 'function' ? every : false;
   //console.log(type, mapping)
   if(type === 'object'){
-    for(key in mapping){
-      if(mapping.hasOwnProperty(key)){
-        sample = mapping[key];
-        //console.log(checkIfBase64(sample))
-        if(sample instanceof ArrayBuffer){
-          promises.push(parseSample(sample, key, every));
-        }else if(checkIfBase64(sample)){
-          promises.push(parseSample(base64ToBinary(sample), key, every));
-        }else{
-          promises.push(loadAndParseSample(sample, key, every));
-        }
-      }
-    }
+    Object.keys(mapping).forEach(function(key){
+      getPromises(promises, mapping[key], key, every)
+    })
   }else if(type === 'array'){
     mapping.forEach(function(sample){
-      if(sample instanceof ArrayBuffer){
-        promises.push(parseSample(sample, key, every));
-      }else if(checkIfBase64(sample)){
-        promises.push(parseSample(sample, every));
-      }else{
-        promises.push(loadAndParseSample(sample, every));
-      }
-    });
+      // key is deliberately undefined
+      getPromises(promises, sample, key, every)
+    })
   }
+
+  console.log(promises)
 
   return new Promise(function(resolve, reject){
     Promise.all(promises)
