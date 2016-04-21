@@ -1,6 +1,12 @@
 import {createSample} from './sample'
 import {context} from './init_audio'
 import {createNote, getNoteNumber} from './note'
+import {checkIfBase64, base64ToBinary} from './util'
+import fetch from 'isomorphic-fetch'
+
+// local util functions
+let getArrayBuffer
+let decodeAudioData
 
 export class Instrument{
 
@@ -89,6 +95,10 @@ export class Instrument{
     }
   }
 
+  addSampleDatas(data){
+
+  }
+
   /*
     @param noteId can be note name (C4) or note number (60)
     @param audio buffer
@@ -100,54 +110,68 @@ export class Instrument{
         velocity: [velocityStart, velocityEnd] // optional, for multi-layered instruments
       }
   */
-  addSampleData(noteId, audioBuffer,
-    {
+
+
+  addSampleData(noteId, data = {}){
+    let {
       sustain = [false, false],
       release = [false, 'default'],
       pan = false,
-      velocity = [0, 127]
-    } = {}){
+      velocity = [0, 127],
+    } = data
 
-    if(audioBuffer instanceof AudioBuffer === false){
-      console.warn('not a valid AudioBuffer instance');
-      return;
-    }
-
-    let [sustainStart, sustainEnd] = sustain;
-    let [releaseDuration, releaseEnvelope] = release;
-    let [velocityStart, velocityEnd] = velocity;
-
-    if(sustain.length !== 2){
-      sustainStart = sustainEnd = false;
-    }
-
-    if(releaseDuration === false){
-      releaseEnvelope = false;
-    }
-
-    // log(sustainStart, sustainEnd);
-    // log(releaseDuration, releaseEnvelope);
-    // log(panPosition);
-    // log(velocityStart, velocityEnd);
-
-    let note = createNote(noteId)
-    console.log(note)
-    if(note === false){
+    if(typeof noteId === 'undefined'){
+      console.warn('please provide a note id')
       return
     }
-    noteId = note.number;
 
-    this.samplesData[noteId].fill({
-      n: noteId,
-      d: audioBuffer,
-      s1: sustainStart,
-      s2: sustainEnd,
-      r: releaseDuration,
-      e: releaseEnvelope,
-      p: pan
-    }, velocityStart, velocityEnd + 1);
+    let note = createNote(noteId)
+    //console.log(note)
+    if(note === false){
+      console.warn('not a valid note id')
+      return
+    }
+    noteId = note.number
 
-    //console.log(this.samplesData[noteId]);
+    getArrayBuffer(data)
+    .then((arrayBuffer) => {
+      return decodeAudioData(arrayBuffer)
+    },
+    () => {
+      console.log('error')
+    })
+    .then((audioBuffer) => {
+
+      console.log('buffer', audioBuffer)
+
+      let [sustainStart, sustainEnd] = sustain
+      let [releaseDuration, releaseEnvelope] = release
+      let [velocityStart, velocityEnd] = velocity
+
+      if(sustain.length !== 2){
+        sustainStart = sustainEnd = false
+      }
+
+      if(releaseDuration === false){
+        releaseEnvelope = false
+      }
+
+      // log(sustainStart, sustainEnd);
+      // log(releaseDuration, releaseEnvelope);
+      // log(panPosition);
+      // log(velocityStart, velocityEnd);
+
+      this.samplesData[noteId].fill({
+        n: noteId,
+        d: audioBuffer,
+        s1: sustainStart,
+        s2: sustainEnd,
+        r: releaseDuration,
+        e: releaseEnvelope,
+        p: pan
+      }, velocityStart, velocityEnd + 1)
+      //console.log(this.samplesData[noteId]);
+    })
   }
 
 
@@ -164,5 +188,99 @@ export class Instrument{
   export(){
     //return json file with base64 encoded audio
   }
+}
+
+
+getArrayBuffer = function({
+    url = null,
+    base64 = null,
+    buffer = null,
+  } = {}){
+
+  return new Promise((resolve, reject) => {
+
+    if(url === null && base64 === null && buffer === null){
+      console.warn('please provide a sample')
+      reject()
+    }else if(buffer !== null){
+      if(buffer instanceof AudioBuffer === true){
+        resolve(buffer)
+      }else{
+        console.warn('not a valid AudioBuffer instance');
+        reject()
+      }
+    }else if(base64 !== null){
+      if(checkIfBase64(base64) === true){
+        let ab = base64ToBinary(base64);
+        if(ab instanceof ArrayBuffer === true){
+          resolve(ab)
+        }else{
+          reject()
+        }
+      }else{
+        reject()
+      }
+    }else if(url !== null){
+      resolve(url)
+/*
+      fetch(url)
+      .then((response) => {
+        return response.arrayBuffer()
+      })
+      .then((ab) => {
+        if(ab instanceof ArrayBuffer === true){
+        console.log(ab)
+          resolve(ab)
+        }else{
+          reject()
+        }
+      })
+      .catch(() => {
+        console.warn('error')
+        reject()
+      })
+*/
+    }
+  })
+}
+
+/*
+decodeAudioData = function(arrayBuffer){
+  return new Promise((resolve, reject) => {
+    try{
+      context.decodeAudioData(arrayBuffer,
+
+        function onSuccess(buffer){
+          resolve(buffer);
+        },
+
+        function onError(e){
+          console.log('onerror', e)
+          reject(e)
+        }
+      )
+    }catch(e){
+      console.log('catch', e)
+      reject(e);
+    }
+  })
+}
+*/
+
+let data = {
+  60: {
+    url: 'url/to/sample',
+    // not mandatory params:
+    sustain: [false, false],
+    release: [false, 'default'],
+    pan: false,
+    velocity: [0, 127],
+  },
+  61: {
+    buffer: 'sample as AudioBuffer'
+  },
+  D4: {
+    base64: 'base64 encoded sample'
+  },
 }
 

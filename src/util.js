@@ -118,7 +118,9 @@ export function parseSamples(mapping, every = false){
       if(mapping.hasOwnProperty(key)){
         sample = mapping[key];
         //console.log(checkIfBase64(sample))
-        if(checkIfBase64(sample)){
+        if(sample instanceof ArrayBuffer){
+          promises.push(parseSample(sample, key, every));
+        }else if(checkIfBase64(sample)){
           promises.push(parseSample(base64ToBinary(sample), key, every));
         }else{
           promises.push(loadAndParseSample(sample, key, every));
@@ -127,7 +129,9 @@ export function parseSamples(mapping, every = false){
     }
   }else if(type === 'array'){
     mapping.forEach(function(sample){
-      if(checkIfBase64(sample)){
+      if(sample instanceof ArrayBuffer){
+        promises.push(parseSample(sample, key, every));
+      }else if(checkIfBase64(sample)){
         promises.push(parseSample(sample, every));
       }else{
         promises.push(loadAndParseSample(sample, every));
@@ -152,7 +156,7 @@ export function parseSamples(mapping, every = false){
 }
 
 
-function checkIfBase64(data){
+export function checkIfBase64(data){
   let passed = true;
   try{
     atob(data);
@@ -164,7 +168,7 @@ function checkIfBase64(data){
 
 
 // adapted version of https://github.com/danguer/blog-examples/blob/master/js/base64-binary.js
-function base64ToBinary(input){
+export function base64ToBinary(input){
   let keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
     bytes, uarray, buffer,
     lkey1, lkey2,
