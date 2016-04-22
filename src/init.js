@@ -1,9 +1,5 @@
 import {initAudio} from './init_audio'
 import {initMIDI} from './init_midi'
-import {getStore} from './create_store'
-import {STORE_SAMPLES} from './action_types'
-
-const store = getStore()
 
 export let getUserMedia = (() => {
   if(typeof navigator !== 'undefined'){
@@ -43,14 +39,6 @@ export function init(): void{
     (data) => {
       // parseAudio
       let dataAudio = data[0]
-
-      store.dispatch({
-        type: STORE_SAMPLES,
-        payload: {
-          lowTick: dataAudio.lowtick,
-          highTick: dataAudio.hightick,
-        }
-      })
 
       // parseMIDI
       let dataMidi = data[1]

@@ -109,16 +109,17 @@ export class Instrument{
           //console.log(data.release[0], data.release[1])
         }
 
-        if(typeof result.forEach === 'undefined'){
-          Object.keys(result).forEach((key) => {
-            let sample = result[key]
-            this.addSampleData(sample.id, sample.buffer, data[sample.id])
-          })
-        }else{
-          result.forEach((sample) => {
-            this.addSampleData(sample.id, sample.buffer, data[sample.id])
-          })
-        }
+        result.forEach((sample) => {
+          let sampleData = data[sample.id]
+          if(typeof sampleData === 'string'){
+            sampleData = {
+              buffer: sample.buffer
+            }
+          }else{
+            sampleData.buffer = sample.buffer
+          }
+          this.addSampleData(sample.id, sampleData)
+        })
 
         resolve()
       })
@@ -200,7 +201,7 @@ export class Instrument{
         this.samplesData[noteId][i] = sampleData
       }
     })
-    console.log('%O', this.samplesData[noteId]);
+    //console.log('%O', this.samplesData[noteId]);
   }
 
 

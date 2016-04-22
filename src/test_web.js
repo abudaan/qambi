@@ -8,7 +8,7 @@ import qambi, {
   getMIDIOutputIds,
   Part,
   Song,
-} from './qambi'
+} from '../build/qambi'
 
 import {
   typeString,
