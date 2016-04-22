@@ -1,12 +1,17 @@
 import {createSample} from './sample'
 import {context} from './init_audio'
 import {createNote, getNoteNumber} from './note'
-import {parseSamples, checkIfBase64, base64ToBinary} from './util'
+import {parseSamples} from './parse_audio'
 import fetch from 'isomorphic-fetch'
 
 // local util functions
 let getArrayBuffer
 let decodeAudioData
+
+const ppq = 480
+const bpm = 120
+const playbackSpeed = 1
+const millisPerTick = (1 / playbackSpeed * 60) / bpm / ppq
 
 export class Instrument{
 
@@ -30,7 +35,7 @@ export class Instrument{
 
   processMIDIEvent(event, time){
     let sample, sampleData
-    time = time || event.ticks * 0.0025
+    time = time || context.currentTime + (event.ticks * millisPerTick)
     //console.log(time)
 
     if(event.type === 144){
@@ -95,12 +100,17 @@ export class Instrument{
     }
   }
 
-  addSampleDatas(data){
+  // load and parse
+  parseSampleData(data){
+    return parseSamples(data, (sample) => {
+      //console.log(sample.buffer instanceof AudioBuffer)
+      this.addSampleData(sample.id, sample.buffer, data[sample.id])
+    })
   }
 
   /*
     @param noteId can be note name (C4) or note number (60)
-    @param audio buffer
+    @param audio buffer!
     @param config (optional)
       {
         sustain: [sustainStart, sustainEnd], // optional, in millis
@@ -109,24 +119,7 @@ export class Instrument{
         velocity: [velocityStart, velocityEnd] // optional, for multi-layered instruments
       }
   */
-
-  // load and parse
-  parseSampleData(data){
-    //@TODO: process data locally!
-    return parseSamples(data)
-    // if(data instanceof 'object' === true){
-    //   Object.keys(data).forEach((key) => {
-    //     this.addSampleData(data[key])
-    //   })
-    // }else if(data instanceof 'array' === true){
-    //   data.forEach((sample) => {
-    //     this.addSampleData(sample)
-    //   })
-    // }
-  }
-
-  // add only parsed AudioBuffers
-  addSampleData(noteId, data = {}){
+  addSampleData(noteId, audioBuffer, data = {}){
     let {
       sustain = [false, false],
       release = [false, 'default'],
@@ -139,61 +132,45 @@ export class Instrument{
       return
     }
 
+    if(audioBuffer instanceof AudioBuffer === false){
+      console.warn('provided buffer is not an instance of AudioBuffer')
+      return
+    }
+
     let note = createNote(noteId)
-    //console.log(note)
     if(note === false){
       console.warn('not a valid note id')
       return
     }
     noteId = note.number
 
-    // getArrayBuffer(data)
-    // .then((arrayBuffer) => {
-    //   return decodeAudioData(arrayBuffer)
-    // },
-    // () => {
-    //   console.log('error')
-    // })
-    data = {
-      [noteId]: data.sample || data.buffer || data.base64 || data.url
+    let [sustainStart, sustainEnd] = sustain
+    let [releaseDuration, releaseEnvelope] = release
+    let [velocityStart, velocityEnd] = velocity
+
+    if(sustain.length !== 2){
+      sustainStart = sustainEnd = false
     }
-    parseSamples(data)
-    .then((result) => {
 
-      let audioBuffer = result[noteId]
-      if(typeof audioBuffer === 'undefined'){
-        return
-      }
-      console.log('buffer', result)
+    if(releaseDuration === false){
+      releaseEnvelope = false
+    }
 
-      let [sustainStart, sustainEnd] = sustain
-      let [releaseDuration, releaseEnvelope] = release
-      let [velocityStart, velocityEnd] = velocity
+    // log(sustainStart, sustainEnd);
+    // log(releaseDuration, releaseEnvelope);
+    // log(panPosition);
+    // log(velocityStart, velocityEnd);
 
-      if(sustain.length !== 2){
-        sustainStart = sustainEnd = false
-      }
-
-      if(releaseDuration === false){
-        releaseEnvelope = false
-      }
-
-      // log(sustainStart, sustainEnd);
-      // log(releaseDuration, releaseEnvelope);
-      // log(panPosition);
-      // log(velocityStart, velocityEnd);
-
-      this.samplesData[noteId].fill({
-        n: noteId,
-        d: audioBuffer,
-        s1: sustainStart,
-        s2: sustainEnd,
-        r: releaseDuration,
-        e: releaseEnvelope,
-        p: pan
-      }, velocityStart, velocityEnd + 1)
-      //console.log(this.samplesData[noteId]);
-    })
+    this.samplesData[noteId].fill({
+      n: noteId,
+      d: audioBuffer,
+      s1: sustainStart,
+      s2: sustainEnd,
+      r: releaseDuration,
+      e: releaseEnvelope,
+      p: pan
+    }, velocityStart, velocityEnd + 1)
+    //console.log(this.samplesData[noteId]);
   }
 
 
@@ -303,4 +280,3 @@ let data = {
     base64: 'base64 encoded sample'
   },
 }
-

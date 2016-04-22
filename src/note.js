@@ -64,6 +64,7 @@ export function createNote(...args){
   warningMsg = '';
 
   // argument: note number
+  //console.log(numArgs, type0)
   if(numArgs === 1 && type0 === 'number'){
     if(arg0 < 0 || arg0 > 127){
       errorMsg = 'please provide a note number >= 0 and <= 127 ' +  arg0;
@@ -339,5 +340,3 @@ export function isBlackKey(...args){
   }
   return false;
 }
-
-

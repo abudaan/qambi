@@ -10,6 +10,10 @@ import qambi, {
   Song,
 } from './qambi'
 
+import {
+  typeString
+} from './util'
+
 /*
 qambi.getMasterVolume()
 //qambi.log('functions')
@@ -87,11 +91,17 @@ document.addEventListener('DOMContentLoaded', function(){
     // console.log(data[60] instanceof Object)
     // console.log(typeof data[61] === 'object')
 
+    // let a = []
+    // let o = {}
+    // console.log(a instanceof Object, o instanceof Object)
+
     // instrument.addSampleData(60, {
     //   url: '../data/TP01d-ElectricPiano-000-060-c3.wav',
     //   sustain: [0],
     //   release: [4, 'equal power'],
     // })
+
+    console.log(typeString(instrument))
 
     instrument.parseSampleData({
       60: {
@@ -107,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function(){
       62: {
         url: '../data/TP01d-ElectricPiano-000-060-c3.wav',
         sustain: [0],
-        release: [4, 'equal power'],
+        release: [3, 'equal power'],
       },
       63: '../data/TP01d-ElectricPiano-000-060-c3.wav',
       64: base64,
@@ -115,18 +125,18 @@ document.addEventListener('DOMContentLoaded', function(){
       function(data){
         console.log(data)
 
-        instrument.processMIDIEvent(new MIDIEvent(0, 144, 60, 100))
-        instrument.processMIDIEvent(new MIDIEvent(200, 128, 60, 0))
+        instrument.processMIDIEvent(new MIDIEvent(0, 144, 62, 100))
+        instrument.processMIDIEvent(new MIDIEvent(200, 128, 62, 0))
 
-        instrument.processMIDIEvent(new MIDIEvent(200, 144, 61, 100))
-        instrument.processMIDIEvent(new MIDIEvent(400, 128, 61, 0))
-
-        instrument.processMIDIEvent(new MIDIEvent(400, 144, 62, 100))
-        instrument.processMIDIEvent(new MIDIEvent(600, 128, 62, 0))
+        // instrument.processMIDIEvent(new MIDIEvent(200, 144, 61, 100))
+        // instrument.processMIDIEvent(new MIDIEvent(400, 128, 61, 0))
+        //
+        // instrument.processMIDIEvent(new MIDIEvent(400, 144, 62, 100))
+        // instrument.processMIDIEvent(new MIDIEvent(600, 128, 62, 0))
       }
     )
-  }
 
+  }
 
 /*
   let on = new MIDIEvent(0, 144, 60, 100)

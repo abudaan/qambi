@@ -1,7 +1,4 @@
-
 import fetch from 'isomorphic-fetch'
-import {context} from './init_audio'
-
 
 const
   mPow = Math.pow,
@@ -15,7 +12,7 @@ export function getNiceTime(millis){
     seconds,
     timeAsString = '';
 
-  seconds = millis/1000; // → millis to seconds
+  seconds = millis / 1000; // → millis to seconds
   h = mFloor(seconds / (60 * 60));
   m = mFloor((seconds % (60 * 60)) / 60);
   s = mFloor(seconds % (60));
@@ -40,143 +37,6 @@ export function getNiceTime(millis){
 }
 
 
-export function parseSample(sample, id, every){
-  return new Promise(function(resolve, reject){
-    try{
-      context.decodeAudioData(sample,
-
-        function onSuccess(buffer){
-          //console.log(id, buffer);
-          if(typeof id !== 'undefined'){
-            resolve({id, buffer})
-            if(every){
-              every({id, buffer})
-            }
-          }else{
-            resolve(buffer);
-            if(every){
-              every(buffer);
-            }
-          }
-        },
-
-        function onError(e){
-          //console.log('error decoding audiodata', id, e);
-          //reject(e); // don't use reject because we use this as a nested promise and we don't want the parent promise to reject
-          if(typeof id !== 'undefined'){
-            resolve({id})
-          }else{
-            resolve()
-          }
-        }
-      )
-    }catch(e){
-      //console.log('error decoding audiodata', id, e);
-      //reject(e); -> do not reject, this stops parsing the ohter samples
-      if(typeof id !== 'undefined'){
-        resolve({id});
-      }else{
-        resolve();
-      }
-    }
-  })
-}
-
-
-function loadAndParseSample(url, id, every){
-  let executor = function(resolve, reject){
-    fetch(url).then(
-      function(response){
-        if(response.ok){
-          response.arrayBuffer().then(function(data){
-            //console.log(data)
-            parseSample(data, id, every).then(resolve, reject);
-          })
-        }else{
-          if(typeof id !== 'undefined'){
-            resolve({id})
-          }else{
-            resolve()
-          }
-        }
-      }
-    )
-  }
-  return new Promise(executor);
-}
-
-
-function getPromises(promises, sample, key, every){
-
-  const getSample = function(promises, sample, key, every){
-
-    if(sample instanceof ArrayBuffer){
-      promises.push(parseSample(sample, key, every))
-    }else if(typeString(sample) === 'string'){
-      if(checkIfBase64(sample)){
-        promises.push(parseSample(base64ToBinary(sample), key, every))
-      }else{
-        promises.push(loadAndParseSample(sample, key, every))
-      }
-    }else if(typeString(sample) === 'object'){
-      sample = sample.sample || sample.buffer || sample.base64 || sample.url
-      getSample(promises, sample, key, every)
-      //console.log(sample, promises.length)
-    }
-  }
-
-  getSample(promises, sample, key, every)
-}
-
-
-export function parseSamples(mapping, every = false){
-  let key,
-    promises = [],
-    type = typeString(mapping);
-
-  every = typeString(every) === 'function' ? every : false;
-  //console.log(type, mapping)
-  if(type === 'object'){
-    Object.keys(mapping).forEach(function(key){
-      getPromises(promises, mapping[key], key, every)
-    })
-  }else if(type === 'array'){
-    mapping.forEach(function(sample){
-      // key is deliberately undefined
-      getPromises(promises, sample, key, every)
-    })
-  }
-
-  console.log(promises)
-
-  return new Promise(function(resolve, reject){
-    Promise.all(promises)
-    .then((values) => {
-      if(type === 'object'){
-        mapping = {};
-        values.forEach(function(value){
-          mapping[value.id] = value.buffer;
-        });
-        resolve(mapping);
-      }else if(type === 'array'){
-        resolve(values);
-      }
-    })
-  })
-}
-
-
-export function checkIfBase64(data){
-  let passed = true;
-  try{
-    atob(data);
-  }catch(e){
-    passed = false;
-  }
-  return passed;
-}
-
-
 // adapted version of https://github.com/danguer/blog-examples/blob/master/js/base64-binary.js
 export function base64ToBinary(input){
   let keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
@@ -190,8 +50,8 @@ export function base64ToBinary(input){
   buffer = new ArrayBuffer(bytes);
   uarray = new Uint8Array(buffer);
 
-  lkey1 = keyStr.indexOf(input.charAt(input.length-1));
-  lkey2 = keyStr.indexOf(input.charAt(input.length-1));
+  lkey1 = keyStr.indexOf(input.charAt(input.length - 1));
+  lkey2 = keyStr.indexOf(input.charAt(input.length - 1));
   if(lkey1 == 64) bytes--; //padding chars, so skip
   if(lkey2 == 64) bytes--; //padding chars, so skip
 
@@ -245,3 +105,12 @@ export function sortEvents(events){
   })
 }
 
+export function checkIfBase64(data){
+  let passed = true;
+  try{
+    atob(data);
+  }catch(e){
+    passed = false;
+  }
+  return passed;
+}
