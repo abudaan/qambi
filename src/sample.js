@@ -1,5 +1,5 @@
 import {context} from './init_audio.js'
-//import {getEqualPowerCurve} from './util.js'
+import {getEqualPowerCurve} from './util.js'
 
 
 class Sample{
@@ -7,14 +7,15 @@ class Sample{
   constructor(sampleData, event){
     this.event = event
     this.sampleData = sampleData
-    if(this.sampleData === -1){
+
+    if(this.sampleData === -1 || typeof this.sampleData.buffer === 'undefined'){
       // create simple synth sample
       this.source = context.createOscillator();
       this.source.type = 'sine';
       this.source.frequency.value = event.frequency
     }else{
       this.source = context.createBufferSource()
-      this.source.buffer = sampleData.d;
+      this.source.buffer = sampleData.buffer;
       //console.log(this.source.buffer)
     }
     this.output = context.createGain()
@@ -30,11 +31,13 @@ class Sample{
   }
 
   stop(time, cb){
-    if(this.sampleData.r && this.sampleData.e){
-      this.source.stop(time + this.sampleData.r);
+    let {releaseDuration, releaseEnvelope, releaseEnvelopeArray} = this.sampleData
+    if(releaseDuration && releaseEnvelope){
+      this.source.stop(time + releaseDuration)
       fadeOut(this.output, {
-        releaseEnvelope: this.sampleData.e,
-        releaseDuration: this.sampleData.r,
+        releaseDuration,
+        releaseEnvelope,
+        releaseEnvelopeArray,
       })
     }else{
       this.source.stop(time);
@@ -57,7 +60,7 @@ export function fadeOut(gainNode, settings){
       gainNode.gain.linearRampToValueAtTime(0, now + settings.releaseDuration)
       break
 
-    case 'equal power':
+    case 'equal_power':
       values = getEqualPowerCurve(100, 'fadeOut', gainNode.gain.value)
       gainNode.gain.setValueCurveAtTime(values, now, settings.releaseDuration)
       break
@@ -73,26 +76,6 @@ export function fadeOut(gainNode, settings){
 
     default:
   }
-}
-
-
-export function getEqualPowerCurve(numSteps, type, maxValue) {
-  let i, value, percent,
-    values = new Float32Array(numSteps);
-
-  for(i = 0; i < numSteps; i++){
-    percent = i / numSteps;
-    if(type === 'fadeIn'){
-      value = Math.cos((1.0 - percent) * 0.5 * Math.PI) * maxValue;
-    }else if(type === 'fadeOut'){
-      value = Math.cos(percent * 0.5 * Math.PI) * maxValue;
-    }
-    values[i] = value;
-    if(i === numSteps - 1){
-      values[i] = type === 'fadeIn' ? 1 : 0;
-    }
-  }
-  return values;
 }
 
 

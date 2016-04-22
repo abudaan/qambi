@@ -1,12 +1,9 @@
 import {createSample} from './sample'
 import {context} from './init_audio'
-import {createNote, getNoteNumber} from './note'
+import {createNote} from './note'
 import {parseSamples} from './parse_audio'
-import fetch from 'isomorphic-fetch'
+import {typeString} from './util'
 
-// local util functions
-let getArrayBuffer
-let decodeAudioData
 
 const ppq = 480
 const bpm = 120
@@ -19,9 +16,9 @@ export class Instrument{
     this.id = id
     this.type = type
     // create a samples data object for all 128 velocity levels of all 128 notes
-    this.samplesData = new Array(128).fill(-1);
+    this.samplesData = new Array(127).fill(-1);
     this.samplesData = this.samplesData.map(function(){
-      return new Array(128).fill(-1);
+      return new Array(127).fill(-1);
     });
 
     this.scheduledSamples = {}
@@ -104,14 +101,25 @@ export class Instrument{
   parseSampleData(data){
 
     return new Promise((resolve, reject) => {
-      parseSamples(data, (sample) => {
-        //console.log(sample.buffer instanceof AudioBuffer)
-        this.addSampleData(sample.id, sample.buffer, data[sample.id])
-      }).then(() => {
+      parseSamples(data)
+      .then((result) => {
+
         if(typeof data.release !== 'undefined'){
           this.setRelease(data.release[0], data.release[1])
           //console.log(data.release[0], data.release[1])
         }
+
+        if(typeof result.forEach === 'undefined'){
+          Object.keys(result).forEach((key) => {
+            let sample = result[key]
+            this.addSampleData(sample.id, sample.buffer, data[sample.id])
+          })
+        }else{
+          result.forEach((sample) => {
+            this.addSampleData(sample.id, sample.buffer, data[sample.id])
+          })
+        }
+
         resolve()
       })
     })
@@ -119,30 +127,26 @@ export class Instrument{
 
   /*
     @param noteId can be note name (C4) or note number (60)
-    @param audio buffer!
     @param config (optional)
       {
+        buffer: AudioBuffer
         sustain: [sustainStart, sustainEnd], // optional, in millis
         release: [releaseDuration, releaseEnvelope], // optional
         pan: panPosition // optional
         velocity: [velocityStart, velocityEnd] // optional, for multi-layered instruments
       }
   */
-  addSampleData(noteId, audioBuffer, data = {}){
+  addSampleData(noteId, data = {}){
     let {
-      sustain = [false, false],
-      release = [false, 'default'],
-      pan = false,
+      buffer = null,
+      sustain = [null, null],
+      release = [null, 'linear'],
+      pan = null,
       velocity = [0, 127],
     } = data
 
     if(typeof noteId === 'undefined'){
       console.warn('please provide a note id')
-      return
-    }
-
-    if(audioBuffer instanceof AudioBuffer === false){
-      console.warn('provided buffer is not an instance of AudioBuffer')
       return
     }
 
@@ -158,32 +162,49 @@ export class Instrument{
     let [velocityStart, velocityEnd] = velocity
 
     if(sustain.length !== 2){
-      sustainStart = sustainEnd = false
+      sustainStart = sustainEnd = null
     }
 
-    if(releaseDuration === false){
-      releaseEnvelope = false
+    if(releaseDuration === null){
+      releaseEnvelope = null
     }
 
-    // log(sustainStart, sustainEnd);
-    // log(releaseDuration, releaseEnvelope);
-    // log(panPosition);
-    // log(velocityStart, velocityEnd);
+    // console.log(noteId, buffer);
+    // console.log(sustainStart, sustainEnd);
+    // console.log(releaseDuration, releaseEnvelope);
+    // console.log(pan);
+    // console.log(velocityStart, velocityEnd);
 
 
-    //@TODO: check if data exists!
-    this.samplesData[noteId].fill({
-      n: noteId,
-      d: audioBuffer,
-      s1: sustainStart,
-      s2: sustainEnd,
-      r: releaseDuration,
-      e: releaseEnvelope,
-      p: pan
-    }, velocityStart, velocityEnd + 1)
-    //console.log(this.samplesData[noteId]);
+    this.samplesData[noteId].forEach((sampleData, i) => {
+      if(i >= velocityStart && i < velocityEnd){
+        if(sampleData === -1){
+          sampleData = {
+            id: noteId
+          }
+        }
+
+        sampleData.buffer = buffer || sampleData.buffer
+        sampleData.sustainStart = sustainStart || sampleData.sustainStart
+        sampleData.sustainEnd = sustainEnd || sampleData.sustainEnd
+        sampleData.releaseDuration = releaseDuration || sampleData.releaseDuration
+        sampleData.releaseEnvelope = releaseEnvelope || sampleData.releaseEnvelope
+        sampleData.pan = pan || sampleData.pan
+
+        if(typeString(sampleData.releaseEnvelope) === 'array'){
+          sampleData.releaseEnvelopeArray = sampleData.releaseEnvelope
+          sampleData.releaseEnvelope = 'array'
+        }else{
+          delete sampleData.releaseEnvelopeArray
+        }
+        this.samplesData[noteId][i] = sampleData
+      }
+    })
+    console.log('%O', this.samplesData[noteId]);
   }
 
+
+  // stereo spread
   setKeyScalingPanning(){
     // sets panning based on the key value, e.g. higher notes are panned more to the right and lower notes more to the left
   }
@@ -194,24 +215,23 @@ export class Instrument{
 
   /*
     @duration: milliseconds
-    @envelopeType: linear | equal power | array
-    @value: when envelopeType is set to array these values will be used to create the envelope curve
+    @envelope: linear | equal_power | array of int values
   */
-  setRelease(duration: number, envelopeType: string, values: Array<number> = null){
+  setRelease(duration: number, envelope){
     // set release for all keys, overrules values set by setKeyScalingRelease()
     this.samplesData.forEach(function(samples, i){
-      //console.log('samples', i)
       samples.forEach(function(sample){
         if(sample === -1){
-          sample = {}
+          sample = {
+            id: i
+          }
         }
-        //console.log('--->', sample)
-        sample.r = duration
-        sample.e = envelopeType
-        //@TODO: add array if necessary
+        sample.releaseDuration = duration
+        sample.releaseEnvelope = envelope
       })
     })
   }
+
 
   stopAllSounds(){
     //console.log('stopAllSounds')
@@ -221,101 +241,4 @@ export class Instrument{
       })
     })
   }
-
-
-  export(){
-    //return json file with base64 encoded audio
-  }
-}
-
-/*
-getArrayBuffer = function({
-    url = null,
-    base64 = null,
-    buffer = null,
-  } = {}){
-
-  return new Promise((resolve, reject) => {
-
-    if(url === null && base64 === null && buffer === null){
-      console.warn('please provide a sample')
-      reject()
-    }else if(buffer !== null){
-      if(buffer instanceof AudioBuffer === true){
-        resolve(buffer)
-      }else{
-        console.warn('not a valid AudioBuffer instance');
-        reject()
-      }
-    }else if(base64 !== null){
-      if(checkIfBase64(base64) === true){
-        let ab = base64ToBinary(base64);
-        if(ab instanceof ArrayBuffer === true){
-          resolve(ab)
-        }else{
-          reject()
-        }
-      }else{
-        reject()
-      }
-    }else if(url !== null){
-
-      fetch(url)
-      .then((response) => {
-        return response.arrayBuffer()
-      })
-      .then((ab) => {
-        if(ab instanceof ArrayBuffer === true){
-        console.log(ab)
-          resolve(ab)
-        }else{
-          reject()
-        }
-      })
-      .catch(() => {
-        console.warn('error')
-        reject()
-      })
-    }
-  })
-}
-*/
-/*
-decodeAudioData = function(arrayBuffer){
-  return new Promise((resolve, reject) => {
-    try{
-      context.decodeAudioData(arrayBuffer,
-
-        function onSuccess(buffer){
-          resolve(buffer);
-        },
-
-        function onError(e){
-          console.log('onerror', e)
-          reject(e)
-        }
-      )
-    }catch(e){
-      console.log('catch', e)
-      reject(e);
-    }
-  })
-}
-*/
-
-let data = {
-  60: {
-    url: 'url/to/sample',
-    // not mandatory params:
-    sustain: [false, false],
-    release: [false, 'default'],
-    pan: false,
-    velocity: [0, 127],
-  },
-  61: {
-    buffer: 'sample as AudioBuffer'
-  },
-  D4: {
-    base64: 'base64 encoded sample'
-  },
 }

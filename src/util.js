@@ -1,6 +1,7 @@
 import fetch from 'isomorphic-fetch'
 
 const
+  mPI = Math.PI,
   mPow = Math.pow,
   mRound = Math.round,
   mFloor = Math.floor,
@@ -113,4 +114,23 @@ export function checkIfBase64(data){
     passed = false;
   }
   return passed;
+}
+
+export function getEqualPowerCurve(numSteps, type, maxValue) {
+  let i, value, percent,
+    values = new Float32Array(numSteps)
+
+  for(i = 0; i < numSteps; i++){
+    percent = i / numSteps
+    if(type === 'fadeIn'){
+      value = Math.cos((1.0 - percent) * 0.5 * mPI) * maxValue
+    }else if(type === 'fadeOut'){
+      value = Math.cos(percent * 0.5 * Math.PI) * maxValue
+    }
+    values[i] = value
+    if(i === numSteps - 1){
+      values[i] = type === 'fadeIn' ? 1 : 0
+    }
+  }
+  return values
 }
