@@ -1,5 +1,6 @@
 import {context} from './init_audio'
 import {typeString, checkIfBase64, base64ToBinary} from './util'
+import fetch from 'isomorphic-fetch'
 
 
 export function decodeSample(sample, id, every){
@@ -45,6 +46,7 @@ export function decodeSample(sample, id, every){
 
 
 function loadAndParseSample(url, id, every){
+  //console.log(id, url)
   let executor = function(resolve){
     fetch(url).then(
       function(response){

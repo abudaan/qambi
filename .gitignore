@@ -3,3 +3,4 @@ src/build/app.js
 assets/*
 node_modules/*
 npm-debug.log
+instruments

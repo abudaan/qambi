@@ -102,9 +102,18 @@ export class Instrument{
 
   // load and parse
   parseSampleData(data){
-    return parseSamples(data, (sample) => {
-      //console.log(sample.buffer instanceof AudioBuffer)
-      this.addSampleData(sample.id, sample.buffer, data[sample.id])
+
+    return new Promise((resolve, reject) => {
+      parseSamples(data, (sample) => {
+        //console.log(sample.buffer instanceof AudioBuffer)
+        this.addSampleData(sample.id, sample.buffer, data[sample.id])
+      }).then(() => {
+        if(typeof data.release !== 'undefined'){
+          this.setRelease(data.release[0], data.release[1])
+          //console.log(data.release[0], data.release[1])
+        }
+        resolve()
+      })
     })
   }
 
@@ -161,6 +170,8 @@ export class Instrument{
     // log(panPosition);
     // log(velocityStart, velocityEnd);
 
+
+    //@TODO: check if data exists!
     this.samplesData[noteId].fill({
       n: noteId,
       d: audioBuffer,
@@ -188,6 +199,18 @@ export class Instrument{
   */
   setRelease(duration: number, envelopeType: string, values: Array<number> = null){
     // set release for all keys, overrules values set by setKeyScalingRelease()
+    this.samplesData.forEach(function(samples, i){
+      //console.log('samples', i)
+      samples.forEach(function(sample){
+        if(sample === -1){
+          sample = {}
+        }
+        //console.log('--->', sample)
+        sample.r = duration
+        sample.e = envelopeType
+        //@TODO: add array if necessary
+      })
+    })
   }
 
   stopAllSounds(){
