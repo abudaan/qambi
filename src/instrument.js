@@ -173,6 +173,22 @@ export class Instrument{
     //console.log(this.samplesData[noteId]);
   }
 
+  setKeyScalingPanning(){
+    // sets panning based on the key value, e.g. higher notes are panned more to the right and lower notes more to the left
+  }
+
+  setKeyScalingRelease(){
+    // set release based on key value
+  }
+
+  /*
+    @duration: milliseconds
+    @envelopeType: linear | equal power | array
+    @value: when envelopeType is set to array these values will be used to create the envelope curve
+  */
+  setRelease(duration: number, envelopeType: string, values: Array<number> = null){
+    // set release for all keys, overrules values set by setKeyScalingRelease()
+  }
 
   stopAllSounds(){
     //console.log('stopAllSounds')
