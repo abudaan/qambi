@@ -31,7 +31,23 @@ export let Blob = (() => {
 })()
 
 
-export function init(): void{
+export function init(settings = {}): void{
+
+  // load settings.instruments (array or object)
+  // load settings.midifiles (array or object)
+  /*
+
+    qambi.init({
+      instruments: ['../instruments/piano', '../instruments/violin'],
+      midifiles: ['../midi/mozart.mid']
+    })
+    .then((loaded) => {
+      let [piano, violin] = loaded.instruments
+      let [mozart] = loaded.midifiles
+    })
+
+  */
+
   return new Promise((resolve, reject) => {
 
     Promise.all([initAudio(), initMIDI()])
