@@ -4,3 +4,6 @@ assets/*
 node_modules/*
 npm-debug.log
 instruments
+lib/qambi
+dist
+build

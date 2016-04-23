@@ -146,6 +146,9 @@ Object.defineProperty(qambi, 'TEMPO', {value: 0x51});
 Object.defineProperty(qambi, 'TIME_SIGNATURE', {value: 0x58});
 Object.defineProperty(qambi, 'END_OF_TRACK', {value: 0x2F});
 
+window.qambi = qambi
+
+/*
 export default qambi
 
 export {
@@ -192,3 +195,4 @@ export {
 
   parseMIDIFile,
 }
+*/
