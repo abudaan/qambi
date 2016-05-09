@@ -118,7 +118,8 @@ export class Instrument{
           }else{
             sampleData.buffer = sample.buffer
           }
-          this.addSampleData(sample.id, sampleData)
+          sampleData.noteId = sample.id
+          this.addSampleData(sampleData)
         })
 
         resolve()
@@ -127,9 +128,9 @@ export class Instrument{
   }
 
   /*
-    @param noteId can be note name (C4) or note number (60)
     @param config (optional)
       {
+        noteId: can be note name (C4) or note number (60)
         buffer: AudioBuffer
         sustain: [sustainStart, sustainEnd], // optional, in millis
         release: [releaseDuration, releaseEnvelope], // optional
@@ -137,8 +138,13 @@ export class Instrument{
         velocity: [velocityStart, velocityEnd] // optional, for multi-layered instruments
       }
   */
-  addSampleData(noteId, data = {}){
+  addSampleData(...data){
+    data.forEach(noteData => this._addSampleData(noteData))
+  }
+
+  _addSampleData(data = {}){
     let {
+      noteId,
       buffer = null,
       sustain = [null, null],
       release = [null, 'linear'],

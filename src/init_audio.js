@@ -3,7 +3,7 @@
 */
 
 import samples from './samples'
-import {parseSamples} from './util'
+import {parseSamples} from './parse_audio'
 
 let
   masterGain,
