@@ -5,8 +5,8 @@ import {MIDIEvent} from './midi_event'
 import {Part} from './part'
 import {Track} from './track'
 import {Song} from './song'
-import {Instrument} from './instrument'
 import {base64ToBinary} from './util'
+import {status, json, arrayBuffer} from './fetch_helpers'
 
 const PPQ = 960
 
@@ -114,7 +114,6 @@ function toSong(parsed){
     if(events.length > 0){
       //console.count(events.length)
       let newTrack = new Track(trackName)
-      newTrack.setInstrument(new Instrument)
       let part = new Part()
       newTrack.addParts(part)
       part.addEvents(...events)
@@ -164,6 +163,15 @@ export function songFromMIDIFile(data, settings = {}){
 
 
 export function songFromMIDIFileAsync(url){
-
-
+  return new Promise((resolve, reject) => {
+    fetch(url)
+    .then(status)
+    .then(arrayBuffer)
+    .then(data => {
+      resolve(songFromMIDIFile(data))
+    })
+    .catch(e => {
+      reject(e)
+    })
+  })
 }

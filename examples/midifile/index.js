@@ -16,7 +16,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
   qambi.init()
   .then(() => {
-    let test = 1
+
+    let test = 2
 
     if(test === 1){
       fetch('../../data/mozk545a.mid')
@@ -27,7 +28,15 @@ document.addEventListener('DOMContentLoaded', function(){
         song = songFromMIDIFile(data)
         initUI()
       })
+    }else if(test === 2){
+
+      songFromMIDIFileAsync('../../data/minute_waltz.mid')
+      .then(s => {
+        song = s
+        initUI()
+      }, e => console.log(e))
     }
+
   })
 
 

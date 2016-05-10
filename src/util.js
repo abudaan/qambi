@@ -136,6 +136,8 @@ export function getEqualPowerCurve(numSteps, type, maxValue) {
 }
 
 
+
+/*
 //old school ajax
 
 export function ajax(config){
@@ -196,3 +198,4 @@ export function ajax(config){
 
   return new Promise(executor);
 }
+*/

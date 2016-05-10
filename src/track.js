@@ -25,6 +25,7 @@ export class Track{
     this._eventsById = new Map()
     this._needsUpdate = false
     this._createEventArray = false
+    this.setInstrument(new Instrument())
   }
 
   setInstrument(instrument){
