@@ -48,7 +48,7 @@ import {
 
 import {
   parseSamples,
-} from './util'
+} from './parse_audio'
 
 
 const getAudioContext = function(){

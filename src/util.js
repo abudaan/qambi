@@ -134,3 +134,65 @@ export function getEqualPowerCurve(numSteps, type, maxValue) {
   }
   return values
 }
+
+
+//old school ajax
+
+export function ajax(config){
+  let
+    request = new XMLHttpRequest(),
+    method = typeof config.method === 'undefined' ? 'GET' : config.method,
+    fileSize;
+
+  function executor(resolve, reject){
+
+    reject = reject || function(){};
+    resolve = resolve || function(){};
+
+    request.onload = function(){
+      if(request.status !== 200){
+        reject(request.status);
+        return;
+      }
+
+      if(config.responseType === 'json'){
+        fileSize = request.response.length;
+        resolve(JSON.parse(request.response), fileSize);
+        request = null;
+      }else{
+        resolve(request.response);
+        request = null;
+      }
+    };
+
+    request.onerror = function(e){
+      config.onError(e);
+    };
+
+    request.open(method, config.url, true);
+
+    if(config.overrideMimeType){
+      request.overrideMimeType(config.overrideMimeType);
+    }
+
+    if(config.responseType){
+      if(config.responseType === 'json'){
+        request.responseType = 'text';
+      }else{
+        request.responseType = config.responseType;
+      }
+    }
+
+    if(method === 'POST') {
+      request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    }
+
+    if(config.data){
+      request.send(config.data);
+    }else{
+      request.send();
+    }
+  }
+
+  return new Promise(executor);
+}

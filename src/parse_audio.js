@@ -48,7 +48,9 @@ export function decodeSample(sample, id, every){
 function loadAndParseSample(url, id, every){
   //console.log(id, url)
   let executor = function(resolve){
-    fetch(url).then(
+    fetch(escape(url), {
+      method: 'GET'
+    }).then(
       function(response){
         if(response.ok){
           response.arrayBuffer().then(function(data){
@@ -90,7 +92,8 @@ function getPromises(promises, sample, key, every){
 }
 
 
-export function parseSamples(mapping, every = false){
+// only for internally use in qambi
+export function parseSamples2(mapping, every = false){
   let type = typeString(mapping),
     promises = []
 
@@ -124,4 +127,12 @@ export function parseSamples(mapping, every = false){
       }
     })
   })
+}
+
+
+export function parseSamples(...data){
+  if(data.length === 1 && typeString(data[0]) !== 'string'){
+    return parseSamples2(data[0])
+  }
+  return parseSamples2(data)
 }

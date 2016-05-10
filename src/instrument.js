@@ -1,7 +1,7 @@
 import {createSample} from './sample'
 import {context} from './init_audio'
 import {createNote} from './note'
-import {parseSamples} from './parse_audio'
+import {parseSamples2} from './parse_audio'
 import {typeString} from './util'
 
 
@@ -101,7 +101,7 @@ export class Instrument{
   parseSampleData(data){
 
     return new Promise((resolve, reject) => {
-      parseSamples(data)
+      parseSamples2(data)
       .then((result) => {
 
         if(typeof data.release !== 'undefined'){
@@ -118,8 +118,8 @@ export class Instrument{
           }else{
             sampleData.buffer = sample.buffer
           }
-          sampleData.noteId = sample.id
-          this.addSampleData(sampleData)
+          sampleData.note = sample.id
+          this.updateSampleData(sampleData)
         })
 
         resolve()
@@ -130,7 +130,7 @@ export class Instrument{
   /*
     @param config (optional)
       {
-        noteId: can be note name (C4) or note number (60)
+        note: can be note name (C4) or note number (60)
         buffer: AudioBuffer
         sustain: [sustainStart, sustainEnd], // optional, in millis
         release: [releaseDuration, releaseEnvelope], // optional
@@ -138,13 +138,13 @@ export class Instrument{
         velocity: [velocityStart, velocityEnd] // optional, for multi-layered instruments
       }
   */
-  addSampleData(...data){
-    data.forEach(noteData => this._addSampleData(noteData))
+  updateSampleData(...data){
+    data.forEach(noteData => this._updateSampleData(noteData))
   }
 
-  _addSampleData(data = {}){
+  _updateSampleData(data = {}){
     let {
-      noteId,
+      note,
       buffer = null,
       sustain = [null, null],
       release = [null, 'linear'],
@@ -152,17 +152,18 @@ export class Instrument{
       velocity = [0, 127],
     } = data
 
-    if(typeof noteId === 'undefined'){
-      console.warn('please provide a note id')
+    if(typeof note === 'undefined'){
+      console.warn('please provide a notenumber or a notename')
       return
     }
 
-    let note = createNote(noteId)
-    if(note === false){
+    // get notenumber from notename and check if the notenumber is valid
+    let n = createNote(note)
+    if(n === false){
       console.warn('not a valid note id')
       return
     }
-    noteId = note.number
+    note = n.number
 
     let [sustainStart, sustainEnd] = sustain
     let [releaseDuration, releaseEnvelope] = release
@@ -183,11 +184,11 @@ export class Instrument{
     // console.log(velocityStart, velocityEnd);
 
 
-    this.samplesData[noteId].forEach((sampleData, i) => {
+    this.samplesData[note].forEach((sampleData, i) => {
       if(i >= velocityStart && i < velocityEnd){
         if(sampleData === -1){
           sampleData = {
-            id: noteId
+            id: note
           }
         }
 
@@ -204,10 +205,10 @@ export class Instrument{
         }else{
           delete sampleData.releaseEnvelopeArray
         }
-        this.samplesData[noteId][i] = sampleData
+        this.samplesData[note][i] = sampleData
       }
     })
-    //console.log('%O', this.samplesData[noteId]);
+    //console.log('%O', this.samplesData[note]);
   }
 
 
