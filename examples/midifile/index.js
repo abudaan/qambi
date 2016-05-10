@@ -1,12 +1,7 @@
 import qambi, {
-  MIDIEvent,
-  Instrument,
+  Song,
 } from '../../src/qambi'
 
-import {
-  songFromMIDIFile,
-  songFromMIDIFileAsync,
-} from '../../src/song_from_midifile'
 
 import fetch from 'isomorphic-fetch'
 
@@ -20,19 +15,25 @@ document.addEventListener('DOMContentLoaded', function(){
     let test = 2
 
     if(test === 1){
+
+      //console.time('song')
       fetch('../../data/mozk545a.mid')
       .then(response => {
         return response.arrayBuffer()
       })
       .then(data => {
-        song = songFromMIDIFile(data)
+        song = Song.fromMIDIFile(data)
         initUI()
+        //console.timeEnd('song')
       })
+
     }else if(test === 2){
 
-      songFromMIDIFileAsync('../../data/minute_waltz.mid')
+      //console.time('song')
+      Song.fromMIDIFileAsync('../../data/minute_waltz.mid')
       .then(s => {
         song = s
+        //console.timeEnd('song')
         initUI()
       }, e => console.log(e))
     }

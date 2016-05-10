@@ -5,9 +5,10 @@ import {parseTimeEvents, parseEvents} from './parse_events'
 import {context} from './init_audio'
 import Scheduler from './scheduler'
 import {MIDIEvent} from './midi_event'
-import {songFromMIDIFile} from './song_from_midifile'
+import {songFromMIDIFile, songFromMIDIFileAsync} from './song_from_midifile'
 import qambi from './qambi'
 import {sortEvents} from './util'
+import {getPosition} from './position'
 
 let songIndex = 0
 
@@ -54,6 +55,10 @@ export class Song{
 
   static fromMIDIFile(data){
     return songFromMIDIFile(data)
+  }
+
+  static fromMIDIFileAsync(data){
+    return songFromMIDIFileAsync(data)
   }
 
   constructor(settings: {} = {}){
@@ -227,16 +232,24 @@ export class Song{
     console.timeEnd('update song')
   }
 
-  // startPosition is in millis, should to possible to call start like so: Song.start('barsbeats', 1,4,0,0)
-  play(startPosition: number = 0): void{
+  /*
+    position:
+      - 'millis', 1234
+      - 'barsbeats', 1, 4, 0, 25 -> bar, beat, sixteenth, tick
+      - 'time', 3, 49, 566 -> minutes, seconds, millis
+  */
+  play(type = 'millis', ...args): void{
+    this.timeStamp = context.currentTime * 1000
     this.playing = true
-    this._scheduler.start(startPosition)
+    this.millis = getPosition(type, args).millis
+    this._scheduler.init(this.millis, this.timeStamp)
+    this._pulse()
   }
 
   stop(): void{
     if(this.playing){
       this.playing = false
-      this._scheduler.stop()
+      this._scheduler.stopAllSounds()
     }
   }
 
@@ -245,7 +258,6 @@ export class Song{
       this._scheduler.stopAllSounds()
     }
   }
-
 
   getTracks(){
     return [...this._tracks]
@@ -261,5 +273,24 @@ export class Song{
 
   getNotes(){
     return [...this._notes]
+  }
+
+  _pulse(): void{
+    if(this.playing === false){
+      return
+    }
+    let now = context.currentTime * 1000
+    let diff = now - this.timeStamp
+    this.millis += diff
+    this.timeStamp = now
+    //console.log(diff, this.millis)
+
+    // @TODO: implement a better end of song calculation!
+    let endOfSong = this._scheduler.update(this.millis)
+    if(endOfSong){
+      this.song.stop()
+    }
+    //console.log('pulse', diff)
+    requestAnimationFrame(this._pulse.bind(this))
   }
 }

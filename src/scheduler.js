@@ -3,7 +3,6 @@ import {context} from './init_audio'
 
 
 const BUFFER_TIME = 200 // millis
-const PRE_BUFFER = 200
 
 export default class Scheduler{
 
@@ -12,36 +11,13 @@ export default class Scheduler{
   }
 
 
-  start(position){
-    this.timeStamp = context.currentTime * 1000
-    this.songStartMillis = position
+  init(millis, timeStamp){
+    this.songStartMillis = millis
+    this.timeStamp = timeStamp
     this.events = this.song._events
     this.numEvents = this.events.length
     this.index = 0
     this.setIndex(this.songStartMillis)
-    this.pulse()
-  }
-
-
-  stop(){
-    this.stopAllSounds()
-  }
-
-
-  pulse(): void{
-    if(this.song.playing === false){
-      return
-    }
-    let now = context.currentTime * 1000
-    this.maxtime = now - this.timeStamp + BUFFER_TIME
-
-    // @TODO: implement a better end of song calculation!
-    let endOfSong = this.update()
-    if(endOfSong){
-      this.song.stop()
-    }
-    //console.log('pulse', diff)
-    requestAnimationFrame(this.pulse.bind(this))
   }
 
 
@@ -82,7 +58,7 @@ export default class Scheduler{
   }
 
 
-  update(){
+  update(millis){
     var i,
       event,
       numEvents,
@@ -94,6 +70,7 @@ export default class Scheduler{
     //console.log(position, this.maxtime)
     events = this.getEvents()
     numEvents = events.length
+    this.maxtime = millis + BUFFER_TIME
 
     //console.log('update', this.maxtime, numEvents)
 
@@ -130,26 +107,26 @@ export default class Scheduler{
       if(event.type === 'audio'){
         // to be implemented
       }else{
-        let channel = track.channel
-        let time = scheduledTime + (BUFFER_TIME * 2)
 
-        // send to external hardware or software instrument
-///*
-        for(let portId of track._midiOutputIds){
-          let port = getMIDIOutputById(portId)
-          if(port){
-            if(event.type === 128 || event.type === 144 || event.type === 176){
-              port.send([event.type + channel, event.data1, event.data2], time)
-            }else if(event.type === 192 || event.type === 224){
-              port.send([event.type + channel, event.data1], time)
-            }
-          }
-        }
-//*/
         // send to javascript instrument
         if(typeof instrument !== 'undefined'){
           // convert to seconds because the audio context uses seconds for scheduling
           instrument.processMIDIEvent(event, scheduledTime / 1000, track._output)
+        }
+
+        // send to external hardware or software instrument
+        let channel = track.channel
+        let offset = (BUFFER_TIME * 2) // why does this work?
+
+        for(let portId of track._midiOutputIds){
+          let port = getMIDIOutputById(portId)
+          if(port){
+            if(event.type === 128 || event.type === 144 || event.type === 176){
+              port.send([event.type + channel, event.data1, event.data2], scheduledTime + offset)
+            }else if(event.type === 192 || event.type === 224){
+              port.send([event.type + channel, event.data1], scheduledTime + offset)
+            }
+          }
         }
       }
     }
@@ -162,10 +139,12 @@ export default class Scheduler{
   stopAllSounds(){
     console.log('STOP')
 ///*
+
+    let timeStamp = context.currentTime * 1000
     let outputs = getMIDIOutputs()
     outputs.forEach((output) => {
-      output.send([0xB0, 0x7B, 0x00], this.timeStamp + (BUFFER_TIME * 2)); // stop all notes
-      output.send([0xB0, 0x79, 0x00], this.timeStamp + (BUFFER_TIME * 2)); // reset all controllers
+      output.send([0xB0, 0x7B, 0x00], timeStamp + (BUFFER_TIME * 2)); // stop all notes
+      output.send([0xB0, 0x79, 0x00], timeStamp + (BUFFER_TIME * 2)); // reset all controllers
     })
 //*/
     let tracks = this.song._tracks
