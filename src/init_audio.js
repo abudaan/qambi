@@ -60,8 +60,8 @@ export function initAudio(){
     parseSamples(samples).then(
       function onFulfilled(buffers){
         //console.log(buffers)
-        data.ogg = buffers.emptyOgg !== undefined
-        data.mp3 = buffers.emptyMp3 !== undefined
+        data.ogg = typeof buffers.emptyOgg !== 'undefined'
+        data.mp3 = typeof buffers.emptyMp3 !== 'undefined'
         data.lowtick = buffers.lowtick
         data.hightick = buffers.hightick
         if(data.ogg === false && data.mp3 === false){

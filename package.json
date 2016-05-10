@@ -45,7 +45,7 @@
     "test": "babel-node ./src/fp/test.js",
     "babel-node": "babel-node",
     "start": "webpack-dev-server",
-    "watch-test": "watchify examples/instruments/index.js -t babelify -o examples/instruments/app.js --debug --verbose",
+    "watch-test": "watchify examples/midifile/index.js -t babelify -o examples/midifile/app.js --debug --verbose",
     "build": "browserify examples/instruments/index.js -t babelify --debug | exorcist examples/instruments/app.js.map | uglifyjs -c > examples/instruments/app.js",
     "watch": "node_modules/babel-cli/bin/babel.js src --watch --out-dir lib/qambi"
   },

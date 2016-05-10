@@ -114,6 +114,7 @@ function toSong(parsed){
     if(events.length > 0){
       //console.count(events.length)
       let newTrack = new Track(trackName)
+      newTrack.setInstrument(new Instrument)
       let part = new Part()
       newTrack.addParts(part)
       part.addEvents(...events)
@@ -159,4 +160,10 @@ export function songFromMIDIFile(data, settings = {}){
   //   bpm = newBPM,
   //   playbackSpeed = newPlaybackSpeed,
   // } = settings
+}
+
+
+export function songFromMIDIFileAsync(url){
+
+
 }

@@ -110,6 +110,7 @@ export class Song{
 
 
   addTimeEvents(...events){
+    //@TODO: filter time events on the same tick -> use the lastly added events
     this._timeEvents.push(...events)
     this._updateTimeEvents = true
   }
@@ -226,20 +227,16 @@ export class Song{
     console.timeEnd('update song')
   }
 
-  start(startPosition: number = 0): void{
-    this._timeStamp = context.currentTime * 1000
-    this._position = 0
-    this._scheduler.setStartPosition(startPosition, this._timeStamp)
+  // startPosition is in millis, should to possible to call start like so: Song.start('barsbeats', 1,4,0,0)
+  play(startPosition: number = 0): void{
     this.playing = true
-    this._pulse()
-    //addTask('repetitive', this.id, this._pulse.bind(this))
+    this._scheduler.start(startPosition)
   }
 
   stop(): void{
     if(this.playing){
-      //removeTask('repetitive', this.id)
       this.playing = false
-      this._scheduler.stopAllSounds()
+      this._scheduler.stop()
     }
   }
 
@@ -249,23 +246,6 @@ export class Song{
     }
   }
 
-  _pulse(): void{
-    if(this.playing === false){
-      return
-    }
-    let
-      now = context.currentTime * 1000,
-      diff = now - this._timeStamp,
-      endOfSong
-
-    this._position += diff // position is in millis
-    this._timeStamp = now
-    endOfSong = this._scheduler.update(this._position)
-    if(endOfSong){
-      this.stop()
-    }
-    requestAnimationFrame(this._pulse.bind(this))
-  }
 
   getTracks(){
     return [...this._tracks]
