@@ -58,7 +58,7 @@ function updatePosition(event, fast = false){
   //console.log(diffTicks, millisPerTick);
   millis += diffTicks * millisPerTick;
 
-  if(fast){
+  if(fast === false){
     while(tick >= ticksPerSixteenth){
       sixteenth++;
       tick -= ticksPerSixteenth;

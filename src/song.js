@@ -8,7 +8,7 @@ import {MIDIEvent} from './midi_event'
 import {songFromMIDIFile, songFromMIDIFileAsync} from './song_from_midifile'
 import qambi from './qambi'
 import {sortEvents} from './util'
-import {getPosition} from './position'
+import {calculatePosition} from './position'
 
 let songIndex = 0
 
@@ -88,6 +88,7 @@ export class Song{
 
     //this._timeEvents = []
     this._updateTimeEvents = true
+    this._lastEvent = new MIDIEvent(0, qambi.END_OF_TRACK)
 
     this._tracks = []
     this._tracksById = new Map()
@@ -111,6 +112,7 @@ export class Song{
     this._removedParts = []
 
     this._scheduler = new Scheduler(this)
+    this._millis = 0
   }
 
 
@@ -150,9 +152,10 @@ export class Song{
 
     // check if time events are updated
     if(this._updateTimeEvents === true){
-      console.log('updateTimeEvents', this._timeEvents.length)
+      //console.log('updateTimeEvents', this._timeEvents.length)
       parseTimeEvents(this, this._timeEvents, this.isPlaying)
       this._updateTimeEvents = false
+      console.log('time events %O', this._timeEvents)
     }
 
     // only parse new and moved events
@@ -230,31 +233,54 @@ export class Song{
     console.timeEnd('total')
     console.groupEnd('update song')
     console.timeEnd('update song')
+
+    let lastEvent = this._events[this._events.length - 1]
+    let lastTimeEvent = this._timeEvents[this._timeEvents.length - 1]
+    if(lastTimeEvent.ticks > lastTimeEvent.ticks){
+      lastTimeEvent = lastTimeEvent
+    }
+    ({
+      bar: this._lastEvent.bar,
+      beat: this._lastEvent.beat,
+      sixteenth: this._lastEvent.sixteenth,
+      tick: this._lastEvent.tick,
+      ticks: this._lastEvent.ticks,
+      millis: this._lastEvent.millis,
+    } = lastEvent)
+    //console.log('last tick', lastTicks)
   }
 
-  /*
-    position:
-      - 'millis', 1234
-      - 'barsbeats', 1, 4, 0, 25 -> bar, beat, sixteenth, tick
-      - 'time', 3, 49, 566 -> minutes, seconds, millis
-  */
-  play(type = 'millis', ...args): void{
-    this.timeStamp = context.currentTime * 1000
-    this.playing = true
-    this.millis = getPosition(type, args).millis
-    this._scheduler.init(this.millis, this.timeStamp)
+  play(): void{
+
+    this._timeStamp = context.currentTime * 1000
+    this._scheduler.setTimeStamp(this._timeStamp)
+
+    if(this._paused){
+      this._paused = false
+      this._playing = true
+    }else{
+      this._playing = true
+      this._scheduler.init(this._millis)
+    }
     this._pulse()
   }
 
+  pause(): void{
+    // just toggle
+    this._playing = !this._playing
+    this._paused = !this._playing
+  }
+
   stop(): void{
-    if(this.playing){
-      this.playing = false
+    if(this._playing){
+      this._playing = false
       this._scheduler.stopAllSounds()
+      this._millis = 0
     }
   }
 
   stopAllSounds(){
-    if(this.playing){
+    if(this._playing){
       this._scheduler.stopAllSounds()
     }
   }
@@ -275,18 +301,62 @@ export class Song{
     return [...this._notes]
   }
 
+  calculatePosition(args){
+    return calculatePosition(this, args)
+  }
+
+  /*
+    position:
+      - 'ticks', 96000
+      - 'millis', 1234
+      - 'percentage', 55
+      - 'barsbeats', 1, 4, 0, 25 -> bar, beat, sixteenth, tick
+      - 'time', 0, 3, 49, 566 -> hours, minutes, seconds, millis
+  */
+  playFrom(type, ...args){
+
+    let target
+
+    switch(type){
+      case 'ticks':
+      case 'millis':
+      case 'percentage':
+        target = args[0] || 0
+        break
+
+      case 'time':
+      case 'barsbeats':
+      case 'barsandbeats':
+        target = args
+        break
+
+      default:
+        console.log('unsupported type')
+        return
+    }
+
+    this._millis = calculatePosition(this, {
+      type,
+      target,
+      result: 'millis'
+    }).millis
+
+    console.log('play song from', this._millis)
+    this.play()
+  }
+
   _pulse(): void{
-    if(this.playing === false){
+    if(this._playing === false){
       return
     }
     let now = context.currentTime * 1000
-    let diff = now - this.timeStamp
-    this.millis += diff
-    this.timeStamp = now
+    let diff = now - this._timeStamp
+    this._millis += diff
+    this._timeStamp = now
     //console.log(diff, this.millis)
 
     // @TODO: implement a better end of song calculation!
-    let endOfSong = this._scheduler.update(this.millis)
+    let endOfSong = this._scheduler.update(this._millis)
     if(endOfSong){
       this.song.stop()
     }

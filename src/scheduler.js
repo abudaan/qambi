@@ -11,15 +11,18 @@ export default class Scheduler{
   }
 
 
-  init(millis, timeStamp){
+  init(millis){
     this.songStartMillis = millis
-    this.timeStamp = timeStamp
     this.events = this.song._events
     this.numEvents = this.events.length
     this.index = 0
     this.setIndex(this.songStartMillis)
   }
 
+
+  setTimeStamp(timeStamp){
+    this.timeStamp = timeStamp
+  }
 
   // get the index of the event that has its millis value at or right after the provided millis value
   setIndex(millis){
@@ -139,7 +142,6 @@ export default class Scheduler{
   stopAllSounds(){
     console.log('STOP')
 ///*
-
     let timeStamp = context.currentTime * 1000
     let outputs = getMIDIOutputs()
     outputs.forEach((output) => {
