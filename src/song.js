@@ -250,7 +250,10 @@ export class Song{
     //console.log('last tick', lastTicks)
   }
 
-  play(): void{
+  play(type, ...args): void{
+    if(typeof type !== 'undefined'){
+      this.setPosition(type, ...args)
+    }
 
     this._timeStamp = context.currentTime * 1000
     this._scheduler.setTimeStamp(this._timeStamp)
@@ -313,7 +316,7 @@ export class Song{
       - 'barsbeats', 1, 4, 0, 25 -> bar, beat, sixteenth, tick
       - 'time', 0, 3, 49, 566 -> hours, minutes, seconds, millis
   */
-  playFrom(type, ...args){
+  setPosition(type, ...args){
 
     let target
 
@@ -341,8 +344,7 @@ export class Song{
       result: 'millis'
     }).millis
 
-    console.log('play song from', this._millis)
-    this.play()
+    console.log('setPosition', this._millis)
   }
 
   _pulse(): void{

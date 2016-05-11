@@ -50,10 +50,10 @@ document.addEventListener('DOMContentLoaded', function(){
     btnStop.disabled = false
 
     btnPlay.addEventListener('click', function(){
-      song.playFrom('barsbeats', 4, 1, 1, 0)
-      //song.playFrom('time', 0, 0, 15) // play from 15 seconds
-      //song.playFrom('millis', 34000) // play from 34 seconds
-      //song.play()
+      //song.play('barsbeats', 4, 1, 1, 0)
+      //song.play('time', 0, 0, 15) // play from 15 seconds
+      //song.play('millis', 34000) // play from 34 seconds
+      song.play()
     });
 
     btnStop.addEventListener('click', function(){

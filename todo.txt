@@ -1,0 +1,11 @@
+implement playhead
+  -> get position data of the current value of song._millis
+  -> get the active event, notes and parst on the current position
+  -> add addEventListener()
+
+
+implement metronome
+
+implement loop
+
+implement precount + MIDI recording
