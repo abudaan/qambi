@@ -1,6 +1,7 @@
 import {getPosition2} from './position.js'
 import {dispatchEvent} from './eventlistener.js'
 
+const range = 10 // milliseconds
 let instanceId = 0
 
 export class Playhead{
@@ -10,6 +11,7 @@ export class Playhead{
     this.song = song
     this.type = type
     this.lastEvent = null
+    this.data = {}
 
     this.activeParts = []
     this.activeNotes = []
@@ -23,7 +25,7 @@ export class Playhead{
     this.eventIndex = 0
     this.noteIndex = 0
     this.partIndex = 0
-    this.calculate()
+    this.calculate(0)
     return this.data
   }
 
@@ -57,24 +59,27 @@ export class Playhead{
 
   calculate(diff){
     let i
+    let value
     let event
     let note
     let part
     let position
     let stillActiveNotes = []
     let stillActiveParts = []
-    let collectedParts = []
-    let collectedNotes = []
-    let collectedEvents = []
+    let collectedParts = new Set()
+    let collectedNotes = new Set()
 
+    this.data = {}
     this.activeEvents = []
 
     for(i = this.eventIndex; i < this.numEvents; i++){
       event = this.events[i]
-      if(event[this.unit] <= this.currentValue){
-        //console.log(event[this.unit], this.currentValue, event.type)
-        //collectedEvents.push(event)
-        this.activeEvents.push(event)
+      value = event[this.unit]
+      if(value <= this.currentValue){
+        // if the playhead is set to a position of say 3000 millis, we don't want to add events more that 10 units before the playhead
+        if(value > this.currentValue - range){
+          this.activeEvents.push(event)
+        }
         this.lastEvent = event
         dispatchEvent({
           type: 'event',
@@ -96,10 +101,6 @@ export class Playhead{
     this.data.millis = position.millis
     this.data.ticks = position.ticks
 
-    //console.log('millis:', position.millis, 'ticks:', position.ticks, this.unit, ':', this.currentValue);
-    // if(this.name === 'iterators'){
-    //     console.log('nominator:', position.nominator, 'ticks:', position.ticks, this.unit, ':', this.currentValue);
-    // }
 
     if(this.type.indexOf('all') !== -1){
       var data = this.data
@@ -129,23 +130,26 @@ export class Playhead{
       this.data.percentage = position.percentage
     }
 
-
     // get active notes
     if(this.type.indexOf('notes') !== -1 || this.type.indexOf('all') !== -1){
 
-      // get all events between the noteIndex and the current playhead position
+      // get all notes between the noteIndex and the current playhead position
       for(i = this.noteIndex; i < this.numNotes; i++){
         note = this.notes[i]
-        if(note.noteOn[this.unit] <= this.currentValue){
+        value = note.noteOn[this.unit]
+        if(value <= this.currentValue){
+          this.noteIndex++
           if(typeof note.noteOff === 'undefined'){
             continue;
           }
-          collectedNotes.push(note)
-          dispatchEvent({
-            type: 'noteOn',
-            data: note
-          })
-          this.noteIndex++
+          // if the playhead is set to a position of say 3000 millis, we don't want to add notes before the playhead
+          if(this.currentValue === 0 || note.noteOff[this.unit] > this.currentValue){
+            collectedNotes.add(note)
+            dispatchEvent({
+              type: 'noteOn',
+              data: note
+            })
+          }
         }else{
           break;
         }
@@ -154,16 +158,18 @@ export class Playhead{
       // filter notes that are no longer active
       for(i = this.activeNotes.length - 1; i >= 0; i--){
         note = this.activeNotes[i];
-        if(note.noteOn.state.indexOf('removed') === 0 || this.song._notesById.get(note.id) === false){
+        //if(note.noteOn.state.indexOf('removed') === 0 || this.song._notesById.get(note.id) === false){
+        if(this.song._notesById.get(note.id) === false){
           //console.log('skipping removed note', note.id);
           continue;
         }
 
         if(typeof note.noteOff === 'undefined'){
-          console.warn('note with id', note.id, 'has no noteOff event', note.noteOn.track.name);
+          console.warn('note with id', note.id, 'has no noteOff event');
           continue;
         }
 
+        //if(note.noteOff[this.unit] > this.currentValue && collectedNotes.has(note) === false){
         if(note.noteOff[this.unit] > this.currentValue){
           stillActiveNotes.push(note);
         }else{
@@ -175,7 +181,7 @@ export class Playhead{
       }
 
       // add the still active notes and the newly active events to the active notes array
-      this.activeNotes = [...collectedEvents, ...stillActiveNotes]
+      this.activeNotes = [...collectedNotes.values(), ...stillActiveNotes]
     }
 
 
@@ -186,7 +192,7 @@ export class Playhead{
         part = this.parts[i]
         //console.log(part, this.unit, this.currentValue);
         if(part._start[this.unit] <= this.currentValue){
-          collectedParts.push(part)
+          collectedParts.add(part)
           dispatchEvent({
             type: 'partOn',
             data: part
@@ -201,13 +207,15 @@ export class Playhead{
       // filter parts that are no longer active
       for(i = this.activeParts.length - 1; i >= 0; i--){
         part = this.activeParts[i];
-        if(part.state.indexOf('removed') === 0 || this.song._partsById.get(part.id) === false){
+        //if(part.state.indexOf('removed') === 0 || this.song._partsById.get(part.id) === false){
+        if(this.song._partsById.get(part.id) === false){
           //console.log('skipping removed part', part.id);
           continue;
         }
 
-        if(note._end[this.unit] > this.currentValue){
-          stillActiveNotes.push(note);
+        //if(part._end[this.unit] > this.currentValue && collectedParts.has(part) === false){
+        if(part._end[this.unit] > this.currentValue){
+          stillActiveParts.push(note);
         }else{
           dispatchEvent({
             type: 'partOff',
@@ -216,7 +224,7 @@ export class Playhead{
         }
       }
 
-      this.activeParts = [...collectedParts, ...stillActiveParts]
+      this.activeParts = [...collectedParts.values(), ...stillActiveParts]
     }
   }
 

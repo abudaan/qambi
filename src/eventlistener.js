@@ -2,6 +2,7 @@ let eventListeners = new Map();
 
 
 export function dispatchEvent(event){
+  //console.log(event.type)
   if(eventListeners.has(event.type) === false){
     return
   }

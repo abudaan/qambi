@@ -64,6 +64,14 @@ document.addEventListener('DOMContentLoaded', function(){
     btnStop.addEventListener('click', function(){
       song.stop()
     })
+
+    song.addEventListener('noteOn', note => {
+      console.log('noteOn', note.id, note.noteOn.id, note.noteOn.data1, note.noteOn.ticks)
+    })
+
+    song.addEventListener('noteOff', note => {
+      console.log('noteOff', note.id, note.noteOff.id, note.noteOff.data1, note.noteOff.ticks)
+    })
   }
 
 })

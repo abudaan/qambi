@@ -241,8 +241,8 @@ export class Instrument{
   }
 
 
-  stopAllSounds(){
-    //console.log('stopAllSounds')
+  allNotesOff(){
+    //console.log('allNotesOff')
     Object.keys(this.scheduledSamples).forEach((sampleId) => {
       this.scheduledSamples[sampleId].stop(0, () => {
         delete this.scheduledSamples[sampleId]

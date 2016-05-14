@@ -1,6 +1,5 @@
-'use strict';
-
 import {getNiceTime} from './util';
+import {MIDINote} from './midi_note';
 
 let
   ppq,
@@ -347,11 +346,12 @@ export function parseMIDINotes(events){
         delete notes[event._track.id][event.data1]
         continue
       }
-      let id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
-      noteOn.midiNoteId = id
-      noteOn.off = noteOff.id
-      noteOff.midiNoteId = id
-      noteOff.on = noteOn.id
+      let note = new MIDINote(noteOn, noteOff)
+      // let id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
+      // noteOn.midiNoteId = id
+      // noteOn.off = noteOff.id
+      // noteOff.midiNoteId = id
+      // noteOff.on = noteOn.id
       delete notes[event._track.id][event.data1]
     }
   }

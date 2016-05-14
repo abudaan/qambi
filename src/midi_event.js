@@ -12,6 +12,10 @@ export class MIDIEvent{
     this.data2 = data2
     this.frequency = 440 * Math.pow(2, (data1 - 69) / 12)
 
+    if(data1 === 144 && data2 === 0){
+      this.data1 = 128
+    }
+
     this._part = null
     this._track = null
     this._song = null

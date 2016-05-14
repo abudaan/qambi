@@ -93,7 +93,7 @@ export default class Scheduler{
       }
 
 
-      if((event.type === 144 || event.type === 128) && typeof event.midiNoteId === 'undefined'){
+      if((event.type === 144 || event.type === 128) && typeof event.midiNote === 'undefined'){
         // this is usually caused by the same note on the same ticks value, which is probably a bug in the midi file
         console.info('no midiNoteId', event)
         continue
@@ -139,8 +139,8 @@ export default class Scheduler{
   }
 
 
-  stopAllSounds(){
-    console.log('STOP')
+  allNotesOff(){
+    //console.log('STOP')
 ///*
     let timeStamp = context.currentTime * 1000
     let outputs = getMIDIOutputs()
@@ -153,7 +153,7 @@ export default class Scheduler{
     tracks.forEach((track) => {
       let instrument = track._instrument
       if(typeof instrument !== 'undefined'){
-        instrument.stopAllSounds()
+        instrument.allNotesOff()
       }
     })
   }

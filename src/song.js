@@ -10,6 +10,7 @@ import qambi from './qambi'
 import {sortEvents} from './util'
 import {calculatePosition} from './position'
 import {Playhead} from './playhead'
+import {addEventListener, removeEventListener, dispatchEvent} from './eventlistener'
 
 let songIndex = 0
 
@@ -115,6 +116,9 @@ export class Song{
     this._scheduler = new Scheduler(this)
     this._playhead = new Playhead(this)
     this._millis = 0
+
+    this._playing = false
+    this._paused = false
   }
 
 
@@ -192,6 +196,7 @@ export class Song{
     // filter removed events
     console.log('removed events %O', this._removedEvents)
     this._removedEvents.forEach((event) => {
+      this._notesById.delete(event.midiNote.id)
       this._eventsById.delete(event.id)
     })
 
@@ -203,6 +208,7 @@ export class Song{
       this._eventsById.set(event.id, event)
       this._events.push(event)
       tobeParsed.push(event)
+      //console.log(event.id)
     })
 
 
@@ -216,21 +222,39 @@ export class Song{
 
     console.time('parse')
     if(tobeParsed.length > 0){
+      //console.log('tobeParsed %O', tobeParsed)
       tobeParsed = [...tobeParsed, ...this._timeEvents]
       console.log('parseEvents', tobeParsed.length - this._timeEvents.length)
       parseEvents(tobeParsed, this.isPlaying)
+      tobeParsed.forEach(event => {
+        //console.log(event.id, event.type)
+        if(event.type === qambi.NOTE_ON){
+          if(event.midiNote){
+            this._notesById.set(event.midiNoteId, event.midiNote)
+            //console.log(event.midiNoteId, event.type)
+            //this._notes.push(event.midiNote)
+          }
+        }
+      })
+      this._notes = Array.from(this._notesById.values())
     }
     console.timeEnd('parse')
 
     if(createEventArray){
       console.time('to array')
       this._events = Array.from(this._eventsById.values())
+      this._notes = Array.from(this._notesById.values())
       console.timeEnd('to array')
     }
 
     console.time(`sorting ${this._events.length} events`)
     sortEvents(this._events)
+    this._notes.sort(function(a, b){
+      return a.noteOn.ticks - b.noteOn.ticks
+    })
     console.timeEnd(`sorting ${this._events.length} events`)
+
+    console.log('notes %O', this._notes)
 
     console.timeEnd('total')
     console.groupEnd('update song')
@@ -258,6 +282,9 @@ export class Song{
     if(typeof type !== 'undefined'){
       this.setPosition(type, ...args)
     }
+    if(this._playing){
+      return
+    }
 
     this._timeStamp = context.currentTime * 1000
     this._scheduler.setTimeStamp(this._timeStamp)
@@ -274,22 +301,27 @@ export class Song{
   }
 
   pause(): void{
-    // just toggle
-    this._playing = !this._playing
-    this._paused = !this._playing
+    this._paused = !this._paused
+    if(this._paused){
+      this._playing = false
+      this._scheduler.allNotesOff()
+      console.log('pause')
+    }else{
+      this.play()
+    }
   }
 
   stop(): void{
     if(this._playing){
       this._playing = false
-      this._scheduler.stopAllSounds()
+      this._scheduler.allNotesOff()
       this._millis = 0
     }
   }
 
-  stopAllSounds(){
+  allNotesOff(){
     if(this._playing){
-      this._scheduler.stopAllSounds()
+      this._scheduler.allNotesOff()
     }
   }
 
@@ -370,5 +402,13 @@ export class Song{
     //console.log('pulse', diff)
     this._playhead.update('millis', diff)
     requestAnimationFrame(this._pulse.bind(this))
+  }
+
+  addEventListener(type, callback){
+    return addEventListener(type, callback)
+  }
+
+  removeEventListener(type, id){
+    removeEventListener(type, id)
   }
 }

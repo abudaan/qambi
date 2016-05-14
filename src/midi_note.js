@@ -12,7 +12,12 @@ export class MIDINote{
     this.id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
     this.noteOn = noteon
     this.noteOff = noteoff
+    noteon.midiNote = this
+    noteoff.midiNote = this
+    noteon.midiNoteId = this.id
+    noteoff.midiNoteId = this.id
     this.durationTicks = noteoff.ticks - noteon.ticks
+    this.durationMillis = -1
   }
 
   copy(){
