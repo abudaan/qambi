@@ -8,7 +8,10 @@ class Sample{
     this.event = event
     this.sampleData = sampleData
 
-    if(this.sampleData === -1 || typeof this.sampleData.buffer === 'undefined'){
+    if(this.sampleData === -1 || typeof this.sampleData === 'undefined' || typeof this.sampleData.buffer === 'undefined'){
+      if(typeof this.sampleData === 'undefined'){
+        console.error('[SAMPLE]', event)
+      }
       // create simple synth sample
       this.source = context.createOscillator();
       this.source.type = 'sine';
@@ -31,6 +34,11 @@ class Sample{
   }
 
   stop(time, cb){
+    if(typeof this.sampleData === 'undefined'){
+      console.log(this.source)
+      console.error('[SAMPLE]', event)
+    }
+
     let {releaseDuration, releaseEnvelope, releaseEnvelopeArray} = this.sampleData
     if(releaseDuration && releaseEnvelope){
       this.source.stop(time + releaseDuration)

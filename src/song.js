@@ -274,11 +274,18 @@ export class Song{
       millis: this._lastEvent.millis,
     } = lastEvent)
     //console.log('last tick', lastTicks)
+    this._durationTicks = this._lastEvent.ticks
+    this._durationMillis = this._lastEvent.millis
 
     this._playhead.updateSong()
   }
 
   play(type, ...args): void{
+    this._play(type, ...args)
+    dispatchEvent({type: 'play', data: this._millis})
+  }
+
+  _play(type, ...args){
     if(typeof type !== 'undefined'){
       this.setPosition(type, ...args)
     }
@@ -291,15 +298,14 @@ export class Song{
 
     if(this._paused){
       this._paused = false
-      this._playing = true
-    }else{
-      this._playing = true
-      this._scheduler.init(this._millis)
     }
+
+    this._playing = true
+    this._scheduler.init(this._millis)
     this._playhead.set('millis', this._millis)
     this._pulse()
-    dispatchEvent({type: 'play', data: this._millis})
   }
+
 
   pause(): void{
     this._paused = !this._paused
@@ -314,10 +320,12 @@ export class Song{
   }
 
   stop(): void{
+    this._scheduler.allNotesOff()
     if(this._playing || this._paused){
       this._playing = false
       this._paused = false
-      this._scheduler.allNotesOff()
+    }
+    if(this._millis !== 0){
       this._millis = 0
       this._playhead.set('millis', this._millis)
       dispatchEvent({type: 'stop'})
@@ -325,9 +333,7 @@ export class Song{
   }
 
   allNotesOff(){
-    if(this._playing){
-      this._scheduler.allNotesOff()
-    }
+    this._scheduler.allNotesOff()
   }
 
   getTracks(){
@@ -360,7 +366,14 @@ export class Song{
   */
   setPosition(type, ...args){
 
+    let wasPlaying = this._playing
+    if(this._playing){
+      this._playing = false
+      this._scheduler.allNotesOff()
+    }
+
     let target
+    let position
 
     switch(type){
       case 'ticks':
@@ -380,13 +393,29 @@ export class Song{
         return
     }
 
-    this._millis = calculatePosition(this, {
+    // millis = calculatePosition(this, {
+    //   type,
+    //   target,
+    //   result: 'millis'
+    // }).millis
+
+    position = calculatePosition(this, {
       type,
       target,
-      result: 'millis'
-    }).millis
+      result: 'all'
+    })
 
-    console.log('setPosition', this._millis)
+    this._millis = position.millis
+
+    dispatchEvent({
+      type: 'position',
+      data: position
+    })
+
+    if(wasPlaying){
+      this._play()
+    }
+    //console.log('setPosition', this._millis)
   }
 
   getPosition(){
@@ -407,13 +436,16 @@ export class Song{
     this._timeStamp = now
     //console.log(diff, this.millis)
 
-    // @TODO: implement a better end of song calculation!
-    let endOfSong = this._scheduler.update(this._millis)
-    if(endOfSong){
-      this.song.stop()
-    }
-    //console.log('pulse', diff)
     this._playhead.update('millis', diff)
+
+    if(this._millis >= this._durationMillis){
+      this.stop()
+      return
+    }
+
+    this._scheduler.update(this._millis)
+
+    //console.log('pulse', diff)
     requestAnimationFrame(this._pulse.bind(this))
   }
 

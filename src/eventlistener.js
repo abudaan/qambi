@@ -3,13 +3,30 @@ let eventListeners = new Map();
 
 export function dispatchEvent(event){
   //console.log(event.type)
+  let map
+
+  if(event.type === 'event'){
+    let midiEvent = event.data
+    let midiEventType = midiEvent.type
+    //console.log(midiEventType)
+    if(eventListeners.has(midiEventType)){
+      map = eventListeners.get(midiEventType)
+      for(let cb of map.values()){
+        cb(midiEvent)
+      }
+    }
+  }
+
+
   if(eventListeners.has(event.type) === false){
     return
   }
-  let map = eventListeners.get(event.type)
+
+  map = eventListeners.get(event.type)
   for(let cb of map.values()){
     cb(event)
   }
+
 
   // @todo: run filters here, for instance if an eventlistener has been added to all NOTE_ON events, check the type of the incoming event
 }
@@ -28,6 +45,7 @@ export function addEventListener(type: string, callback){
   }
 
   map.set(id, callback)
+  //console.log(eventListeners)
   return id
 }
 

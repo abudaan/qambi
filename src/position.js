@@ -375,7 +375,7 @@ function getPositionData(song){
       positionData.secondsPerTick = secondsPerTick;
 
       // use ticks to make tempo changes visible by a faster moving playhead
-      positionData.percentage = ticks / song.durationTicks;
+      positionData.percentage = ticks / song._durationTicks;
       //positionData.percentage = millis / song.durationMillis;
       break;
     default:
@@ -475,7 +475,8 @@ export function calculatePosition(song, settings){
       //fromMillis(song, millis);
       //console.log(millis);
 
-      ticks = target * song.durationTicks // target must be in ticks!
+      ticks = target * song._durationTicks // target must be in ticks!
+      //console.log(ticks, song._durationTicks)
       if(snap !== -1){
         ticks = floor(ticks / snap) * snap;
         //fromTicks(song, ticks);

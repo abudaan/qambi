@@ -45,8 +45,11 @@ document.addEventListener('DOMContentLoaded', function(){
     let btnPlay = document.getElementById('play')
     let btnPause = document.getElementById('pause')
     let btnStop = document.getElementById('stop')
+    let divTempo = document.getElementById('tempo')
     let divPosition = document.getElementById('position')
     let divPositionTime = document.getElementById('position_time')
+    let rangePosition = document.getElementById('playhead')
+    let userInteraction = false
 
     btnPlay.disabled = false
     btnPause.disabled = false
@@ -67,6 +70,11 @@ document.addEventListener('DOMContentLoaded', function(){
       song.stop()
     })
 
+    // song.addEventListener(qambi.TEMPO, event => {
+    //   divTempo.innerHTML = `tempo: ${event.bpm} bpm`
+    // })
+
+
     song.addEventListener('noteOn', event => {
       let note = event.data
       //console.log('noteOn', note.id, note.noteOn.id, note.noteOn.data1, note.noteOn.ticks)
@@ -83,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     song.addEventListener('stop', () => {
       console.log('stop')
+      rangePosition.value = 0
     })
 
     song.addEventListener('pause', event => {
@@ -92,11 +101,33 @@ document.addEventListener('DOMContentLoaded', function(){
     let position = song.getPosition()
     divPosition.innerHTML = position.barsAsString
     divPositionTime.innerHTML = position.timeAsString
+    divTempo.innerHTML = `tempo: ${position.bpm} bpm`
 
     song.addEventListener('position', event => {
       divPosition.innerHTML = event.data.barsAsString
       divPositionTime.innerHTML = event.data.timeAsString
+      divTempo.innerHTML = `tempo: ${event.data.bpm} bpm`
+      if(!userInteraction){
+        rangePosition.value = event.data.percentage
+      }
     })
+
+    rangePosition.addEventListener('mouseup', e => {
+      rangePosition.removeEventListener('mousemove', rangeListener)
+      userInteraction = false
+    })
+
+    rangePosition.addEventListener('mousedown', e => {
+      setTimeout(function(){
+        song.setPosition('percentage', e.target.valueAsNumber)
+      }, 0)
+      rangePosition.addEventListener('mousemove', rangeListener)
+      userInteraction = true
+    })
+
+    const rangeListener = function(e){
+      song.setPosition('percentage', e.target.valueAsNumber)
+    }
   }
 
 })

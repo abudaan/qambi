@@ -1,5 +1,6 @@
 import {getPosition2} from './position.js'
 import {dispatchEvent} from './eventlistener.js'
+import {sortEvents} from './util.js'
 
 const range = 10 // milliseconds or ticks
 let instanceId = 0
@@ -47,7 +48,9 @@ export class Playhead{
 
 
   updateSong(){
-    this.events = this.song._events
+    this.events = [...this.song._events, ...this.song._timeEvents]
+    sortEvents(this.events)
+    console.log('events %O', this.events)
     this.notes = this.song._notes
     this.parts = this.song._parts
     this.numEvents = this.events.length
@@ -77,14 +80,14 @@ export class Playhead{
       value = event[this.unit]
       if(value <= this.currentValue){
         // if the playhead is set to a position of say 3000 millis, we don't want to add events more that 10 units before the playhead
-        if(value > this.currentValue - range){
+        if(value === 0 || value > this.currentValue - range){
           this.activeEvents.push(event)
+          dispatchEvent({
+            type: 'event',
+            data: event
+          })
         }
         this.lastEvent = event
-        dispatchEvent({
-          type: 'event',
-          data: event
-        })
         this.eventIndex++
       }else{
         break

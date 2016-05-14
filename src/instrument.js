@@ -16,9 +16,9 @@ export class Instrument{
     this.id = id
     this.type = type
     // create a samples data object for all 128 velocity levels of all 128 notes
-    this.samplesData = new Array(127).fill(-1);
+    this.samplesData = new Array(128).fill(-1);
     this.samplesData = this.samplesData.map(function(){
-      return new Array(127).fill(-1);
+      return new Array(128).fill(-1);
     });
 
     this.scheduledSamples = {}
@@ -42,13 +42,18 @@ export class Instrument{
       sample = createSample(sampleData, event)
       this.scheduledSamples[event.midiNoteId] = sample
       sample.output.connect(this.output || context.destination)
+      // sample.source.onended = () => {
+      //   console.log('    deleting', event.midiNoteId)
+      //   delete this.scheduledSamples[event.midiNoteId]
+      // }
       sample.start(time)
+      //console.log('scheduling', event.id, event.midiNoteId)
       //console.log('start', event.midiNoteId)
     }else if(event.type === 128){
       //console.log(128, ':', time, context.currentTime, event.millis)
       sample = this.scheduledSamples[event.midiNoteId]
       if(typeof sample === 'undefined'){
-        console.error('sample not found for event', event)
+        console.info('sample not found for event', event.id, ' midiNote', event.midiNoteId, event)
         return
       }
       if(this.sustainPedalDown === true){
@@ -59,6 +64,7 @@ export class Instrument{
           //console.log('stop', event.midiNoteId)
           delete this.scheduledSamples[event.midiNoteId]
         })
+        //sample.stop(time)
       }
     }else if(event.type === 176){
       // sustain pedal
@@ -72,6 +78,7 @@ export class Instrument{
           this.sustainedSamples.forEach((midiNoteId) => {
             sample = this.scheduledSamples[midiNoteId]
             if(sample){
+              //sample.stop(time)
               sample.stop(time, () => {
                 //console.log('stop', midiNoteId)
                 delete this.scheduledSamples[midiNoteId]
@@ -242,11 +249,14 @@ export class Instrument{
 
 
   allNotesOff(){
-    //console.log('allNotesOff')
+    this.sustainedSamples = []
+    this.sustainPedalDown = false
     Object.keys(this.scheduledSamples).forEach((sampleId) => {
-      this.scheduledSamples[sampleId].stop(0, () => {
-        delete this.scheduledSamples[sampleId]
-      })
+      //console.log('  stopping', sampleId)
+      this.scheduledSamples[sampleId].stop()
     })
+    this.scheduledSamples = {}
+
+    console.log('allNotesOff', this.sustainedSamples.length, this.scheduledSamples)
   }
 }
