@@ -9,6 +9,7 @@ import {songFromMIDIFile, songFromMIDIFileAsync} from './song_from_midifile'
 import qambi from './qambi'
 import {sortEvents} from './util'
 import {calculatePosition} from './position'
+import {Playhead} from './playhead'
 
 let songIndex = 0
 
@@ -112,6 +113,7 @@ export class Song{
     this._removedParts = []
 
     this._scheduler = new Scheduler(this)
+    this._playhead = new Playhead(this)
     this._millis = 0
   }
 
@@ -248,6 +250,8 @@ export class Song{
       millis: this._lastEvent.millis,
     } = lastEvent)
     //console.log('last tick', lastTicks)
+
+    this._playhead.updateSong()
   }
 
   play(type, ...args): void{
@@ -265,6 +269,7 @@ export class Song{
       this._playing = true
       this._scheduler.init(this._millis)
     }
+    this._playhead.set('millis', this._millis)
     this._pulse()
   }
 
@@ -363,6 +368,7 @@ export class Song{
       this.song.stop()
     }
     //console.log('pulse', diff)
+    this._playhead.update('millis', diff)
     requestAnimationFrame(this._pulse.bind(this))
   }
 }

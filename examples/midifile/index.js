@@ -37,16 +37,17 @@ document.addEventListener('DOMContentLoaded', function(){
         initUI()
       }, e => console.log(e))
     }
-
   })
 
 
   function initUI(){
 
     let btnPlay = document.getElementById('play')
+    let btnPause = document.getElementById('pause')
     let btnStop = document.getElementById('stop')
 
     btnPlay.disabled = false
+    btnPause.disabled = false
     btnStop.disabled = false
 
     btnPlay.addEventListener('click', function(){
@@ -56,9 +57,13 @@ document.addEventListener('DOMContentLoaded', function(){
       song.play()
     });
 
+    btnPause.addEventListener('click', function(){
+      song.pause()
+    })
+
     btnStop.addEventListener('click', function(){
-      song.stop();
-    });
+      song.stop()
+    })
   }
 
 })

@@ -16,6 +16,8 @@ export class Part{
     this._eventsById = new Map()
     this._needsUpdate = false
     this._createEventArray = false
+    this._start = {millis: 0, ticks: 0}
+    this._end = {millis: 0, ticks: 0}
   }
 
   copy(){
