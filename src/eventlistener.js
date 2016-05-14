@@ -8,7 +8,7 @@ export function dispatchEvent(event){
   }
   let map = eventListeners.get(event.type)
   for(let cb of map.values()){
-    cb(event.data)
+    cb(event)
   }
 
   // @todo: run filters here, for instance if an eventlistener has been added to all NOTE_ON events, check the type of the incoming event

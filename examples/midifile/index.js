@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', function(){
     let btnPlay = document.getElementById('play')
     let btnPause = document.getElementById('pause')
     let btnStop = document.getElementById('stop')
+    let divPosition = document.getElementById('position')
+    let divPositionTime = document.getElementById('position_time')
 
     btnPlay.disabled = false
     btnPause.disabled = false
@@ -65,12 +67,35 @@ document.addEventListener('DOMContentLoaded', function(){
       song.stop()
     })
 
-    song.addEventListener('noteOn', note => {
-      console.log('noteOn', note.id, note.noteOn.id, note.noteOn.data1, note.noteOn.ticks)
+    song.addEventListener('noteOn', event => {
+      let note = event.data
+      //console.log('noteOn', note.id, note.noteOn.id, note.noteOn.data1, note.noteOn.ticks)
     })
 
-    song.addEventListener('noteOff', note => {
-      console.log('noteOff', note.id, note.noteOff.id, note.noteOff.data1, note.noteOff.ticks)
+    song.addEventListener('noteOff', event => {
+      let note = event.data
+      //console.log('noteOff', note.id, note.noteOff.id, note.noteOff.data1, note.noteOff.ticks)
+    })
+
+    song.addEventListener('play', event => {
+      console.log('started playing at position:', event.data)
+    })
+
+    song.addEventListener('stop', () => {
+      console.log('stop')
+    })
+
+    song.addEventListener('pause', event => {
+      console.log('paused:', event.data)
+    })
+
+    let position = song.getPosition()
+    divPosition.innerHTML = position.barsAsString
+    divPositionTime.innerHTML = position.timeAsString
+
+    song.addEventListener('position', event => {
+      divPosition.innerHTML = event.data.barsAsString
+      divPositionTime.innerHTML = event.data.timeAsString
     })
   }
 

@@ -1,7 +1,7 @@
 import {getPosition2} from './position.js'
 import {dispatchEvent} from './eventlistener.js'
 
-const range = 10 // milliseconds
+const range = 10 // milliseconds or ticks
 let instanceId = 0
 
 export class Playhead{
@@ -25,7 +25,7 @@ export class Playhead{
     this.eventIndex = 0
     this.noteIndex = 0
     this.partIndex = 0
-    this.calculate(0)
+    this.calculate()
     return this.data
   }
 
@@ -41,7 +41,7 @@ export class Playhead{
     }
     this.unit = unit
     this.currentValue += diff
-    this.calculate(diff)
+    this.calculate()
     return this.data
   }
 
@@ -57,7 +57,7 @@ export class Playhead{
   }
 
 
-  calculate(diff){
+  calculate(){
     let i
     let value
     let event
@@ -90,6 +90,7 @@ export class Playhead{
         break
       }
     }
+    this.data.activeEvents = this.activeEvents
 
     // if a song has no events yet, use the first time event as reference
     if(this.lastEvent === null){
@@ -100,7 +101,11 @@ export class Playhead{
     this.data.eventIndex = this.eventIndex
     this.data.millis = position.millis
     this.data.ticks = position.ticks
-
+    this.data.position = position
+    dispatchEvent({
+      type: 'position',
+      data: position
+    })
 
     if(this.type.indexOf('all') !== -1){
       var data = this.data
@@ -182,6 +187,7 @@ export class Playhead{
 
       // add the still active notes and the newly active events to the active notes array
       this.activeNotes = [...collectedNotes.values(), ...stillActiveNotes]
+      this.data.activeNotes = this.activeNotes
     }
 
 
@@ -225,7 +231,14 @@ export class Playhead{
       }
 
       this.activeParts = [...collectedParts.values(), ...stillActiveParts]
+      this.data.activeParts = this.activeParts
     }
+
+    dispatchEvent({
+      type: 'playhead',
+      data: this.data
+    })
+
   }
 
 /*

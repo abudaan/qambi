@@ -298,6 +298,7 @@ export class Song{
     }
     this._playhead.set('millis', this._millis)
     this._pulse()
+    dispatchEvent({type: 'play', data: this._millis})
   }
 
   pause(): void{
@@ -305,17 +306,21 @@ export class Song{
     if(this._paused){
       this._playing = false
       this._scheduler.allNotesOff()
-      console.log('pause')
+      dispatchEvent({type: 'pause', data: this._paused})
     }else{
       this.play()
+      dispatchEvent({type: 'pause', data: this._paused})
     }
   }
 
   stop(): void{
-    if(this._playing){
+    if(this._playing || this._paused){
       this._playing = false
+      this._paused = false
       this._scheduler.allNotesOff()
       this._millis = 0
+      this._playhead.set('millis', this._millis)
+      dispatchEvent({type: 'stop'})
     }
   }
 
@@ -382,6 +387,14 @@ export class Song{
     }).millis
 
     console.log('setPosition', this._millis)
+  }
+
+  getPosition(){
+    return this._playhead.get().position
+  }
+
+  getPlayhead(){
+    return this._playhead.get()
   }
 
   _pulse(): void{
