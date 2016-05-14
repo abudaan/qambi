@@ -3,6 +3,7 @@ import {context} from './init_audio'
 import {createNote} from './note'
 import {parseSamples2} from './parse_audio'
 import {typeString} from './util'
+import {dispatchEvent} from './eventlistener'
 
 
 const ppq = 480
@@ -71,8 +72,11 @@ export class Instrument{
       if(event.data1 === 64){
         if(event.data2 === 127){
           this.sustainPedalDown = true
+          dispatchEvent({
+            type: 'sustainpedal',
+            data: 'down'
+          })
           //console.log('sustain pedal down')
-          //dispatchEvent(this.track.song, 'sustain_pedal', 'down');
         }else if(event.data2 === 0){
           this.sustainPedalDown = false
           this.sustainedSamples.forEach((midiNoteId) => {
@@ -87,7 +91,10 @@ export class Instrument{
           })
           //console.log('sustain pedal up', this.sustainedSamples)
           this.sustainedSamples = []
-          //dispatchEvent(this.track.song, 'sustain_pedal', 'up');
+          dispatchEvent({
+            type: 'sustainpedal',
+            data: 'up'
+          })
           //this.stopSustain(time);
         }
 
@@ -256,6 +263,11 @@ export class Instrument{
       this.scheduledSamples[sampleId].stop()
     })
     this.scheduledSamples = {}
+
+    dispatchEvent({
+      type: 'sustainpedal',
+      data: 'up'
+    })
 
     //console.log('allNotesOff', this.sustainedSamples.length, this.scheduledSamples)
   }

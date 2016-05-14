@@ -46,6 +46,8 @@ document.addEventListener('DOMContentLoaded', function(){
     let btnPause = document.getElementById('pause')
     let btnStop = document.getElementById('stop')
     let divTempo = document.getElementById('tempo')
+    let divSustain = document.getElementById('sustain')
+    let divSustain2 = document.getElementById('sustain2')
     let divPosition = document.getElementById('position')
     let divPositionTime = document.getElementById('position_time')
     let rangePosition = document.getElementById('playhead')
@@ -74,6 +76,20 @@ document.addEventListener('DOMContentLoaded', function(){
     //   divTempo.innerHTML = `tempo: ${event.bpm} bpm`
     // })
 
+    song.addEventListener('sustainpedal', event => {
+      divSustain.innerHTML = 'sustainpedal ' + event.data
+    })
+
+    song.addEventListener(qambi.CONTROL_CHANGE, event => {
+      if(event.data1 !== 64){
+        return
+      }
+      if(event.data2 === 127){
+        divSustain2.innerHTML = 'sustainpedal down'
+      }else if(event.data2 === 0){
+        divSustain2.innerHTML = 'sustainpedal up'
+      }
+    })
 
     song.addEventListener('noteOn', event => {
       let note = event.data
