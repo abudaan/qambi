@@ -82,6 +82,7 @@ export class Playhead{
         // if the playhead is set to a position of say 3000 millis, we don't want to add events more that 10 units before the playhead
         if(value === 0 || value > this.currentValue - range){
           this.activeEvents.push(event)
+          // this doesn't work too well
           dispatchEvent({
             type: 'event',
             data: event

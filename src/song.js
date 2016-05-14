@@ -2,7 +2,7 @@
 
 import {parseTimeEvents, parseEvents} from './parse_events'
 //import {addTask, removeTask} from './heartbeat'
-import {context} from './init_audio'
+import {context, masterGain} from './init_audio'
 import Scheduler from './scheduler'
 import {MIDIEvent} from './midi_event'
 import {songFromMIDIFile, songFromMIDIFileAsync} from './song_from_midifile'
@@ -119,6 +119,11 @@ export class Song{
 
     this._playing = false
     this._paused = false
+
+    this.volume = 0.5
+    this._output = context.createGain()
+    this._output.gain.value = this.volume
+    this._output.connect(masterGain)
   }
 
 
@@ -131,6 +136,7 @@ export class Song{
   addTracks(...tracks){
     tracks.forEach((track) => {
       track._song = this
+      track.connect(this._output)
       this._tracks.push(track)
       this._tracksById.set(track.id, track)
       this._newEvents.push(...track._events)
@@ -276,7 +282,7 @@ export class Song{
     //console.log('last tick', lastTicks)
     this._durationTicks = this._lastEvent.ticks
     this._durationMillis = this._lastEvent.millis
-
+    this.bars = this._lastEvent.bar + 1
     this._playhead.updateSong()
   }
 

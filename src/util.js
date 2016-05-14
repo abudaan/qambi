@@ -136,6 +136,19 @@ export function getEqualPowerCurve(numSteps, type, maxValue) {
 }
 
 
+export function checkMIDINumber(value){
+  //console.log(value);
+  if(isNaN(value)){
+    console.warn('please provide a number');
+    return false;
+  }
+  if(value < 0 || value > 127){
+    console.warn('please provide a number between 0 and 127');
+    return false;
+  }
+  return value;
+}
+
 
 /*
 //old school ajax

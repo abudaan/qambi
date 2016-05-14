@@ -1,6 +1,6 @@
 import {Part} from './part'
 import {sortEvents} from './util'
-import {context, masterGain} from './init_audio'
+import {context} from './init_audio'
 import {Instrument} from './instrument'
 
 
@@ -16,7 +16,6 @@ export class Track{
     this.volume = 0.5
     this._output = context.createGain()
     this._output.gain.value = this.volume
-    this._output.connect(masterGain)
     this._midiOutputIds = []
     this._song = null
     this._parts = []
@@ -31,6 +30,10 @@ export class Track{
   setInstrument(instrument){
     this._instrument = instrument
     instrument.connect(this._output)
+  }
+
+  connect(output){
+    this._output.connect(output)
   }
 
   setMIDIOutputs(...outputIds){
