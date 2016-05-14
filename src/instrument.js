@@ -257,6 +257,6 @@ export class Instrument{
     })
     this.scheduledSamples = {}
 
-    console.log('allNotesOff', this.sustainedSamples.length, this.scheduledSamples)
+    //console.log('allNotesOff', this.sustainedSamples.length, this.scheduledSamples)
   }
 }
