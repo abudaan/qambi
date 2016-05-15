@@ -85,9 +85,18 @@ document.addEventListener('DOMContentLoaded', function(){
       btnLoop.innerHTML = loop ? 'stop loop' : 'start loop'
     })
 
+
+    let memoryLeak
+
     btnDelete.addEventListener('click', function(){
+      memoryLeak = song.getEvents()[0]
       //song.dispose()
       song = null
+      console.log(memoryLeak) // -> this event retains the whole song!
+      setTimeout(function(){
+        memoryLeak = null
+        console.log('memory cleared')
+      }, 5000)
     })
 
     // song.addEventListener(MIDIEventTypes.TEMPO, event => {
@@ -173,6 +182,7 @@ document.addEventListener('DOMContentLoaded', function(){
     song.setLeftLocator('barsbeats', 2)
     song.setRightLocator('barsbeats', 3, 2)
     song.setLoop()
+
 
     //console.log(song.getPosition())
   }

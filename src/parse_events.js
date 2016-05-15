@@ -24,9 +24,8 @@ let
   ticksPerSixteenth,
   numSixteenth,
 
-  diffTicks,
-  previousEvent;
-
+  diffTicks
+  //previousEvent
 
 function setTickDuration(){
   secondsPerTick = (1 / playbackSpeed * 60) / bpm / ppq;
@@ -53,7 +52,7 @@ function updatePosition(event, fast = false){
   // }
   tick += diffTicks;
   ticks = event.ticks;
-  previousEvent = event
+  //previousEvent = event
   //console.log(diffTicks, millisPerTick);
   millis += diffTicks * millisPerTick;
 
