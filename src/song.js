@@ -90,6 +90,14 @@ export class Song{
       new MIDIEvent(0, MIDIEventTypes.TIME_SIGNATURE, this.nominator, this.denominator),
     ]
 
+    // let noteOn = new MIDIEvent(0, MIDIEventTypes.NOTE_ON, 60, 100)
+    // let noteOff = new MIDIEvent(0, MIDIEventTypes.NOTE_OFF, 60, 0)
+    // noteOn.id = 'dummy'
+    // noteOff.id = 'dummy'
+    // noteOn._track = {id: 'dummy'}
+    // noteOff._track = {id: 'dummy'}
+    // this._dummyEvents = [this._timeEvents[0], noteOn, noteOff]
+
     //this._timeEvents = []
     this._updateTimeEvents = true
     this._lastEvent = new MIDIEvent(0, MIDIEventTypes.END_OF_TRACK)
@@ -326,6 +334,16 @@ export class Song{
     this._allEvents = [...this._metronomeEvents, ...this._events]
     sortEvents(this._allEvents)
 
+    // clear the closure of parseEvents with some dummy events
+    //parseEvents(this._dummyEvents)
+
+    let noteOn = new MIDIEvent(0, MIDIEventTypes.NOTE_ON, 60, 100)
+    let noteOff = new MIDIEvent(0, MIDIEventTypes.NOTE_OFF, 60, 0)
+    noteOn.id = 'dummy'
+    noteOff.id = 'dummy'
+    noteOn._track = {id: 'dummy'}
+    noteOff._track = {id: 'dummy'}
+    parseEvents([this._timeEvents[0], noteOn, noteOff])
   }
 
   play(type, ...args): void{
@@ -574,6 +592,26 @@ export class Song{
   removeEventListener(type, id){
     removeEventListener(type, id)
   }
+/*
+  dispose(){
+    this._tracks = []
+    this._tracksById = new Map()
+
+    this._parts = []
+    this._partsById = new Map()
+
+    this._events = []
+    this._eventsById = new Map()
+
+    this._allEvents = [] // MIDI events and metronome events
+
+    this._notes = []
+    this._notesById = new Map()
+
+    this._metronome.events = []
+    this._metronome = null
+  }
+*/
 }
 
 

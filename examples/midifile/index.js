@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', function(){
     let btnPause = document.getElementById('pause')
     let btnStop = document.getElementById('stop')
     let btnLoop = document.getElementById('loop')
+    let btnDelete = document.getElementById('delete')
     let divTempo = document.getElementById('tempo')
     let divSustain = document.getElementById('sustain')
     let divSustain2 = document.getElementById('sustain2')
@@ -61,6 +62,7 @@ document.addEventListener('DOMContentLoaded', function(){
     btnPause.disabled = false
     btnStop.disabled = false
     btnLoop.disabled = false
+    btnDelete.disabled = false
 
     btnPlay.addEventListener('click', function(){
       //song.play('barsbeats', 4, 1, 1, 0)
@@ -81,6 +83,11 @@ document.addEventListener('DOMContentLoaded', function(){
       let loop = song.setLoop()
       console.log(loop)
       btnLoop.innerHTML = loop ? 'stop loop' : 'start loop'
+    })
+
+    btnDelete.addEventListener('click', function(){
+      //song.dispose()
+      song = null
     })
 
     // song.addEventListener(MIDIEventTypes.TEMPO, event => {

@@ -20,24 +20,6 @@ let
     ['noteLengthNonAccentedTick', 'setNoteLengthNonAccentedTick']
   ]);
 
-
-let defaultMetronomeInstrument = null
-function getDefaultInstrument(){
-  if(defaultMetronomeInstrument === null){
-    let data = getInitData()
-    defaultMetronomeInstrument = new Instrument('metronome')
-    defaultMetronomeInstrument.updateSampleData({
-      note: 60,
-      buffer: data.lowtick,
-    }, {
-      note: 61,
-      buffer: data.hightick,
-    })
-  }
-  return defaultMetronomeInstrument
-}
-
-
 export class Metronome{
 
   constructor(song){
@@ -46,21 +28,39 @@ export class Metronome{
     this.part = new Part()
     this.track.addParts(this.part)
     this.track.connect(this.song._output)
-    this.track.setInstrument(getDefaultInstrument())
+
     this.events = []
     this.precountEvents = []
-    this.noteNumberAccented = 61
-    this.noteNumberNonAccented = 60
-    this.volume = 1
-    this.velocityNonAccented = 100
-    this.velocityAccented = 100
-    this.noteLengthNonAccented = song.ppq / 4 // sixteenth notes -> don't make this too short if your sample has a long attack!
-    this.noteLengthAccented = song.ppq / 4
     this.precountDurationInMillis = 0
     this.bars = 0
-    //this.reset();
+    this.reset();
   }
 
+
+  reset(){
+
+    let data = getInitData()
+    let instrument = new Instrument('metronome')
+    instrument.updateSampleData({
+      note: 60,
+      buffer: data.lowtick,
+    }, {
+      note: 61,
+      buffer: data.hightick,
+    })
+    this.track.setInstrument(instrument)
+
+    this.volume = 1
+
+    this.noteNumberAccented = 61
+    this.noteNumberNonAccented = 60
+
+    this.velocityAccented = 100
+    this.velocityNonAccented = 100
+
+    this.noteLengthAccented = this.song.ppq / 4 // sixteenth notes -> don't make this too short if your sample has a long attack!
+    this.noteLengthNonAccented = this.song.ppq / 4
+  }
 
   createEvents(startBar, endBar, id = 'init'){
     let i, j
@@ -104,6 +104,8 @@ export class Metronome{
 
         this.part.addEvents(noteOn, noteOff)
         this.events.push(noteOn, noteOff)
+        //console.log(noteOn.id)
+        //console.log(noteOff.id)
         ticks += ticksPerBeat
       }
     }
@@ -160,21 +162,6 @@ export class Metronome{
       }
     }
     return result;
-  }
-
-
-  reset(){
-    this.volume = 1;
-    this.track.setInstrument(getDefaultInstrument());
-
-    this.noteNumberAccented = 61;
-    this.noteNumberNonAccented = 60;
-
-    this.velocityAccented = 100;
-    this.velocityNonAccented = 100;
-
-    this.noteLengthAccented = this.song.ppq / 4;
-    this.noteLengthNonAccented = this.song.ppq / 4;
   }
 
 

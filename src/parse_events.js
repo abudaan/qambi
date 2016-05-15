@@ -257,7 +257,7 @@ export function parseEvents(events, isPlaying = false){
     lastEventTick = event.ticks;
   }
   parseMIDINotes(result)
-  return result;
+  return result
   //song.lastEventTmp = event;
 }
 
@@ -347,6 +347,7 @@ export function parseMIDINotes(events){
         continue
       }
       let note = new MIDINote(noteOn, noteOff)
+      note = null
       // let id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
       // noteOn.midiNoteId = id
       // noteOn.off = noteOff.id
@@ -358,6 +359,7 @@ export function parseMIDINotes(events){
   Object.keys(notes).forEach(function(key){
     delete notes[key]
   })
+  notes = {}
   //console.log(notes, notesInTrack)
 }
 
