@@ -37,6 +37,7 @@ export default class Scheduler{
       i++;
     }
     this.beyondLoop = millis > this.song._rightLocator.millis
+    this.notes = new Map()
   }
 
 
@@ -45,54 +46,58 @@ export default class Scheduler{
 
     if(this.song._loop === true && this.song._loopDuration < BUFFER_TIME){
       this.maxtime = this.songStartMillis + this.song._loopDuration - 1;
-      //console.log(maxtime, this.song.loopDuration);
+      //console.log(this.maxtime, this.song.loopDuration);
     }
 
     if(this.song._loop === true){
 
       if(this.maxtime >= this.song._rightLocator.millis && this.beyondLoop === false){
 
-
         let diff = this.maxtime - this.song._rightLocator.millis
         this.maxtime = this.song._leftLocator.millis + diff
 
-        //console.log('-------LOOPED', this.maxtime, this.song._leftLocator.millis, diff);
+        //console.log('-------LOOPED', this.maxtime, diff, this.song._leftLocator.millis, this.song._rightLocator.millis);
 
         if(this.looped === false){
+
           this.looped = true;
+          let leftMillis = this.song._leftLocator.millis
+          let rightMillis = this.song._rightLocator.millis
+
           for(let i = this.index; i < this.numEvents; i++){
             let event = this.events[i];
-            if(event.millis < this.song._rightLocator.millis){
-              event.time = this.timeStamp + event.millis - this.songStartMillis;
-              events.push(event);
-              this.index++;
+            //console.log(event)
+            if(event.millis < rightMillis){
+              event.time = this.timeStamp + event.millis - this.songStartMillis
+              events.push(event)
+              //console.log(event.type)
+              this.index++
             }else{
               break;
             }
           }
 
-          // stop overflowing notes-> move the note off event to the position of the right locator (end of the loop)
+          // stop overflowing notes-> add a new note off event at the position of the right locator (end of the loop)
           let endTicks = this.song._rightLocator.ticks - 1
           let endMillis = this.song.calculatePosition({type: 'ticks', target: endTicks, result: 'millis'}).millis
 
-          let updated = []
-          let leftMillis = this.song._leftLocator.millis
-          let rightMillis = this.song._rightLocator.millis
-
-          events.forEach(event => {
-            if(event.type === 128 && event.millis > rightMillis){
-              let clone = new MIDIEvent(endTicks, 128, event.data1, 0)
-              clone.millis = endMillis
-              clone.midiNote = event.midiNote
-              clone._track = event._track
-              clone.time = this.timeStamp + clone.millis - this.songStartMillis
-              updated.push(clone)
-            }else{
-              updated.push(event)
+          for(let note of this.notes.values()){
+            let noteOn = note.noteOn
+            let noteOff = note.noteOff
+            if(noteOff.millis <= rightMillis){
+              continue
             }
-          })
+            let event = new MIDIEvent(endTicks, 128, noteOn.data1, 0)
+            event.millis = endMillis
+            event._part = noteOn._part
+            event._track = noteOn._track
+            event.midiNote = note
+            event.midiNoteId = note.id
+            event.time = this.timeStamp + event.millis - this.songStartMillis
+            //console.log(event)
+            events.push(event)
+          }
 
-          events = [...updated]
 /*
           // stop overflowing audio samples
           for(i in this.scheduledAudioEvents){
@@ -106,8 +111,11 @@ export default class Scheduler{
             }
           }
 */
+          this.notes = new Map()
           this.setIndex(leftMillis)
           this.timeStamp += this.song._loopDuration
+
+          //console.log(events.length)
 
           // get the audio events that start before song.loopStart
           //this.getDanglingAudioEvents(this.song.loopStart, events);
@@ -198,6 +206,11 @@ export default class Scheduler{
           // convert to seconds because the audio context uses seconds for scheduling
           //instrument.processMIDIEvent(event, scheduledTime / 1000, track._output)
           instrument.processMIDIEvent(event, event.time / 1000, track._output)
+          if(event.type === 144){
+            this.notes.set(event.midiNoteId, event.midiNote)
+          }else if(event.type === 128){
+            this.notes.delete(event.midiNoteId)
+          }
         }
 
         // send to external hardware or software instrument
