@@ -62,6 +62,7 @@ export class Part{
 
   addEvents(...events){
     let track = this._track
+    //console.log(track)
     events.forEach((event) => {
       event._part = this
       this._eventsById.set(event.id, event)

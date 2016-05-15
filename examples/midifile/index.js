@@ -1,5 +1,6 @@
 import qambi, {
   Song,
+  MIDIEventTypes,
 } from '../../src/qambi'
 
 
@@ -12,12 +13,13 @@ document.addEventListener('DOMContentLoaded', function(){
   qambi.init()
   .then(() => {
 
-    let test = 2
+    let test = 1
 
     if(test === 1){
 
       //console.time('song')
-      fetch('../../data/mozk545a.mid')
+      // fetch('../../data/mozk545a.mid')
+      fetch('../../data/minute_waltz.mid')
       .then(response => {
         return response.arrayBuffer()
       })
@@ -72,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function(){
       song.stop()
     })
 
-    // song.addEventListener(qambi.TEMPO, event => {
+    // song.addEventListener(MIDIEventTypes.TEMPO, event => {
     //   divTempo.innerHTML = `tempo: ${event.bpm} bpm`
     // })
 
@@ -80,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function(){
       divSustain.innerHTML = 'sustainpedal ' + event.data
     })
 
-    song.addEventListener(qambi.CONTROL_CHANGE, event => {
+    song.addEventListener(MIDIEventTypes.CONTROL_CHANGE, event => {
       if(event.data1 !== 64){
         return
       }

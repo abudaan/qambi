@@ -106,10 +106,6 @@ export class Playhead{
     this.data.millis = position.millis
     this.data.ticks = position.ticks
     this.data.position = position
-    dispatchEvent({
-      type: 'position',
-      data: position
-    })
 
     if(this.type.indexOf('all') !== -1){
       var data = this.data
@@ -239,7 +235,7 @@ export class Playhead{
     }
 
     dispatchEvent({
-      type: 'playhead',
+      type: 'position',
       data: this.data
     })
 

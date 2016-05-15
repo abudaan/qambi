@@ -31,7 +31,8 @@ export let Blob = (() => {
 })()
 
 
-export function init(settings = {}): void{
+//export function init(settings = {}): void{
+export function init(callback): void{
 
   // load settings.instruments (array or object)
   // load settings.midifiles (array or object)
@@ -47,6 +48,7 @@ export function init(settings = {}): void{
     })
 
   */
+
 
   return new Promise((resolve, reject) => {
 
@@ -71,4 +73,28 @@ export function init(settings = {}): void{
       reject(error)
     })
   })
+
+
+/*
+  Promise.all([initAudio(), initMIDI()])
+  .then(
+  (data) => {
+    // parseAudio
+    let dataAudio = data[0]
+
+    // parseMIDI
+    let dataMidi = data[1]
+
+    callback({
+      legacy: dataAudio.legacy,
+      mp3: dataAudio.mp3,
+      ogg: dataAudio.ogg,
+      midi: dataMidi.midi,
+      webmidi: dataMidi.webmidi,
+    })
+  },
+  (error) => {
+    callback(error)
+  })
+*/
 }

@@ -13,7 +13,7 @@ export default class Scheduler{
 
   init(millis){
     this.songStartMillis = millis
-    this.events = this.song._events
+    this.events = this.song._allEvents
     this.numEvents = this.events.length
     this.index = 0
     this.setIndex(this.songStartMillis)
@@ -140,22 +140,11 @@ export default class Scheduler{
 
 
   allNotesOff(){
-    //console.log('STOP')
-///*
     let timeStamp = context.currentTime * 1000
     let outputs = getMIDIOutputs()
     outputs.forEach((output) => {
       output.send([0xB0, 0x7B, 0x00], timeStamp + (BUFFER_TIME * 2)); // stop all notes
       output.send([0xB0, 0x79, 0x00], timeStamp + (BUFFER_TIME * 2)); // reset all controllers
-    })
-//*/
-    let tracks = this.song._tracks
-    tracks.forEach((track) => {
-      //let instrument = track._instrument
-      //if(typeof instrument !== 'undefined'){
-      //  instrument.allNotesOff()
-      //}
-      track._instrument.allNotesOff()
     })
   }
 }

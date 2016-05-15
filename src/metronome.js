@@ -4,8 +4,8 @@ import {MIDINote} from './midi_note'
 import {MIDIEvent} from './midi_event'
 import {checkMIDINumber} from './util'
 import {calculatePosition} from './position'
-import {parseEvents} from './parse_events'
 import {Instrument} from './instrument'
+import {getInitData} from './init_audio'
 
 
 let
@@ -21,33 +21,50 @@ let
   ]);
 
 
+let defaultMetronomeInstrument = null
+function getDefaultInstrument(){
+  if(defaultMetronomeInstrument === null){
+    let data = getInitData()
+    defaultMetronomeInstrument = new Instrument('metronome')
+    defaultMetronomeInstrument.updateSampleData({
+      note: 60,
+      buffer: data.lowtick,
+    }, {
+      note: 61,
+      buffer: data.hightick,
+    })
+  }
+  return defaultMetronomeInstrument
+}
+
+
 export class Metronome{
 
   constructor(song){
-    this._song = song;
-    this._track = new Track(this.song.id + '_metronome', 'metronome');
-    this._part = new Part();
-    this._track.addPart(this._part);
-    this._track.connect(this._song._output);
-    this._events = [];
-    this._precountEvents = [];
-    this._noteNumberAccented = 61;
-    this._noteNumberNonAccented = 60;
-    this._volume = 1;
-    this._velocityNonAccented = 100;
-    this._velocityAccented = 100;
-    this._noteLengthNonAccented = song.ppq / 4; // sixteenth notes -> don't make this too short if your sample has a long attack!
-    this._noteLengthAccented = song.ppq / 4;
-    this._track._instrument = new Instrument();
-    this._precountDurationInMillis = 0;
-    this._bars = 0;
+    this.song = song
+    this.track = new Track(this.song.id + '_metronome')
+    this.part = new Part()
+    this.track.addParts(this.part)
+    this.track.connect(this.song._output)
+    this.track.setInstrument(getDefaultInstrument())
+    this.events = []
+    this.precountEvents = []
+    this.noteNumberAccented = 61
+    this.noteNumberNonAccented = 60
+    this.volume = 1
+    this.velocityNonAccented = 100
+    this.velocityAccented = 100
+    this.noteLengthNonAccented = song.ppq / 4 // sixteenth notes -> don't make this too short if your sample has a long attack!
+    this.noteLengthAccented = song.ppq / 4
+    this.precountDurationInMillis = 0
+    this.bars = 0
     //this.reset();
   }
 
 
   createEvents(startBar, endBar, id = 'init'){
     let i, j
-    let data
+    let position
     let velocity
     let noteLength
     let noteNumber
@@ -56,77 +73,125 @@ export class Metronome{
     let ticks = 0
     let noteOn, noteOff
 
-    this._events = []
+    this.events = []
 
     //console.log(startBar, endBar);
 
     for(i = startBar; i <= endBar; i++){
-      data = calculatePosition(this.song, {
-        barsbeats: [i],
-        type: 'barsbeats'
+      position = calculatePosition(this.song, {
+        type: 'barsbeats',
+        target: [i],
       })
-      beatsPerBar = data.nominator
-      ticksPerBeat = data.ticksPerBeat
+
+      beatsPerBar = position.nominator
+      ticksPerBeat = position.ticksPerBeat
 
       for(j = 0; j < beatsPerBar; j++){
+
         noteNumber = j === 0 ? this.noteNumberAccented : this.noteNumberNonAccented
         noteLength = j === 0 ? this.noteLengthAccented : this.noteLengthNonAccented
         velocity = j === 0 ? this.velocityAccented : this.velocityNonAccented
 
-        noteOn = new MIDIEvent(ticks, 144, noteNumber, velocity);
-        noteOff = new MIDIEvent(ticks + noteLength, 128, noteNumber, 0);
+        noteOn = new MIDIEvent(ticks, 144, noteNumber, velocity)
+        noteOff = new MIDIEvent(ticks + noteLength, 128, noteNumber, 0)
 
         if(id === 'precount'){
-          noteOn.part = {id: 'precount'};
-          noteOn.track = this._track;
-          noteOff.part = {id: 'precount'};
-          noteOff.track = this._track;
+          noteOn._part = {id: 'precount'}
+          noteOff._part = {id: 'precount'}
+          noteOn._track = this.track
+          noteOff._track = this.track
         }
 
-        this._part.addEvents(noteOn, noteOff);
-        this._events.push(noteOn)
-        this._events.push(noteOff)
-        ticks += ticksPerBeat;
+        this.part.addEvents(noteOn, noteOff)
+        this.events.push(noteOn, noteOff)
+        ticks += ticksPerBeat
       }
     }
   }
 
 
-  init(startBar = 1, endBar = this.song.bars){
-    if(this._part.numEvents > 0){
-      this._part.removeEvents(this._part.getEvents());
-      this._track.update();
-    }
-    this.createEvents(startBar, endBar);
-    this.bars = this.song.bars;
-    parseEvents(this.song, this.events);
+  getEvents(startBar = 1, endBar = this.song.bars, id = 'init'){
+    this.part.removeEvents(this.part.getEvents())
+    this.createEvents(startBar, endBar, id)
+    this.bars = this.song.bars
+    console.log('getEvents %O', this.events)
+    return this.events
   }
 
 
-  update(startBar, endBar){
-    if(startBar === 0){
-      startBar = 1;
+  createPrecountEvents(precount){
+    if(precount <= 0){
+      return;
     }
-    //console.log('metronome', this.song.bars, startBar, endBar);
-    // for now, just re-init the metronome
-    this.init('update', startBar, endBar);
+    let endPos = calculatePosition(this.song, {
+      barsbeats: [this.song.bar + precount],
+      type: 'barsbeats',
+    })
 
-    //this.allNotesOff();
-    //this.song.scheduler.updateSong();
-
-    // let events = createEvents(this, startBar, endBar, 'update');
-    // this.events = this.events.concat(events);
-    // parseMetronomeEvents(this.song, this.events);
+    this.index = 0;
+    this.millis = 0;
+    this.startMillis = this.song._millis;
+    this.precountDurationInMillis = endPos.millis - this.startMillis;
+    //@todo: fix this up
+    this.precountEvents = this.createEvents(this, this.song.bar, endPos.bar - 1, 'precount');
+    //parseEvents(this.song, this.precountEvents)
+    //console.log(this.song.bar, endPos.bar, precount, this.precountEvents.length);
+    //console.log(this.precountEvents, this.precountDurationInMillis, startTicks, endTicks);
   }
 
+
+  // called by scheduler.js
+  getPrecountEvents(maxtime){
+    let events = this.precountEvents,
+      maxi = events.length, i, evt,
+      result = [];
+
+    //console.log(maxtime, maxi, this.index, this.millis);
+
+    for(i = this.index; i < maxi; i++){
+      evt = events[i];
+      //console.log(event.millis, maxtime, this.millis);
+      if(evt.millis < maxtime){
+        evt.time = this.startTime + evt.millis;
+        result.push(evt);
+        this.index++;
+      }else{
+        break;
+      }
+    }
+    return result;
+  }
+
+
+  reset(){
+    this.volume = 1;
+    this.track.setInstrument(getDefaultInstrument());
+
+    this.noteNumberAccented = 61;
+    this.noteNumberNonAccented = 60;
+
+    this.velocityAccented = 100;
+    this.velocityNonAccented = 100;
+
+    this.noteLengthAccented = this.song.ppq / 4;
+    this.noteLengthNonAccented = this.song.ppq / 4;
+  }
+
+
+  allNotesOff(){
+    this.track._instrument.allNotesOff()
+  }
+
+
+  // =========== CONFIGURATION ===========
 
   updateConfig(){
-    this.init(1, this.bars);
+    this.init(1, this.bars, 'update');
     this.allNotesOff();
-    this._song._scheduler.updateSong();
+    this.song._scheduler.updateSong();
   }
 
-
+  // add to public API: Song.configureMetronome({})
   configure(config){
 
     Object.keys(config).forEach(function(key){
@@ -142,7 +207,7 @@ export class Metronome{
       console.warn('not an instance of Instrument')
       return
     }
-    this._track.setInstrument(instrument)
+    this.track.setInstrument(instrument)
     this.updateConfig();
   }
 
@@ -208,72 +273,6 @@ export class Metronome{
     this.updateConfig();
   }
 
-
-  reset(){
-    this.volume = 1;
-    this.track.setInstrument(new Instrument());
-
-    this.noteNumberAccented = 61;
-    this.noteNumberNonAccented = 60;
-
-    this.velocityAccented = 100;
-    this.velocityNonAccented = 100;
-
-    this.noteLengthAccented = this.song.ppq / 4;
-    this.noteLengthNonAccented = this.song.ppq / 4;
-  }
-
-
-  allNotesOff(){
-    // @todo: think up something here
-    if(this._track._instrument){
-      //this._track._instrument.allNotesOff();
-    }
-  }
-
-
-  createPrecountEvents(precount){
-    if(precount <= 0){
-      return;
-    }
-    let endPos = calculatePosition(this.song, {
-      barsbeats: [this.song.bar + precount],
-      type: 'barsbeats',
-    })
-
-    this.index = 0;
-    this.millis = 0;
-    this.startMillis = this._song._millis;
-    this.precountDurationInMillis = endPos.millis - this.startMillis;
-    //@todo: fix this up
-    this.precountEvents = this.createEvents(this, this._song.bar, endPos.bar - 1, 'precount');
-    //parseEvents(this.song, this.precountEvents)
-    //console.log(this.song.bar, endPos.bar, precount, this.precountEvents.length);
-    //console.log(this.precountEvents, this.precountDurationInMillis, startTicks, endTicks);
-  }
-
-
-  // called by scheduler.js
-  getPrecountEvents(maxtime){
-    let events = this.precountEvents,
-      maxi = events.length, i, evt,
-      result = [];
-
-    //console.log(maxtime, maxi, this.index, this.millis);
-
-    for(i = this.index; i < maxi; i++){
-      evt = events[i];
-      //console.log(event.millis, maxtime, this.millis);
-      if(evt.millis < maxtime){
-        evt.time = this.startTime + evt.millis;
-        result.push(evt);
-        this.index++;
-      }else{
-        break;
-      }
-    }
-    return result;
-  }
 
   setVolume(value){
     this.track.setVolume(value);

@@ -8,7 +8,8 @@ import {parseSamples} from './parse_audio'
 let
   masterGain,
   compressor,
-  initialized = false
+  initialized = false,
+  data
 
 export let context = (function(){
   console.log('init AudioContext')
@@ -40,7 +41,7 @@ export function initAudio(){
     context.createGainNode = context.createGain
   }
   // check for older implementations of WebAudio
-  let data = {}
+  data = {}
   let source = context.createBufferSource()
   data.legacy = false
   if(typeof source.start === 'undefined'){
@@ -165,6 +166,10 @@ let configureMasterCompressor = function(cfg): void{
     }
     configureMasterCompressor(cfg)
   }
+}
+
+export function getInitData(){
+  return data
 }
 
 export {masterGain, compressor as masterCompressor, setMasterVolume, getMasterVolume, getCompressionReduction, enableMasterCompressor, configureMasterCompressor}

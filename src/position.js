@@ -45,6 +45,7 @@ function getTimeEvent(song, unit, target){
 
   for(let i = timeEvents.length - 1; i >= 0; i--){
     let event = timeEvents[i];
+    //console.log(unit, target, event)
     if(event[unit] <= target){
       index = i
       return event
@@ -123,6 +124,7 @@ function fromMillis(song, targetMillis, event){
   if(typeof event === 'undefined'){
     event = getTimeEvent(song, 'millis', targetMillis);
   }
+  //console.log(event)
   getDataFromEvent(event);
 
   // if the event is not exactly at target millis, calculate the diff
@@ -154,6 +156,7 @@ function fromTicks(song, targetTicks, event){
   if(typeof event === 'undefined'){
     event = getTimeEvent(song, 'ticks', targetTicks);
   }
+  //console.log(event)
   getDataFromEvent(event);
 
   // if the event is not exactly at target ticks, calculate the diff

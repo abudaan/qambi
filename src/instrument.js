@@ -54,7 +54,7 @@ export class Instrument{
       //console.log(128, ':', time, context.currentTime, event.millis)
       sample = this.scheduledSamples[event.midiNoteId]
       if(typeof sample === 'undefined'){
-        console.info('sample not found for event', event.id, ' midiNote', event.midiNoteId, event)
+        //console.info('sample not found for event', event.id, ' midiNote', event.midiNoteId, event)
         return
       }
       if(this.sustainPedalDown === true){
@@ -257,17 +257,19 @@ export class Instrument{
 
   allNotesOff(){
     this.sustainedSamples = []
+    if(this.sustainPedalDown === true){
+      dispatchEvent({
+        type: 'sustainpedal',
+        data: 'up'
+      })
+    }
     this.sustainPedalDown = false
+
     Object.keys(this.scheduledSamples).forEach((sampleId) => {
-      //console.log('  stopping', sampleId)
+      //console.log('  stopping', sampleId, this.id)
       this.scheduledSamples[sampleId].stop()
     })
     this.scheduledSamples = {}
-
-    dispatchEvent({
-      type: 'sustainpedal',
-      data: 'up'
-    })
 
     //console.log('allNotesOff', this.sustainedSamples.length, this.scheduledSamples)
   }

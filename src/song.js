@@ -1,5 +1,6 @@
 //@ flow
 
+import {MIDIEventTypes} from './qambi'
 import {parseTimeEvents, parseEvents} from './parse_events'
 //import {addTask, removeTask} from './heartbeat'
 import {context, masterGain} from './init_audio'
@@ -10,6 +11,7 @@ import qambi from './qambi'
 import {sortEvents} from './util'
 import {calculatePosition} from './position'
 import {Playhead} from './playhead'
+import {Metronome} from './metronome'
 import {addEventListener, removeEventListener, dispatchEvent} from './eventlistener'
 
 let songIndex = 0
@@ -84,13 +86,13 @@ export class Song{
     } = settings);
 
     this._timeEvents = [
-      new MIDIEvent(0, qambi.TEMPO, this.bpm),
-      new MIDIEvent(0, qambi.TIME_SIGNATURE, this.nominator, this.denominator),
+      new MIDIEvent(0, MIDIEventTypes.TEMPO, this.bpm),
+      new MIDIEvent(0, MIDIEventTypes.TIME_SIGNATURE, this.nominator, this.denominator),
     ]
 
     //this._timeEvents = []
     this._updateTimeEvents = true
-    this._lastEvent = new MIDIEvent(0, qambi.END_OF_TRACK)
+    this._lastEvent = new MIDIEvent(0, MIDIEventTypes.END_OF_TRACK)
 
     this._tracks = []
     this._tracksById = new Map()
@@ -100,6 +102,8 @@ export class Song{
 
     this._events = []
     this._eventsById = new Map()
+
+    this._allEvents = [] // MIDI events and metronome events
 
     this._notes = []
     this._notesById = new Map()
@@ -124,12 +128,21 @@ export class Song{
     this._output = context.createGain()
     this._output.gain.value = this.volume
     this._output.connect(masterGain)
+
+    this._metronome = new Metronome(this)
+    this._metronomeEvents = []
+    this._updateMetronomeEvents = true
   }
 
 
   addTimeEvents(...events){
     //@TODO: filter time events on the same tick -> use the lastly added events
-    this._timeEvents.push(...events)
+    events.forEach(event => {
+      if(event.type === MIDIEventTypes.TIME_SIGNATURE){
+        this._updateMetronomeEvents = true
+      }
+      this._timeEvents.push(event)
+    })
     this._updateTimeEvents = true
   }
 
@@ -217,7 +230,6 @@ export class Song{
       //console.log(event.id)
     })
 
-
     // moved events need to be parsed
     console.log('moved %O', this._movedEvents)
     this._movedEvents.forEach((event) => {
@@ -246,12 +258,14 @@ export class Song{
     }
     console.timeEnd('parse')
 
+
     if(createEventArray){
       console.time('to array')
       this._events = Array.from(this._eventsById.values())
       this._notes = Array.from(this._notesById.values())
       console.timeEnd('to array')
     }
+
 
     console.time(`sorting ${this._events.length} events`)
     sortEvents(this._events)
@@ -266,24 +280,46 @@ export class Song{
     console.groupEnd('update song')
     console.timeEnd('update song')
 
+
+    // get the last event of this song
     let lastEvent = this._events[this._events.length - 1]
     let lastTimeEvent = this._timeEvents[this._timeEvents.length - 1]
-    if(lastTimeEvent.ticks > lastTimeEvent.ticks){
-      lastTimeEvent = lastTimeEvent
+    if(lastEvent.ticks > lastTimeEvent.ticks){
+      lastEvent = lastTimeEvent
     }
-    ({
-      bar: this._lastEvent.bar,
-      beat: this._lastEvent.beat,
-      sixteenth: this._lastEvent.sixteenth,
-      tick: this._lastEvent.tick,
-      ticks: this._lastEvent.ticks,
-      millis: this._lastEvent.millis,
-    } = lastEvent)
-    //console.log('last tick', lastTicks)
+
+    // get the position data of the first beat in the bar after the last bar
+    this.bars = lastEvent.bar
+    console.log('num bars', this.bars)
+    let ticks = calculatePosition(this, {
+      type: 'barsbeats',
+      target: [this.bars + 1],
+      result: 'ticks'
+    }).ticks
+
+    // we want to put the END_OF_TRACK event at the very last tick of the last bar, so we calculate that position
+    let millis = calculatePosition(this, {
+      type: 'ticks',
+      target: ticks - 1,
+      result: 'millis'
+    }).millis
+
+
+    this._lastEvent.ticks = ticks - 1
+    this._lastEvent.millis = millis
+
+    console.log('last tick', this._lastEvent.ticks, this._lastEvent.millis)
     this._durationTicks = this._lastEvent.ticks
     this._durationMillis = this._lastEvent.millis
-    this.bars = this._lastEvent.bar + 1
     this._playhead.updateSong()
+
+    // add metronome events
+    if(this._updateMetronomeEvents || this._metronome.bars !== this.bars){
+      this._metronomeEvents = parseEvents([...this._timeEvents, ...this._metronome.getEvents()])
+    }
+    this._allEvents = [...this._metronomeEvents, ...this._events]
+    sortEvents(this._allEvents)
+
   }
 
   play(type, ...args): void{
@@ -317,7 +353,7 @@ export class Song{
     this._paused = !this._paused
     if(this._paused){
       this._playing = false
-      this._scheduler.allNotesOff()
+      this.allNotesOff()
       dispatchEvent({type: 'pause', data: this._paused})
     }else{
       this.play()
@@ -326,7 +362,7 @@ export class Song{
   }
 
   stop(): void{
-    this._scheduler.allNotesOff()
+    this.allNotesOff()
     if(this._playing || this._paused){
       this._playing = false
       this._paused = false
@@ -339,7 +375,15 @@ export class Song{
   }
 
   allNotesOff(){
+    this._tracks.forEach((track) => {
+      let instrument = track._instrument
+      if(typeof instrument !== 'undefined'){
+        instrument.allNotesOff()
+      }
+    })
+
     this._scheduler.allNotesOff()
+    this._metronome.allNotesOff()
   }
 
   getTracks(){
@@ -375,7 +419,7 @@ export class Song{
     let wasPlaying = this._playing
     if(this._playing){
       this._playing = false
-      this._scheduler.allNotesOff()
+      this.allNotesOff()
     }
 
     let target
