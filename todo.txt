@@ -4,8 +4,8 @@ implement playhead
   -> add addEventListener() ✓
 
 
-implement metronome
+implement metronome ✓
 
-implement loop
+implement loop ✓
 
 implement precount + MIDI recording

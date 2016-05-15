@@ -132,6 +132,12 @@ export class Song{
     this._metronome = new Metronome(this)
     this._metronomeEvents = []
     this._updateMetronomeEvents = true
+
+    this._loop = false
+    this._leftLocator = {millis: 0, ticks: 0}
+    this._rightLocator = {millis: 0, ticks: 0}
+    this._illegalLoop = false
+    this._loopDuration = 0
   }
 
 
@@ -284,13 +290,13 @@ export class Song{
     // get the last event of this song
     let lastEvent = this._events[this._events.length - 1]
     let lastTimeEvent = this._timeEvents[this._timeEvents.length - 1]
-    if(lastEvent.ticks > lastTimeEvent.ticks){
+    if(lastTimeEvent.ticks > lastEvent.ticks){
       lastEvent = lastTimeEvent
     }
 
     // get the position data of the first beat in the bar after the last bar
     this.bars = lastEvent.bar
-    console.log('num bars', this.bars)
+    //console.log('num bars', this.bars, lastEvent)
     let ticks = calculatePosition(this, {
       type: 'barsbeats',
       target: [this.bars + 1],
@@ -406,14 +412,7 @@ export class Song{
     return calculatePosition(this, args)
   }
 
-  /*
-    position:
-      - 'ticks', 96000
-      - 'millis', 1234
-      - 'percentage', 55
-      - 'barsbeats', 1, 4, 0, 25 -> bar, beat, sixteenth, tick
-      - 'time', 0, 3, 49, 566 -> hours, minutes, seconds, millis
-  */
+  // @args -> see _calculatePosition
   setPosition(type, ...args){
 
     let wasPlaying = this._playing
@@ -422,38 +421,11 @@ export class Song{
       this.allNotesOff()
     }
 
-    let target
-    let position
-
-    switch(type){
-      case 'ticks':
-      case 'millis':
-      case 'percentage':
-        target = args[0] || 0
-        break
-
-      case 'time':
-      case 'barsbeats':
-      case 'barsandbeats':
-        target = args
-        break
-
-      default:
-        console.log('unsupported type')
-        return
+    let position = this._calculatePosition(type, args, 'all')
+    //let millis = this._calculatePosition(type, args, 'millis')
+    if(position === false){
+      return
     }
-
-    // millis = calculatePosition(this, {
-    //   type,
-    //   target,
-    //   result: 'millis'
-    // }).millis
-
-    position = calculatePosition(this, {
-      type,
-      target,
-      result: 'all'
-    })
 
     this._millis = position.millis
 
@@ -476,17 +448,72 @@ export class Song{
     return this._playhead.get()
   }
 
+  // @args -> see _calculatePosition
+  setLeftLocator(type, ...args){
+    this._leftLocator = this._calculatePosition(type, args, 'all')
+
+    if(this._leftLocator === false){
+      console.warn('invalid position for locator')
+      this._leftLocator = {millis: 0, ticks: 0}
+      return
+    }
+  }
+
+  // @args -> see _calculatePosition
+  setRightLocator(type, ...args){
+    this._rightLocator = this._calculatePosition(type, args, 'all')
+
+    if(this._rightLocator === false){
+      this._rightLocator = {millis: 0, ticks: 0}
+      console.warn('invalid position for locator')
+      return
+    }
+  }
+
+  setLoop(flag = null){
+
+    this._loop = flag !== null ? flag : !this._loop
+
+    if(this._rightLocator === false || this._leftLocator === false){
+      this._illegalLoop = true
+      this._loop = false
+      return false
+    }
+
+    // locators can not (yet) be used to jump over a segment
+    if(this._rightLocator.millis <= this._leftLocator.millis){
+      this._illegalLoop = true
+      this._loop = false
+      return false
+    }
+
+    this._loopDuration = this._rightLocator.millis - this._leftLocator.millis
+    //console.log(this._loop, this._loopDuration)
+    this._scheduler.beyondLoop = this._millis > this._rightLocator.millis
+    return this._loop
+  }
+
   _pulse(): void{
     if(this._playing === false){
       return
     }
     let now = context.currentTime * 1000
     let diff = now - this._timeStamp
+
+    if(this._loop && this._scheduler.looped && this._millis > this._rightLocator.millis){
+      this._millis -= this._loopDuration
+      this._playhead.set('millis', this._millis + diff)
+      dispatchEvent({
+        type: 'loop',
+        data: null
+      })
+    }else{
+      //console.log(diff, this._millis)
+      this._playhead.update('millis', diff)
+    }
+
     this._millis += diff
     this._timeStamp = now
-    //console.log(diff, this.millis)
-
-    this._playhead.update('millis', diff)
 
     if(this._millis >= this._durationMillis){
       this.stop()
@@ -499,6 +526,47 @@ export class Song{
     requestAnimationFrame(this._pulse.bind(this))
   }
 
+  /*
+    helper method: converts user friendly position format to internal format
+
+    position:
+      - 'ticks', 96000
+      - 'millis', 1234
+      - 'percentage', 55
+      - 'barsbeats', 1, 4, 0, 25 -> bar, beat, sixteenth, tick
+      - 'time', 0, 3, 49, 566 -> hours, minutes, seconds, millis
+
+  */
+  _calculatePosition(type, args, resultType){
+    let target
+
+    switch(type){
+      case 'ticks':
+      case 'millis':
+      case 'percentage':
+        target = args[0] || 0
+        break
+
+      case 'time':
+      case 'barsbeats':
+      case 'barsandbeats':
+        target = args
+        break
+
+      default:
+        console.log('unsupported type')
+        return false
+    }
+
+    let position = calculatePosition(this, {
+      type,
+      target,
+      result: resultType,
+    })
+
+    return position
+  }
+
   addEventListener(type, callback){
     return addEventListener(type, callback)
   }
@@ -507,3 +575,5 @@ export class Song{
     removeEventListener(type, id)
   }
 }
+
+

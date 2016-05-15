@@ -50,7 +50,7 @@ export class Playhead{
   updateSong(){
     this.events = [...this.song._events, ...this.song._timeEvents]
     sortEvents(this.events)
-    console.log('events %O', this.events)
+    //console.log('events %O', this.events)
     this.notes = this.song._notes
     this.parts = this.song._parts
     this.numEvents = this.events.length
@@ -83,6 +83,21 @@ export class Playhead{
         if(value === 0 || value > this.currentValue - range){
           this.activeEvents.push(event)
           // this doesn't work too well
+          if(event.type === 176){
+            //console.log(event.type, event.data1, event.data2)
+            if(event.data1 === 64){
+              dispatchEvent({
+                type: 'sustainpedal2',
+                data: event.data2 === 127 ? 'down' : 'up'
+              })
+            }
+          // }else{
+          //   dispatchEvent({
+          //     type: 'event',
+          //     data: event
+          //   })
+          }
+
           dispatchEvent({
             type: 'event',
             data: event
@@ -94,6 +109,7 @@ export class Playhead{
         break
       }
     }
+    //console.log('-----------------')
     this.data.activeEvents = this.activeEvents
 
     // if a song has no events yet, use the first time event as reference

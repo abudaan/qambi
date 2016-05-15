@@ -72,10 +72,12 @@ export class Instrument{
       if(event.data1 === 64){
         if(event.data2 === 127){
           this.sustainPedalDown = true
+          ///*
           dispatchEvent({
             type: 'sustainpedal',
             data: 'down'
           })
+          //*/
           //console.log('sustain pedal down')
         }else if(event.data2 === 0){
           this.sustainPedalDown = false
@@ -91,10 +93,12 @@ export class Instrument{
           })
           //console.log('sustain pedal up', this.sustainedSamples)
           this.sustainedSamples = []
+          ///*
           dispatchEvent({
             type: 'sustainpedal',
             data: 'up'
           })
+          //*/
           //this.stopSustain(time);
         }
 

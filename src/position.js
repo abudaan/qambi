@@ -408,7 +408,8 @@ export function getPosition2(song, unit, target, type, event){
   }else if(unit === 'ticks'){
     fromTicks(song, target, event);
   }
-  if(type === 'all'){
+  returnType = type
+  if(returnType === 'all'){
     calculateBarsAndBeats();
   }
   return getPositionData(song);

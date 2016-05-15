@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', function(){
     if(test === 1){
 
       //console.time('song')
-      // fetch('../../data/mozk545a.mid')
-      fetch('../../data/minute_waltz.mid')
+      fetch('../../data/mozk545a.mid')
+      //fetch('../../data/minute_waltz.mid')
       .then(response => {
         return response.arrayBuffer()
       })
@@ -47,9 +47,11 @@ document.addEventListener('DOMContentLoaded', function(){
     let btnPlay = document.getElementById('play')
     let btnPause = document.getElementById('pause')
     let btnStop = document.getElementById('stop')
+    let btnLoop = document.getElementById('loop')
     let divTempo = document.getElementById('tempo')
     let divSustain = document.getElementById('sustain')
     let divSustain2 = document.getElementById('sustain2')
+    let divSustain3 = document.getElementById('sustain3')
     let divPosition = document.getElementById('position')
     let divPositionTime = document.getElementById('position_time')
     let rangePosition = document.getElementById('playhead')
@@ -58,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function(){
     btnPlay.disabled = false
     btnPause.disabled = false
     btnStop.disabled = false
+    btnLoop.disabled = false
 
     btnPlay.addEventListener('click', function(){
       //song.play('barsbeats', 4, 1, 1, 0)
@@ -74,6 +77,12 @@ document.addEventListener('DOMContentLoaded', function(){
       song.stop()
     })
 
+    btnLoop.addEventListener('click', function(){
+      let loop = song.setLoop()
+      console.log(loop)
+      btnLoop.innerHTML = loop ? 'stop loop' : 'start loop'
+    })
+
     // song.addEventListener(MIDIEventTypes.TEMPO, event => {
     //   divTempo.innerHTML = `tempo: ${event.bpm} bpm`
     // })
@@ -82,14 +91,18 @@ document.addEventListener('DOMContentLoaded', function(){
       divSustain.innerHTML = 'sustainpedal ' + event.data
     })
 
+    song.addEventListener('sustainpedal2', event => {
+      divSustain2.innerHTML = 'sustainpedal2 ' + event.data
+    })
+
     song.addEventListener(MIDIEventTypes.CONTROL_CHANGE, event => {
       if(event.data1 !== 64){
         return
       }
       if(event.data2 === 127){
-        divSustain2.innerHTML = 'sustainpedal down'
+        divSustain3.innerHTML = 'sustainpedal3 down'
       }else if(event.data2 === 0){
-        divSustain2.innerHTML = 'sustainpedal up'
+        divSustain3.innerHTML = 'sustainpedal3 up'
       }
     })
 
@@ -114,6 +127,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     song.addEventListener('pause', event => {
       console.log('paused:', event.data)
+      //console.log(song.getPosition())
     })
 
     let position = song.getPosition()
@@ -146,6 +160,14 @@ document.addEventListener('DOMContentLoaded', function(){
     const rangeListener = function(e){
       song.setPosition('percentage', e.target.valueAsNumber)
     }
+
+
+    song.setPosition('barsbeats', 2)
+    song.setLeftLocator('barsbeats', 2)
+    song.setRightLocator('barsbeats', 4)
+    song.setLoop()
+
+    //console.log(song.getPosition())
   }
 
 })
