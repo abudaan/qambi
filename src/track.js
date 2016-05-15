@@ -16,6 +16,7 @@ export class Track{
     this.volume = 0.5
     this._output = context.createGain()
     this._output.gain.value = this.volume
+    this._midiInputIds = []
     this._midiOutputIds = []
     this._song = null
     this._parts = []
@@ -27,21 +28,32 @@ export class Track{
     this.setInstrument(new Instrument('sinewave'))
   }
 
-  setInstrument(instrument){
+  setInstrument(instrument = null){
     this._instrument = instrument
-    instrument.connect(this._output)
+    if(this.instrument !== null){
+      instrument.connect(this._output)
+    }
   }
 
   connect(output){
     this._output.connect(output)
   }
 
-  setMIDIOutputs(...outputIds){
+  connectMIDIOutputs(...outputIds){
     //console.log(outputIds)
     this._midiOutputIds.push(...outputIds)
   }
 
-  removeMIDIOutputs(...outputs){
+  disconnectMIDIOutputs(...outputs){
+    //this._midiOutputs = this._midiOutputs.filter(...outputs)
+  }
+
+  connectMIDIInputs(...inputIds){
+    //console.log(outputIds)
+    this._midiOutputIds.push(...inputIds)
+  }
+
+  disconnectMIDIInputs(...inputs){
     //this._midiOutputs = this._midiOutputs.filter(...outputs)
   }
 

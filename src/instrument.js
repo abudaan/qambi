@@ -31,6 +31,10 @@ export class Instrument{
     this.output = output
   }
 
+  disconnect(){
+    this.output = null
+  }
+
   processMIDIEvent(event, time){
     let sample, sampleData
     time = time || context.currentTime + (event.ticks * millisPerTick)
