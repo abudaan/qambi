@@ -45,8 +45,8 @@
     "test": "babel-node ./src/fp/test.js",
     "babel-node": "babel-node",
     "start": "webpack-dev-server",
-    "watch-test": "watchify examples/midifile/index.js -t babelify -o examples/midifile/app.js --debug --verbose",
-    "build": "browserify examples/instruments/index.js -t babelify --debug | exorcist examples/instruments/app.js.map | uglifyjs -c > examples/instruments/app.js",
+    "watch-test": "watchify examples/midi-io/index.js -t babelify -o examples/midi-io/build.js --debug --verbose",
+    "build": "browserify examples/instruments/index.js -t babelify --debug | exorcist examples/instruments/build.js.map | uglifyjs -c > examples/instruments/build.js",
     "watch": "node_modules/babel-cli/bin/babel.js src --watch --out-dir lib/qambi"
   },
   "dependencies": {
