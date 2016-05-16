@@ -61,7 +61,7 @@ export default class Scheduler{
         //console.log('-------LOOPED', this.maxtime, diff, this.song._leftLocator.millis, this.song._rightLocator.millis);
 
         if(this.looped === false){
-
+          //console.log('LOOP')
           this.looped = true;
           let leftMillis = this.song._leftLocator.millis
           let rightMillis = this.song._rightLocator.millis
@@ -72,6 +72,10 @@ export default class Scheduler{
             if(event.millis < rightMillis){
               event.time = this.timeStamp + event.millis - this.songStartMillis
               events.push(event)
+
+              if(event.type === 144){
+                this.notes.set(event.midiNoteId, event.midiNote)
+              }
               //console.log(event.type)
               this.index++
             }else{
