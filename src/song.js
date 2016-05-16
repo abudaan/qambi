@@ -408,6 +408,9 @@ export class Song{
     if(this._recording === true){
       return
     }
+    this._tracks.forEach(track => {
+      track._startRecording()
+    })
     this._recording = true
     dispatchEvent({type: 'start_recording'})
     this._play()

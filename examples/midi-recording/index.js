@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function(){
     btnStopRecord.disabled = false
     btnInstrument.disabled = false
     btnMetronome.disabled = false
-    btnUndoRecord.disabled = false
+
 
 
     let MIDIInputs = getMIDIInputs()
@@ -132,6 +132,14 @@ document.addEventListener('DOMContentLoaded', function(){
       if(!userInteraction){
         rangePosition.value = event.data.percentage
       }
+    })
+
+    song.addEventListener('stop_recording', e => {
+      btnUndoRecord.disabled = false
+    })
+
+    song.addEventListener('start_recording', e => {
+      btnUndoRecord.disabled = true
     })
 
     rangePosition.addEventListener('mouseup', e => {

@@ -152,7 +152,10 @@ export class Track{
 
   setRecordEnabled(type){ // 'midi', 'audio', empty or anything will disable recording
     this._recordEnabled = type
-    if(type === 'midi'){
+  }
+
+  _startRecording(){
+    if(this._recordEnabled === 'midi'){
       this._recordedEvents = []
       this._recordId = `recording_${recordingIndex++}${new Date().getTime()}`
       this._recordPart = new Part(this._recordId)
