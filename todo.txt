@@ -8,4 +8,6 @@ implement metronome ✓
 
 implement loop ✓
 
-implement precount + MIDI recording
+implement MIDI recording ✓
+
+implement precount + preroll
