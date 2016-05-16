@@ -1,6 +1,7 @@
 import qambi, {
   Song,
   MIDIEventTypes,
+  Instrument,
 } from '../../src/qambi'
 
 
@@ -18,8 +19,8 @@ document.addEventListener('DOMContentLoaded', function(){
     if(test === 1){
 
       //console.time('song')
-      fetch('../data/mozk545a.mid')
-      //fetch('../data/minute_waltz.mid')
+      //fetch('../data/mozk545a.mid')
+      fetch('../data/minute_waltz.mid')
       .then(response => {
         return response.arrayBuffer()
       })
@@ -43,6 +44,10 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
   function initUI(){
+
+    song.getTracks().forEach(track => {
+      track.setInstrument(new Instrument())
+    })
 
     let btnPlay = document.getElementById('play')
     let btnPause = document.getElementById('pause')
