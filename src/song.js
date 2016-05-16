@@ -15,6 +15,7 @@ import {Metronome} from './metronome'
 import {addEventListener, removeEventListener, dispatchEvent} from './eventlistener'
 
 let songIndex = 0
+let recordingIndex = 0
 
 const defaultSong = {
   ppq: 960,
@@ -408,8 +409,9 @@ export class Song{
     if(this._recording === true){
       return
     }
+    this._recordId = `recording_${recordingIndex++}${new Date().getTime()}`
     this._tracks.forEach(track => {
-      track._startRecording()
+      track._startRecording(this._recordId)
     })
     this._recording = true
     dispatchEvent({type: 'start_recording'})
@@ -421,7 +423,7 @@ export class Song{
       return
     }
     this._tracks.forEach(track => {
-      track._stopRecording()
+      track._stopRecording(this._recordId)
     })
     this.update()
     this._recording = false
@@ -430,14 +432,14 @@ export class Song{
 
   undoRecording(){
     this._tracks.forEach(track => {
-      track.undoRecording()
+      track.undoRecording(this._recordId)
     })
     this.update()
   }
 
   redoRecording(){
     this._tracks.forEach(track => {
-      track.redoRecording()
+      track.redoRecording(this._recordId)
     })
     this.update()
   }

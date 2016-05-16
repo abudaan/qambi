@@ -9,7 +9,6 @@ import {MIDIEventTypes} from './qambi'
 
 
 let trackIndex = 0
-let recordingIndex = 0
 
 export class Track{
 
@@ -154,24 +153,33 @@ export class Track{
     this._recordEnabled = type
   }
 
-  _startRecording(){
+  _startRecording(recordId){
     if(this._recordEnabled === 'midi'){
+      this._recordId = recordId
       this._recordedEvents = []
-      this._recordId = `recording_${recordingIndex++}${new Date().getTime()}`
       this._recordPart = new Part(this._recordId)
     }
   }
 
-  _stopRecording(){
+  _stopRecording(recordId){
+    if(this._recordId !== recordId){
+      return
+    }
     this._recordPart.addEvents(...this._recordedEvents)
     this.addParts(this._recordPart)
   }
 
-  undoRecording(){
+  undoRecording(recordId){
+    if(this._recordId !== recordId){
+      return
+    }
     this.removeParts(this._recordPart)
   }
 
-  redoRecording(){
+  redoRecording(recordId){
+    if(this._recordId !== recordId){
+      return
+    }
     this.addParts(this._recordPart)
   }
 
