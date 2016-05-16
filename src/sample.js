@@ -26,7 +26,7 @@ class Sample{
   }
 
   start(time){
-    //console.log(this.source);
+    //console.log(time, this.source);
     this.source.start(time);
   }
 

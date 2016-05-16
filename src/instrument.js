@@ -37,7 +37,9 @@ export class Instrument{
 
   processMIDIEvent(event, time){
     let sample, sampleData
-    time = time || context.currentTime + (event.ticks * millisPerTick)
+    if(isNaN(time)){
+      time = context.currentTime + (event.ticks * millisPerTick)
+    }
     //console.log(time)
 
     if(event.type === 144){

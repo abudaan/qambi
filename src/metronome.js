@@ -116,7 +116,7 @@ export class Metronome{
     this.part.removeEvents(this.part.getEvents())
     this.createEvents(startBar, endBar, id)
     this.bars = this.song.bars
-    console.log('getEvents %O', this.events)
+    //console.log('getEvents %O', this.events)
     return this.events
   }
 

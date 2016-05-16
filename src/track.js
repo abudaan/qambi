@@ -9,6 +9,7 @@ import {MIDIEventTypes} from './qambi'
 
 
 let trackIndex = 0
+let recordingIndex = 0
 
 export class Track{
 
@@ -31,7 +32,8 @@ export class Track{
     this._createEventArray = false
     this.latency = 100
     this._instrument = null
-    this._recordedNotes = new Map()
+    this._tmpRecordedNotes = new Map()
+    this._recordedEvents = []
     //this.setInstrument(new Instrument('sinewave'))
   }
 
@@ -101,17 +103,21 @@ export class Track{
         let note, midiEvent
         input.addEventListener('midimessage', e => {
 
-          midiEvent = new MIDIEvent(1, ...e.data)
+          midiEvent = new MIDIEvent(this._song._ticks, ...e.data)
           midiEvent.time = 0 // play immediately
           midiEvent.recordMillis = context.currentTime * 1000
 
           if(midiEvent.type === MIDIEventTypes.NOTE_ON){
             note = new MIDINote(midiEvent)
-            this._recordedNotes.set(midiEvent.data1, note)
+            this._tmpRecordedNotes.set(midiEvent.data1, note)
           }else if(midiEvent.type === MIDIEventTypes.NOTE_OFF){
-            note = this._recordedNotes.get(midiEvent.data1)
+            note = this._tmpRecordedNotes.get(midiEvent.data1)
             note.addNoteOff(midiEvent)
-            this._recordedNotes.delete(midiEvent.data1)
+            this._tmpRecordedNotes.delete(midiEvent.data1)
+          }
+
+          if(this._recordEnabled === 'midi' && this._song._recording === true){
+            this._recordedEvents.push(midiEvent)
           }
           this.processMIDIEvent(midiEvent)
         })
@@ -142,6 +148,28 @@ export class Track{
 
   getMIDIOutputs(){
     return Array.from(this._midiOutputs.values())
+  }
+
+  setRecordEnabled(type){ // 'midi', 'audio', empty or anything will disable recording
+    this._recordEnabled = type
+    if(type === 'midi'){
+      this._recordedEvents = []
+      this._recordId = `recording_${recordingIndex++}${new Date().getTime()}`
+      this._recordPart = new Part(this._recordId)
+    }
+  }
+
+  _stopRecording(){
+    this._recordPart.addEvents(...this._recordedEvents)
+    this.addParts(this._recordPart)
+  }
+
+  undoRecording(){
+    this.removeParts(this._recordPart)
+  }
+
+  redoRecording(){
+    this.addParts(this._recordPart)
   }
 
   copy(){
@@ -195,11 +223,11 @@ export class Track{
       part._track = null
       this._partsById.delete(part.id, part)
       if(song){
-        song._deletedParts.push(part)
+        song._removedParts.push(part)
       }
 
       let events = part._events
-      events.forEach(function(event){
+      events.forEach(event => {
         event._track = null
         if(song){
           event._song = null

@@ -19,7 +19,7 @@ let songIndex = 0
 const defaultSong = {
   ppq: 960,
   bpm: 120,
-  bars: 30,
+  bars: 16,
   lowestNote: 0,
   highestNote: 127,
   nominator: 4,
@@ -171,6 +171,8 @@ export class Song{
       && this._removedEvents.length === 0
       && this._newEvents.length === 0
       && this._movedEvents.length === 0
+      && this._newParts.length === 0
+      && this._removedParts.length === 0
     ){
       return
     }
@@ -195,7 +197,7 @@ export class Song{
     // filter removed parts
     console.log('removed parts %O', this._removedParts)
     this._removedParts.forEach((part) => {
-      this.partsById.delete(part.id)
+      this._partsById.delete(part.id)
       this._removedEvents.push(...part._events)
     })
 
@@ -205,7 +207,7 @@ export class Song{
     this._newParts.forEach((part) => {
       part._song = this
       this._partsById.set(part.id, part)
-      tobeParsed.push(...part._events)
+      this._newEvents.push(...part._events)
       part.update()
     })
 
@@ -215,6 +217,18 @@ export class Song{
     this._changedParts.forEach((part) => {
       part.update()
     })
+
+    // remove events from removed parts
+    console.log('changed parts %O', this._changedParts)
+    this._removedParts.forEach((part) => {
+      this._removedEvents.push(...part._events)
+      this._partsById.delete(part.id)
+      part.update()
+    })
+
+    if(this._removedParts.length > 0){
+      this._parts = Array.from(this._partsById.values())
+    }
 
 
     // filter removed events
@@ -250,8 +264,8 @@ export class Song{
       console.log('parseEvents', tobeParsed.length - this._timeEvents.length)
       parseEvents(tobeParsed, this.isPlaying)
       tobeParsed.forEach(event => {
-        //console.log(event.id, event.type)
-        if(event.type === qambi.NOTE_ON){
+        //console.log(event.id, event.type, event.midiNote)
+        if(event.type === MIDIEventTypes.NOTE_ON){
           if(event.midiNote){
             this._notesById.set(event.midiNoteId, event.midiNote)
             //console.log(event.midiNoteId, event.type)
@@ -270,7 +284,7 @@ export class Song{
       this._notes = Array.from(this._notesById.values())
       console.timeEnd('to array')
     }
-
+    //debugger
 
     console.time(`sorting ${this._events.length} events`)
     sortEvents(this._events)
@@ -289,12 +303,14 @@ export class Song{
     // get the last event of this song
     let lastEvent = this._events[this._events.length - 1]
     let lastTimeEvent = this._timeEvents[this._timeEvents.length - 1]
-    if(lastTimeEvent.ticks > lastEvent.ticks){
+    if(lastEvent instanceof MIDIEvent === false){
+      lastEvent = lastTimeEvent
+    }else if(lastTimeEvent.ticks > lastEvent.ticks){
       lastEvent = lastTimeEvent
     }
 
     // get the position data of the first beat in the bar after the last bar
-    this.bars = lastEvent.bar
+    this.bars = Math.max(lastEvent.bar, this.bars)
     //console.log('num bars', this.bars, lastEvent)
     let ticks = calculatePosition(this, {
       type: 'barsbeats',
@@ -324,6 +340,13 @@ export class Song{
     }
     this._allEvents = [...this._metronomeEvents, ...this._events]
     sortEvents(this._allEvents)
+    //console.log('all events %O', this._allEvents)
+
+    this._newParts = []
+    this._removedParts = []
+    this._newEvents = []
+    this._movedEvents = []
+    this._removedEvents = []
   }
 
   play(type, ...args): void{
@@ -374,8 +397,46 @@ export class Song{
     if(this._millis !== 0){
       this._millis = 0
       this._playhead.set('millis', this._millis)
+      if(this._recording){
+        this.stopRecording()
+      }
       dispatchEvent({type: 'stop'})
     }
+  }
+
+  startRecording(){
+    if(this._recording === true){
+      return
+    }
+    this._recording = true
+    dispatchEvent({type: 'start_recording'})
+    this._play()
+  }
+
+  stopRecording(){
+    if(this._recording === false){
+      return
+    }
+    this._tracks.forEach(track => {
+      track._stopRecording()
+    })
+    this.update()
+    this._recording = false
+    dispatchEvent({type: 'stop_recording'})
+  }
+
+  undoRecording(){
+    this._tracks.forEach(track => {
+      track.undoRecording()
+    })
+    this.update()
+  }
+
+  redoRecording(){
+    this._tracks.forEach(track => {
+      track.redoRecording()
+    })
+    this.update()
   }
 
   setMetronome(flag){
@@ -520,6 +581,7 @@ export class Song{
       this._playhead.update('millis', diff)
     }
 
+    this._ticks = this._playhead.get().ticks
     this._millis += diff
     this._timeStamp = now
 
