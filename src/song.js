@@ -378,15 +378,25 @@ export class Song{
     }
   }
 
+  setMetronome(flag){
+    if(typeof flag === 'undefined'){
+      this.useMetronome = !this.useMetronome
+    }else{
+      this.useMetronome = flag
+    }
+    this._metronome.mute(this.useMetronome)
+  }
+
+  configureMetronome(config){
+    this._metronome.configure(config)
+  }
+
   allNotesOff(){
     this._tracks.forEach((track) => {
-      let instrument = track._instrument
-      if(typeof instrument !== 'undefined'){
-        instrument.allNotesOff()
-      }
+      track.allNotesOff()
     })
 
-    this._scheduler.allNotesOff()
+    //this._scheduler.allNotesOff()
     this._metronome.allNotesOff()
   }
 

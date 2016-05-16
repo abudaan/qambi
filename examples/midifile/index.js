@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', function(){
     if(test === 1){
 
       //console.time('song')
-      fetch('../../data/mozk545a.mid')
-      //fetch('../../data/minute_waltz.mid')
+      fetch('../data/mozk545a.mid')
+      //fetch('../data/minute_waltz.mid')
       .then(response => {
         return response.arrayBuffer()
       })
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }else if(test === 2){
 
       //console.time('song')
-      Song.fromMIDIFileAsync('../../data/minute_waltz.mid')
+      Song.fromMIDIFileAsync('../data/minute_waltz.mid')
       .then(s => {
         song = s
         //console.timeEnd('song')

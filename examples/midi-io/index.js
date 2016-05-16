@@ -1,6 +1,8 @@
 import qambi, {
   Song,
-  MIDIEventTypes,
+  Instrument,
+  getMIDIInputs,
+  getMIDIOutputs,
 } from '../../src/qambi'
 
 
@@ -17,25 +19,21 @@ document.addEventListener('DOMContentLoaded', function(){
 
     if(test === 1){
 
-      //console.time('song')
-      fetch('../../data/mozk545a.mid')
-      //fetch('../../data/minute_waltz.mid')
+      fetch('../data/mozk545a.mid')
+      //fetch('../data/minute_waltz.mid')
       .then(response => {
         return response.arrayBuffer()
       })
       .then(data => {
         song = Song.fromMIDIFile(data)
         initUI()
-        //console.timeEnd('song')
       })
 
     }else if(test === 2){
 
-      //console.time('song')
       Song.fromMIDIFileAsync('../../data/minute_waltz.mid')
       .then(s => {
         song = s
-        //console.timeEnd('song')
         initUI()
       }, e => console.log(e))
     }
@@ -47,29 +45,77 @@ document.addEventListener('DOMContentLoaded', function(){
     let btnPlay = document.getElementById('play')
     let btnPause = document.getElementById('pause')
     let btnStop = document.getElementById('stop')
-    let btnLoop = document.getElementById('loop')
-    let btnDelete = document.getElementById('delete')
+    let btnInstrument = document.getElementById('instrument')
+    let btnMetronome = document.getElementById('metronome')
     let divTempo = document.getElementById('tempo')
-    let divSustain = document.getElementById('sustain')
-    let divSustain2 = document.getElementById('sustain2')
-    let divSustain3 = document.getElementById('sustain3')
     let divPosition = document.getElementById('position')
     let divPositionTime = document.getElementById('position_time')
     let rangePosition = document.getElementById('playhead')
+    let rangeLatency = document.getElementById('latency')
+    let selectMIDIIn = document.getElementById('midiin')
+    let selectMIDIOut = document.getElementById('midiout')
     let userInteraction = false
 
     btnPlay.disabled = false
     btnPause.disabled = false
     btnStop.disabled = false
-    btnLoop.disabled = false
-    btnDelete.disabled = false
+    btnInstrument.disabled = false
+    btnMetronome.disabled = false
+
+
+    let MIDIInputs = getMIDIInputs()
+    let html = '<option id="-1">select MIDI in</option>'
+    MIDIInputs.forEach(port => {
+      html += `<option id="${port.id}">${port.name}</option>`
+    })
+    selectMIDIIn.innerHTML = html
+
+    selectMIDIIn.addEventListener('change', e => {
+      let portId = selectMIDIIn.options[selectMIDIIn.selectedIndex].id
+      // song.getTracks().forEach(track => {
+      //   track.disconnectMIDIInputs() // no arguments means disconnect from all inputs
+      //   track.connectMIDIInputs(portId)
+      // })
+      let track = song.getTracks()[0]
+      track.disconnectMIDIInputs() // no arguments means disconnect from all inputs
+      track.connectMIDIInputs(portId)
+    })
+
+    let MIDIOutputs = getMIDIOutputs()
+    html = '<option id="-1">select MIDI out</option>'
+    MIDIOutputs.forEach(port => {
+      html += `<option id="${port.id}">${port.name}</option>`
+    })
+    selectMIDIOut.innerHTML = html
+
+    selectMIDIOut.addEventListener('change', e => {
+      let portId = selectMIDIOut.options[selectMIDIOut.selectedIndex].id
+      song.getTracks().forEach(track => {
+        track.disconnectMIDIOutputs() // no arguments means disconnect from all outputs
+        track.connectMIDIOutputs(portId)
+      })
+/*
+      let track = song.getTracks()[0]
+      track.disconnectMIDIOutputs(track.getMIDIOutputs()[0])
+      //track.disconnectMIDIOutputs() // no arguments means disconnect from all inputs
+      track.connectMIDIOutputs(portId)
+*/
+    })
+
+    rangeLatency.addEventListener('change', e => {
+      song.getTracks().forEach(track => {
+        track.latency = e.target.valueAsNumber
+      })
+    })
+
+    btnMetronome.addEventListener('click', function(){
+      song.setMetronome() // if no arguments are provided it simply toggles
+      btnMetronome.innerHTML = song.useMetronome ? 'metronome on' : 'metronome off'
+    })
 
     btnPlay.addEventListener('click', function(){
-      //song.play('barsbeats', 4, 1, 1, 0)
-      //song.play('time', 0, 0, 15) // play from 15 seconds
-      //song.play('millis', 34000) // play from 34 seconds
       song.play()
-    });
+    })
 
     btnPause.addEventListener('click', function(){
       song.pause()
@@ -79,71 +125,16 @@ document.addEventListener('DOMContentLoaded', function(){
       song.stop()
     })
 
-    btnLoop.addEventListener('click', function(){
-      let loop = song.setLoop()
-      console.log(loop)
-      btnLoop.innerHTML = loop ? 'stop loop' : 'start loop'
-    })
-
-
-    let memoryLeak
-
-    btnDelete.addEventListener('click', function(){
-      memoryLeak = song.getEvents()[0]
-      //song.dispose()
-      song = null
-      console.log(memoryLeak) // -> this event retains the whole song!
-      setTimeout(function(){
-        memoryLeak = null
-        console.log('memory cleared')
-      }, 5000)
-    })
-
-    // song.addEventListener(MIDIEventTypes.TEMPO, event => {
-    //   divTempo.innerHTML = `tempo: ${event.bpm} bpm`
-    // })
-
-    song.addEventListener('sustainpedal', event => {
-      divSustain.innerHTML = 'sustainpedal ' + event.data
-    })
-
-    song.addEventListener('sustainpedal2', event => {
-      divSustain2.innerHTML = 'sustainpedal2 ' + event.data
-    })
-
-    song.addEventListener(MIDIEventTypes.CONTROL_CHANGE, event => {
-      if(event.data1 !== 64){
-        return
-      }
-      if(event.data2 === 127){
-        divSustain3.innerHTML = 'sustainpedal3 down'
-      }else if(event.data2 === 0){
-        divSustain3.innerHTML = 'sustainpedal3 up'
-      }
-    })
-
-    song.addEventListener('noteOn', event => {
-      let note = event.data
-      //console.log('noteOn', note.id, note.noteOn.id, note.noteOn.data1, note.noteOn.ticks)
-    })
-
-    song.addEventListener('noteOff', event => {
-      let note = event.data
-      //console.log('noteOff', note.id, note.noteOff.id, note.noteOff.data1, note.noteOff.ticks)
-    })
-
-    song.addEventListener('play', event => {
-      console.log('started playing at position:', event.data)
-    })
-
-    song.addEventListener('stop', () => {
-      console.log('stop')
-      rangePosition.value = 0
-    })
-
-    song.addEventListener('pause', event => {
-      console.log('paused:', event.data)
-      //console.log(song.getPosition())
+    btnInstrument.addEventListener('click', function(){
+      song.getTracks().forEach(track => {
+        if(track.getInstrument() === null){
+          btnInstrument.innerHTML = 'remove instrument'
+          track.setInstrument(new Instrument()) // by passing a new Instrument, the simple sinewave synth is used for instrument
+        }else{
+          btnInstrument.innerHTML = 'set instrument'
+          track.setInstrument() // by not providing an instrument you remove the instrument from this track
+        }
+      })
     })
 
     let position = song.getPosition()
@@ -176,15 +167,6 @@ document.addEventListener('DOMContentLoaded', function(){
     const rangeListener = function(e){
       song.setPosition('percentage', e.target.valueAsNumber)
     }
-
-
-    song.setPosition('barsbeats', 2)
-    song.setLeftLocator('barsbeats', 2)
-    song.setRightLocator('barsbeats', 3, 2)
-    song.setLoop()
-
-
-    //console.log(song.getPosition())
   }
 
 })

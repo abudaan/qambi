@@ -1,9 +1,5 @@
 .gitignore
-src/build/app.js
-assets/*
-node_modules/*
 npm-debug.log
 instruments
 lib/qambi
-dist
-build
+node_modules/*

@@ -11,6 +11,12 @@
       input[type='range']{
         width: 500px;
       }
+      div{
+        margin: 10px;
+      }
+      label{
+        margin-right: 10px;
+      }
     </style>
   </head>
   <body>
@@ -18,15 +24,19 @@
       <button id="play" disabled>play</button>
       <button id="pause" disabled>pause</button>
       <button id="stop" disabled>stop</button>
-      <button id="loop" disabled>stop loop</button>
-      <button id="delete" disabled>delete song</button>
+      <button id="instrument" disabled>set instrument</button>
+      <button id="metronome" disabled>metronome off</button>
       <div id="tempo"></div>
       <div id="position"></div>
       <div id="position_time"></div>
-      <div id="sustain">sustainpedal up</div>
-      <div id="sustain2">sustainpedal2 up</div>
-      <div id="sustain3">sustainpedal3 up</div>
+      <div>song position</div>
       <input type='range' id="playhead" value=0 min=0 max=1 step=0.001></input>
+      <div>
+        <label for="midiin">MIDI in</label><select id="midiin"></select>
+        <label for="midiout">MIDI out</label><select id="midiout"></select>
+      </div>
+      <div>latency</div>
+      <input type='range' id="latency" value=0 min=0 max=400 step=1></input>
     </div>
   </body>
 </html>

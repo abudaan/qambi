@@ -5,18 +5,30 @@ let midiNoteIndex = 0
 export class MIDINote{
 
   constructor(noteon: MIDIEvent, noteoff: MIDIEvent){
-    if(noteon.type !== 144 || noteoff.type !== 128){
+    //if(noteon.type !== 144 || noteoff.type !== 128){
+    if(noteon.type !== 144){
       console.warn('cannot create MIDINote')
       return
     }
     this.id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
     this.noteOn = noteon
-    this.noteOff = noteoff
     noteon.midiNote = this
-    noteoff.midiNote = this
     noteon.midiNoteId = this.id
+
+    if(noteoff instanceof MIDIEvent){
+      this.noteOff = noteoff
+      noteoff.midiNote = this
+      noteoff.midiNoteId = this.id
+      this.durationTicks = noteoff.ticks - noteon.ticks
+      this.durationMillis = -1
+    }
+  }
+
+  addNoteOff(noteoff){
+    this.noteOff = noteoff
+    noteoff.midiNote = this
     noteoff.midiNoteId = this.id
-    this.durationTicks = noteoff.ticks - noteon.ticks
+    this.durationTicks = noteoff.ticks - this.noteOn.ticks
     this.durationMillis = -1
   }
 

@@ -66,7 +66,7 @@ export class Instrument{
         this.sustainedSamples.push(event.midiNoteId)
       }else{
         sample.stop(time, () => {
-          //console.log('stop', event.midiNoteId)
+          //console.log('stop', time, event.midiNoteId)
           delete this.scheduledSamples[event.midiNoteId]
         })
         //sample.stop(time)

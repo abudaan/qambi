@@ -1,7 +1,11 @@
 import {Part} from './part'
+import {MIDIEvent} from './midi_event'
+import {MIDINote} from './midi_note'
+import {getMIDIInputById, getMIDIOutputById} from './init_midi'
 import {sortEvents} from './util'
 import {context} from './init_audio'
 import {Instrument} from './instrument'
+import {MIDIEventTypes} from './qambi'
 
 
 let trackIndex = 0
@@ -16,8 +20,8 @@ export class Track{
     this.volume = 0.5
     this._output = context.createGain()
     this._output.gain.value = this.volume
-    this._midiInputIds = []
-    this._midiOutputIds = []
+    this._midiInputs = new Map()
+    this._midiOutputs = new Map()
     this._song = null
     this._parts = []
     this._partsById = new Map()
@@ -25,36 +29,119 @@ export class Track{
     this._eventsById = new Map()
     this._needsUpdate = false
     this._createEventArray = false
-    this.setInstrument(new Instrument('sinewave'))
+    this.latency = 100
+    this._instrument = null
+    this._recordedNotes = new Map()
+    //this.setInstrument(new Instrument('sinewave'))
   }
 
   setInstrument(instrument = null){
-    this._instrument = instrument
-    if(this.instrument !== null){
-      instrument.connect(this._output)
+    if(this._instrument !== null){
+      this._instrument.allNotesOff()
+      this._instrument.disconnect()
     }
+    this._instrument = instrument
+    if(this._instrument !== null){
+      this._instrument.connect(this._output)
+    }
+  }
+
+  getInstrument(){
+    return this._instrument
   }
 
   connect(output){
     this._output.connect(output)
   }
 
-  connectMIDIOutputs(...outputIds){
-    //console.log(outputIds)
-    this._midiOutputIds.push(...outputIds)
+  disconnect(){
+    this._output.disconnect()
+  }
+
+  connectMIDIOutputs(...outputs){
+    //console.log(outputs)
+    outputs.forEach(output => {
+      if(typeof output === 'string'){
+        output = getMIDIOutputById(output)
+      }
+      if(output instanceof MIDIOutput){
+        this._midiOutputs.set(output.id, output)
+      }
+    })
+    //console.log(this._midiOutputs)
   }
 
   disconnectMIDIOutputs(...outputs){
+    //console.log(outputs)
+    if(outputs.length === 0){
+      this._midiOutputs.clear()
+    }
+    outputs.forEach(port => {
+      if(port instanceof MIDIOutput){
+        port = port.id
+      }
+      if(this._midiOutputs.has(port)){
+        //console.log('removing', this._midiOutputs.get(port).name)
+        this._midiOutputs.delete(port)
+      }
+    })
     //this._midiOutputs = this._midiOutputs.filter(...outputs)
+    //console.log(this._midiOutputs)
   }
 
-  connectMIDIInputs(...inputIds){
-    //console.log(outputIds)
-    this._midiOutputIds.push(...inputIds)
+  connectMIDIInputs(...inputs){
+    inputs.forEach(input => {
+      if(typeof input === 'string'){
+        input = getMIDIInputById(input)
+      }
+      if(input instanceof MIDIInput){
+
+        this._midiInputs.set(input.id, input)
+
+        let note, midiEvent
+        input.addEventListener('midimessage', e => {
+
+          midiEvent = new MIDIEvent(1, ...e.data)
+          midiEvent.time = 0 // play immediately
+          midiEvent.recordMillis = context.currentTime * 1000
+
+          if(midiEvent.type === MIDIEventTypes.NOTE_ON){
+            note = new MIDINote(midiEvent)
+            this._recordedNotes.set(midiEvent.data1, note)
+          }else if(midiEvent.type === MIDIEventTypes.NOTE_OFF){
+            note = this._recordedNotes.get(midiEvent.data1)
+            note.addNoteOff(midiEvent)
+            this._recordedNotes.delete(midiEvent.data1)
+          }
+          this.processMIDIEvent(midiEvent)
+        })
+      }
+    })
+    //console.log(this._midiInputs)
   }
 
   disconnectMIDIInputs(...inputs){
+    if(inputs.length === 0){
+      this._midiInputs.clear()
+    }
+    inputs.forEach(port => {
+      if(port instanceof MIDIInput){
+        port = port.id
+      }
+      if(this._midiOutputs.has(port)){
+        this._midiOutputs.delete(port)
+      }
+    })
     //this._midiOutputs = this._midiOutputs.filter(...outputs)
+    //console.log(this._midiInputs)
+  }
+
+  getMIDIInputs(){
+    return Array.from(this._midiInputs.values())
+  }
+
+  getMIDIOutputs(){
+    return Array.from(this._midiOutputs.values())
   }
 
   copy(){
@@ -222,6 +309,40 @@ export class Track{
     }
     sortEvents(this._events)
     this._needsUpdate = false
+  }
+
+  allNotesOff(){
+    if(this._instrument !== null){
+      this._instrument.allNotesOff()
+    }
+
+    let timeStamp = (context.currentTime * 1000) + this.latency
+    for(let output of this._midiOutputs.values()){
+      output.send([0xB0, 0x7B, 0x00], timeStamp) // stop all notes
+      output.send([0xB0, 0x79, 0x00], timeStamp) // reset all controllers
+    }
+  }
+
+  processMIDIEvent(event, useLatency = false){
+
+    let latency = useLatency ? this.latency : 0
+    //console.log(latency)
+
+    // send to javascript instrument
+    if(this._instrument !== null){
+      this._instrument.processMIDIEvent(event, event.time / 1000)
+    }
+
+    // send to external hardware or software instrument
+    for(let port of this._midiOutputs.values()){
+      if(port){
+        if(event.type === 128 || event.type === 144 || event.type === 176){
+          port.send([event.type + this.channel, event.data1, event.data2], event.time + latency)
+        }else if(event.type === 192 || event.type === 224){
+          port.send([event.type + this.channel, event.data1], event.time + latency)
+        }
+      }
+    }
   }
 }
 

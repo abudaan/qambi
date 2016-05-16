@@ -17,6 +17,8 @@ export default class Scheduler{
     this.events = this.song._allEvents
     this.numEvents = this.events.length
     this.index = 0
+    this.maxtime = 0
+    this.prevMaxtime = 0
     this.beyondLoop = false // tells us if the playhead has already passed the looped section
     this.setIndex(this.songStartMillis)
   }
@@ -155,33 +157,31 @@ export default class Scheduler{
       event,
       numEvents,
       track,
-      events,
-      instrument,
-      scheduledTime
+      events
 
-    //console.log(position, this.maxtime)
     events = this.getEvents()
     numEvents = events.length
+    this.prevMaxtime = this.maxtime
     this.maxtime = millis + BUFFER_TIME
-    //console.log(millis)
 
-    //console.log('update', this.maxtime, numEvents)
+    // if(numEvents > 5){
+    //   console.log(numEvents)
+    // }
 
     for(i = 0; i < numEvents; i++){
       event = events[i]
       track = event._track
-      instrument = track._instrument
+      //console.log(event.millis, this.maxtime, this.prevMaxtime)
 
-      //console.log(event.ticks)
-
-      // if(typeof instrument === 'undefined'){
-      //   continue
-      // }
+      if(event.millis > this.maxtime){
+        // skip events that were harvest accidently while jumping the playhead -> should happen very rarely if ever
+        console.log('skip', event)
+        continue
+      }
 
       if(event._part.muted === true || track.muted === true || event.muted === true){
         continue
       }
-
 
       if((event.type === 144 || event.type === 128) && typeof event.midiNote === 'undefined'){
         // this is usually caused by the same note on the same ticks value, which is probably a bug in the midi file
@@ -189,61 +189,34 @@ export default class Scheduler{
         continue
       }
 
-      // debug minute_waltz double events
-      // if(event.ticks > 40300){
-      //   console.info(event)
-      // }
-
-      //scheduledTime = (this.timeStamp + event.millis - this.songStartMillis)
-      //console.log('scheduled', scheduledTime, 'current', context.currentTime * 1000)
 
       if(event.type === 'audio'){
         // to be implemented
       }else{
+        // convert to seconds because the audio context uses seconds for scheduling
+        track.processMIDIEvent(event, true) // true means: use latency to compensate timing for external MIDI devices, see Track.processMIDIEvent
 
-        // send to javascript instrument
-        if(typeof instrument !== 'undefined'){
-          // convert to seconds because the audio context uses seconds for scheduling
-          //instrument.processMIDIEvent(event, scheduledTime / 1000, track._output)
-          instrument.processMIDIEvent(event, event.time / 1000, track._output)
-          if(event.type === 144){
-            this.notes.set(event.midiNoteId, event.midiNote)
-          }else if(event.type === 128){
-            this.notes.delete(event.midiNoteId)
-          }
-        }
-
-        // send to external hardware or software instrument
-        let channel = track.channel
-        let offset = (BUFFER_TIME * 2) // why does this work?
-
-        for(let portId of track._midiOutputIds){
-          let port = getMIDIOutputById(portId)
-          if(port){
-            if(event.type === 128 || event.type === 144 || event.type === 176){
-              // port.send([event.type + channel, event.data1, event.data2], scheduledTime + offset)
-              port.send([event.type + channel, event.data1, event.data2], event.time + offset)
-            }else if(event.type === 192 || event.type === 224){
-              // port.send([event.type + channel, event.data1], scheduledTime + offset)
-              port.send([event.type + channel, event.data1], event.time + offset)
-            }
-          }
+        if(event.type === 144){
+          this.notes.set(event.midiNoteId, event.midiNote)
+        }else if(event.type === 128){
+          this.notes.delete(event.midiNoteId)
         }
       }
     }
     //console.log(this.index, this.numEvents)
     //return this.index >= 10
-    return this.index >= this.numEvents // end of song
+    return this.index >= this.numEvents // last event of song
   }
 
-
+/*
   allNotesOff(){
     let timeStamp = context.currentTime * 1000
     let outputs = getMIDIOutputs()
     outputs.forEach((output) => {
-      output.send([0xB0, 0x7B, 0x00], timeStamp + (BUFFER_TIME * 2)); // stop all notes
-      output.send([0xB0, 0x79, 0x00], timeStamp + (BUFFER_TIME * 2)); // reset all controllers
+      output.send([0xB0, 0x7B, 0x00], timeStamp) // stop all notes
+      output.send([0xB0, 0x79, 0x00], timeStamp) // reset all controllers
     })
   }
+*/
 }
 

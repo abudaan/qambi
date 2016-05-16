@@ -165,6 +165,11 @@ export class Metronome{
   }
 
 
+  mute(flag){
+    this.track.muted = flag
+  }
+
+
   allNotesOff(){
     this.track._instrument.allNotesOff()
   }
@@ -178,7 +183,7 @@ export class Metronome{
     this.song._scheduler.updateSong();
   }
 
-  // add to public API: Song.configureMetronome({})
+  // added to public API: Song.configureMetronome({})
   configure(config){
 
     Object.keys(config).forEach(function(key){

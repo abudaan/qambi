@@ -34,10 +34,13 @@ function getMIDIports(){
   //sort ports by name ascending
   outputs.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1)
 
+  //console.log(outputs)
   for(let port of outputs){
+    //console.log(port.id, port.name)
     outputsById.set(port.id, port)
     outputIds.push(port.id)
   }
+  //console.log(outputsById)
 }
 
 
@@ -171,8 +174,8 @@ export let getMIDIOutputById = function(id: string){
   if(initialized === false){
     console.warn('please call qambi.init() first')
   }else {
-    getMIDIOutputById = function(){
-      return outputsById.get(id)
+    getMIDIOutputById = function(_id){
+      return outputsById.get(_id)
     }
     return getMIDIOutputById(id)
   }
@@ -184,8 +187,8 @@ export let getMIDIInputById = function(id: string){
   if(initialized === false){
     console.warn('please call qambi.init() first')
   }else {
-    getMIDIInputById = function(){
-      return outputsById.get(id)
+    getMIDIInputById = function(_id){
+      return inputsById.get(_id)
     }
     return getMIDIInputById(id)
   }
@@ -236,7 +239,6 @@ export function setMidiInputSong(song, id, flag){
 }
 
 
-
 export function setMidiOutputSong(song, id, flag){
   let output = outputs.get(id);
 
@@ -259,7 +261,6 @@ export function setMidiOutputSong(song, id, flag){
     track.setMidiOutput(id, flag);
   }
 }
-
 
 
 function handleMidiMessageSong(song, midiMessageEvent, input){
