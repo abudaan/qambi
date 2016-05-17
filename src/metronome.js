@@ -1,11 +1,12 @@
 import {Track} from './track'
 import {Part} from './part'
-import {MIDINote} from './midi_note'
+import {parseEvents} from './parse_events'
 import {MIDIEvent} from './midi_event'
 import {checkMIDINumber} from './util'
 import {calculatePosition} from './position'
 import {Instrument} from './instrument'
 import {getInitData} from './init_audio'
+import {bufferTime} from './settings' // millis
 
 
 let
@@ -33,6 +34,8 @@ export class Metronome{
     this.precountEvents = []
     this.precountDurationInMillis = 0
     this.bars = 0
+    this.index = 0
+    this.precountIndex = 0
     this.reset();
   }
 
@@ -72,8 +75,7 @@ export class Metronome{
     let ticksPerBeat
     let ticks = 0
     let noteOn, noteOff
-
-    this.events = []
+    let events = []
 
     //console.log(startBar, endBar);
 
@@ -96,71 +98,87 @@ export class Metronome{
         noteOff = new MIDIEvent(ticks + noteLength, 128, noteNumber, 0)
 
         if(id === 'precount'){
-          noteOn._part = {id: 'precount'}
-          noteOff._part = {id: 'precount'}
           noteOn._track = this.track
           noteOff._track = this.track
+          noteOn._part = {}
+          noteOff._part = {}
         }
 
-        this.part.addEvents(noteOn, noteOff)
-        this.events.push(noteOn, noteOff)
-        //console.log(noteOn.id)
-        //console.log(noteOff.id)
+        events.push(noteOn, noteOff)
         ticks += ticksPerBeat
       }
     }
+
+    return events
   }
 
 
   getEvents(startBar = 1, endBar = this.song.bars, id = 'init'){
     this.part.removeEvents(this.part.getEvents())
-    this.createEvents(startBar, endBar, id)
+    this.events = this.createEvents(startBar, endBar, id)
+    this.part.addEvents(...this.events)
     this.bars = this.song.bars
     //console.log('getEvents %O', this.events)
     return this.events
   }
 
 
-  createPrecountEvents(precount){
+  createPrecountEvents(precount, timeStamp){
     if(precount <= 0){
-      return;
+      return -1
     }
+
+    this.timeStamp = timeStamp
+
+    let songStartPosition = this.song.getPosition()
+
     let endPos = calculatePosition(this.song, {
-      barsbeats: [this.song.bar + precount],
       type: 'barsbeats',
+      target: [songStartPosition.bar + precount],
+      result: 'all',
     })
 
-    this.index = 0;
-    this.millis = 0;
-    this.startMillis = this.song._millis;
-    this.precountDurationInMillis = endPos.millis - this.startMillis;
-    //@todo: fix this up
-    this.precountEvents = this.createEvents(this, this.song.bar, endPos.bar - 1, 'precount');
-    //parseEvents(this.song, this.precountEvents)
-    //console.log(this.song.bar, endPos.bar, precount, this.precountEvents.length);
-    //console.log(this.precountEvents, this.precountDurationInMillis, startTicks, endTicks);
+    //console.log(this.songStartPosition, endPos)
+
+    this.precountIndex = 0
+    this.millis = songStartPosition.millis
+    this.startMillis = songStartPosition.millis
+    this.endMillis = endPos.millis
+    this.precountDurationInMillis = endPos.millis - this.startMillis
+
+    //console.log(this.precountDurationInMillis)
+
+    this.precountEvents = this.createEvents(songStartPosition.bar, endPos.bar - 1, 'precount');
+    this.precountEvents = parseEvents([...this.song._timeEvents, ...this.precountEvents])
+
+    //console.log(songStartPosition.bar, endPos.bar, precount, this.precountEvents.length);
+    //console.log(this.precountEvents, this.precountDurationInMillis);
+    return this.precountDurationInMillis
   }
 
 
   // called by scheduler.js
-  getPrecountEvents(maxtime){
+  getPrecountEvents(diff){
     let events = this.precountEvents,
       maxi = events.length, i, evt,
       result = [];
 
-    //console.log(maxtime, maxi, this.index, this.millis);
+    this.millis += diff
+    let maxtime = this.millis + bufferTime
+    //console.log(maxtime, maxi, this.precountIndex, this.millis)
 
-    for(i = this.index; i < maxi; i++){
+    for(i = this.precountIndex; i < maxi; i++){
       evt = events[i];
       //console.log(event.millis, maxtime, this.millis);
       if(evt.millis < maxtime){
-        evt.time = this.startTime + evt.millis;
-        result.push(evt);
-        this.index++;
+        evt.time = this.timeStamp + evt.millis
+        result.push(evt)
+        this.precountIndex++
       }else{
         break;
       }
     }
+    //console.log(result.length);
     return result;
   }
 

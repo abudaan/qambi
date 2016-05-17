@@ -12,6 +12,7 @@ export default class Scheduler{
 
 
   init(millis){
+    this.songMillis = millis
     this.songStartMillis = millis
     this.events = this.song._allEvents
     this.numEvents = this.events.length
@@ -75,10 +76,10 @@ export default class Scheduler{
               if(event.type === 144){
                 this.notes.set(event.midiNoteId, event.midiNote)
               }
-              //console.log(event.type)
+              //console.log(event.midiNoteId, event.type)
               this.index++
             }else{
-              break;
+              break
             }
           }
 
@@ -99,7 +100,7 @@ export default class Scheduler{
             event.midiNote = note
             event.midiNoteId = note.id
             event.time = this.timeStamp + event.millis - this.songStartMillis
-            //console.log(event)
+            //console.log('added', event)
             events.push(event)
           }
 
@@ -155,17 +156,40 @@ export default class Scheduler{
   }
 
 
-  update(millis){
+  update(diff){
     var i,
       event,
       numEvents,
       track,
       events
 
-    events = this.getEvents()
-    numEvents = events.length
     this.prevMaxtime = this.maxtime
-    this.maxtime = millis + bufferTime
+
+    if(this.song.precounting){
+      events = this.song._metronome.getPrecountEvents(diff)
+      this.maxtime = this.song._metronome.millis + bufferTime
+      let _diff = this.maxtime - this.song._metronome.endMillis
+      // start scheduling events of the song -> add the first events of the song
+      if(_diff > 0){
+        console.log(this.songMillis, _diff, this.songStartMillis)
+        if(this.song._metronome.precountDurationInMillis !== -1){
+          this.timeStamp += this.song._metronome.precountDurationInMillis
+          this.song._metronome.precountDurationInMillis = -1
+        }
+        this.songMillis += _diff
+        this.maxtime = this.songMillis + bufferTime
+        let e = this.getEvents()
+        events.push(...e)
+      }
+    }else{
+      console.log('done', this.songMillis, diff)
+      this.songMillis += diff
+      this.maxtime = this.songMillis + bufferTime
+      events = this.getEvents()
+    }
+
+    numEvents = events.length
+
 
     // if(numEvents > 5){
     //   console.log(numEvents)
@@ -176,11 +200,11 @@ export default class Scheduler{
       track = event._track
       //console.log(event.millis, this.maxtime, this.prevMaxtime)
 
-      if(event.millis > this.maxtime){
-        // skip events that were harvest accidently while jumping the playhead -> should happen very rarely if ever
-        console.log('skip', event)
-        continue
-      }
+      // if(event.millis > this.maxtime){
+      //   // skip events that were harvest accidently while jumping the playhead -> should happen very rarely if ever
+      //   console.log('skip', event)
+      //   continue
+      // }
 
       if(event._part.muted === true || track.muted === true || event.muted === true){
         continue

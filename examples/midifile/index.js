@@ -183,9 +183,9 @@ document.addEventListener('DOMContentLoaded', function(){
     }
 
 
-    song.setPosition('barsbeats', 2)
-    song.setLeftLocator('barsbeats', 2)
-    song.setRightLocator('barsbeats', 3, 2)
+    song.setPosition('barsbeats', 6)
+    //song.setLeftLocator('barsbeats', 2)
+    //song.setRightLocator('barsbeats', 3, 2)
     song.setLoop()
 
 

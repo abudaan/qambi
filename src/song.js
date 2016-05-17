@@ -105,8 +105,11 @@ export class Song{
     this._playhead = new Playhead(this)
     this._millis = 0
 
-    this._playing = false
-    this._paused = false
+    this.playing = false
+    this.paused = false
+    this.recording = false
+    this.precounting = false
+    this.stopped = true
 
     this.volume = 0.5
     this._output = context.createGain()
@@ -122,8 +125,9 @@ export class Song{
     this._rightLocator = {millis: 0, ticks: 0}
     this._illegalLoop = false
     this._loopDuration = 0
+    this._precountBars = 2
+    this._precountMillis = -1
 
-    this.recording = false
   }
 
 
@@ -194,7 +198,7 @@ export class Song{
     this._newParts.forEach((part) => {
       part._song = this
       this._partsById.set(part.id, part)
-      this._newEvents.push(...part._events)
+      //this._newEvents.push(...part._events)
       part.update()
     })
 
@@ -338,25 +342,36 @@ export class Song{
 
   play(type, ...args): void{
     this._play(type, ...args)
-    dispatchEvent({type: 'play', data: this._millis})
+    if(this._precountBars > 0){
+      dispatchEvent({type: 'precounting', data: this._millis})
+    }else{
+      dispatchEvent({type: 'play', data: this._millis})
+    }
   }
 
   _play(type, ...args){
     if(typeof type !== 'undefined'){
       this.setPosition(type, ...args)
     }
-    if(this._playing){
+    if(this.playing){
       return
     }
 
-    this._timeStamp = context.currentTime * 1000
+    this._timeStamp = this._startTimeStamp = context.currentTime * 1000
     this._scheduler.setTimeStamp(this._timeStamp)
 
-    if(this._paused){
-      this._paused = false
+    if(this._precountBars > 0){
+      this._precountMillis = this._millis + this._metronome.createPrecountEvents(this._precountBars, this._timeStamp)
+      this.precounting = true
+    }else{
+      this._precountMillis = -1
+      this.playing = true
     }
 
-    this._playing = true
+    if(this.paused){
+      this.paused = false
+    }
+
     this._scheduler.init(this._millis)
     this._playhead.set('millis', this._millis)
     this._pulse()
@@ -364,22 +379,24 @@ export class Song{
 
 
   pause(): void{
-    this._paused = !this._paused
-    if(this._paused){
-      this._playing = false
+    this.paused = !this.paused
+    this.precounting = false
+    if(this.paused){
+      this.playing = false
       this.allNotesOff()
-      dispatchEvent({type: 'pause', data: this._paused})
+      dispatchEvent({type: 'pause', data: this.paused})
     }else{
       this.play()
-      dispatchEvent({type: 'pause', data: this._paused})
+      dispatchEvent({type: 'pause', data: this.paused})
     }
   }
 
   stop(): void{
+    this.precounting = false
     this.allNotesOff()
-    if(this._playing || this._paused){
-      this._playing = false
-      this._paused = false
+    if(this.playing || this.paused){
+      this.playing = false
+      this.paused = false
     }
     if(this._millis !== 0){
       this._millis = 0
@@ -392,26 +409,27 @@ export class Song{
   }
 
   startRecording(){
-    if(this.recording === true){
+    if(this._preparedForRecording === true){
       return
     }
     this._recordId = `recording_${recordingIndex++}${new Date().getTime()}`
     this._tracks.forEach(track => {
       track._startRecording(this._recordId)
     })
-    this.recording = true
+    this._preparedForRecording = true
     dispatchEvent({type: 'start_recording'})
     //this._play()
   }
 
   stopRecording(){
-    if(this.recording === false){
+    if(this._preparedForRecording === false){
       return
     }
     this._tracks.forEach(track => {
       track._stopRecording(this._recordId)
     })
     this.update()
+    this._preparedForRecording = false
     this.recording = false
     dispatchEvent({type: 'stop_recording'})
   }
@@ -475,9 +493,9 @@ export class Song{
   // @args -> see _calculatePosition
   setPosition(type, ...args){
 
-    let wasPlaying = this._playing
-    if(this._playing){
-      this._playing = false
+    let wasPlaying = this.playing
+    if(this.playing){
+      this.playing = false
       this.allNotesOff()
     }
 
@@ -553,14 +571,43 @@ export class Song{
     return this._loop
   }
 
+  setPrecount(value = 0){
+    this._precountBars = value
+  }
+
   _pulse(): void{
-    if(this._playing === false){
+    if(this.playing === false && this.precounting === false){
       return
     }
     let now = context.currentTime * 1000
     let diff = now - this._timeStamp
 
+
+    if(this._precountMillis !== -1){
+      if(this._precountMillis > this._millis){
+        //console.log(this._precountMillis, this._millis)
+        this._millis += diff
+        this._timeStamp = now
+        this._scheduler.update(diff)
+        requestAnimationFrame(this._pulse.bind(this))
+        return
+      }
+      this._scheduler.setTimeStamp(this._startTimeStamp + this._precountMillis)
+      this._millis -= this._precountMillis
+      //console.log(this._millis)
+      this.precounting = false
+      this._precountMillis = -1
+      if(this._preparedForRecording){
+        this.recording = true
+      }else{
+        this.playing = true
+        dispatchEvent({type: 'play', data: this._millis})
+        //dispatchEvent({type: 'play', data: this._millis})
+      }
+    }
+
     if(this._loop && this._scheduler.looped && this._millis > this._rightLocator.millis){
+      //this._millis = this._millis + diff - this._loopDuration
       this._millis -= this._loopDuration
       this._playhead.set('millis', this._millis + diff)
       dispatchEvent({
@@ -581,9 +628,12 @@ export class Song{
       return
     }
 
-    this._scheduler.update(this._millis)
+    this._scheduler.update(diff)
 
-    //console.log('pulse', diff)
+    // if(this.precounting === false){
+    //   console.log('pulse', this._millis, diff)
+    // }
+
     requestAnimationFrame(this._pulse.bind(this))
   }
 
