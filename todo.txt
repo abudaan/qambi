@@ -10,6 +10,6 @@ implement loop ✓
 
 implement MIDI recording ✓
 
-implement precount + preroll
+implement precount + preroll ✓
 
 improve position calculation

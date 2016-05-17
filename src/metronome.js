@@ -6,7 +6,6 @@ import {checkMIDINumber} from './util'
 import {calculatePosition} from './position'
 import {Instrument} from './instrument'
 import {getInitData} from './init_audio'
-import {bufferTime} from './settings' // millis
 
 
 let
@@ -32,7 +31,7 @@ export class Metronome{
 
     this.events = []
     this.precountEvents = []
-    this.precountDurationInMillis = 0
+    this.precountDuration = 0
     this.bars = 0
     this.index = 0
     this.precountIndex = 0
@@ -130,7 +129,13 @@ export class Metronome{
 
     this.timeStamp = timeStamp
 
-    let songStartPosition = this.song.getPosition()
+//   let songStartPosition = this.song.getPosition()
+
+    let songStartPosition = calculatePosition(this.song, {
+      type: 'millis',
+      target: this.song._currentMillis,
+      result: 'all',
+    })
 
     let endPos = calculatePosition(this.song, {
       type: 'barsbeats',
@@ -138,34 +143,29 @@ export class Metronome{
       result: 'all',
     })
 
-    //console.log(this.songStartPosition, endPos)
+    //console.log(songStartPosition, endPos)
 
     this.precountIndex = 0
-    this.millis = songStartPosition.millis
     this.startMillis = songStartPosition.millis
     this.endMillis = endPos.millis
-    this.precountDurationInMillis = endPos.millis - this.startMillis
+    this.precountDuration = endPos.millis - this.startMillis
 
-    //console.log(this.precountDurationInMillis)
+    //console.log(this.precountDuration)
 
     this.precountEvents = this.createEvents(songStartPosition.bar, endPos.bar - 1, 'precount');
     this.precountEvents = parseEvents([...this.song._timeEvents, ...this.precountEvents])
 
     //console.log(songStartPosition.bar, endPos.bar, precount, this.precountEvents.length);
-    //console.log(this.precountEvents, this.precountDurationInMillis);
-    return this.precountDurationInMillis
+    //console.log(this.precountEvents, this.precountDuration);
+    return this.precountDuration
   }
 
 
   // called by scheduler.js
-  getPrecountEvents(diff){
+  getPrecountEvents(maxtime){
     let events = this.precountEvents,
       maxi = events.length, i, evt,
       result = [];
-
-    this.millis += diff
-    let maxtime = this.millis + bufferTime
-    //console.log(maxtime, maxi, this.precountIndex, this.millis)
 
     for(i = this.precountIndex; i < maxi; i++){
       evt = events[i];

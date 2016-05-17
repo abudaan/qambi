@@ -101,9 +101,9 @@ export class Song{
     this._changedParts = []
     this._removedParts = []
 
+    this._currentMillis = 0
     this._scheduler = new Scheduler(this)
     this._playhead = new Playhead(this)
-    this._millis = 0
 
     this.playing = false
     this.paused = false
@@ -125,8 +125,8 @@ export class Song{
     this._rightLocator = {millis: 0, ticks: 0}
     this._illegalLoop = false
     this._loopDuration = 0
-    this._precountBars = 2
-    this._precountMillis = -1
+    this._precountBars = 1
+    this._endPrecountMillis = 0
 
   }
 
@@ -325,6 +325,10 @@ export class Song{
     this._durationMillis = this._lastEvent.millis
     this._playhead.updateSong()
 
+    // if(this.playing === false){
+    //   this._playhead.set('millis', this._currentMillis)
+    // }
+
     // add metronome events
     if(this._updateMetronomeEvents || this._metronome.bars !== this.bars){
       this._metronomeEvents = parseEvents([...this._timeEvents, ...this._metronome.getEvents()])
@@ -343,9 +347,9 @@ export class Song{
   play(type, ...args): void{
     this._play(type, ...args)
     if(this._precountBars > 0){
-      dispatchEvent({type: 'precounting', data: this._millis})
+      dispatchEvent({type: 'precounting', data: this._currentMillis})
     }else{
-      dispatchEvent({type: 'play', data: this._millis})
+      dispatchEvent({type: 'play', data: this._currentMillis})
     }
   }
 
@@ -357,14 +361,16 @@ export class Song{
       return
     }
 
-    this._timeStamp = this._startTimeStamp = context.currentTime * 1000
-    this._scheduler.setTimeStamp(this._timeStamp)
+    this._reference = this._timeStamp = context.currentTime * 1000
+    this._scheduler.setTimeStamp(this._reference)
+    this._startMillis = this._currentMillis
 
     if(this._precountBars > 0){
-      this._precountMillis = this._millis + this._metronome.createPrecountEvents(this._precountBars, this._timeStamp)
+      this._endPrecountMillis = this._currentMillis + this._metronome.createPrecountEvents(this._precountBars, this._reference)
+      //console.log('precountMillis', this._endPrecountMillis)
       this.precounting = true
     }else{
-      this._precountMillis = -1
+      this._endPrecountMillis = 0
       this.playing = true
     }
 
@@ -372,8 +378,8 @@ export class Song{
       this.paused = false
     }
 
-    this._scheduler.init(this._millis)
-    this._playhead.set('millis', this._millis)
+    this._scheduler.init(this._currentMillis)
+    this._playhead.set('millis', this._currentMillis)
     this._pulse()
   }
 
@@ -398,9 +404,9 @@ export class Song{
       this.playing = false
       this.paused = false
     }
-    if(this._millis !== 0){
-      this._millis = 0
-      this._playhead.set('millis', this._millis)
+    if(this._currentMillis !== 0){
+      this._currentMillis = 0
+      this._playhead.set('millis', this._currentMillis)
       if(this.recording){
         this.stopRecording()
       }
@@ -505,7 +511,7 @@ export class Song{
       return
     }
 
-    this._millis = position.millis
+    this._currentMillis = position.millis
 
     dispatchEvent({
       type: 'position',
@@ -515,7 +521,7 @@ export class Song{
     if(wasPlaying){
       this._play()
     }
-    //console.log('setPosition', this._millis)
+    //console.log('setPosition', this._currentMillis)
   }
 
   getPosition(){
@@ -567,7 +573,7 @@ export class Song{
 
     this._loopDuration = this._rightLocator.millis - this._leftLocator.millis
     //console.log(this._loop, this._loopDuration)
-    this._scheduler.beyondLoop = this._millis > this._rightLocator.millis
+    this._scheduler.beyondLoop = this._currentMillis > this._rightLocator.millis
     return this._loop
   }
 
@@ -580,59 +586,48 @@ export class Song{
       return
     }
     let now = context.currentTime * 1000
-    let diff = now - this._timeStamp
+    let diff = now - this._reference
+    this._currentMillis += diff
+    this._reference = now
 
-
-    if(this._precountMillis !== -1){
-      if(this._precountMillis > this._millis){
-        //console.log(this._precountMillis, this._millis)
-        this._millis += diff
-        this._timeStamp = now
+    if(this._endPrecountMillis > 0){
+      if(this._endPrecountMillis > this._currentMillis){
         this._scheduler.update(diff)
         requestAnimationFrame(this._pulse.bind(this))
+        //return because during precounting only precount metronome events get scheduled
         return
       }
-      this._scheduler.setTimeStamp(this._startTimeStamp + this._precountMillis)
-      this._millis -= this._precountMillis
-      //console.log(this._millis)
       this.precounting = false
-      this._precountMillis = -1
+      this._endPrecountMillis = 0
       if(this._preparedForRecording){
         this.recording = true
       }else{
         this.playing = true
-        dispatchEvent({type: 'play', data: this._millis})
-        //dispatchEvent({type: 'play', data: this._millis})
+        dispatchEvent({type: 'play', data: this._startMillis})
+        //dispatchEvent({type: 'play', data: this._currentMillis})
       }
     }
 
-    if(this._loop && this._scheduler.looped && this._millis > this._rightLocator.millis){
-      //this._millis = this._millis + diff - this._loopDuration
-      this._millis -= this._loopDuration
-      this._playhead.set('millis', this._millis + diff)
+    if(this._loop && this._currentMillis >= this._rightLocator.millis){
+      this._currentMillis -= this._loopDuration
+      this._playhead.set('millis', this._currentMillis)
+      //this._playhead.set('millis', this._leftLocator.millis) // playhead is a bit ahead only during this frame
       dispatchEvent({
         type: 'loop',
         data: null
       })
     }else{
-      //console.log(diff, this._millis)
       this._playhead.update('millis', diff)
     }
 
     this._ticks = this._playhead.get().ticks
-    this._millis += diff
-    this._timeStamp = now
 
-    if(this._millis >= this._durationMillis){
+    if(this._currentMillis >= this._durationMillis){
       this.stop()
       return
     }
 
     this._scheduler.update(diff)
-
-    // if(this.precounting === false){
-    //   console.log('pulse', this._millis, diff)
-    // }
 
     requestAnimationFrame(this._pulse.bind(this))
   }

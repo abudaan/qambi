@@ -12,7 +12,7 @@ export default class Scheduler{
 
 
   init(millis){
-    this.songMillis = millis
+    this.songCurrentMillis = millis
     this.songStartMillis = millis
     this.events = this.song._allEvents
     this.numEvents = this.events.length
@@ -20,6 +20,7 @@ export default class Scheduler{
     this.maxtime = 0
     this.prevMaxtime = 0
     this.beyondLoop = false // tells us if the playhead has already passed the looped section
+    this.precountingDone = false
     this.setIndex(this.songStartMillis)
   }
 
@@ -40,6 +41,7 @@ export default class Scheduler{
     }
     this.beyondLoop = millis > this.song._rightLocator.millis
     this.notes = new Map()
+    this.precountingDone = false
   }
 
 
@@ -47,13 +49,14 @@ export default class Scheduler{
     let events = []
 
     if(this.song._loop === true && this.song._loopDuration < bufferTime){
-      this.maxtime = this.songStartMillis + this.song._loopDuration - 1;
+      this.maxtime = this.songStartMillis + this.song._loopDuration - 1
       //console.log(this.maxtime, this.song.loopDuration);
     }
 
     if(this.song._loop === true){
 
       if(this.maxtime >= this.song._rightLocator.millis && this.beyondLoop === false){
+        //console.log('LOOP', this.maxtime, this.song._rightLocator.millis)
 
         let diff = this.maxtime - this.song._rightLocator.millis
         this.maxtime = this.song._leftLocator.millis + diff
@@ -61,7 +64,6 @@ export default class Scheduler{
         //console.log('-------LOOPED', this.maxtime, diff, this.song._leftLocator.millis, this.song._rightLocator.millis);
 
         if(this.looped === false){
-          //console.log('LOOP')
           this.looped = true;
           let leftMillis = this.song._leftLocator.millis
           let rightMillis = this.song._rightLocator.millis
@@ -120,6 +122,7 @@ export default class Scheduler{
           this.notes = new Map()
           this.setIndex(leftMillis)
           this.timeStamp += this.song._loopDuration
+          this.songCurrentMillis -= this.song._loopDuration
 
           //console.log(events.length)
 
@@ -131,7 +134,7 @@ export default class Scheduler{
       }
     }
 
-    //console.log(this.looped)
+    //console.log('scheduler', this.looped)
 
     // main loop
     for(let i = this.index; i < this.numEvents; i++){
@@ -166,26 +169,25 @@ export default class Scheduler{
     this.prevMaxtime = this.maxtime
 
     if(this.song.precounting){
-      events = this.song._metronome.getPrecountEvents(diff)
-      this.maxtime = this.song._metronome.millis + bufferTime
-      let _diff = this.maxtime - this.song._metronome.endMillis
-      // start scheduling events of the song -> add the first events of the song
-      if(_diff > 0){
-        console.log(this.songMillis, _diff, this.songStartMillis)
-        if(this.song._metronome.precountDurationInMillis !== -1){
-          this.timeStamp += this.song._metronome.precountDurationInMillis
-          this.song._metronome.precountDurationInMillis = -1
-        }
-        this.songMillis += _diff
-        this.maxtime = this.songMillis + bufferTime
-        let e = this.getEvents()
-        events.push(...e)
+      this.songCurrentMillis += diff
+      this.maxtime = this.songCurrentMillis + bufferTime
+      events = this.song._metronome.getPrecountEvents(this.maxtime)
+
+      if(this.maxtime > this.song._metronome.endMillis && this.precountingDone === false){
+        this.precountingDone = true
+        this.timeStamp += this.song._metronome.precountDuration
+
+        // start scheduling events of the song -> add the first events of the song
+        this.songCurrentMillis = this.songStartMillis
+        this.songCurrentMillis += diff
+        this.maxtime = this.songCurrentMillis + bufferTime
+        events.push(...this.getEvents())
       }
     }else{
-      console.log('done', this.songMillis, diff)
-      this.songMillis += diff
-      this.maxtime = this.songMillis + bufferTime
+      this.songCurrentMillis += diff
+      this.maxtime = this.songCurrentMillis + bufferTime
       events = this.getEvents()
+      //console.log('done', this.songCurrentMillis, diff, this.index, events.length)
     }
 
     numEvents = events.length
@@ -222,7 +224,7 @@ export default class Scheduler{
       }else{
         // convert to seconds because the audio context uses seconds for scheduling
         track.processMIDIEvent(event, true) // true means: use latency to compensate timing for external MIDI devices, see Track.processMIDIEvent
-
+        //console.log(context.currentTime * 1000, event.time, this.index)
         if(event.type === 144){
           this.notes.set(event.midiNoteId, event.midiNote)
         }else if(event.type === 128){
