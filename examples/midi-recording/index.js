@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function(){
     let divPositionTime = document.getElementById('position_time')
     let rangePosition = document.getElementById('playhead')
     let selectMIDIIn = document.getElementById('midiin')
+    let selectPrecount = document.getElementById('precount')
     let userInteraction = false
 
     btnPlay.disabled = false
@@ -54,6 +55,11 @@ document.addEventListener('DOMContentLoaded', function(){
       track.connectMIDIInputs(portId)
     })
 
+    selectPrecount.addEventListener('change', e => {
+      let numBars = parseInt(selectPrecount.options[selectPrecount.selectedIndex].id, 10)
+      song.setPrecount(numBars)
+    })
+
     btnMetronome.addEventListener('click', function(){
       song.setMetronome() // if no arguments are provided it simply toggles
       btnMetronome.innerHTML = song.useMetronome ? 'metronome on' : 'metronome off'
@@ -72,10 +78,10 @@ document.addEventListener('DOMContentLoaded', function(){
     })
 
     btnRecord.addEventListener('click', function(){
-      if(song.recording === false){
+      if(btnRecord.className === 'neutral'){
         song.startRecording()
         btnRecord.className = 'recording'
-      }else{
+      }else if(btnRecord.className === 'recording'){
         song.stopRecording()
         btnRecord.className = 'neutral'
       }
@@ -107,6 +113,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     song.addEventListener('stop_recording', e => {
       btnUndoRecord.disabled = false
+      btnRecord.className = 'neutral'
     })
 
     song.addEventListener('start_recording', e => {

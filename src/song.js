@@ -125,7 +125,7 @@ export class Song{
     this._rightLocator = {millis: 0, ticks: 0}
     this._illegalLoop = false
     this._loopDuration = 0
-    this._precountBars = 1
+    this._precountBars = 0
     this._endPrecountMillis = 0
 
   }
@@ -325,9 +325,9 @@ export class Song{
     this._durationMillis = this._lastEvent.millis
     this._playhead.updateSong()
 
-    // if(this.playing === false){
-    //   this._playhead.set('millis', this._currentMillis)
-    // }
+    if(this.playing === false){
+      this._playhead.set('millis', this._currentMillis)
+    }
 
     // add metronome events
     if(this._updateMetronomeEvents || this._metronome.bars !== this.bars){
@@ -348,6 +348,8 @@ export class Song{
     this._play(type, ...args)
     if(this._precountBars > 0){
       dispatchEvent({type: 'precounting', data: this._currentMillis})
+    }else if(this._preparedForRecording === true){
+      dispatchEvent({type: 'start_recording', data: this._currentMillis})
     }else{
       dispatchEvent({type: 'play', data: this._currentMillis})
     }
@@ -365,13 +367,14 @@ export class Song{
     this._scheduler.setTimeStamp(this._reference)
     this._startMillis = this._currentMillis
 
-    if(this._precountBars > 0){
+    if(this._precountBars > 0 && this._preparedForRecording){
       this._endPrecountMillis = this._currentMillis + this._metronome.createPrecountEvents(this._precountBars, this._reference)
-      //console.log('precountMillis', this._endPrecountMillis)
+      //console.log('endPrecountMillis', this._endPrecountMillis)
       this.precounting = true
-    }else{
+    }else {
       this._endPrecountMillis = 0
       this.playing = true
+      this.recording = this._preparedForRecording
     }
 
     if(this.paused){
@@ -423,8 +426,6 @@ export class Song{
       track._startRecording(this._recordId)
     })
     this._preparedForRecording = true
-    dispatchEvent({type: 'start_recording'})
-    //this._play()
   }
 
   stopRecording(){
@@ -600,6 +601,7 @@ export class Song{
       this.precounting = false
       this._endPrecountMillis = 0
       if(this._preparedForRecording){
+        this.playing = true
         this.recording = true
       }else{
         this.playing = true

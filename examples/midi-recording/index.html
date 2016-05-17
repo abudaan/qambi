@@ -30,7 +30,7 @@
       <button id="play" disabled>play</button>
       <button id="pause" disabled>pause</button>
       <button id="stop" disabled>stop</button>
-      <button id="record" disabled>record</button>
+      <button class="neutral" id="record" disabled>record</button>
       <button id="record-undo" disabled>undo record</button>
       <!-- <button id="instrument" disabled>set instrument</button> -->
       <button id="metronome" disabled>metronome off</button>
@@ -41,7 +41,13 @@
       <input type='range' id="playhead" value=0 min=0 max=1 step=0.001></input>
       <div>
         <label for="midiin">MIDI in</label><select id="midiin"></select>
-        <!-- <label for="midiout">MIDI out</label><select id="midiout"></select> -->
+        <label for="precount"># bars precount</label><select id="precount">
+          <option id="0">0</option>
+          <option id="1">1</option>
+          <option id="2">2</option>
+          <option id="3">3</option>
+          <option id="4">4</option>
+        </select>
       </div>
       <!--
       <div>latency</div>

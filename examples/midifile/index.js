@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', function(){
     if(test === 1){
 
       //console.time('song')
-      fetch('../data/mozk545a.mid')
-      //fetch('../data/minute_waltz.mid')
+      //fetch('../data/mozk545a.mid')
+      fetch('../data/minute_waltz.mid')
       .then(response => {
         return response.arrayBuffer()
       })
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     song.setPosition('barsbeats', 2)
     song.setLeftLocator('barsbeats', 2)
-    song.setRightLocator('barsbeats', 3)
+    song.setRightLocator('barsbeats', 3, 2)
     song.setLoop()
 
 

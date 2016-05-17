@@ -166,6 +166,7 @@ export class Track{
       return
     }
     this._recordPart.addEvents(...this._recordedEvents)
+    this._song._newEvents.push(...this._recordedEvents)
     this.addParts(this._recordPart)
   }
 
@@ -174,6 +175,7 @@ export class Track{
       return
     }
     this.removeParts(this._recordPart)
+    //this._song._removedEvents.push(...this._recordedEvents)
   }
 
   redoRecording(recordId){
