@@ -166,7 +166,7 @@ export class Track{
       return
     }
     this._recordPart.addEvents(...this._recordedEvents)
-    this._song._newEvents.push(...this._recordedEvents)
+    //this._song._newEvents.push(...this._recordedEvents)
     this.addParts(this._recordPart)
   }
 
@@ -220,7 +220,7 @@ export class Track{
         event._track = this
         if(song){
           event._song = song
-          //song._newEvents.push(event)
+          song._newEvents.push(event)
         }
         this._eventsById.set(event.id, event)
       })
