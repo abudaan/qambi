@@ -15,12 +15,12 @@ import{
 } from './track'
 
 import {
-  Instrument,
-} from './instrument'
-
-import {
   Song,
 } from './song'
+
+import {
+  Instrument,
+} from './instrument'
 
 import {
   parseMIDIFile
@@ -50,6 +50,14 @@ import {
   parseSamples,
 } from './parse_audio'
 
+import {
+  MIDIEventTypes,
+} from './constants'
+
+import {
+  setBufferTime,
+} from './settings'
+
 
 const getAudioContext = function(){
   return context
@@ -58,11 +66,20 @@ const getAudioContext = function(){
 const qambi = {
   version: '1.0.0-beta2',
 
+  // from ./init
+  init,
+
+  // from ./settings
+  setBufferTime,
+
+  // from ./constants
+  MIDIEventTypes,
+
   // from ./util
   parseSamples,
 
-  // from ./init
-  init,
+  // from ./midifile
+  parseMIDIFile,
 
   // from ./init_audio
   getAudioContext,
@@ -96,22 +113,22 @@ const qambi = {
   // from ./instrument
   Instrument,
 
-  parseMIDIFile,
-
-  log: function(id){
+  log(id){
     switch(id){
       case 'functions':
         console.log(`functions:
-          createMIDIEvent
-          moveMIDIEvent
-          moveMIDIEventTo
-          createMIDINote
-          createSong
-          addTracks
-          createTrack
-          addParts
-          createPart
-          addMIDIEvents
+          getAudioContext
+          getMasterVolume
+          setMasterVolume
+          getMIDIAccess
+          getMIDIInputs
+          getMIDIOutputs
+          getMIDIInputIds
+          getMIDIOutputIds
+          getMIDIInputsById
+          getMIDIOutputsById
+          parseMIDIFile
+          setBufferTime
         `)
         break
       default:
@@ -119,41 +136,23 @@ const qambi = {
   },
 }
 
-// standard MIDI events
-const MIDIEventTypes = {}
-Object.defineProperty(MIDIEventTypes, 'NOTE_OFF', {value: 0x80}); //128
-Object.defineProperty(MIDIEventTypes, 'NOTE_ON', {value: 0x90}); //144
-Object.defineProperty(MIDIEventTypes, 'POLY_PRESSURE', {value: 0xA0}); //160
-Object.defineProperty(MIDIEventTypes, 'CONTROL_CHANGE', {value: 0xB0}); //176
-Object.defineProperty(MIDIEventTypes, 'PROGRAM_CHANGE', {value: 0xC0}); //192
-Object.defineProperty(MIDIEventTypes, 'CHANNEL_PRESSURE', {value: 0xD0}); //208
-Object.defineProperty(MIDIEventTypes, 'PITCH_BEND', {value: 0xE0}); //224
-Object.defineProperty(MIDIEventTypes, 'SYSTEM_EXCLUSIVE', {value: 0xF0}); //240
-Object.defineProperty(MIDIEventTypes, 'MIDI_TIMECODE', {value: 241});
-Object.defineProperty(MIDIEventTypes, 'SONG_POSITION', {value: 242});
-Object.defineProperty(MIDIEventTypes, 'SONG_SELECT', {value: 243});
-Object.defineProperty(MIDIEventTypes, 'TUNE_REQUEST', {value: 246});
-Object.defineProperty(MIDIEventTypes, 'EOX', {value: 247});
-Object.defineProperty(MIDIEventTypes, 'TIMING_CLOCK', {value: 248});
-Object.defineProperty(MIDIEventTypes, 'START', {value: 250});
-Object.defineProperty(MIDIEventTypes, 'CONTINUE', {value: 251});
-Object.defineProperty(MIDIEventTypes, 'STOP', {value: 252});
-Object.defineProperty(MIDIEventTypes, 'ACTIVE_SENSING', {value: 254});
-Object.defineProperty(MIDIEventTypes, 'SYSTEM_RESET', {value: 255});
-
-
-Object.defineProperty(MIDIEventTypes, 'TEMPO', {value: 0x51});
-Object.defineProperty(MIDIEventTypes, 'TIME_SIGNATURE', {value: 0x58});
-Object.defineProperty(MIDIEventTypes, 'END_OF_TRACK', {value: 0x2F});
-
-
 export default qambi
 
 export {
   // from ./init
   init,
 
+  // from ./settings
+  setBufferTime,
+
+  // from ./constants
   MIDIEventTypes,
+
+  // from ./util
+  parseSamples,
+
+  // from ./midifile
+  parseMIDIFile,
 
   // from ./init_audio
   getAudioContext,
@@ -168,9 +167,6 @@ export {
   getMIDIOutputIds,
   getMIDIInputsById,
   getMIDIOutputsById,
-
-  // from ./util
-  parseSamples,
 
   // from ./midi_event
   MIDIEvent,
@@ -189,8 +185,4 @@ export {
 
   // from ./instrument
   Instrument,
-
-//  MIDI,
-
-  parseMIDIFile,
 }

@@ -17,6 +17,12 @@
       label{
         margin-right: 10px;
       }
+      .recording{
+        color: red;
+      }
+      .neutral{
+        color: black;
+      }
     </style>
   </head>
   <body>
@@ -24,10 +30,9 @@
       <button id="play" disabled>play</button>
       <button id="pause" disabled>pause</button>
       <button id="stop" disabled>stop</button>
-      <button id="record-start" disabled>record start</button>
-      <button id="record-stop" disabled>record stop</button>
+      <button id="record" disabled>record</button>
       <button id="record-undo" disabled>undo record</button>
-      <button id="instrument" disabled>set instrument</button>
+      <!-- <button id="instrument" disabled>set instrument</button> -->
       <button id="metronome" disabled>metronome off</button>
       <div id="tempo"></div>
       <div id="position"></div>
@@ -36,10 +41,12 @@
       <input type='range' id="playhead" value=0 min=0 max=1 step=0.001></input>
       <div>
         <label for="midiin">MIDI in</label><select id="midiin"></select>
-        <label for="midiout">MIDI out</label><select id="midiout"></select>
+        <!-- <label for="midiout">MIDI out</label><select id="midiout"></select> -->
       </div>
+      <!--
       <div>latency</div>
-      <!-- <input type='range' id="latency" value=0 min=0 max=400 step=1></input> -->
+      <input type='range' id="latency" value=0 min=0 max=400 step=1></input>
+      -->
     </div>
   </body>
 </html>

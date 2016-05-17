@@ -1,39 +1,23 @@
 //@ flow
 
-import {MIDIEventTypes} from './qambi'
+import {MIDIEventTypes} from './constants'
 import {parseTimeEvents, parseEvents} from './parse_events'
 //import {addTask, removeTask} from './heartbeat'
 import {context, masterGain} from './init_audio'
 import Scheduler from './scheduler'
 import {MIDIEvent} from './midi_event'
 import {songFromMIDIFile, songFromMIDIFileAsync} from './song_from_midifile'
-import qambi from './qambi'
 import {sortEvents} from './util'
 import {calculatePosition} from './position'
 import {Playhead} from './playhead'
 import {Metronome} from './metronome'
 import {addEventListener, removeEventListener, dispatchEvent} from './eventlistener'
+import {defaultSong} from './settings'
 
 let songIndex = 0
 let recordingIndex = 0
 
-const defaultSong = {
-  ppq: 960,
-  bpm: 120,
-  bars: 16,
-  lowestNote: 0,
-  highestNote: 127,
-  nominator: 4,
-  denominator: 4,
-  quantizeValue: 8,
-  fixedLengthValue: false,
-  positionType: 'all',
-  useMetronome: false,
-  autoSize: true,
-  loop: false,
-  playbackSpeed: 1,
-  autoQuantize: false
-}
+
 /*
 type songSettings = {
   name: string,
@@ -138,6 +122,8 @@ export class Song{
     this._rightLocator = {millis: 0, ticks: 0}
     this._illegalLoop = false
     this._loopDuration = 0
+
+    this.recording = false
   }
 
 
@@ -398,7 +384,7 @@ export class Song{
     if(this._millis !== 0){
       this._millis = 0
       this._playhead.set('millis', this._millis)
-      if(this._recording){
+      if(this.recording){
         this.stopRecording()
       }
       dispatchEvent({type: 'stop'})
@@ -406,27 +392,27 @@ export class Song{
   }
 
   startRecording(){
-    if(this._recording === true){
+    if(this.recording === true){
       return
     }
     this._recordId = `recording_${recordingIndex++}${new Date().getTime()}`
     this._tracks.forEach(track => {
       track._startRecording(this._recordId)
     })
-    this._recording = true
+    this.recording = true
     dispatchEvent({type: 'start_recording'})
-    this._play()
+    //this._play()
   }
 
   stopRecording(){
-    if(this._recording === false){
+    if(this.recording === false){
       return
     }
     this._tracks.forEach(track => {
       track._stopRecording(this._recordId)
     })
     this.update()
-    this._recording = false
+    this.recording = false
     dispatchEvent({type: 'stop_recording'})
   }
 

@@ -3,11 +3,8 @@ import qambi, {
   Track,
   Instrument,
   getMIDIInputs,
-  getMIDIOutputs,
 } from '../../src/qambi'
 
-
-import fetch from 'isomorphic-fetch'
 
 document.addEventListener('DOMContentLoaded', function(){
 
@@ -20,33 +17,28 @@ document.addEventListener('DOMContentLoaded', function(){
     let song = new Song()
     let track = new Track()
     track.setRecordEnabled('midi')
+    track.setInstrument(new Instrument()) // by passing a new Instrument, the simple sinewave synth is used for instrument
     song.addTracks(track)
     song.update()
 
     let btnPlay = document.getElementById('play')
     let btnPause = document.getElementById('pause')
     let btnStop = document.getElementById('stop')
-    let btnStartRecord = document.getElementById('record-start')
-    let btnStopRecord = document.getElementById('record-stop')
+    let btnRecord = document.getElementById('record')
     let btnUndoRecord = document.getElementById('record-undo')
-    let btnInstrument = document.getElementById('instrument')
     let btnMetronome = document.getElementById('metronome')
     let divTempo = document.getElementById('tempo')
     let divPosition = document.getElementById('position')
     let divPositionTime = document.getElementById('position_time')
     let rangePosition = document.getElementById('playhead')
     let selectMIDIIn = document.getElementById('midiin')
-    let selectMIDIOut = document.getElementById('midiout')
     let userInteraction = false
 
     btnPlay.disabled = false
     btnPause.disabled = false
     btnStop.disabled = false
-    btnStartRecord.disabled = false
-    btnStopRecord.disabled = false
-    btnInstrument.disabled = false
+    btnRecord.disabled = false
     btnMetronome.disabled = false
-
 
 
     let MIDIInputs = getMIDIInputs()
@@ -60,19 +52,6 @@ document.addEventListener('DOMContentLoaded', function(){
       let portId = selectMIDIIn.options[selectMIDIIn.selectedIndex].id
       track.disconnectMIDIInputs() // no arguments means disconnect from all inputs
       track.connectMIDIInputs(portId)
-    })
-
-    let MIDIOutputs = getMIDIOutputs()
-    html = '<option id="-1">select MIDI out</option>'
-    MIDIOutputs.forEach(port => {
-      html += `<option id="${port.id}">${port.name}</option>`
-    })
-    selectMIDIOut.innerHTML = html
-
-    selectMIDIOut.addEventListener('change', e => {
-      let portId = selectMIDIOut.options[selectMIDIOut.selectedIndex].id
-      track.disconnectMIDIOutputs() // no arguments means disconnect from all outputs
-      track.connectMIDIOutputs(portId)
     })
 
     btnMetronome.addEventListener('click', function(){
@@ -92,12 +71,14 @@ document.addEventListener('DOMContentLoaded', function(){
       song.stop()
     })
 
-    btnStartRecord.addEventListener('click', function(){
-      song.startRecording()
-    })
-
-    btnStopRecord.addEventListener('click', function(){
-      song.stopRecording()
+    btnRecord.addEventListener('click', function(){
+      if(song.recording === false){
+        song.startRecording()
+        btnRecord.className = 'recording'
+      }else{
+        song.stopRecording()
+        btnRecord.className = 'neutral'
+      }
     })
 
     btnUndoRecord.addEventListener('click', function(){
@@ -107,16 +88,6 @@ document.addEventListener('DOMContentLoaded', function(){
       }else{
         song.redoRecording()
         btnUndoRecord.innerHTML = 'undo record'
-      }
-    })
-
-    btnInstrument.addEventListener('click', function(){
-      if(track.getInstrument() === null){
-        btnInstrument.innerHTML = 'remove instrument'
-        track.setInstrument(new Instrument()) // by passing a new Instrument, the simple sinewave synth is used for instrument
-      }else{
-        btnInstrument.innerHTML = 'set instrument'
-        track.setInstrument() // by not providing an instrument you remove the instrument from this track
       }
     })
 

@@ -115,7 +115,7 @@ export class Track{
             this._tmpRecordedNotes.delete(midiEvent.data1)
           }
 
-          if(this._recordEnabled === 'midi' && this._song._recording === true){
+          if(this._recordEnabled === 'midi' && this._song.recording === true){
             this._recordedEvents.push(midiEvent)
           }
           this.processMIDIEvent(midiEvent)

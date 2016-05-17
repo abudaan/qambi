@@ -1,9 +1,8 @@
 import {getMIDIOutputById, getMIDIOutputs} from './init_midi'
 import {context} from './init_audio'
 import {MIDIEvent} from './midi_event'
+import {bufferTime} from './settings' // millis
 
-
-const BUFFER_TIME = 200 // millis
 
 export default class Scheduler{
 
@@ -46,7 +45,7 @@ export default class Scheduler{
   getEvents(){
     let events = []
 
-    if(this.song._loop === true && this.song._loopDuration < BUFFER_TIME){
+    if(this.song._loop === true && this.song._loopDuration < bufferTime){
       this.maxtime = this.songStartMillis + this.song._loopDuration - 1;
       //console.log(this.maxtime, this.song.loopDuration);
     }
@@ -166,7 +165,7 @@ export default class Scheduler{
     events = this.getEvents()
     numEvents = events.length
     this.prevMaxtime = this.maxtime
-    this.maxtime = millis + BUFFER_TIME
+    this.maxtime = millis + bufferTime
 
     // if(numEvents > 5){
     //   console.log(numEvents)
