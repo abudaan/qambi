@@ -13,3 +13,5 @@ implement MIDI recording ✓
 implement precount + preroll ✓
 
 improve position calculation
+
+implement save as MIDI file (https://github.com/eligrey/FileSaver.js/ or native: http://caniuse.com/#search=blob)
