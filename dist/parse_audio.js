@@ -111,6 +111,7 @@ function parseSamples2(mapping) {
   if (type === 'object') {
     Object.keys(mapping).forEach(function (key) {
       //key = parseInt(key, 10)
+      //console.log(key)
       getPromises(promises, mapping[key], key, every);
     });
   } else if (type === 'array') {
@@ -125,6 +126,7 @@ function parseSamples2(mapping) {
 
   return new Promise(function (resolve) {
     Promise.all(promises).then(function (values) {
+      //console.log(type)
       if (type === 'object') {
         mapping = {};
         values.forEach(function (value) {

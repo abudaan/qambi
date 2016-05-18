@@ -7,6 +7,8 @@ exports.Instrument = undefined;
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _sample = require('./sample');
@@ -161,17 +163,26 @@ var Instrument = exports.Instrument = function () {
             //console.log(data.release[0], data.release[1])
           }
 
+          if ((typeof result === 'undefined' ? 'undefined' : _typeof(result)) === 'object') {
+            result = Object.keys(result);
+          }
+
+          console.log(data);
           result.forEach(function (sample) {
             var sampleData = data[sample.id];
-            if (typeof sampleData === 'string') {
-              sampleData = {
-                buffer: sample.buffer
-              };
+            if (typeof sampleData === 'undefined') {
+              console.log(sample);
             } else {
-              sampleData.buffer = sample.buffer;
+              if (typeof sampleData === 'string') {
+                sampleData = {
+                  buffer: sample.buffer
+                };
+              } else {
+                sampleData.buffer = sample.buffer;
+              }
+              sampleData.note = sample.id;
+              _this2.updateSampleData(sampleData);
             }
-            sampleData.note = sample.id;
-            _this2.updateSampleData(sampleData);
           });
 
           resolve();

@@ -133,17 +133,26 @@ export class Instrument{
           //console.log(data.release[0], data.release[1])
         }
 
+        if(typeof result === 'object'){
+          result = Object.keys(result)
+        }
+
+        console.log(data)
         result.forEach((sample) => {
           let sampleData = data[sample.id]
-          if(typeof sampleData === 'string'){
-            sampleData = {
-              buffer: sample.buffer
+          if(typeof sampleData === 'undefined'){
+            console.log(sample)
+          }else {
+            if(typeof sampleData === 'string'){
+              sampleData = {
+                buffer: sample.buffer
+              }
+            }else{
+              sampleData.buffer = sample.buffer
             }
-          }else{
-            sampleData.buffer = sample.buffer
+            sampleData.note = sample.id
+            this.updateSampleData(sampleData)
           }
-          sampleData.note = sample.id
-          this.updateSampleData(sampleData)
         })
 
         resolve()
