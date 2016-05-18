@@ -126,12 +126,13 @@ function parseSamples2(mapping) {
 
   return new Promise(function (resolve) {
     Promise.all(promises).then(function (values) {
-      //console.log(type)
+      //console.log(type, values)
       if (type === 'object') {
         mapping = {};
         values.forEach(function (value) {
           mapping[value.id] = value.buffer;
         });
+        //console.log(mapping)
         resolve(mapping);
       } else if (type === 'array') {
         resolve(values);
@@ -146,6 +147,7 @@ function parseSamples() {
   }
 
   if (data.length === 1 && (0, _util.typeString)(data[0]) !== 'string') {
+    //console.log(data[0])
     return parseSamples2(data[0]);
   }
   return parseSamples2(data);

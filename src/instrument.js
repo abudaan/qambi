@@ -1,7 +1,7 @@
 import {createSample} from './sample'
 import {context} from './init_audio'
 import {createNote} from './note'
-import {parseSamples2} from './parse_audio'
+import {parseSamples, parseSamples2} from './parse_audio'
 import {typeString} from './util'
 import {dispatchEvent} from './eventlistener'
 
@@ -124,36 +124,58 @@ export class Instrument{
   // load and parse
   parseSampleData(data){
 
+    if(typeof data.release !== 'undefined'){
+      this.setRelease(data.release[0], data.release[1])
+      //console.log(data.release[0], data.release[1])
+    }
+
+    delete data.release
+
     return new Promise((resolve, reject) => {
-      parseSamples2(data)
+      parseSamples(data)
       .then((result) => {
 
-        if(typeof data.release !== 'undefined'){
-          this.setRelease(data.release[0], data.release[1])
-          //console.log(data.release[0], data.release[1])
-        }
-
         if(typeof result === 'object'){
-          result = Object.keys(result)
-        }
 
-        console.log(data)
-        result.forEach((sample) => {
-          let sampleData = data[sample.id]
-          if(typeof sampleData === 'undefined'){
-            console.log(sample)
-          }else {
-            if(typeof sampleData === 'string'){
-              sampleData = {
-                buffer: sample.buffer
+          for(let noteId of Object.keys(result)) {
+
+            let buffer = result[noteId]
+            let sampleData = data[noteId]
+            if(typeof sampleData === 'undefined'){
+              console.log('sampleData is undefined', noteId)
+            }else {
+              if(typeof sampleData === 'string'){
+                sampleData = {
+                  buffer: buffer
+                }
+              }else{
+                sampleData.buffer = buffer
               }
-            }else{
-              sampleData.buffer = sample.buffer
+              sampleData.note = parseInt(noteId, 10)
+              this._updateSampleData(sampleData)
             }
-            sampleData.note = sample.id
-            this.updateSampleData(sampleData)
           }
-        })
+
+        }else{
+
+          result.forEach((sample) => {
+            let sampleData = data[sample]
+            if(typeof sampleData === 'undefined'){
+              console.log('sampleData is undefined', sample)
+            }else {
+              if(typeof sampleData === 'string'){
+                sampleData = {
+                  buffer: sample.buffer
+                }
+              }else{
+                sampleData.buffer = sample.buffer
+              }
+              sampleData.note = sample
+              this._updateSampleData(sampleData)
+            }
+          })
+
+        }
 
         resolve()
       })
@@ -176,6 +198,7 @@ export class Instrument{
   }
 
   _updateSampleData(data = {}){
+    console.log(data)
     let {
       note,
       buffer = null,
@@ -210,11 +233,11 @@ export class Instrument{
       releaseEnvelope = null
     }
 
-    // console.log(noteId, buffer);
-    // console.log(sustainStart, sustainEnd);
-    // console.log(releaseDuration, releaseEnvelope);
-    // console.log(pan);
-    // console.log(velocityStart, velocityEnd);
+    // console.log(note, buffer)
+    // console.log(sustainStart, sustainEnd)
+    // console.log(releaseDuration, releaseEnvelope)
+    // console.log(pan)
+    // console.log(velocityStart, velocityEnd)
 
 
     this.samplesData[note].forEach((sampleData, i) => {
@@ -241,7 +264,7 @@ export class Instrument{
         this.samplesData[note][i] = sampleData
       }
     })
-    //console.log('%O', this.samplesData[note]);
+    //console.log('%O', this.samplesData[note])
   }
 
 

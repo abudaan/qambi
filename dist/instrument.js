@@ -155,35 +155,76 @@ var Instrument = exports.Instrument = function () {
     value: function parseSampleData(data) {
       var _this2 = this;
 
-      return new Promise(function (resolve, reject) {
-        (0, _parse_audio.parseSamples2)(data).then(function (result) {
+      if (typeof data.release !== 'undefined') {
+        this.setRelease(data.release[0], data.release[1]);
+        //console.log(data.release[0], data.release[1])
+      }
 
-          if (typeof data.release !== 'undefined') {
-            _this2.setRelease(data.release[0], data.release[1]);
-            //console.log(data.release[0], data.release[1])
-          }
+      delete data.release;
+
+      return new Promise(function (resolve, reject) {
+        (0, _parse_audio.parseSamples)(data).then(function (result) {
 
           if ((typeof result === 'undefined' ? 'undefined' : _typeof(result)) === 'object') {
-            result = Object.keys(result);
-          }
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
 
-          console.log(data);
-          result.forEach(function (sample) {
-            var sampleData = data[sample.id];
-            if (typeof sampleData === 'undefined') {
-              console.log(sample);
-            } else {
-              if (typeof sampleData === 'string') {
-                sampleData = {
-                  buffer: sample.buffer
-                };
-              } else {
-                sampleData.buffer = sample.buffer;
+            try {
+
+              for (var _iterator = Object.keys(result)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                var noteId = _step.value;
+
+
+                var buffer = result[noteId];
+                var sampleData = data[noteId];
+                if (typeof sampleData === 'undefined') {
+                  console.log('sampleData is undefined', noteId);
+                } else {
+                  if (typeof sampleData === 'string') {
+                    sampleData = {
+                      buffer: buffer
+                    };
+                  } else {
+                    sampleData.buffer = buffer;
+                  }
+                  sampleData.note = parseInt(noteId, 10);
+                  _this2._updateSampleData(sampleData);
+                }
               }
-              sampleData.note = sample.id;
-              _this2.updateSampleData(sampleData);
+            } catch (err) {
+              _didIteratorError = true;
+              _iteratorError = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion && _iterator.return) {
+                  _iterator.return();
+                }
+              } finally {
+                if (_didIteratorError) {
+                  throw _iteratorError;
+                }
+              }
             }
-          });
+          } else {
+
+            result.forEach(function (sample) {
+              var sampleData = data[sample];
+              if (typeof sampleData === 'undefined') {
+                console.log('sampleData is undefined', sample);
+              } else {
+                if (typeof sampleData === 'string') {
+                  sampleData = {
+                    buffer: sample.buffer
+                  };
+                } else {
+                  sampleData.buffer = sample.buffer;
+                }
+                sampleData.note = sample;
+                _this2._updateSampleData(sampleData);
+              }
+            });
+          }
 
           resolve();
         });
@@ -221,6 +262,8 @@ var Instrument = exports.Instrument = function () {
       var _this4 = this;
 
       var data = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+      console.log(data);
       var note = data.note;
       var _data$buffer = data.buffer;
       var buffer = _data$buffer === undefined ? null : _data$buffer;
@@ -271,11 +314,11 @@ var Instrument = exports.Instrument = function () {
         releaseEnvelope = null;
       }
 
-      // console.log(noteId, buffer);
-      // console.log(sustainStart, sustainEnd);
-      // console.log(releaseDuration, releaseEnvelope);
-      // console.log(pan);
-      // console.log(velocityStart, velocityEnd);
+      // console.log(note, buffer)
+      // console.log(sustainStart, sustainEnd)
+      // console.log(releaseDuration, releaseEnvelope)
+      // console.log(pan)
+      // console.log(velocityStart, velocityEnd)
 
       this.samplesData[note].forEach(function (sampleData, i) {
         if (i >= velocityStart && i < velocityEnd) {
@@ -301,7 +344,7 @@ var Instrument = exports.Instrument = function () {
           _this4.samplesData[note][i] = sampleData;
         }
       });
-      //console.log('%O', this.samplesData[note]);
+      //console.log('%O', this.samplesData[note])
     }
 
     // stereo spread

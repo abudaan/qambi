@@ -116,13 +116,14 @@ export function parseSamples2(mapping, every = false){
   return new Promise(function(resolve){
     Promise.all(promises)
     .then((values) => {
-      //console.log(type)
+      //console.log(type, values)
       if(type === 'object'){
         mapping = {}
         values.forEach(function(value){
           mapping[value.id] = value.buffer
         })
-        resolve(mapping);
+        //console.log(mapping)
+        resolve(mapping)
       }else if(type === 'array'){
         resolve(values);
       }
@@ -133,6 +134,7 @@ export function parseSamples2(mapping, every = false){
 
 export function parseSamples(...data){
   if(data.length === 1 && typeString(data[0]) !== 'string'){
+    //console.log(data[0])
     return parseSamples2(data[0])
   }
   return parseSamples2(data)
