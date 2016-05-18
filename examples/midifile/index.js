@@ -2,7 +2,8 @@ import qambi, {
   Song,
   MIDIEventTypes,
   Instrument,
-} from '../../src/qambi'
+} from 'qambi' // use this for deployment
+//} from '../../src/qambi'
 
 
 import fetch from 'isomorphic-fetch'

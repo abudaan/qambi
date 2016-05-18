@@ -2,29 +2,22 @@
   "name": "qambi",
   "version": "1.0.0-beta5",
   "description": "MIDI sequencer, loads MIDI files, can record and playback MIDI, uses WebMIDI and WebAudio",
-  "keywords": [
-    "MIDI",
-    "sequencer",
-    "recording",
-    "WebMIDI",
-    "WebAudio"
-  ],
-  "author": "abudaan <daniel@abumarkub.net> (http://abumarkub.net)",
+  "author": "abudaan daniel@abumarkub.net",
   "main": "dist/qambi.js",
   "private": false,
   "devDependencies": {
-    "babel-cli": "^6.7.5",
     "babel-eslint": "^6.0.2",
     "babel-plugin-transform-flow-strip-types": "^6.7.0",
     "babel-preset-es2015": "6.9.0",
     "babel-preset-stage-0": "^6.5.0",
+    "babelify": "^7.2.0",
+    "browserify": "^13.0.0",
     "eslint": "^2.7.0",
     "eslint-plugin-babel": "^3.2.0",
-    "flow-bin": "^0.22.1"
+    "watchify": "^3.7.0"
   },
   "license": "MIT",
   "repository": "git@github.com:abudaan/qambi.git",
-  "bugs": "https://github.com/abudaan/qambi/issues",
   "babel": {
     "plugins": [
       "transform-flow-strip-types"
@@ -38,11 +31,11 @@
     "node": ">0.10.x"
   },
   "scripts": {
-    "test": "",
-    "build": "node_modules/babel-cli/bin/babel.js src --out-dir dist",
-    "watch": "node_modules/babel-cli/bin/babel.js src --watch --out-dir dist"
+    "flow": "flow; test $? -eq 0 -o $? -eq 2",
+    "watch": "watchify ./midifile/index.js -t babelify -o ./midifile/build.js --debug --verbose"
   },
   "dependencies": {
-    "isomorphic-fetch": "^2.2.1"
+    "isomorphic-fetch": "^2.2.1",
+    "qambi": "1.0.0-beta5"
   }
 }
