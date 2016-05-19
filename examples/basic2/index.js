@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     let piano = new Instrument()
 
-    piano.parseSampleData({release: [5, 'equal_power'], 61: '../../instruments/rhodes/FreesoundRhodes-000-061-c#3.mp3'})
+    //piano.parseSampleData({release: [5, 'equal_power'], 61: '../../instruments/rhodes/FreesoundRhodes-000-061-c#3.mp3'})
     // piano.parseSampleData({
     //   release: [0.5, 'equal_power'],
     //   61: {

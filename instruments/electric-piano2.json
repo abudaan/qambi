@@ -1,7 +1,7 @@
 {
-  "baseUrl": "https://github.com/abudaan/qambi/tree/gh-pages/instruments/",
+  "baseUrl": "https://raw.githubusercontent.com/abudaan/qambi/gh-pages/instruments/rhodes/",
   "61": {
-    "url": "rhodes/FreesoundRhodes-000-061-c#3.mp3",
+    "url": "FreesoundRhodes-000-061-c#3.mp3",
     "sustain": [0],
     "release": [30, "equal_power"]
   }
