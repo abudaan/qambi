@@ -20,9 +20,6 @@ document.addEventListener('DOMContentLoaded', function(){
       .then(() => {
         song.play()
       })
-
     })
-
   })
-
 })
