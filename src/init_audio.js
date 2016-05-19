@@ -12,7 +12,7 @@ let
   data
 
 export let context = (function(){
-  console.log('init AudioContext')
+  //console.log('init AudioContext')
   let ctx
   if(typeof window === 'object'){
     let AudioContext = window.AudioContext || window.webkitAudioContext

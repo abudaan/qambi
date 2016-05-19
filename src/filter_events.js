@@ -1,4 +1,4 @@
-
+/*
 import {getStore} from './create_store'
 import {Song} from './song'
 
@@ -66,3 +66,4 @@ function runFilters(event, filters){
 
   return result
 }
+*/

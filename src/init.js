@@ -1,3 +1,4 @@
+import qambi from './qambi'
 import {initAudio} from './init_audio'
 import {initMIDI} from './init_midi'
 
@@ -68,6 +69,7 @@ export function init(callback): void{
         midi: dataMidi.midi,
         webmidi: dataMidi.webmidi,
       })
+      console.log('qambi', qambi.version)
     },
     (error) => {
       reject(error)

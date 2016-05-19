@@ -6,9 +6,15 @@ Object.defineProperty(exports, "__esModule", {
 exports.Blob = exports.requestAnimationFrame = exports.getUserMedia = undefined;
 exports.init = init;
 
+var _qambi = require('./qambi');
+
+var _qambi2 = _interopRequireDefault(_qambi);
+
 var _init_audio = require('./init_audio');
 
 var _init_midi = require('./init_midi');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var getUserMedia = exports.getUserMedia = function () {
   if (typeof navigator !== 'undefined') {
@@ -69,6 +75,7 @@ function init(callback) {
         midi: dataMidi.midi,
         webmidi: dataMidi.webmidi
       });
+      console.log('qambi', _qambi2.default.version);
     }, function (error) {
       reject(error);
     });

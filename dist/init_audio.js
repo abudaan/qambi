@@ -26,7 +26,7 @@ var masterGain = void 0,
     data = void 0;
 
 var context = exports.context = function () {
-  console.log('init AudioContext');
+  //console.log('init AudioContext')
   var ctx = void 0;
   if ((typeof window === 'undefined' ? 'undefined' : _typeof(window)) === 'object') {
     var AudioContext = window.AudioContext || window.webkitAudioContext;
