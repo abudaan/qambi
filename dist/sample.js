@@ -48,23 +48,40 @@ var Sample = function () {
   }, {
     key: 'stop',
     value: function stop(time, cb) {
+      var _this = this;
+
       var _sampleData = this.sampleData;
       var releaseDuration = _sampleData.releaseDuration;
       var releaseEnvelope = _sampleData.releaseEnvelope;
       var releaseEnvelopeArray = _sampleData.releaseEnvelopeArray;
 
+
+      this.source.onended = cb;
+
       if (releaseDuration && releaseEnvelope) {
+        this.startReleasePhase = time;
+        this.releaseFunction = function () {
+          fadeOut(_this.output, {
+            releaseDuration: releaseDuration,
+            releaseEnvelope: releaseEnvelope,
+            releaseEnvelopeArray: releaseEnvelopeArray
+          });
+        };
         this.source.stop(time + releaseDuration);
-        fadeOut(this.output, {
-          releaseDuration: releaseDuration,
-          releaseEnvelope: releaseEnvelope,
-          releaseEnvelopeArray: releaseEnvelopeArray
-        });
+        this.checkPhase();
       } else {
         this.source.stop(time);
       }
-
-      this.source.onended = cb;
+    }
+  }, {
+    key: 'checkPhase',
+    value: function checkPhase() {
+      //console.log(context.currentTime, this.startReleasePhase)
+      if (_init_audio.context.currentTime >= this.startReleasePhase) {
+        this.releaseFunction();
+        return;
+      }
+      requestAnimationFrame(this.checkPhase.bind(this));
     }
   }]);
 

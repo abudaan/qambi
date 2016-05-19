@@ -4,6 +4,7 @@ import {createNote} from './note'
 import {parseSamples, parseSamples2} from './parse_audio'
 import {typeString} from './util'
 import {dispatchEvent} from './eventlistener'
+import {fetchJSON} from './fetch_helpers'
 
 
 const ppq = 480
@@ -121,26 +122,37 @@ export class Instrument{
     }
   }
 
+  _loadJSON(data){
+    if(typeof data === 'object' && typeof data.url === 'string'){
+      return fetchJSON(data.url)
+    }
+    return Promise.resolve(data)
+  }
+
   // load and parse
   parseSampleData(data){
 
     if(typeof data.release !== 'undefined'){
       this.setRelease(data.release[0], data.release[1])
       //console.log(data.release[0], data.release[1])
+      delete data.release
     }
 
-    delete data.release
+    //return Promise.resolve()
 
     return new Promise((resolve, reject) => {
-      parseSamples(data)
+      this._loadJSON(data)
+      .then((json) => {
+        data = json
+        return parseSamples(data)
+      })
       .then((result) => {
-
         if(typeof result === 'object'){
 
           for(let noteId of Object.keys(result)) {
-
             let buffer = result[noteId]
             let sampleData = data[noteId]
+
             if(typeof sampleData === 'undefined'){
               console.log('sampleData is undefined', noteId)
             }else {
@@ -198,7 +210,7 @@ export class Instrument{
   }
 
   _updateSampleData(data = {}){
-    console.log(data)
+    //console.log(data)
     let {
       note,
       buffer = null,
@@ -283,17 +295,19 @@ export class Instrument{
   */
   setRelease(duration: number, envelope){
     // set release for all keys, overrules values set by setKeyScalingRelease()
-    this.samplesData.forEach(function(samples, i){
-      samples.forEach(function(sample){
+    this.samplesData.forEach(function(samples, id){
+      samples.forEach(function(sample, i){
         if(sample === -1){
           sample = {
-            id: i
+            id: id
           }
         }
         sample.releaseDuration = duration
         sample.releaseEnvelope = envelope
+        samples[i] = sample
       })
     })
+    //console.log('%O', this.samplesData)
   }
 
 

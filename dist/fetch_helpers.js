@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.status = status;
 exports.json = json;
 exports.arrayBuffer = arrayBuffer;
+exports.fetchJSON = fetchJSON;
+exports.fetchArraybuffer = fetchArraybuffer;
 // fetch helpers
 
 function status(response) {
@@ -21,4 +23,24 @@ function json(response) {
 
 function arrayBuffer(response) {
   return response.arrayBuffer();
+}
+
+function fetchJSON(url) {
+  return new Promise(function (resolve, reject) {
+    fetch(url).then(status).then(json).then(function (data) {
+      resolve(data);
+    }).catch(function (e) {
+      reject(e);
+    });
+  });
+}
+
+function fetchArraybuffer(url) {
+  return new Promise(function (resolve, reject) {
+    fetch(url).then(status).then(arrayBuffer).then(function (data) {
+      resolve(data);
+    }).catch(function (e) {
+      reject(e);
+    });
+  });
 }

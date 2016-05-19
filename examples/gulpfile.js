@@ -5,7 +5,7 @@ var watchify = require('watchify');
 var babelify = require('babelify');
 var source = require('vinyl-source-stream');
 
-var folders = ['midi-io', 'midi-recording', 'midifile', 'instruments']
+var folders = ['basic', 'midi-io', 'midi-recording', 'midifile', 'create_instruments']
 var currentFolder = 'instruments'
 
 gulp.task('watch', function () {
@@ -19,8 +19,8 @@ gulp.task('watch', function () {
 gulp.task('build-all', function () {
 
   folders.map(function(folder) {
-
-    return browserify({entries: [folder], extensions: ['.js'], debug: true})
+    console.log(folder)
+    browserify({entries: [folder], extensions: ['.js'], debug: true})
       .transform(babelify)
       .bundle()
       .pipe(source('build.js'))

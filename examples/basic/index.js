@@ -1,7 +1,7 @@
 import qambi, {
   Instrument,
   MIDIEvent,
-} from 'qambi'
+} from '../../src/qambi' // remove ../../src/
 
 document.addEventListener('DOMContentLoaded', function(){
 

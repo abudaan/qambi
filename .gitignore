@@ -1,6 +1,6 @@
 .gitignore
 npm-debug.log
-./instruments
+instruments
 lib/qambi
 node_modules/*
 examples/node_modules/*

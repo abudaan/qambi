@@ -23,6 +23,8 @@ var _util = require('./util');
 
 var _eventlistener = require('./eventlistener');
 
+var _fetch_helpers = require('./fetch_helpers');
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var ppq = 480;
@@ -147,6 +149,14 @@ var Instrument = exports.Instrument = function () {
                 }
           }
     }
+  }, {
+    key: '_loadJSON',
+    value: function _loadJSON(data) {
+      if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object' && typeof data.url === 'string') {
+        return (0, _fetch_helpers.fetchJSON)(data.url);
+      }
+      return Promise.resolve(data);
+    }
 
     // load and parse
 
@@ -158,13 +168,16 @@ var Instrument = exports.Instrument = function () {
       if (typeof data.release !== 'undefined') {
         this.setRelease(data.release[0], data.release[1]);
         //console.log(data.release[0], data.release[1])
+        delete data.release;
       }
 
-      delete data.release;
+      //return Promise.resolve()
 
       return new Promise(function (resolve, reject) {
-        (0, _parse_audio.parseSamples)(data).then(function (result) {
-
+        _this2._loadJSON(data).then(function (json) {
+          data = json;
+          return (0, _parse_audio.parseSamples)(data);
+        }).then(function (result) {
           if ((typeof result === 'undefined' ? 'undefined' : _typeof(result)) === 'object') {
             var _iteratorNormalCompletion = true;
             var _didIteratorError = false;
@@ -175,9 +188,9 @@ var Instrument = exports.Instrument = function () {
               for (var _iterator = Object.keys(result)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                 var noteId = _step.value;
 
-
                 var buffer = result[noteId];
                 var sampleData = data[noteId];
+
                 if (typeof sampleData === 'undefined') {
                   console.log('sampleData is undefined', noteId);
                 } else {
@@ -263,7 +276,7 @@ var Instrument = exports.Instrument = function () {
 
       var data = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-      console.log(data);
+      //console.log(data)
       var note = data.note;
       var _data$buffer = data.buffer;
       var buffer = _data$buffer === undefined ? null : _data$buffer;
@@ -369,17 +382,19 @@ var Instrument = exports.Instrument = function () {
     key: 'setRelease',
     value: function setRelease(duration, envelope) {
       // set release for all keys, overrules values set by setKeyScalingRelease()
-      this.samplesData.forEach(function (samples, i) {
-        samples.forEach(function (sample) {
+      this.samplesData.forEach(function (samples, id) {
+        samples.forEach(function (sample, i) {
           if (sample === -1) {
             sample = {
-              id: i
+              id: id
             };
           }
           sample.releaseDuration = duration;
           sample.releaseEnvelope = envelope;
+          samples[i] = sample;
         });
       });
+      //console.log('%O', this.samplesData)
     }
   }, {
     key: 'allNotesOff',

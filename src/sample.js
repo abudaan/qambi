@@ -32,18 +32,32 @@ class Sample{
 
   stop(time, cb){
     let {releaseDuration, releaseEnvelope, releaseEnvelopeArray} = this.sampleData
-    if(releaseDuration && releaseEnvelope){
-      this.source.stop(time + releaseDuration)
-      fadeOut(this.output, {
-        releaseDuration,
-        releaseEnvelope,
-        releaseEnvelopeArray,
-      })
-    }else{
-      this.source.stop(time);
-    }
 
-    this.source.onended = cb;
+    this.source.onended = cb
+
+    if(releaseDuration && releaseEnvelope){
+      this.startReleasePhase = time
+      this.releaseFunction = () => {
+        fadeOut(this.output, {
+          releaseDuration,
+          releaseEnvelope,
+          releaseEnvelopeArray,
+        })
+      }
+      this.source.stop(time + releaseDuration)
+      this.checkPhase()
+    }else{
+      this.source.stop(time)
+    }
+  }
+
+  checkPhase(){
+    //console.log(context.currentTime, this.startReleasePhase)
+    if(context.currentTime >= this.startReleasePhase){
+      this.releaseFunction()
+      return
+    }
+    requestAnimationFrame(this.checkPhase.bind(this))
   }
 }
 

@@ -15,3 +15,32 @@ export function json(response){
 export function arrayBuffer(response){
   return response.arrayBuffer()
 }
+
+
+export function fetchJSON(url){
+  return new Promise((resolve, reject) => {
+    fetch(url)
+    .then(status)
+    .then(json)
+    .then(data => {
+      resolve(data)
+    })
+    .catch(e => {
+      reject(e)
+    })
+  })
+}
+
+export function fetchArraybuffer(url){
+  return new Promise((resolve, reject) => {
+    fetch(url)
+    .then(status)
+    .then(arrayBuffer)
+    .then(data => {
+      resolve(data)
+    })
+    .catch(e => {
+      reject(e)
+    })
+  })
+}

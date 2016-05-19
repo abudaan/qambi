@@ -37,7 +37,7 @@ function decodeSample(sample, id, every) {
           }
         }
       }, function onError(e) {
-        console('error decoding audiodata', id, e);
+        console.log('error decoding audiodata', id, e);
         //reject(e); // don't use reject because we use this as a nested promise and we don't want the parent promise to reject
         if (typeof id !== 'undefined') {
           resolve({ id: id });
@@ -59,7 +59,7 @@ function decodeSample(sample, id, every) {
 function loadAndParseSample(url, id, every) {
   //console.log(id, url)
   var executor = function executor(resolve) {
-    (0, _isomorphicFetch2.default)(escape(url), {
+    (0, _isomorphicFetch2.default)(url, {
       method: 'GET'
     }).then(function (response) {
       if (response.ok) {
@@ -77,21 +77,22 @@ function loadAndParseSample(url, id, every) {
   return new Promise(executor);
 }
 
-function getPromises(promises, sample, key, every) {
+function getPromises(promises, sample, key, baseUrl, every) {
 
   var getSample = function getSample() {
 
     if (sample instanceof ArrayBuffer) {
-      promises.push(decodeSample(sample, key, every));
+      promises.push(decodeSample(sample, key, baseUrl, every));
     } else if (typeof sample === 'string') {
       if ((0, _util.checkIfBase64)(sample)) {
-        promises.push(decodeSample((0, _util.base64ToBinary)(sample), key, every));
+        promises.push(decodeSample((0, _util.base64ToBinary)(sample), key, baseUrl, every));
       } else {
-        promises.push(loadAndParseSample(sample, key, every));
+        //console.log(baseUrl + sample)
+        promises.push(loadAndParseSample(baseUrl + escape(sample), key, every));
       }
     } else if ((typeof sample === 'undefined' ? 'undefined' : _typeof(sample)) === 'object') {
       sample = sample.sample || sample.buffer || sample.base64 || sample.url;
-      getSample(promises, sample, key, every);
+      getSample(promises, sample, key, baseUrl, every);
       //console.log(sample, promises.length)
     }
   };
@@ -104,22 +105,32 @@ function parseSamples2(mapping) {
   var every = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
 
   var type = (0, _util.typeString)(mapping),
-      promises = [];
+      promises = [],
+      baseUrl = '';
+
+  if (typeof mapping.baseUrl === 'string') {
+    baseUrl = mapping.baseUrl;
+    delete mapping.baseUrl;
+  }
+
+  //console.log(mapping, baseUrl)
 
   every = typeof every === 'function' ? every : false;
   //console.log(type, mapping)
   if (type === 'object') {
     Object.keys(mapping).forEach(function (key) {
-      //key = parseInt(key, 10)
-      //console.log(key)
-      getPromises(promises, mapping[key], key, every);
+      // if(isNaN(key) === false){
+      //   key = parseInt(key, 10)
+      // }
+      // console.log(key)
+      getPromises(promises, mapping[key], key, baseUrl, every);
     });
   } else if (type === 'array') {
     (function () {
       var key = void 0;
       mapping.forEach(function (sample) {
         // key is deliberately undefined
-        getPromises(promises, sample, key, every);
+        getPromises(promises, sample, key, baseUrl, every);
       });
     })();
   }

@@ -24,7 +24,7 @@ export function decodeSample(sample, id, every){
         },
 
         function onError(e){
-          console('error decoding audiodata', id, e);
+          console.log('error decoding audiodata', id, e);
           //reject(e); // don't use reject because we use this as a nested promise and we don't want the parent promise to reject
           if(typeof id !== 'undefined'){
             resolve({id})
@@ -48,7 +48,7 @@ export function decodeSample(sample, id, every){
 function loadAndParseSample(url, id, every){
   //console.log(id, url)
   let executor = function(resolve){
-    fetch(escape(url), {
+    fetch(url, {
       method: 'GET'
     }).then(
       function(response){
@@ -69,21 +69,22 @@ function loadAndParseSample(url, id, every){
 }
 
 
-function getPromises(promises, sample, key, every){
+function getPromises(promises, sample, key, baseUrl, every){
 
   const getSample = function(){
 
     if(sample instanceof ArrayBuffer){
-      promises.push(decodeSample(sample, key, every))
+      promises.push(decodeSample(sample, key, baseUrl, every))
     }else if(typeof sample === 'string'){
       if(checkIfBase64(sample)){
-        promises.push(decodeSample(base64ToBinary(sample), key, every))
+        promises.push(decodeSample(base64ToBinary(sample), key, baseUrl, every))
       }else{
-        promises.push(loadAndParseSample(sample, key, every))
+        //console.log(baseUrl + sample)
+        promises.push(loadAndParseSample(baseUrl + escape(sample), key, every))
       }
     }else if(typeof sample === 'object'){
       sample = sample.sample || sample.buffer || sample.base64 || sample.url
-      getSample(promises, sample, key, every)
+      getSample(promises, sample, key, baseUrl, every)
       //console.log(sample, promises.length)
     }
   }
@@ -95,21 +96,31 @@ function getPromises(promises, sample, key, every){
 // only for internally use in qambi
 export function parseSamples2(mapping, every = false){
   let type = typeString(mapping),
-    promises = []
+    promises = [],
+    baseUrl = ''
+
+  if(typeof mapping.baseUrl === 'string'){
+    baseUrl = mapping.baseUrl
+    delete mapping.baseUrl
+  }
+
+  //console.log(mapping, baseUrl)
 
   every = typeof every === 'function' ? every : false
   //console.log(type, mapping)
   if(type === 'object'){
     Object.keys(mapping).forEach(function(key){
-      //key = parseInt(key, 10)
-      //console.log(key)
-      getPromises(promises, mapping[key], key, every)
+      // if(isNaN(key) === false){
+      //   key = parseInt(key, 10)
+      // }
+      // console.log(key)
+      getPromises(promises, mapping[key], key, baseUrl, every)
     })
   }else if(type === 'array'){
     let key
     mapping.forEach(function(sample){
       // key is deliberately undefined
-      getPromises(promises, sample, key, every)
+      getPromises(promises, sample, key, baseUrl, every)
     })
   }
 

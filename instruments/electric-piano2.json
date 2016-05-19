@@ -1,7 +1,0 @@
-{
-  "60": {
-    "url": "../instruments/rhodes/FreesoundRhodes-000-028-e0.mp3",
-    "sustain": [0],
-    "release": [4, "equal power"],
-  }
-}
