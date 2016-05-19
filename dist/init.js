@@ -50,7 +50,9 @@ var Blob = exports.Blob = function () {
 function loadInstrument(data) {
   var instrument = new _instrument.Instrument();
   return new Promise(function (resolve, reject) {
-    instrument.parseSampleData(data).then(resolve(instrument));
+    instrument.parseSampleData(data).then(function () {
+      return resolve(instrument);
+    });
   });
 }
 
@@ -81,7 +83,7 @@ function init() {
   })
    */
 
-  var promises = [];
+  var promises = [(0, _init_audio.initAudio)(), (0, _init_midi.initMIDI)()];
   var loadKeys = Object.keys(settings);
 
   if (settings !== null) {
@@ -119,33 +121,28 @@ function init() {
 
   return new Promise(function (resolve, reject) {
 
-    Promise.all([(0, _init_audio.initAudio)(), (0, _init_midi.initMIDI)()]).then(function (data) {
-      // parseAudio
-      var dataAudio = data[0];
+    Promise.all(promises).then(function (result) {
 
-      // parseMIDI
-      var dataMidi = data[1];
+      var returnObj = {};
 
-      var result = {
-        legacy: dataAudio.legacy,
-        mp3: dataAudio.mp3,
-        ogg: dataAudio.ogg,
-        midi: dataMidi.midi,
-        webmidi: dataMidi.webmidi
-      };
+      result.forEach(function (data, i) {
+        if (i === 0) {
+          // parseAudio
+          returnObj.legacy = data.legacy;
+          returnObj.mp3 = data.mp3;
+          returnObj.ogg = data.ogg;
+        } else if (i === 1) {
+          // parseMIDI
+          returnObj.midi = data.midi;
+          returnObj.webmidi = data.webmidi;
+        } else {
+          // Instruments, samples or MIDI files that got loaded during initialization
+          result[loadKeys[i - 2]] = data;
+        }
+      });
+
       console.log('qambi', _qambi2.default.version);
-
-      if (promises.length > 0) {
-        Promise.all(promises).then(function (loadedData) {
-          // add the loaded data by their keys to the result object
-          loadedData.forEach(function (loaded, i) {
-            result[loadKeys[i]] = loaded;
-          });
-          resolve(result);
-        });
-      } else {
-        resolve(result);
-      }
+      resolve(result);
     }, function (error) {
       reject(error);
     });

@@ -150,7 +150,7 @@ export class Instrument{
     return new Promise((resolve, reject) => {
       this._loadJSON(data)
       .then((json) => {
-        console.log(json)
+        //console.log(json)
         data = json
         if(baseUrl !== null){
           json.baseUrl = baseUrl
@@ -199,7 +199,7 @@ export class Instrument{
           })
 
         }
-
+        //console.log(new Date().getTime())
         resolve()
       })
     })

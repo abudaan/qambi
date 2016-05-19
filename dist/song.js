@@ -341,7 +341,6 @@ var Song = exports.Song = function () {
       console.log('notes %O', this._notes);
 
       console.timeEnd('total');
-      console.groupEnd('update song');
       console.timeEnd('update song');
 
       // get the last event of this song
@@ -373,6 +372,7 @@ var Song = exports.Song = function () {
       this._lastEvent.millis = millis;
 
       console.log('last tick', this._lastEvent.ticks, this._lastEvent.millis);
+
       this._durationTicks = this._lastEvent.ticks;
       this._durationMillis = this._lastEvent.millis;
       this._playhead.updateSong();
@@ -394,6 +394,8 @@ var Song = exports.Song = function () {
       this._newEvents = [];
       this._movedEvents = [];
       this._removedEvents = [];
+
+      console.groupEnd('update song');
     }
   }, {
     key: 'play',

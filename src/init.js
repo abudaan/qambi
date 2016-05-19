@@ -38,11 +38,11 @@ function loadInstrument(data){
   let instrument = new Instrument()
   return new Promise((resolve, reject) => {
     instrument.parseSampleData(data)
-    .then(resolve(instrument))
+    .then(() => resolve(instrument))
   })
 }
 
-export function init(settings =  null): void{
+export function init(settings = null): void{
 
   // load settings.instruments (array or object)
   // load settings.midifiles (array or object)
@@ -70,7 +70,7 @@ export function init(settings =  null): void{
 
   */
 
-  let promises = []
+  let promises = [initAudio(), initMIDI()]
   let loadKeys = Object.keys(settings)
 
   if(settings !== null){
@@ -88,36 +88,30 @@ export function init(settings =  null): void{
 
   return new Promise((resolve, reject) => {
 
-    Promise.all([initAudio(), initMIDI()])
+    Promise.all(promises)
     .then(
-    (data) => {
-      // parseAudio
-      let dataAudio = data[0]
+    (result) => {
 
-      // parseMIDI
-      let dataMidi = data[1]
+      let returnObj = {}
 
-      let result = {
-        legacy: dataAudio.legacy,
-        mp3: dataAudio.mp3,
-        ogg: dataAudio.ogg,
-        midi: dataMidi.midi,
-        webmidi: dataMidi.webmidi,
-      }
+      result.forEach((data, i) => {
+        if(i === 0){
+          // parseAudio
+          returnObj.legacy = data.legacy
+          returnObj.mp3 = data.mp3
+          returnObj.ogg = data.ogg
+        }else if(i === 1){
+          // parseMIDI
+          returnObj.midi = data.midi
+          returnObj.webmidi = data.webmidi
+        }else{
+          // Instruments, samples or MIDI files that got loaded during initialization
+          result[loadKeys[i - 2]] = data
+        }
+      })
+
       console.log('qambi', qambi.version)
-
-      if(promises.length > 0){
-        Promise.all(promises)
-        .then(loadedData => {
-          // add the loaded data by their keys to the result object
-          loadedData.forEach((loaded, i) => {
-            result[loadKeys[i]] = loaded
-          })
-          resolve(result)
-        })
-      }else{
-        resolve(result)
-      }
+      resolve(result)
     },
     (error) => {
       reject(error)

@@ -181,7 +181,7 @@ var Instrument = exports.Instrument = function () {
 
       return new Promise(function (resolve, reject) {
         _this2._loadJSON(data).then(function (json) {
-          console.log(json);
+          //console.log(json)
           data = json;
           if (baseUrl !== null) {
             json.baseUrl = baseUrl;
@@ -248,7 +248,7 @@ var Instrument = exports.Instrument = function () {
               }
             });
           }
-
+          //console.log(new Date().getTime())
           resolve();
         });
       });

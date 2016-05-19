@@ -287,7 +287,6 @@ export class Song{
     console.log('notes %O', this._notes)
 
     console.timeEnd('total')
-    console.groupEnd('update song')
     console.timeEnd('update song')
 
 
@@ -321,6 +320,7 @@ export class Song{
     this._lastEvent.millis = millis
 
     console.log('last tick', this._lastEvent.ticks, this._lastEvent.millis)
+
     this._durationTicks = this._lastEvent.ticks
     this._durationMillis = this._lastEvent.millis
     this._playhead.updateSong()
@@ -342,6 +342,8 @@ export class Song{
     this._newEvents = []
     this._movedEvents = []
     this._removedEvents = []
+
+    console.groupEnd('update song')
   }
 
   play(type, ...args): void{
