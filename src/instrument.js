@@ -138,12 +138,23 @@ export class Instrument{
       delete data.release
     }
 
+
+    // check if we have to overrule the baseUrl of the sampels
+    let baseUrl = null
+    if(typeof data.baseUrl === 'string'){
+      baseUrl = data.baseUrl
+    }
+
     //return Promise.resolve()
 
     return new Promise((resolve, reject) => {
       this._loadJSON(data)
       .then((json) => {
+        console.log(json)
         data = json
+        if(baseUrl !== null){
+          json.baseUrl = baseUrl
+        }
         return parseSamples(data)
       })
       .then((result) => {

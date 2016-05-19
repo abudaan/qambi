@@ -537,7 +537,7 @@ var Song = exports.Song = function () {
       } else {
         this.useMetronome = flag;
       }
-      this._metronome.mute(this.useMetronome);
+      this._metronome.mute(!this.useMetronome);
     }
   }, {
     key: 'configureMetronome',

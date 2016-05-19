@@ -461,7 +461,7 @@ export class Song{
     }else{
       this.useMetronome = flag
     }
-    this._metronome.mute(this.useMetronome)
+    this._metronome.mute(!this.useMetronome)
   }
 
   configureMetronome(config){

@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', function(){
     },
     piano: {
       type: 'Instrument',
-      url: '../../instruments/electric-piano.json'
+      url: 'http://abumarkub.net/qambi/instruments/city-piano.json',
+      //baseUrl: '../../instruments/city-piano/'
     }
   })
   .then((data) => {
@@ -19,6 +20,9 @@ document.addEventListener('DOMContentLoaded', function(){
     song.getTracks().forEach(track => {
       track.setInstrument(piano)
     })
+
+    // turn off metronome
+    song.setMetronome(false)
 
     initUI(song)
 

@@ -171,11 +171,21 @@ var Instrument = exports.Instrument = function () {
         delete data.release;
       }
 
+      // check if we have to overrule the baseUrl of the sampels
+      var baseUrl = null;
+      if (typeof data.baseUrl === 'string') {
+        baseUrl = data.baseUrl;
+      }
+
       //return Promise.resolve()
 
       return new Promise(function (resolve, reject) {
         _this2._loadJSON(data).then(function (json) {
+          console.log(json);
           data = json;
+          if (baseUrl !== null) {
+            json.baseUrl = baseUrl;
+          }
           return (0, _parse_audio.parseSamples)(data);
         }).then(function (result) {
           if ((typeof result === 'undefined' ? 'undefined' : _typeof(result)) === 'object') {
