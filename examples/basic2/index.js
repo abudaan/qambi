@@ -18,7 +18,10 @@ document.addEventListener('DOMContentLoaded', function(){
     //     release: [20, 'equal_power']
     //   }
     // })
-    //piano.parseSampleData({url: '../../instruments/electric-piano2.json'})
+    piano.parseSampleData({
+      url: '../../instruments/electric-piano2.json' // can be an absolute url as well
+      //baseUrl: '../../instruments/rhodes' // url of the folder where the mp3 files are stored, can be an absolute url as well
+    })
     .then(() => {
       piano.processMIDIEvent(new MIDIEvent(0, 144, 61, 100))
       piano.processMIDIEvent(new MIDIEvent(960, 128, 61, 0))
