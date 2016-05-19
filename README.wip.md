@@ -32,5 +32,48 @@ qambi.init()
 })
 ```
 
-More [examples](http://abudaan.github.io/qambi/)
+
+
+Same example but now we load a json file that contains a mapping of MIDI notes to samples. The json file has the following structure:
+```javascript
+
+{
+  "28": "FreesoundRhodes-000-028-e0.mp3",
+  "29": "FreesoundRhodes-000-029-f0.mp3",
+  "30": "FreesoundRhodes-000-030-f#0.mp3",
+  // and so on
+}
+
+```
+
+
+```
+import qambi, {
+  Song,
+  Instrument,
+} from 'qambi'
+
+import fetch from 'isomorphic-fetch'
+
+let promises = [
+  qambi.init(),
+  fetch()
+]
+
+qambi.init()
+.then({
+  Song.fromMIDIFileAsync('path/to/minute_waltz.mid')
+  .then(song => {
+      song.getTracks().forEeach(track => {
+        track.setInstrument(new Instrument())
+      })
+      song.play()
+    },
+    e => console.log(e)
+  )
+})
+
+```
+
+
 
