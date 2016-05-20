@@ -26,7 +26,13 @@ class Sample{
   }
 
   start(time){
-    //console.log(time, this.source);
+    let {sustainStart, sustainEnd, releaseEnvelopeArray} = this.sampleData
+    //console.log(sustainStart, sustainEnd)
+    if(sustainStart && sustainEnd){
+      this.source.loop = true
+      this.source.loopStart = sustainStart
+      this.source.loopEnd = sustainEnd
+    }
     this.source.start(time);
   }
 

@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function(){
   qambi.init({
     song: {
       type: 'Song',
-      url: '../data/mozk545a.mid'
+      url: 'http://qambi.org/instruments/midi/minute_waltz.mid'
     },
     piano: {
       type: 'Instrument',

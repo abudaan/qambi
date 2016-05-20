@@ -1,36 +1,37 @@
 ###qambi
 
-Qambi is a rebuild of [heartbeat](https://abudaan.github.io/heartbeat) in es6 and still work in progress. Not all functionality has been ported yet. If you need a well-tested sequencer for your project you'd better use heartbeat.
-
-Missing features compared to heartbeat:
-
- - audio events
- - audio recording
- - save as binary MIDI file
+Qambi is a rebuild of [heartbeat](https://abudaan.github.io/heartbeat) in es6. It is still work in progress so not all functionality has been ported yet. If you need a well-tested sequencer for your project you'd better use heartbeat.
 
 
-In the next code example we load a binary MIDI file and create a qambi song of it. Then we loop over all tracks of this song and add an instrument. By calling the Instrument constructor without arguments we create a simple sinewave synth.
+``` javascript
+import qambi from 'qambi'
 
-```javascript
-import qambi, {
-  Song,
-  Instrument,
-} from 'qambi'
-
-
-qambi.init()
-.then({
-  Song.fromMIDIFileAsync('path/to/minute_waltz.mid')
-  .then(song => {
-      song.getTracks().forEeach(track => {
-        track.setInstrument(new Instrument())
-      })
-      song.play()
+qambi.init({
+    song: {
+      type: 'Song',
+      url: 'http://qambi.org/midi/minute_waltz.mid'
     },
-    e => console.log(e)
-  )
-})
+    piano: {
+      type: 'Instrument',
+      url: 'http://qambi.org/instruments/heartbeat/city-piano.json'
+    }
+  })
+  .then((data) => {
+
+    let {song, piano} = data
+
+    song.getTracks().forEach(track => {
+      track.setInstrument(piano)
+    })
+  })
+
 ```
 
-More [examples](http://abudaan.github.io/qambi/)
+The `qambi.init()` initializes WebMIDI and WebAudio and prepares the sequencer. By passing an optional object you can preload MIDI files and audio samples.
+
+If you set the type to `Song` a qambi song will be created from the loaded MIDI file. If you set the type to `Instrument` the audio samples will be loaded into a new `Instrument` instance.
+
+The created `Song` and `Instrument` instances are returned as argument of the `then()` function.
+
+Check the [live version](http://abudaan.github.io/qambi/examples/basic4) of this example. More examples [here](http://abudaan.github.io/qambi/).
 
