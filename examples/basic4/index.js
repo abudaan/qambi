@@ -11,10 +11,10 @@ document.addEventListener('DOMContentLoaded', function(){
     },
     piano: {
       type: 'Instrument',
-      url: 'http://abumarkub.net/qambi/instruments/city-piano.json',
-      //url: 'http://abumarkub.net/qambi/instruments/drawbar_organ.json',
-      //url: 'http://abumarkub.net/qambi/instruments/dulcimer.json',
-      //baseUrl: '../../instruments/city-piano/'
+      url: 'http://qambi.org/instruments/heartbeat/city-piano.json',
+      //url: 'http://qambi.org/instruments/fluidsynth/drawbar_organ.json',
+      //url: 'http://qambi.org/instruments/fluidsynth/dulcimer.json',
+      //baseUrl: '../../samples/city-piano/'
     }
   })
   .then((data) => {

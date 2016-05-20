@@ -4,4 +4,4 @@ lib/qambi
 node_modules/*
 examples/node_modules/*
 qambi*.js
-instruments
+samples
