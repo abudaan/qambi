@@ -1,3 +1,9 @@
+/*
+
+converts heartbeat instruments to qambi instrument files
+
+*/
+
 import fs from 'fs'
 
 let args = process.argv

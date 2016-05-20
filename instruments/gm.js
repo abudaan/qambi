@@ -1,3 +1,11 @@
+/*
+
+creates json instruments files from midijs soundfont files:
+
+https://github.com/gleitz/midi-js-soundfonts
+
+*/
+
 import fs from 'fs'
 
 let gm = {

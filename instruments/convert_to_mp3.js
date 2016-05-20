@@ -1,3 +1,9 @@
+/*
+  converts all .wav files in a specific folder to .mp3 files
+
+  the generated .mp3 files will be stored in the same folder
+*/
+
 var fs = require('fs')
 var path = require('path')
 var exec = require('child_process').exec
