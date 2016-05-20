@@ -11,19 +11,18 @@ import fetch from 'isomorphic-fetch'
 document.addEventListener('DOMContentLoaded', function(){
 
   let song
-  let violin
+  let instrument = new Instrument()
 
   qambi.init({
-    violin: {
+    instrument: {
       type: 'Instrument',
-      url: 'http://qambi.org/instruments/heartbeat/violin.json',
+      //url: 'http://qambi.org/instruments/heartbeat/violin.json', // sustain loop
+      url: 'http://qambi.org/instruments/heartbeat/squareroot.json', // 2 velocity layers
     }
   })
   .then((loaded) => {
 
-    ({violin} = loaded)
-
-    console.log(violin)
+    ({instrument} = loaded)
 
     let test = 1
 
@@ -140,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if(track.getInstrument() === null){
           btnInstrument.innerHTML = 'remove instrument'
           //track.setInstrument(new Instrument()) // by passing a new Instrument, the simple sinewave synth is used for instrument
-          track.setInstrument(violin) // by passing a new Instrument, the simple sinewave synth is used for instrument
+          track.setInstrument(instrument) // by passing a new Instrument, the simple sinewave synth is used for instrument
         }else{
           btnInstrument.innerHTML = 'set instrument'
           track.setInstrument() // by not providing an instrument you remove the instrument from this track

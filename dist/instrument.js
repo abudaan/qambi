@@ -194,8 +194,7 @@ var Instrument = exports.Instrument = function () {
             var _iteratorError = undefined;
 
             try {
-
-              for (var _iterator = Object.keys(result)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+              var _loop = function _loop() {
                 var noteId = _step.value;
 
                 var buffer = result[noteId];
@@ -203,7 +202,23 @@ var Instrument = exports.Instrument = function () {
 
                 if (typeof sampleData === 'undefined') {
                   console.log('sampleData is undefined', noteId);
+                } else if ((0, _util.typeString)(buffer) === 'array') {
+                  // @TODO: both are arrays -> loop over them
+                  //console.log(buffer, sampleData)
+                  sampleData.forEach(function (sd, i) {
+
+                    if (typeof sd === 'string') {
+                      sd = {
+                        buffer: buffer[i]
+                      };
+                    } else {
+                      sd.buffer = buffer[i];
+                    }
+                    sd.note = parseInt(noteId, 10);
+                    _this2._updateSampleData(sd);
+                  });
                 } else {
+
                   if (typeof sampleData === 'string') {
                     sampleData = {
                       buffer: buffer
@@ -214,6 +229,10 @@ var Instrument = exports.Instrument = function () {
                   sampleData.note = parseInt(noteId, 10);
                   _this2._updateSampleData(sampleData);
                 }
+              };
+
+              for (var _iterator = Object.keys(result)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                _loop();
               }
             } catch (err) {
               _didIteratorError = true;
@@ -245,6 +264,7 @@ var Instrument = exports.Instrument = function () {
                 }
                 sampleData.note = sample;
                 _this2._updateSampleData(sampleData);
+                //this.updateSampleData(sampleData)
               }
             });
           }
@@ -276,7 +296,15 @@ var Instrument = exports.Instrument = function () {
       }
 
       data.forEach(function (noteData) {
-        return _this3._updateSampleData(noteData);
+        // support for multi layered instruments
+        //console.log(noteData, typeString(noteData))
+        if ((0, _util.typeString)(noteData) === 'array') {
+          noteData.forEach(function (velocityLayer) {
+            _this3._updateSampleData(velocityLayer);
+          });
+        } else {
+          _this3._updateSampleData(noteData);
+        }
       });
     }
   }, {
@@ -366,8 +394,8 @@ var Instrument = exports.Instrument = function () {
           }
           _this4.samplesData[note][i] = sampleData;
         }
+        //console.log('%O', this.samplesData[note])
       });
-      //console.log('%O', this.samplesData[note])
     }
 
     // stereo spread

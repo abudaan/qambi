@@ -24,7 +24,7 @@ export function decodeSample(sample, id, every){
         },
 
         function onError(e){
-          console.log('error decoding audiodata', id, e);
+          console.log(`error decoding audiodata ${e} [ID: ${id}]`);
           //reject(e); // don't use reject because we use this as a nested promise and we don't want the parent promise to reject
           if(typeof id !== 'undefined'){
             resolve({id})
@@ -54,7 +54,7 @@ function loadAndParseSample(url, id, every){
       function(response){
         if(response.ok){
           response.arrayBuffer().then(function(data){
-            //console.log(data)
+            //console.log(id, data)
             decodeSample(data, id, every).then(resolve)
           })
         }else if(typeof id !== 'undefined'){
@@ -85,6 +85,7 @@ function getPromises(promises, sample, key, baseUrl, every){
     }else if(typeof sample === 'object'){
       sample = sample.sample || sample.buffer || sample.base64 || sample.url
       getSample(promises, sample, key, baseUrl, every)
+      //console.log(key, sample)
       //console.log(sample, promises.length)
     }
   }
@@ -113,8 +114,16 @@ export function parseSamples2(mapping, every = false){
       // if(isNaN(key) === false){
       //   key = parseInt(key, 10)
       // }
-      // console.log(key)
-      getPromises(promises, mapping[key], key, baseUrl, every)
+      let a = mapping[key]
+      //console.log(key, a, typeString(a))
+      if(typeString(a) === 'array' && key !== 'release' && key !== 'sustain' && key !== 'velocity'){
+        a.forEach(map => {
+          //console.log(map)
+          getPromises(promises, map, key, baseUrl, every)
+        })
+      }else{
+        getPromises(promises, a, key, baseUrl, every)
+      }
     })
   }else if(type === 'array'){
     let key
@@ -131,7 +140,13 @@ export function parseSamples2(mapping, every = false){
       if(type === 'object'){
         mapping = {}
         values.forEach(function(value){
-          mapping[value.id] = value.buffer
+          // support for multi layered instruments
+          let map = mapping[value.id]
+          if(typeof map !== 'undefined'){
+            mapping[value.id] = [map, value.buffer]
+          }else{
+            mapping[value.id] = value.buffer
+          }
         })
         //console.log(mapping)
         resolve(mapping)

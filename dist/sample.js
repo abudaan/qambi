@@ -42,7 +42,17 @@ var Sample = function () {
   _createClass(Sample, [{
     key: 'start',
     value: function start(time) {
-      //console.log(time, this.source);
+      var _sampleData = this.sampleData;
+      var sustainStart = _sampleData.sustainStart;
+      var sustainEnd = _sampleData.sustainEnd;
+      var releaseEnvelopeArray = _sampleData.releaseEnvelopeArray;
+      //console.log(sustainStart, sustainEnd)
+
+      if (sustainStart && sustainEnd) {
+        this.source.loop = true;
+        this.source.loopStart = sustainStart;
+        this.source.loopEnd = sustainEnd;
+      }
       this.source.start(time);
     }
   }, {
@@ -50,10 +60,10 @@ var Sample = function () {
     value: function stop(time, cb) {
       var _this = this;
 
-      var _sampleData = this.sampleData;
-      var releaseDuration = _sampleData.releaseDuration;
-      var releaseEnvelope = _sampleData.releaseEnvelope;
-      var releaseEnvelopeArray = _sampleData.releaseEnvelopeArray;
+      var _sampleData2 = this.sampleData;
+      var releaseDuration = _sampleData2.releaseDuration;
+      var releaseEnvelope = _sampleData2.releaseEnvelope;
+      var releaseEnvelopeArray = _sampleData2.releaseEnvelopeArray;
 
 
       this.source.onended = cb;

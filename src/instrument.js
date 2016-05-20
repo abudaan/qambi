@@ -159,14 +159,31 @@ export class Instrument{
       })
       .then((result) => {
         if(typeof result === 'object'){
-
           for(let noteId of Object.keys(result)) {
             let buffer = result[noteId]
             let sampleData = data[noteId]
 
+
             if(typeof sampleData === 'undefined'){
               console.log('sampleData is undefined', noteId)
+            }else if(typeString(buffer) === 'array'){
+              // @TODO: both are arrays -> loop over them
+              //console.log(buffer, sampleData)
+              sampleData.forEach((sd, i) => {
+
+                if(typeof sd === 'string'){
+                  sd = {
+                    buffer: buffer[i]
+                  }
+                }else{
+                  sd.buffer = buffer[i]
+                }
+                sd.note = parseInt(noteId, 10)
+                this._updateSampleData(sd)
+              })
+
             }else {
+
               if(typeof sampleData === 'string'){
                 sampleData = {
                   buffer: buffer
@@ -176,6 +193,7 @@ export class Instrument{
               }
               sampleData.note = parseInt(noteId, 10)
               this._updateSampleData(sampleData)
+
             }
           }
 
@@ -195,6 +213,7 @@ export class Instrument{
               }
               sampleData.note = sample
               this._updateSampleData(sampleData)
+              //this.updateSampleData(sampleData)
             }
           })
 
@@ -217,7 +236,17 @@ export class Instrument{
       }
   */
   updateSampleData(...data){
-    data.forEach(noteData => this._updateSampleData(noteData))
+    data.forEach(noteData => {
+      // support for multi layered instruments
+      //console.log(noteData, typeString(noteData))
+      if(typeString(noteData) === 'array'){
+        noteData.forEach(velocityLayer => {
+          this._updateSampleData(velocityLayer)
+        })
+      }else{
+        this._updateSampleData(noteData)
+      }
+    })
   }
 
   _updateSampleData(data = {}){
@@ -286,8 +315,8 @@ export class Instrument{
         }
         this.samplesData[note][i] = sampleData
       }
+      //console.log('%O', this.samplesData[note])
     })
-    //console.log('%O', this.samplesData[note])
   }
 
 
