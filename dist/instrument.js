@@ -165,15 +165,15 @@ var Instrument = exports.Instrument = function () {
     value: function parseSampleData(data) {
       var _this2 = this;
 
-      if (typeof data.release !== 'undefined') {
-        this.setRelease(data.release[0], data.release[1]);
-        //console.log(data.release[0], data.release[1])
-      }
-
       // check if we have to overrule the baseUrl of the sampels
       var baseUrl = null;
       if (typeof data.baseUrl === 'string') {
         baseUrl = data.baseUrl;
+      }
+
+      if (typeof data.release !== 'undefined') {
+        this.setRelease(data.release[0], data.release[1]);
+        console.log(1, data.release[0], data.release[1]);
       }
 
       //return Promise.resolve()
@@ -184,6 +184,10 @@ var Instrument = exports.Instrument = function () {
           data = json;
           if (baseUrl !== null) {
             json.baseUrl = baseUrl;
+          }
+          if (typeof data.release !== 'undefined') {
+            _this2.setRelease(data.release[0], data.release[1]);
+            console.log(2, data.release[0], data.release[1]);
           }
           return (0, _parse_audio.parseSamples)(data);
         }).then(function (result) {
@@ -202,10 +206,10 @@ var Instrument = exports.Instrument = function () {
                 if (typeof sampleData === 'undefined') {
                   console.log('sampleData is undefined', noteId);
                 } else if ((0, _util.typeString)(buffer) === 'array') {
-                  // @TODO: both are arrays -> loop over them
+
                   //console.log(buffer, sampleData)
                   sampleData.forEach(function (sd, i) {
-
+                    //console.log(noteId, buffer[i])
                     if (typeof sd === 'string') {
                       sd = {
                         buffer: buffer[i]
@@ -372,7 +376,7 @@ var Instrument = exports.Instrument = function () {
       // console.log(velocityStart, velocityEnd)
 
       this.samplesData[note].forEach(function (sampleData, i) {
-        if (i >= velocityStart && i < velocityEnd) {
+        if (i >= velocityStart && i <= velocityEnd) {
           if (sampleData === -1) {
             sampleData = {
               id: note
@@ -450,7 +454,12 @@ var Instrument = exports.Instrument = function () {
 
       Object.keys(this.scheduledSamples).forEach(function (sampleId) {
         //console.log('  stopping', sampleId, this.id)
-        _this5.scheduledSamples[sampleId].stop();
+        var sample = _this5.scheduledSamples[sampleId];
+        //console.log(sample)
+        _this5.scheduledSamples[sampleId].stop(_init_audio.context.currentTime, function () {
+          //console.log('allNotesOff', sample.event.midiNoteId)
+          delete _this5.scheduledSamples[sample.event.midiNoteId];
+        });
       });
       this.scheduledSamples = {};
 

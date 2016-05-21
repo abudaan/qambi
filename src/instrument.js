@@ -132,15 +132,15 @@ export class Instrument{
   // load and parse
   parseSampleData(data){
 
-    if(typeof data.release !== 'undefined'){
-      this.setRelease(data.release[0], data.release[1])
-      //console.log(data.release[0], data.release[1])
-    }
-
     // check if we have to overrule the baseUrl of the sampels
     let baseUrl = null
     if(typeof data.baseUrl === 'string'){
       baseUrl = data.baseUrl
+    }
+
+    if(typeof data.release !== 'undefined'){
+      this.setRelease(data.release[0], data.release[1])
+      console.log(1, data.release[0], data.release[1])
     }
 
     //return Promise.resolve()
@@ -152,6 +152,10 @@ export class Instrument{
         data = json
         if(baseUrl !== null){
           json.baseUrl = baseUrl
+        }
+        if(typeof data.release !== 'undefined'){
+          this.setRelease(data.release[0], data.release[1])
+          console.log(2, data.release[0], data.release[1])
         }
         return parseSamples(data)
       })
@@ -165,10 +169,10 @@ export class Instrument{
             if(typeof sampleData === 'undefined'){
               console.log('sampleData is undefined', noteId)
             }else if(typeString(buffer) === 'array'){
-              // @TODO: both are arrays -> loop over them
+
               //console.log(buffer, sampleData)
               sampleData.forEach((sd, i) => {
-
+                //console.log(noteId, buffer[i])
                 if(typeof sd === 'string'){
                   sd = {
                     buffer: buffer[i]
@@ -291,7 +295,7 @@ export class Instrument{
 
 
     this.samplesData[note].forEach((sampleData, i) => {
-      if(i >= velocityStart && i < velocityEnd){
+      if(i >= velocityStart && i <= velocityEnd){
         if(sampleData === -1){
           sampleData = {
             id: note
@@ -361,7 +365,12 @@ export class Instrument{
 
     Object.keys(this.scheduledSamples).forEach((sampleId) => {
       //console.log('  stopping', sampleId, this.id)
-      this.scheduledSamples[sampleId].stop()
+      let sample = this.scheduledSamples[sampleId]
+      //console.log(sample)
+      this.scheduledSamples[sampleId].stop(context.currentTime, () => {
+        //console.log('allNotesOff', sample.event.midiNoteId)
+        delete this.scheduledSamples[sample.event.midiNoteId]
+      })
     })
     this.scheduledSamples = {}
 

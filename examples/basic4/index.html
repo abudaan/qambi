@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>qambi modules</title>
+    <title>qambi</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <script src="build.js"></script>
@@ -12,10 +12,31 @@
       input[type='range']{
         width: 500px;
       }
+      ul{
+        list-style-type: circle;
+        list-style-position: inside;
+      }
+      #loading{
+        color: red;
+      }
+      div{
+        margin-bottom: 10px;
+      }
     </style>
  </head>
   <body>
     <div id="app">
+      <div id="loading">Loading samples... (~30 seconds)</div>
+      <div>
+        City Piano has 4 velocity layers:
+        <ul>
+        <li>layer 1: velocity 1 - 48</li>
+        <li>layer 2: velocity 49 - 96</li>
+        <li>layer 3: velocity 97 - 110</li>
+        <li>layer 4: velocity 110 - 127</li>
+        </ul>
+        So in total 4 x 88 = 352 samples need to be loaded.<br>
+      </div>
       <button id="play" disabled>play</button>
       <button id="pause" disabled>pause</button>
       <button id="stop" disabled>stop</button>

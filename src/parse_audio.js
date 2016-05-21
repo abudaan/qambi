@@ -1,6 +1,7 @@
 import {context} from './init_audio'
 import {typeString, checkIfBase64, base64ToBinary} from './util'
 import fetch from 'isomorphic-fetch'
+import {dispatchEvent} from './eventlistener'
 
 
 export function decodeSample(sample, id, every){
@@ -47,6 +48,10 @@ export function decodeSample(sample, id, every){
 
 function loadAndParseSample(url, id, every){
   //console.log(id, url)
+  dispatchEvent({
+    type: 'loading',
+    data: url
+  })
   let executor = function(resolve){
     fetch(url, {
       method: 'GET'
@@ -72,8 +77,8 @@ function loadAndParseSample(url, id, every){
 function getPromises(promises, sample, key, baseUrl, every){
 
   const getSample = function(){
-
     if(key !== 'release' && key !== 'info' && key !== 'sustain'){
+      //console.log(key)
       if(sample instanceof ArrayBuffer){
         promises.push(decodeSample(sample, key, baseUrl, every))
       }else if(typeof sample === 'string'){
@@ -144,8 +149,13 @@ export function parseSamples2(mapping, every = false){
         values.forEach(function(value){
           // support for multi layered instruments
           let map = mapping[value.id]
-          if(typeof map !== 'undefined'){
-            mapping[value.id] = [map, value.buffer]
+          let type = typeString(map)
+          if(type !== 'undefined'){
+            if(type === 'array'){
+              map.push(value.buffer)
+            }else{
+              mapping[value.id] = [map, value.buffer]
+            }
           }else{
             mapping[value.id] = value.buffer
           }

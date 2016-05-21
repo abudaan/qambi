@@ -18,6 +18,8 @@ var _isomorphicFetch = require('isomorphic-fetch');
 
 var _isomorphicFetch2 = _interopRequireDefault(_isomorphicFetch);
 
+var _eventlistener = require('./eventlistener');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function decodeSample(sample, id, every) {
@@ -58,6 +60,10 @@ function decodeSample(sample, id, every) {
 
 function loadAndParseSample(url, id, every) {
   //console.log(id, url)
+  (0, _eventlistener.dispatchEvent)({
+    type: 'loading',
+    data: url
+  });
   var executor = function executor(resolve) {
     (0, _isomorphicFetch2.default)(url, {
       method: 'GET'
@@ -80,8 +86,8 @@ function loadAndParseSample(url, id, every) {
 function getPromises(promises, sample, key, baseUrl, every) {
 
   var getSample = function getSample() {
-
     if (key !== 'release' && key !== 'info' && key !== 'sustain') {
+      //console.log(key)
       if (sample instanceof ArrayBuffer) {
         promises.push(decodeSample(sample, key, baseUrl, every));
       } else if (typeof sample === 'string') {
@@ -154,8 +160,13 @@ function parseSamples2(mapping) {
         values.forEach(function (value) {
           // support for multi layered instruments
           var map = mapping[value.id];
-          if (typeof map !== 'undefined') {
-            mapping[value.id] = [map, value.buffer];
+          var type = (0, _util.typeString)(map);
+          if (type !== 'undefined') {
+            if (type === 'array') {
+              map.push(value.buffer);
+            } else {
+              mapping[value.id] = [map, value.buffer];
+            }
           } else {
             mapping[value.id] = value.buffer;
           }

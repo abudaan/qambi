@@ -6,7 +6,7 @@
     "name": "City Piano light",
     "description": "sampled from Baldwin piano"
   },
-  "release": [1, "equal power"],
+  "release": [0.4, "equal_power"],
   "21": "A0-97-110.mp3",
   "22": "A#0-97-110.mp3",
   "23": "B0-97-110.mp3",

@@ -24,11 +24,13 @@ var Sample = function () {
 
     if (this.sampleData === -1 || typeof this.sampleData.buffer === 'undefined') {
       // create simple synth sample
+      console.log(event.data1, event.data2);
       this.source = _init_audio.context.createOscillator();
       this.source.type = 'sine';
       this.source.frequency.value = event.frequency;
     } else {
       this.source = _init_audio.context.createBufferSource();
+      //console.log(sampleData)
       this.source.buffer = sampleData.buffer;
       //console.log(this.source.buffer)
     }
@@ -112,6 +114,7 @@ function fadeOut(gainNode, settings) {
       gainNode.gain.linearRampToValueAtTime(0, now + settings.releaseDuration);
       break;
 
+    case 'equal power':
     case 'equal_power':
       values = (0, _util.getEqualPowerCurve)(100, 'fadeOut', gainNode.gain.value);
       gainNode.gain.setValueCurveAtTime(values, now, settings.releaseDuration);

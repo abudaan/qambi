@@ -11,12 +11,11 @@ document.addEventListener('DOMContentLoaded', function(){
     },
     piano: {
       type: 'Instrument',
-      url: '../../instruments/heartbeat/city-piano-light.json'
+      url: '../../instruments/heartbeat/city-piano.json'
     }
   })
   .then((data) => {
 
-    console.log(data)
     let {song, piano} = data
 
     song.getTracks().forEach(track => {
@@ -37,6 +36,8 @@ document.addEventListener('DOMContentLoaded', function(){
     let btnPlay = document.getElementById('play')
     let btnPause = document.getElementById('pause')
     let btnStop = document.getElementById('stop')
+    let divLoading = document.getElementById('loading')
+    divLoading.innerHTML = ''
 
     btnPlay.disabled = false
     btnPause.disabled = false
