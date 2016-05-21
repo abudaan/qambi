@@ -12,12 +12,6 @@ document.addEventListener('DOMContentLoaded', function(){
     piano: {
       type: 'Instrument',
       url: '../../instruments/heartbeat/city-piano.json'
-
-      //url: 'https://raw.githubusercontent.com/abudaan/qambi-instruments/master/heartbeat/city-piano.json',
-      //url: 'http://qambi.org/instruments/heartbeat/city-piano.json',
-      //url: 'http://qambi.org/instruments/fluidsynth/drawbar_organ.json',
-      //url: 'http://qambi.org/instruments/fluidsynth/dulcimer.json',
-      //baseUrl: '../../samples/city-piano/'
     }
   })
   .then((data) => {
