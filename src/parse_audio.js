@@ -73,20 +73,22 @@ function getPromises(promises, sample, key, baseUrl, every){
 
   const getSample = function(){
 
-    if(sample instanceof ArrayBuffer){
-      promises.push(decodeSample(sample, key, baseUrl, every))
-    }else if(typeof sample === 'string'){
-      if(checkIfBase64(sample)){
-        promises.push(decodeSample(base64ToBinary(sample), key, baseUrl, every))
-      }else{
-        //console.log(baseUrl + sample)
-        promises.push(loadAndParseSample(baseUrl + escape(sample), key, every))
+    if(key !== 'release' && key !== 'info' && key !== 'sustain'){
+      if(sample instanceof ArrayBuffer){
+        promises.push(decodeSample(sample, key, baseUrl, every))
+      }else if(typeof sample === 'string'){
+        if(checkIfBase64(sample)){
+          promises.push(decodeSample(base64ToBinary(sample), key, baseUrl, every))
+        }else{
+          //console.log(baseUrl + sample)
+          promises.push(loadAndParseSample(baseUrl + escape(sample), key, every))
+        }
+      }else if(typeof sample === 'object'){
+        sample = sample.sample || sample.buffer || sample.base64 || sample.url
+        getSample(promises, sample, key, baseUrl, every)
+        //console.log(key, sample)
+        //console.log(sample, promises.length)
       }
-    }else if(typeof sample === 'object'){
-      sample = sample.sample || sample.buffer || sample.base64 || sample.url
-      getSample(promises, sample, key, baseUrl, every)
-      //console.log(key, sample)
-      //console.log(sample, promises.length)
     }
   }
 
@@ -116,7 +118,7 @@ export function parseSamples2(mapping, every = false){
       // }
       let a = mapping[key]
       //console.log(key, a, typeString(a))
-      if(typeString(a) === 'array' && key !== 'release' && key !== 'sustain' && key !== 'velocity'){
+      if(typeString(a) === 'array'){
         a.forEach(map => {
           //console.log(map)
           getPromises(promises, map, key, baseUrl, every)

@@ -168,7 +168,6 @@ var Instrument = exports.Instrument = function () {
       if (typeof data.release !== 'undefined') {
         this.setRelease(data.release[0], data.release[1]);
         //console.log(data.release[0], data.release[1])
-        delete data.release;
       }
 
       // check if we have to overrule the baseUrl of the sampels

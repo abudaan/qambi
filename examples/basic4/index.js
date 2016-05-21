@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function(){
     },
     piano: {
       type: 'Instrument',
-      url: '../../instruments/heartbeat/city-piano.json'
+      url: '../../instruments/heartbeat/city-piano-light.json'
     }
   })
   .then((data) => {

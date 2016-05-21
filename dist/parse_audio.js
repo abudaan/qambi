@@ -81,20 +81,22 @@ function getPromises(promises, sample, key, baseUrl, every) {
 
   var getSample = function getSample() {
 
-    if (sample instanceof ArrayBuffer) {
-      promises.push(decodeSample(sample, key, baseUrl, every));
-    } else if (typeof sample === 'string') {
-      if ((0, _util.checkIfBase64)(sample)) {
-        promises.push(decodeSample((0, _util.base64ToBinary)(sample), key, baseUrl, every));
-      } else {
-        //console.log(baseUrl + sample)
-        promises.push(loadAndParseSample(baseUrl + escape(sample), key, every));
+    if (key !== 'release' && key !== 'info' && key !== 'sustain') {
+      if (sample instanceof ArrayBuffer) {
+        promises.push(decodeSample(sample, key, baseUrl, every));
+      } else if (typeof sample === 'string') {
+        if ((0, _util.checkIfBase64)(sample)) {
+          promises.push(decodeSample((0, _util.base64ToBinary)(sample), key, baseUrl, every));
+        } else {
+          //console.log(baseUrl + sample)
+          promises.push(loadAndParseSample(baseUrl + escape(sample), key, every));
+        }
+      } else if ((typeof sample === 'undefined' ? 'undefined' : _typeof(sample)) === 'object') {
+        sample = sample.sample || sample.buffer || sample.base64 || sample.url;
+        getSample(promises, sample, key, baseUrl, every);
+        //console.log(key, sample)
+        //console.log(sample, promises.length)
       }
-    } else if ((typeof sample === 'undefined' ? 'undefined' : _typeof(sample)) === 'object') {
-      sample = sample.sample || sample.buffer || sample.base64 || sample.url;
-      getSample(promises, sample, key, baseUrl, every);
-      //console.log(key, sample)
-      //console.log(sample, promises.length)
     }
   };
 
@@ -125,7 +127,7 @@ function parseSamples2(mapping) {
       // }
       var a = mapping[key];
       //console.log(key, a, typeString(a))
-      if ((0, _util.typeString)(a) === 'array' && key !== 'release' && key !== 'sustain' && key !== 'velocity') {
+      if ((0, _util.typeString)(a) === 'array') {
         a.forEach(function (map) {
           //console.log(map)
           getPromises(promises, map, key, baseUrl, every);

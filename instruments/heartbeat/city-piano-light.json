@@ -1,12 +1,12 @@
 {
-  "baseUrl": "https://raw.githubusercontent.com/abudaan/qambi/gh-pages/instruments/samples/city-piano/",
+  "baseUrl": "https://raw.githubusercontent.com/abudaan/qambi/gh-pages/instruments/samples/city-piano-light/",
   "info": {
     "keyrange": [21, 108],
     "url": "http://patcharena.com/",
     "name": "City Piano light",
     "description": "sampled from Baldwin piano"
   },
-  "release": [0.4, "equal power"],
+  "release": [1, "equal power"],
   "21": "A0-97-110.mp3",
   "22": "A#0-97-110.mp3",
   "23": "B0-97-110.mp3",
