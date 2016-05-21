@@ -14,7 +14,7 @@ let multilayered = true
 //json = '/home/abudaan/workspace/heartbeat/assets/sso/brass/trumpet.mp3.112.json'
 //json = '/home/abudaan/workspace/heartbeat/assets/detunized/ck-iceskates.mp3.128.json'
 //json = '/home/abudaan/workspace/heartbeat/assets/detunized/shk2-squareroot.mp3.128.json'
-json = '/home/abudaan/workspace/heartbeat/assets/city-piano/city-piano-velocity-layers.mp3.112.json'
+json = '/home/abudaan/workspace/heartbeat/assets/city-piano/city-piano-velocity-layers.mp3.128.json'
 
 json = JSON.parse(fs.readFileSync(json))
 
@@ -41,7 +41,7 @@ if(multilayered){
   for(let key of Object.keys(notes)){
     let note = notes[key]
 
-    console.log(key) // notenumber
+    //console.log(key) // notenumber
     result[key] = []
 
     note.forEach(n => {
@@ -51,7 +51,7 @@ if(multilayered){
 
       //let sustainLoop = samples[n.n].s
       result[key].push({
-        url: n.n,
+        url: n.n + '.mp3',
         velocity: n.v,
         //sustain: [sustainLoop[0] / 1000, sustainLoop[1] / 1000]
       })
