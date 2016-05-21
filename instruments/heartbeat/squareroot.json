@@ -1,0 +1,251 @@
+{
+  "baseUrl": "https://raw.githubusercontent.com/abudaan/qambi-instruments/master/samples/squareroot/",
+  "release": [3, "equal power"],
+  "36": [
+    {"url": "SHK2-SquareRoot-000-036-c1.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-036-c1.mp3", "velocity": [91, 127]}
+  ],
+  "37": [
+    {"url": "SHK2-SquareRoot-000-037-c#1.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-037-c#1.mp3", "velocity": [91, 127]}
+  ],
+  "38": [
+    {"url": "SHK2-SquareRoot-000-038-d1.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-038-d1.mp3", "velocity": [91, 127]}
+  ],
+  "39": [
+    {"url": "SHK2-SquareRoot-000-039-d#1.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-039-d#1.mp3", "velocity": [91, 127]}
+  ],
+  "40": [
+    {"url": "SHK2-SquareRoot-000-040-e1.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-040-e1.mp3", "velocity": [91, 127]}
+  ],
+  "41": [
+    {"url": "SHK2-SquareRoot-000-041-f1.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-041-f1.mp3", "velocity": [91, 127]}
+  ],
+  "42": [
+    {"url": "SHK2-SquareRoot-000-042-f#1.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-042-f#1.mp3", "velocity": [91, 127]}
+  ],
+  "43": [
+    {"url": "SHK2-SquareRoot-000-043-g1.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-043-g1.mp3", "velocity": [91, 127]}
+  ],
+  "44": [
+    {"url": "SHK2-SquareRoot-000-044-g#1.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-044-g#1.mp3", "velocity": [91, 127]}
+  ],
+  "45": [
+    {"url": "SHK2-SquareRoot-000-045-a1.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-045-a1.mp3", "velocity": [91, 127]}
+  ],
+  "46": [
+    {"url": "SHK2-SquareRoot-000-046-a#1.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-046-a#1.mp3", "velocity": [91, 127]}
+  ],
+  "47": [
+    {"url": "SHK2-SquareRoot-000-047-h1.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-047-h1.mp3", "velocity": [91, 127]}
+  ],
+  "48": [
+    {"url": "SHK2-SquareRoot-000-048-c2.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-048-c2.mp3", "velocity": [91, 127]}
+  ],
+  "49": [
+    {"url": "SHK2-SquareRoot-000-049-c#2.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-049-c#2.mp3", "velocity": [91, 127]}
+  ],
+  "50": [
+    {"url": "SHK2-SquareRoot-000-050-d2.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-050-d2.mp3", "velocity": [91, 127]}
+  ],
+  "51": [
+    {"url": "SHK2-SquareRoot-000-051-d#2.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-051-d#2.mp3", "velocity": [91, 127]}
+  ],
+  "52": [
+    {"url": "SHK2-SquareRoot-000-052-e2.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-052-e2.mp3", "velocity": [91, 127]}
+  ],
+  "53": [
+    {"url": "SHK2-SquareRoot-000-053-f2.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-053-f2.mp3", "velocity": [91, 127]}
+  ],
+  "54": [
+    {"url": "SHK2-SquareRoot-000-054-f#2.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-054-f#2.mp3", "velocity": [91, 127]}
+  ],
+  "55": [
+    {"url": "SHK2-SquareRoot-000-055-g2.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-055-g2.mp3", "velocity": [91, 127]}
+  ],
+  "56": [
+    {"url": "SHK2-SquareRoot-000-056-g#2.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-056-g#2.mp3", "velocity": [91, 127]}
+  ],
+  "57": [
+    {"url": "SHK2-SquareRoot-000-057-a2.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-057-a2.mp3", "velocity": [91, 127]}
+  ],
+  "58": [
+    {"url": "SHK2-SquareRoot-000-058-a#2.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-058-a#2.mp3", "velocity": [91, 127]}
+  ],
+  "59": [
+    {"url": "SHK2-SquareRoot-000-059-h2.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-059-h2.mp3", "velocity": [91, 127]}
+  ],
+  "60": [
+    {"url": "SHK2-SquareRoot-000-060-c3.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-060-c3.mp3", "velocity": [91, 127]}
+  ],
+  "61": [
+    {"url": "SHK2-SquareRoot-000-061-c#3.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-061-c#3.mp3", "velocity": [91, 127]}
+  ],
+  "62": [
+    {"url": "SHK2-SquareRoot-000-062-d3.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-062-d3.mp3", "velocity": [91, 127]}
+  ],
+  "63": [
+    {"url": "SHK2-SquareRoot-000-063-d#3.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-063-d#3.mp3", "velocity": [91, 127]}
+  ],
+  "64": [
+    {"url": "SHK2-SquareRoot-000-064-e3.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-064-e3.mp3", "velocity": [91, 127]}
+  ],
+  "65": [
+    {"url": "SHK2-SquareRoot-000-065-f3.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-065-f3.mp3", "velocity": [91, 127]}
+  ],
+  "66": [
+    {"url": "SHK2-SquareRoot-000-066-f#3.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-066-f#3.mp3", "velocity": [91, 127]}
+  ],
+  "67": [
+    {"url": "SHK2-SquareRoot-000-067-g3.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-067-g3.mp3", "velocity": [91, 127]}
+  ],
+  "68": [
+    {"url": "SHK2-SquareRoot-000-068-g#3.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-068-g#3.mp3", "velocity": [91, 127]}
+  ],
+  "69": [
+    {"url": "SHK2-SquareRoot-000-069-a3.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-069-a3.mp3", "velocity": [91, 127]}
+  ],
+  "70": [
+    {"url": "SHK2-SquareRoot-000-070-a#3.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-070-a#3.mp3", "velocity": [91, 127]}
+  ],
+  "71": [
+    {"url": "SHK2-SquareRoot-000-071-h3.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-071-h3.mp3", "velocity": [91, 127]}
+  ],
+  "72": [
+    {"url": "SHK2-SquareRoot-000-072-c4.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-072-c4.mp3", "velocity": [91, 127]}
+  ],
+  "73": [
+    {"url": "SHK2-SquareRoot-000-073-c#4.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-073-c#4.mp3", "velocity": [91, 127]}
+  ],
+  "74": [
+    {"url": "SHK2-SquareRoot-000-074-d4.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-074-d4.mp3", "velocity": [91, 127]}
+  ],
+  "75": [
+    {"url": "SHK2-SquareRoot-000-075-d#4.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-075-d#4.mp3", "velocity": [91, 127]}
+  ],
+  "76": [
+    {"url": "SHK2-SquareRoot-000-076-e4.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-076-e4.mp3", "velocity": [91, 127]}
+  ],
+  "77": [
+    {"url": "SHK2-SquareRoot-000-077-f4.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-077-f4.mp3", "velocity": [91, 127]}
+  ],
+  "78": [
+    {"url": "SHK2-SquareRoot-000-078-f#4.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-078-f#4.mp3", "velocity": [91, 127]}
+  ],
+  "79": [
+    {"url": "SHK2-SquareRoot-000-079-g4.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-079-g4.mp3", "velocity": [91, 127]}
+  ],
+  "80": [
+    {"url": "SHK2-SquareRoot-000-080-g#4.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-080-g#4.mp3", "velocity": [91, 127]}
+  ],
+  "81": [
+    {"url": "SHK2-SquareRoot-000-081-a4.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-081-a4.mp3", "velocity": [91, 127]}
+  ],
+  "82": [
+    {"url": "SHK2-SquareRoot-000-082-a#4.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-082-a#4.mp3", "velocity": [91, 127]}
+  ],
+  "83": [
+    {"url": "SHK2-SquareRoot-000-083-h4.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-083-h4.mp3", "velocity": [91, 127]}
+  ],
+  "84": [
+    {"url": "SHK2-SquareRoot-000-084-c5.mp3", "velocity": [0, 90]},
+    {"url": "SHK2-SquareRoot-001-084-c5.mp3", "velocity": [91, 127]}
+  ]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
