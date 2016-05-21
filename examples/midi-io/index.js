@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function(){
   qambi.init({
     instrument: {
       type: 'Instrument',
-      url: 'https://abumarkub.net/qambi/instruments/heartbeat/city-piano.json',
+      url: 'https://raw.githubusercontent.com/abudaan/qambi/gh-pages/instruments/heartbeat/city-piano.json'
       //url: 'http://qambi.org/instruments/heartbeat/city-piano.json',
       //url: 'http://qambi.org/instruments/heartbeat/violin.json', // sustain loop
       //url: 'http://qambi.org/instruments/heartbeat/squareroot.json', // 2 velocity layers
