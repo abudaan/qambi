@@ -1,5 +1,5 @@
 {
-  "baseUrl": "https://raw.githubusercontent.com/abudaan/qambi-instruments/master/samples/rhodes/",
+  "baseUrl": "https://raw.githubusercontent.com/abudaan/qambi/gh-pages/instruments/samples/rhodes/",
   "release": [4, "equal power"],
   "28": "FreesoundRhodes-000-028-e0.mp3",
   "29": "FreesoundRhodes-000-029-f0.mp3",

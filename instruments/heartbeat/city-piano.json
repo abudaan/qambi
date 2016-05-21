@@ -1,5 +1,5 @@
 {
-  "baseUrl": "https://raw.githubusercontent.com/abudaan/qambi-instruments/master/samples/city-piano/",
+  "baseUrl": "https://raw.githubusercontent.com/abudaan/qambi/gh-pages/instruments/samples/city-piano/",
   "release": [4, "equal power"],
   "21": "A0-97-110.mp3",
   "22": "A#0-97-110.mp3",

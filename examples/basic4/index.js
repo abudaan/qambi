@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function(){
   })
   .then((data) => {
 
+    console.log(data)
     let {song, piano} = data
 
     song.getTracks().forEach(track => {
