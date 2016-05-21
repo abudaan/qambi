@@ -1,0 +1,8 @@
+{
+  "baseUrl": "https://raw.githubusercontent.com/abudaan/qambi-instruments/master/samples/rhodes/",
+  "61": {
+    "url": "FreesoundRhodes-000-061-c#3.mp3",
+    "sustain": [0],
+    "release": [30, "equal_power"]
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "baseUrl": "http://qambi.org/samples/squareroot/",
+  "baseUrl": "https://raw.githubusercontent.com/abudaan/qambi-instruments/master/samples/squareroot/",
   "release": [3, "equal power"],
   "36": [
     {"url": "SHK2-SquareRoot-000-036-c1.mp3", "velocity": [0, 90]},

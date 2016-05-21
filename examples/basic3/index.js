@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function(){
         track.setInstrument(piano)
       })
 
-      piano.parseSampleData({url: '../../instruments/electric-piano.json'})
+      piano.parseSampleData({url: 'https://raw.githubusercontent.com/abudaan/qambi-instruments/master/heartbeat/electric-piano.json'})
       .then(() => {
         song.play()
       })

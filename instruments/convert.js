@@ -18,7 +18,7 @@ let instrument = json.instruments[0]
 let notes = instrument.mapping
 let samples = json.samplepacks[0].mapping
 let result = {
-  baseUrl: `http://qambi.org/samples/${name}/`,
+  baseUrl: `https://raw.githubusercontent.com/abudaan/qambi-instruments/master/samples/${name}/`,
   release: [instrument.release_duration, instrument.release_envelope]
 }
 

@@ -7,11 +7,12 @@ document.addEventListener('DOMContentLoaded', function(){
   qambi.init({
     song: {
       type: 'Song',
-      url: 'http://qambi.org/instruments/midi/minute_waltz.mid'
+      url: '../data/minute_waltz.mid'
     },
     piano: {
       type: 'Instrument',
-      url: 'http://qambi.org/instruments/heartbeat/city-piano.json',
+      url: 'https://raw.githubusercontent.com/abudaan/qambi-instruments/master/heartbeat/city-piano.json',
+      //url: 'http://qambi.org/instruments/heartbeat/city-piano.json',
       //url: 'http://qambi.org/instruments/fluidsynth/drawbar_organ.json',
       //url: 'http://qambi.org/instruments/fluidsynth/dulcimer.json',
       //baseUrl: '../../samples/city-piano/'

@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function(){
     //   }
     // })
     piano.parseSampleData({
-      url: '../../instruments/electric-piano2.json' // can be an absolute url as well
+      url: '../../data/electric-piano2.json' // can be an absolute url as well
       //baseUrl: '../../instruments/rhodes' // url of the folder where the mp3 files are stored, can be an absolute url as well
     })
     .then(() => {
