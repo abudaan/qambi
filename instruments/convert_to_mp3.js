@@ -40,7 +40,7 @@ getFiles(args[2])
 wavFiles.forEach(function(data){
   let wavFile = data.path
   let mp3File = data.path.replace(/\.wav$/, '.mp3')
-  let cmd = 'lame ' + wavFile + ' ' + mp3File
+  let cmd = `lame "${wavFile}" "${mp3File}"`
   //console.log(cmd)
   runCommand(cmd)
 })

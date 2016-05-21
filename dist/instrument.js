@@ -323,7 +323,8 @@ var Instrument = exports.Instrument = function () {
       var _data$release = data.release;
       var release = _data$release === undefined ? [null, 'linear'] : _data$release;
       var _data$pan = data.pan;
-      var pan = _data$pan === undefined ? null : _data$pan;
+      var // release duration is in seconds!
+      pan = _data$pan === undefined ? null : _data$pan;
       var _data$velocity = data.velocity;
       var velocity = _data$velocity === undefined ? [0, 127] : _data$velocity;
 

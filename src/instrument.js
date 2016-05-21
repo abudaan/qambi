@@ -255,7 +255,7 @@ export class Instrument{
       note,
       buffer = null,
       sustain = [null, null],
-      release = [null, 'linear'],
+      release = [null, 'linear'], // release duration is in seconds!
       pan = null,
       velocity = [0, 127],
     } = data
