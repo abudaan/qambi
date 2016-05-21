@@ -36,7 +36,7 @@
   },
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
-    "watch": "watchify ./midi-io/index.js -t babelify -o ./midi-io/build.js --debug --verbose",
+    "watch": "watchify ./basic4/index.js -t babelify -o ./basic4/build.js --debug --verbose",
     "module": "browserify ../src/qambi.js  -t [ babelify --presets [es2015 stage-0 ] --plugins [ transform-es2015-modules-amd ] ] -o ../qambi.module.js"
   },
   "dependencies": {
