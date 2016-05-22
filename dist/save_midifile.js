@@ -7,23 +7,23 @@ exports.saveAsMIDIFile = saveAsMIDIFile;
 
 var _filesaverjs = require('filesaverjs');
 
-var AP = Array.prototype; /*
-                          
-                          
-                          This code is based on https://github.com/sergi/jsmidi
-                          
-                          info: http://www.deluge.co/?q=midi-tempo-bpm
-                          
-                          */
+var PPQ = 960; /*
+               
+               
+               This code is based on https://github.com/sergi/jsmidi
+               
+               info: http://www.deluge.co/?q=midi-tempo-bpm
+               
+               */
 
-var PPQ = 960;
+var HDR_PPQ = str2Bytes(PPQ.toString(16), 2);
+
 var HDR_CHUNKID = ['M'.charCodeAt(0), 'T'.charCodeAt(0), 'h'.charCodeAt(0), 'd'.charCodeAt(0)];
 var HDR_CHUNK_SIZE = [0x0, 0x0, 0x0, 0x6]; // Header size for SMF
 var HDR_TYPE0 = [0x0, 0x0]; // Midi Type 0 id
 var HDR_TYPE1 = [0x0, 0x1]; // Midi Type 1 id
 //HDR_PPQ = [0x01, 0xE0] // Defaults to 480 ticks per beat
 //HDR_PPQ = [0x00, 0x80] // Defaults to 128 ticks per beat
-var HDR_PPQ = str2Bytes(PPQ.toString(16), 2);
 
 var TRK_CHUNKID = ['M'.charCodeAt(0), 'T'.charCodeAt(0), 'r'.charCodeAt(0), 'k'.charCodeAt(0)];
 
@@ -46,7 +46,11 @@ var META_SEQ_EVENT = 0x7f;
 
 function saveAsMIDIFile(song) {
   var fileName = arguments.length <= 1 || arguments[1] === undefined ? song.name : arguments[1];
-  var ppq = arguments.length <= 2 || arguments[2] === undefined ? PPQ : arguments[2];
+  var ppq = arguments.length <= 2 || arguments[2] === undefined ? 960 : arguments[2];
+
+
+  PPQ = ppq;
+  HDR_PPQ = str2Bytes(PPQ.toString(16), 2);
 
   var byteArray = [].concat(HDR_CHUNKID, HDR_CHUNK_SIZE, HDR_TYPE1);
   var tracks = song.getTracks();
@@ -61,18 +65,10 @@ function saveAsMIDIFile(song) {
       dataView = void 0,
       uintArray = void 0;
 
-  //console.log(numTracks, song._durationTicks, song._timeEvents.length, HDR_PPQ)
-
-  // if(ppq !== PPQ){
-
-  // }else{
-
-  // }
   byteArray = byteArray.concat(str2Bytes(numTracks.toString(16), 2), HDR_PPQ);
 
   //console.log(byteArray);
   byteArray = byteArray.concat(trackToBytes(song._timeEvents, song._durationTicks, 'tempo'));
-  //console.log(song.durationMillis);
 
   for (i = 0, maxi = tracks.length; i < maxi; i++) {
     track = tracks[i];
@@ -82,12 +78,12 @@ function saveAsMIDIFile(song) {
     }
     //console.log(track.name, track._events.length, instrument)
     byteArray = byteArray.concat(trackToBytes(track._events, song._durationTicks, track.name, instrument));
-    //byteArray = byteArray.concat(trackToBytes(track._events, song._lastEvent.icks, track.name, track._instrument.id));
+    //byteArray = byteArray.concat(trackToBytes(track._events, song._lastEvent.icks, track.name, instrument))
   }
 
-  //b64 = btoa(codes2Str(byteArray));
-  //window.location.assign("data:audio/midi;base64," + b64);
-  //console.log(b64);// send to server
+  //b64 = btoa(codes2Str(byteArray))
+  //window.location.assign("data:audio/midi;base64," + b64)
+  //console.log(b64)// send to server
 
   maxi = byteArray.length;
   arrayBuffer = new ArrayBuffer(maxi);
@@ -96,9 +92,16 @@ function saveAsMIDIFile(song) {
     uintArray[i] = byteArray[i];
   }
   midiFile = new Blob([uintArray], { type: 'application/x-midi', endings: 'transparent' });
-  fileName = fileName.replace(/\.mid$/, '');
-  (0, _filesaverjs.saveAs)(midiFile, fileName + '.mid');
-  //window.location.assign(window.URL.createObjectURL(midiFile));
+  fileName = fileName.replace(/\.midi$/, '');
+  //let patt = /\.mid[i]{0,1}$/
+  var patt = /\.mid$/;
+  var hasExtension = patt.test(fileName);
+  if (hasExtension === false) {
+    fileName += '.mid';
+  }
+  //console.log(fileName, hasExtension)
+  (0, _filesaverjs.saveAs)(midiFile, fileName);
+  //window.location.assign(window.URL.createObjectURL(midiFile))
 }
 
 function trackToBytes(events, lastEventTicks, trackName) {
@@ -275,7 +278,11 @@ function convertToVLQ(ticks) {
  * @param str {String} String to be converted
  * @returns array with the charcode values of the string
  */
+var AP = Array.prototype;
 function stringToNumArray(str) {
+  // return str.split().forEach(char => {
+  //   return char.charCodeAt(0)
+  // })
   return AP.map.call(str, function (char) {
     return char.charCodeAt(0);
   });

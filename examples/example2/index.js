@@ -4,7 +4,7 @@ import qambi, {
   Song,
   Track,
   Part,
-} from '../../src/qambi' // remove ../../src/
+} from '../../src/qambi' // use "from 'qambi'" in your own code! so without the extra "../../"
 
 document.addEventListener('DOMContentLoaded', function(){
 
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function(){
     song.update()
 
     song.play()
-    song.saveAsMIDIFile('test.mid')
+    song.saveAsMIDIFile('test.midi')
   })
 
 })

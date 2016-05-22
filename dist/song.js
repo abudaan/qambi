@@ -163,6 +163,7 @@ var Song = exports.Song = function () {
     this._metronome = new _metronome.Metronome(this);
     this._metronomeEvents = [];
     this._updateMetronomeEvents = true;
+    this._metronome.mute(!this.useMetronome);
 
     this._loop = false;
     this._leftLocator = { millis: 0, ticks: 0 };
@@ -171,6 +172,7 @@ var Song = exports.Song = function () {
     this._loopDuration = 0;
     this._precountBars = 0;
     this._endPrecountMillis = 0;
+    this.update();
   }
 
   _createClass(Song, [{
@@ -548,6 +550,9 @@ var Song = exports.Song = function () {
     value: function configureMetronome(config) {
       this._metronome.configure(config);
     }
+  }, {
+    key: 'configure',
+    value: function configure(config) {}
   }, {
     key: 'allNotesOff',
     value: function allNotesOff() {

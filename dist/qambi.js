@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.setBufferTime = exports.init = undefined;
+exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getGMInstruments = exports.getInstruments = exports.setBufferTime = exports.init = undefined;
 
 var _midi_event = require('./midi_event');
 
@@ -31,12 +31,14 @@ var _constants = require('./constants');
 
 var _settings = require('./settings');
 
+var _eventlistener = require('./eventlistener');
+
 var getAudioContext = function getAudioContext() {
   return _init_audio.context;
 };
 
 var qambi = {
-  version: '1.0.0-beta13',
+  version: '1.0.0-beta15',
 
   // from ./init
   init: _init.init,
@@ -67,6 +69,17 @@ var qambi = {
   getMIDIInputsById: _init_midi.getMIDIInputsById,
   getMIDIOutputsById: _init_midi.getMIDIOutputsById,
 
+  getInstruments: _settings.getInstruments,
+  getGMInstruments: _settings.getGMInstruments,
+
+  addEventListener: function addEventListener(type, callback) {
+    return (0, _eventlistener.addEventListener)(type, callback);
+  },
+  removeEventListener: function removeEventListener(type, id) {
+    (0, _eventlistener.removeEventListener)(type, id);
+  },
+
+
   // from ./midi_event
   MIDIEvent: _midi_event.MIDIEvent,
 
@@ -88,7 +101,7 @@ var qambi = {
   log: function log(id) {
     switch (id) {
       case 'functions':
-        console.log('functions:\n          getAudioContext\n          getMasterVolume\n          setMasterVolume\n          getMIDIAccess\n          getMIDIInputs\n          getMIDIOutputs\n          getMIDIInputIds\n          getMIDIOutputIds\n          getMIDIInputsById\n          getMIDIOutputsById\n          parseMIDIFile\n          setBufferTime\n        ');
+        console.log('functions:\n          getAudioContext\n          getMasterVolume\n          setMasterVolume\n          getMIDIAccess\n          getMIDIInputs\n          getMIDIOutputs\n          getMIDIInputIds\n          getMIDIOutputIds\n          getMIDIInputsById\n          getMIDIOutputsById\n          parseMIDIFile\n          setBufferTime\n          getInstruments\n          getGMInstruments\n        ');
         break;
       default:
     }
@@ -103,6 +116,8 @@ exports.
 
 // from ./settings
 setBufferTime = _settings.setBufferTime;
+exports.getInstruments = _settings.getInstruments;
+exports.getGMInstruments = _settings.getGMInstruments;
 exports.
 
 // from ./constants
@@ -123,7 +138,7 @@ exports.getMasterVolume = _init_audio.getMasterVolume;
 exports.setMasterVolume = _init_audio.setMasterVolume;
 exports.
 
-// ./init_midi
+// from ./init_midi
 getMIDIAccess = _init_midi.getMIDIAccess;
 exports.getMIDIInputs = _init_midi.getMIDIInputs;
 exports.getMIDIOutputs = _init_midi.getMIDIOutputs;

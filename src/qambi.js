@@ -56,7 +56,15 @@ import {
 
 import {
   setBufferTime,
+  getInstruments,
+  getGMInstruments,
 } from './settings'
+
+import {
+  addEventListener,
+  removeEventListener,
+  dispatchEvent
+} from './eventlistener'
 
 
 const getAudioContext = function(){
@@ -64,7 +72,7 @@ const getAudioContext = function(){
 }
 
 const qambi = {
-  version: '1.0.0-beta13',
+  version: '1.0.0-beta15',
 
   // from ./init
   init,
@@ -94,6 +102,17 @@ const qambi = {
   getMIDIOutputIds,
   getMIDIInputsById,
   getMIDIOutputsById,
+
+  getInstruments,
+  getGMInstruments,
+
+  addEventListener(type, callback){
+    return addEventListener(type, callback)
+  },
+
+  removeEventListener(type, id){
+    removeEventListener(type, id)
+  },
 
   // from ./midi_event
   MIDIEvent,
@@ -129,6 +148,8 @@ const qambi = {
           getMIDIOutputsById
           parseMIDIFile
           setBufferTime
+          getInstruments
+          getGMInstruments
         `)
         break
       default:
@@ -144,6 +165,8 @@ export {
 
   // from ./settings
   setBufferTime,
+  getInstruments,
+  getGMInstruments,
 
   // from ./constants
   MIDIEventTypes,
@@ -159,7 +182,7 @@ export {
   getMasterVolume,
   setMasterVolume,
 
-  // ./init_midi
+  // from ./init_midi
   getMIDIAccess,
   getMIDIInputs,
   getMIDIOutputs,

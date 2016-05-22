@@ -36,11 +36,11 @@
   },
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
-    "watch": "watchify ./basic5/index.js -t babelify -o ./basic5/build.js --debug --verbose",
+    "watch": "watchify ./example3/index.js -t babelify -o ./example3/build.js --debug --verbose",
     "module": "browserify ../src/qambi.js  -t [ babelify --presets [es2015 stage-0 ] --plugins [ transform-es2015-modules-amd ] ] -o ../qambi.module.js"
   },
   "dependencies": {
     "isomorphic-fetch": "^2.2.1",
-    "qambi": "1.0.0-beta5"
+    "qambi": "1.0.0-beta15"
   }
 }

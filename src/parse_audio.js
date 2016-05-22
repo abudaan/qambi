@@ -2,6 +2,7 @@ import {context} from './init_audio'
 import {typeString, checkIfBase64, base64ToBinary} from './util'
 import fetch from 'isomorphic-fetch'
 import {dispatchEvent} from './eventlistener'
+import {qambi} from './qambi'
 
 
 export function decodeSample(sample, id, every){
@@ -48,10 +49,19 @@ export function decodeSample(sample, id, every){
 
 function loadAndParseSample(url, id, every){
   //console.log(id, url)
+  /*
+  setTimeout(() => {
+    dispatchEvent({
+      type: 'loading',
+      data: url
+    })
+  }, 0)
+  */
   dispatchEvent({
     type: 'loading',
     data: url
   })
+
   let executor = function(resolve){
     fetch(url, {
       method: 'GET'

@@ -1,4 +1,4 @@
-import qambi from '../../src/qambi'
+import qambi from '../../src/qambi' // use "from 'qambi'" in your own code! so without the extra "../../"
 
 document.addEventListener('DOMContentLoaded', function(){
 
@@ -21,9 +21,6 @@ document.addEventListener('DOMContentLoaded', function(){
     song.getTracks().forEach(track => {
       track.setInstrument(piano)
     })
-
-    // turn off metronome
-    song.setMetronome(false)
 
     initUI(song)
 

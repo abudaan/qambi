@@ -121,7 +121,7 @@ let template = {
   108: 'C8.mp3'
 }
 
-
+/*
 for(let key of Object.keys(gm)){
   let group = gm[key]
   group.forEach(name => {
@@ -136,5 +136,27 @@ for(let key of Object.keys(gm)){
     fs.writeFileSync(`./instruments/fluidsynth/${name}.json`, JSON.stringify(instrument))
   })
 }
+*/
 
 
+let mapping = {}
+
+for(let key of Object.keys(gm)){
+  let group = gm[key]
+  //let mappingGroup = {}
+  group.forEach(origName => {
+    let name = origName
+    name = name.toLowerCase()
+    name = name.replace(/[0-9]{1,}\ /, '')
+    name = name.replace(/\ /g, '_')
+    name = name.replace(/[\(\)\+\-]/g, '')
+    //mappingGroup[name] = origName
+    mapping[name] = {
+      name: `${origName} (${key.toLowerCase()})`,
+      description: 'Fluidsynth samples'
+    }
+  })
+  //mapping[key] = mappingGroup
+}
+
+fs.writeFileSync('./instruments/gm.json', JSON.stringify(mapping))

@@ -20,6 +20,8 @@ var _isomorphicFetch2 = _interopRequireDefault(_isomorphicFetch);
 
 var _eventlistener = require('./eventlistener');
 
+var _qambi = require('./qambi');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function decodeSample(sample, id, every) {
@@ -60,10 +62,19 @@ function decodeSample(sample, id, every) {
 
 function loadAndParseSample(url, id, every) {
   //console.log(id, url)
+  /*
+  setTimeout(() => {
+    dispatchEvent({
+      type: 'loading',
+      data: url
+    })
+  }, 0)
+  */
   (0, _eventlistener.dispatchEvent)({
     type: 'loading',
     data: url
   });
+
   var executor = function executor(resolve) {
     (0, _isomorphicFetch2.default)(url, {
       method: 'GET'

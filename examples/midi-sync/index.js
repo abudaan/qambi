@@ -16,10 +16,7 @@ document.addEventListener('DOMContentLoaded', function(){
   qambi.init({
     instrument: {
       type: 'Instrument',
-      url: 'https://raw.githubusercontent.com/abudaan/qambi-instruments/master/heartbeat/city-piano.json'
-      //url: 'http://qambi.org/instruments/heartbeat/city-piano.json',
-      //url: 'http://qambi.org/instruments/heartbeat/violin.json', // sustain loop
-      //url: 'http://qambi.org/instruments/heartbeat/squareroot.json', // 2 velocity layers
+      url: '../../instruments/heartbeat/city-piano-light.json'
     }
   })
   .then((loaded) => {
@@ -31,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if(test === 1){
 
       fetch('../data/mozk545a.mid')
-      //fetch('../data/minute_waltz.mid')
+      fetch('../data/minute_waltz.mid')
       .then(response => {
         return response.arrayBuffer()
       })
@@ -121,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     btnMetronome.addEventListener('click', function(){
       song.setMetronome() // if no arguments are provided it simply toggles
-      btnMetronome.innerHTML = song.useMetronome ? 'metronome on' : 'metronome off'
+      btnMetronome.innerHTML = song.useMetronome ? 'metronome off' : 'metronome on'
     })
 
     btnPlay.addEventListener('click', function(){

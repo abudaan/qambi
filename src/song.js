@@ -120,6 +120,7 @@ export class Song{
     this._metronome = new Metronome(this)
     this._metronomeEvents = []
     this._updateMetronomeEvents = true
+    this._metronome.mute(!this.useMetronome)
 
     this._loop = false
     this._leftLocator = {millis: 0, ticks: 0}
@@ -128,7 +129,7 @@ export class Song{
     this._loopDuration = 0
     this._precountBars = 0
     this._endPrecountMillis = 0
-
+    this.update()
   }
 
 
@@ -469,6 +470,10 @@ export class Song{
 
   configureMetronome(config){
     this._metronome.configure(config)
+  }
+
+  configure(config){
+
   }
 
   allNotesOff(){

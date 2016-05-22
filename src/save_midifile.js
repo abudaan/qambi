@@ -10,8 +10,9 @@ info: http://www.deluge.co/?q=midi-tempo-bpm
 
 import {saveAs} from 'filesaverjs'
 
-const AP = Array.prototype
-const PPQ = 960
+let PPQ = 960
+let HDR_PPQ = str2Bytes(PPQ.toString(16), 2)
+
 const HDR_CHUNKID = [
   'M'.charCodeAt(0),
   'T'.charCodeAt(0),
@@ -23,7 +24,6 @@ const HDR_TYPE0 = [0x0, 0x0] // Midi Type 0 id
 const HDR_TYPE1 = [0x0, 0x1] // Midi Type 1 id
 //HDR_PPQ = [0x01, 0xE0] // Defaults to 480 ticks per beat
 //HDR_PPQ = [0x00, 0x80] // Defaults to 128 ticks per beat
-const HDR_PPQ = str2Bytes(PPQ.toString(16), 2)
 
 const TRK_CHUNKID = [
   'M'.charCodeAt(0),
@@ -50,25 +50,21 @@ const META_KEY_SIG = 0x59
 const META_SEQ_EVENT = 0x7f
 
 
-export function saveAsMIDIFile(song, fileName = song.name, ppq = PPQ) {
+export function saveAsMIDIFile(song, fileName = song.name, ppq = 960) {
+
+  PPQ = ppq
+  HDR_PPQ = str2Bytes(PPQ.toString(16), 2)
+
   let byteArray = [].concat(HDR_CHUNKID, HDR_CHUNK_SIZE, HDR_TYPE1)
   let tracks = song.getTracks()
   let numTracks = tracks.length + 1
   let i, maxi, track, midiFile, destination, b64
   let arrayBuffer, dataView, uintArray
 
-  //console.log(numTracks, song._durationTicks, song._timeEvents.length, HDR_PPQ)
-
-  // if(ppq !== PPQ){
-
-  // }else{
-
-  // }
-  byteArray = byteArray.concat(str2Bytes(numTracks.toString(16), 2), HDR_PPQ);
+  byteArray = byteArray.concat(str2Bytes(numTracks.toString(16), 2), HDR_PPQ)
 
   //console.log(byteArray);
-  byteArray = byteArray.concat(trackToBytes(song._timeEvents, song._durationTicks, 'tempo'));
-  //console.log(song.durationMillis);
+  byteArray = byteArray.concat(trackToBytes(song._timeEvents, song._durationTicks, 'tempo'))
 
   for(i = 0, maxi = tracks.length; i < maxi; i++){
     track = tracks[i];
@@ -77,24 +73,31 @@ export function saveAsMIDIFile(song, fileName = song.name, ppq = PPQ) {
       instrument = track._instrument.id
     }
     //console.log(track.name, track._events.length, instrument)
-    byteArray = byteArray.concat(trackToBytes(track._events, song._durationTicks, track.name, instrument));
-    //byteArray = byteArray.concat(trackToBytes(track._events, song._lastEvent.icks, track.name, track._instrument.id));
+    byteArray = byteArray.concat(trackToBytes(track._events, song._durationTicks, track.name, instrument))
+    //byteArray = byteArray.concat(trackToBytes(track._events, song._lastEvent.icks, track.name, instrument))
   }
 
-  //b64 = btoa(codes2Str(byteArray));
-  //window.location.assign("data:audio/midi;base64," + b64);
-  //console.log(b64);// send to server
+  //b64 = btoa(codes2Str(byteArray))
+  //window.location.assign("data:audio/midi;base64," + b64)
+  //console.log(b64)// send to server
 
-  maxi = byteArray.length;
-  arrayBuffer = new ArrayBuffer(maxi);
-  uintArray = new Uint8Array(arrayBuffer);
+  maxi = byteArray.length
+  arrayBuffer = new ArrayBuffer(maxi)
+  uintArray = new Uint8Array(arrayBuffer)
   for(i = 0; i < maxi; i++){
-    uintArray[i] = byteArray[i];
+    uintArray[i] = byteArray[i]
   }
-  midiFile = new Blob([uintArray], {type: 'application/x-midi', endings: 'transparent'});
-  fileName = fileName.replace(/\.mid$/, '')
-  saveAs(midiFile, `${fileName}.mid`);
-  //window.location.assign(window.URL.createObjectURL(midiFile));
+  midiFile = new Blob([uintArray], {type: 'application/x-midi', endings: 'transparent'})
+  fileName = fileName.replace(/\.midi$/, '')
+  //let patt = /\.mid[i]{0,1}$/
+  let patt = /\.mid$/
+  let hasExtension = patt.test(fileName)
+  if(hasExtension === false){
+    fileName += '.mid'
+  }
+  //console.log(fileName, hasExtension)
+  saveAs(midiFile, fileName)
+  //window.location.assign(window.URL.createObjectURL(midiFile))
 }
 
 
@@ -266,8 +269,12 @@ function convertToVLQ(ticks) {
  * @param str {String} String to be converted
  * @returns array with the charcode values of the string
  */
+const AP = Array.prototype
 function stringToNumArray(str) {
+  // return str.split().forEach(char => {
+  //   return char.charCodeAt(0)
+  // })
   return AP.map.call(str, function(char) {
-    return char.charCodeAt(0);
-  });
+    return char.charCodeAt(0)
+  })
 }

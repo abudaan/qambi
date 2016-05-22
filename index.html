@@ -4,9 +4,20 @@
   <meta charset="utf-8">
   <title>qambi</title>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<!--
+  <link rel="stylesheet" type="text/css" href="./examples/css/reset.css">
+  <link rel="stylesheet" type="text/css" href="./examples/css/prism.css">
+  <link rel="stylesheet" type="text/css" href="./examples/css/examples.css">
+-->
+  <style>
+    li{
+      margin-bottom: 15px;
+    }
+  </style>
+  <script>if(window.location.hostname === 'abudaan.github.io' || window.location.hostname === 'qambi.org'){(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o), m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m) })(window,document,'script','https://www.google-analytics.com/analytics.js','ga'); ga('create', 'UA-5081547-11', 'auto'); ga('send', 'pageview');}</script>
 </head>
 <body>
-  <h3>qambi</h3>
+  <h1>qambi</h1>
   <p>
     Qambi is a rebuild in progress of <a href="https://github.com/abudaan/heartbeat">heartbeat</a> in es6.
   </p>
@@ -14,17 +25,27 @@
 
   <br>
   <br>
+  <h2>examples</h2>
+  <ol>
+    <li>Creates a song form a MIDI file and plays it back using City Piano, a qambi sample instrument with 4 velocity layers.
+    <br><a href="./examples/example1/index.html">[link]</a>
+    </li>
 
-  Examples:
-  <ul>
-    <li><a href="./examples/basic/index.html">basic</a></li>
-    <li><a href="./examples/basic2/index.html">basic2</a></li>
-    <li><a href="./examples/basic3/index.html">basic3</a></li>
-    <li><a href="./examples/basic4/index.html">basic4</a></li>
-    <li><a href="./examples/create_instruments/index.html">create instruments</a></li>
-    <li><a href="./examples/midi-io/index.html">MIDI i/o</a></li>
-    <li><a href="./examples/midifile/index.html">MIDI file</a></li>
-    <li><a href="./examples/midi-recording/index.html">MIDI recording</a></li>
-  </ul>
+    <li>Create song from scratch and save it as MIDI file.
+    <br><a href="./examples/example2/index.html">[link]</a>
+    </li>
+
+    <li>Play instruments using your MIDI keyboard
+    <br><a href="./examples/example3/index.html">[link]</a>
+    </li>
+
+    <li>Record MIDI
+    <br><a href="./examples/midi-recording/index.html">[link]</a>
+    </li>
+
+    <li>Playback a MIDI file via an external softsynth
+    <br><a href="./examples/midi-sync/index.html">[link]</a>&nbsp;<a href="https://www.youtube.com/embed/zj1Sof90N7k">[screencast explaining how to use it]</a>
+  </ol>
+
 </body>
 </html>
