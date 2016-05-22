@@ -72,7 +72,7 @@ const getAudioContext = function(){
 }
 
 const qambi = {
-  version: '1.0.0-beta15',
+  version: '1.0.0-beta16',
 
   // from ./init
   init,

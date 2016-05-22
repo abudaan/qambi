@@ -41,6 +41,6 @@
   },
   "dependencies": {
     "isomorphic-fetch": "^2.2.1",
-    "qambi": "1.0.0-beta15"
+    "qambi": "1.0.0-beta16"
   }
 }

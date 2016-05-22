@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 ##### Example 3: play instruments using your MIDI keyboard
 
-```
+```javascript
 import qambi, {
   Song,
   Track,

@@ -38,7 +38,7 @@ var getAudioContext = function getAudioContext() {
 };
 
 var qambi = {
-  version: '1.0.0-beta15',
+  version: '1.0.0-beta16',
 
   // from ./init
   init: _init.init,
