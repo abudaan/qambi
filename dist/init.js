@@ -84,9 +84,10 @@ function init() {
    */
 
   var promises = [(0, _init_audio.initAudio)(), (0, _init_midi.initMIDI)()];
-  var loadKeys = Object.keys(settings);
+  var loadKeys = void 0;
 
   if (settings !== null) {
+    loadKeys = Object.keys(settings);
     var _iteratorNormalCompletion = true;
     var _didIteratorError = false;
     var _iteratorError = undefined;

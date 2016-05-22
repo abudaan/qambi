@@ -24,7 +24,7 @@ var Sample = function () {
 
     if (this.sampleData === -1 || typeof this.sampleData.buffer === 'undefined') {
       // create simple synth sample
-      console.log(event.data1, event.data2);
+      //console.log(event.data1, event.data2)
       this.source = _init_audio.context.createOscillator();
       this.source.type = 'sine';
       this.source.frequency.value = event.frequency;

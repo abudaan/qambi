@@ -36,6 +36,8 @@ var _eventlistener = require('./eventlistener');
 
 var _settings = require('./settings');
 
+var _save_midifile = require('./save_midifile');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -799,6 +801,11 @@ var Song = exports.Song = function () {
     key: 'removeEventListener',
     value: function removeEventListener(type, id) {
       (0, _eventlistener.removeEventListener)(type, id);
+    }
+  }, {
+    key: 'saveAsMIDIFile',
+    value: function saveAsMIDIFile(name) {
+      (0, _save_midifile.saveAsMIDIFile)(this, name);
     }
   }]);
 

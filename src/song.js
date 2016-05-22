@@ -13,6 +13,7 @@ import {Playhead} from './playhead'
 import {Metronome} from './metronome'
 import {addEventListener, removeEventListener, dispatchEvent} from './eventlistener'
 import {defaultSong} from './settings'
+import {saveAsMIDIFile} from './save_midifile'
 
 let songIndex = 0
 let recordingIndex = 0
@@ -683,5 +684,9 @@ export class Song{
 
   removeEventListener(type, id){
     removeEventListener(type, id)
+  }
+
+  saveAsMIDIFile(name){
+    saveAsMIDIFile(this, name)
   }
 }

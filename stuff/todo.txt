@@ -23,3 +23,9 @@ plugins (reverb, autopan, 3rd party)
 find samples Conga
 
 
+
+
+
+track.output -> instrument -> track.input
+
+

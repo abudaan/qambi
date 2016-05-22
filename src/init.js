@@ -71,9 +71,10 @@ export function init(settings = null): void{
   */
 
   let promises = [initAudio(), initMIDI()]
-  let loadKeys = Object.keys(settings)
+  let loadKeys
 
   if(settings !== null){
+    loadKeys = Object.keys(settings)
     for(let key of loadKeys){
       let data = settings[key]
 
