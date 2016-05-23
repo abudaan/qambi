@@ -77,6 +77,8 @@ export class Song{
     //this._timeEvents = []
     this._updateTimeEvents = true
     this._lastEvent = new MIDIEvent(0, MIDIEventTypes.END_OF_TRACK)
+    //this._lastEvent._part = {}
+    //this._lastEvent._track = {}
 
     this._tracks = []
     this._tracksById = new Map()
@@ -163,18 +165,31 @@ export class Song{
         }
       }
     }
+    sortEvents(result)
     return result
 
   }
 
-  _prepare(){
+  update(){
     //console.log(this._events)
-    parseTimeEvents(this, this._timeEvents)
-    parseMIDINotes(this._events)
-    this._allEvents.push(...this._events, ...this._timeEvents)
-    sortEvents(this._allEvents)
-    this._durationMillis = 4000
-    this._metronome.getEvents()
+    if(this._updateTimeEvents){
+      this._updateTimeEvents = false
+      this._updateEvents = true
+      parseTimeEvents(this, this._timeEvents)
+      this._metronome.getEvents()
+    }
+    if(this._updateEvents){
+      parseMIDINotes(this._events)
+      //this._allEvents.push(...this._events, ...this._timeEvents)
+      //sortEvents(this._allEvents)
+      sortEvents(this._events)
+      console.log('update')
+      let lastEvent = this._events[this._events.length - 1]
+      let position = this._calculatePosition('ticks', lastEvent.ticks, 'millis')
+      this._lastEvent.ticks = lastEvent.ticks
+      this._durationMillis = position.millis
+    }
+    //console.log(position, lastEvent, this._durationMillis)
   }
 
   addTimeEvents(...events){
@@ -194,13 +209,12 @@ export class Song{
       track.connect(this._output)
       this._tracks.push(track)
       this._tracksById.set(track.id, track)
-      this._newEvents.push(...track._events)
-      this._newParts.push(...track._parts)
+      this._events.push(...track._events)
     })
   }
 
   // prepare song events for playback
-  update(): void{
+  update_(): void{
 
     let createEventArray = false
 
@@ -755,7 +769,8 @@ export class Song{
       case 'ticks':
       case 'millis':
       case 'percentage':
-        target = args[0] || 0
+        //target = args[0] || 0
+        target = args || 0
         break
 
       case 'time':

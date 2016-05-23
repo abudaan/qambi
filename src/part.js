@@ -76,7 +76,8 @@ export class Part{
       track._needsUpdate = true
     }
     if(this._song){
-      this._song._newEvents.push(...events)
+      this._song._events.push(...events)
+      track._songUpdate = true
     }
     this._needsUpdate = true
   }

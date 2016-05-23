@@ -119,6 +119,8 @@ var Song = exports.Song = function () {
     //this._timeEvents = []
     this._updateTimeEvents = true;
     this._lastEvent = new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.END_OF_TRACK);
+    //this._lastEvent._part = {}
+    //this._lastEvent._track = {}
 
     this._tracks = [];
     this._tracksById = new Map();
@@ -205,20 +207,31 @@ var Song = exports.Song = function () {
           }
         }
       }
+      (0, _util.sortEvents)(result);
       return result;
     }
   }, {
-    key: '_prepare',
-    value: function _prepare() {
-      var _allEvents;
-
+    key: 'update',
+    value: function update() {
       //console.log(this._events)
-      (0, _parse_events.parseTimeEvents)(this, this._timeEvents);
-      (0, _parse_events.parseMIDINotes)(this._events);
-      (_allEvents = this._allEvents).push.apply(_allEvents, _toConsumableArray(this._events).concat(_toConsumableArray(this._timeEvents)));
-      (0, _util.sortEvents)(this._allEvents);
-      this._durationMillis = 4000;
-      this._metronome.getEvents();
+      if (this._updateTimeEvents) {
+        this._updateTimeEvents = false;
+        this._updateEvents = true;
+        (0, _parse_events.parseTimeEvents)(this, this._timeEvents);
+        this._metronome.getEvents();
+      }
+      if (this._updateEvents) {
+        (0, _parse_events.parseMIDINotes)(this._events);
+        //this._allEvents.push(...this._events, ...this._timeEvents)
+        //sortEvents(this._allEvents)
+        (0, _util.sortEvents)(this._events);
+        console.log('update');
+        var lastEvent = this._events[this._events.length - 1];
+        var position = this._calculatePosition('ticks', lastEvent.ticks, 'millis');
+        this._lastEvent.ticks = lastEvent.ticks;
+        this._durationMillis = position.millis;
+      }
+      //console.log(position, lastEvent, this._durationMillis)
     }
   }, {
     key: 'addTimeEvents',
@@ -248,22 +261,21 @@ var Song = exports.Song = function () {
       }
 
       tracks.forEach(function (track) {
-        var _newEvents, _newParts;
+        var _events;
 
         track._song = _this2;
         track.connect(_this2._output);
         _this2._tracks.push(track);
         _this2._tracksById.set(track.id, track);
-        (_newEvents = _this2._newEvents).push.apply(_newEvents, _toConsumableArray(track._events));
-        (_newParts = _this2._newParts).push.apply(_newParts, _toConsumableArray(track._parts));
+        (_events = _this2._events).push.apply(_events, _toConsumableArray(track._events));
       });
     }
 
     // prepare song events for playback
 
   }, {
-    key: 'update',
-    value: function update() {
+    key: 'update_',
+    value: function update_() {
       var _this3 = this;
 
       var createEventArray = false;
@@ -831,13 +843,13 @@ var Song = exports.Song = function () {
           this.stop();
           return;
         }
-        var _events = this._metronome.addEvents(this.bars, this.bars + 1);
-        var tobeParsed = [].concat(_toConsumableArray(_events), _toConsumableArray(this._timeEvents));
+        var _events2 = this._metronome.addEvents(this.bars, this.bars + 1);
+        var tobeParsed = [].concat(_toConsumableArray(_events2), _toConsumableArray(this._timeEvents));
         (0, _util.sortEvents)(tobeParsed);
         (0, _parse_events.parseEvents)(tobeParsed);
-        (_scheduler$events = this._scheduler.events).push.apply(_scheduler$events, _toConsumableArray(_events));
-        this._scheduler.numEvents += _events.length;
-        var lastEvent = _events[_events.length - 1];
+        (_scheduler$events = this._scheduler.events).push.apply(_scheduler$events, _toConsumableArray(_events2));
+        this._scheduler.numEvents += _events2.length;
+        var lastEvent = _events2[_events2.length - 1];
         var extraMillis = lastEvent.ticksPerBar * lastEvent.millisPerTick;
         this._lastEvent.ticks += lastEvent.ticksPerBar;
         this._lastEvent.millis += extraMillis;
@@ -871,7 +883,8 @@ var Song = exports.Song = function () {
         case 'ticks':
         case 'millis':
         case 'percentage':
-          target = args[0] || 0;
+          //target = args[0] || 0
+          target = args || 0;
           break;
 
         case 'time':

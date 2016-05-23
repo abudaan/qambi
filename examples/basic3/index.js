@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function(){
   .then(() => {
 
     Song.fromMIDIFileAsync('../data/minute_waltz.mid')
+    //Song.fromMIDIFileAsync('../data/mozk545a.mid')
     .then(song => {
 
       let piano = new Instrument()
@@ -16,10 +17,12 @@ document.addEventListener('DOMContentLoaded', function(){
         track.setInstrument(piano)
       })
 
-      piano.parseSampleData({url: 'https://raw.githubusercontent.com/abudaan/qambi-instruments/master/heartbeat/electric-piano.json'})
-      .then(() => {
-        song.play()
-      })
+      song.setMetronome(true)
+      song.play()
+      // piano.parseSampleData({url: 'https://raw.githubusercontent.com/abudaan/qambi/gh-pages/instruments/heartbeat/city-piano-light.json'})
+      // .then(() => {
+      //   song.play()
+      // })
     })
   })
 })

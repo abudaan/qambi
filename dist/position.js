@@ -497,6 +497,7 @@ function calculatePosition(song, settings) {
       return getPositionData(song);
 
     case 'ticks':
+      //console.log(song, target)
       fromTicks(song, target);
       calculateBarsAndBeats();
       return getPositionData(song);

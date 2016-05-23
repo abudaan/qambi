@@ -2,6 +2,7 @@ import {getMIDIOutputById, getMIDIOutputs} from './init_midi'
 import {context} from './init_audio'
 import {MIDIEvent} from './midi_event'
 import {bufferTime} from './settings' // millis
+import {sortEvents} from './util' // millis
 
 
 export default class Scheduler{
@@ -22,6 +23,19 @@ export default class Scheduler{
     this.beyondLoop = false // tells us if the playhead has already passed the looped section
     this.precountingDone = false
     this.setIndex(this.songStartMillis)
+
+    this.timeEventsIndex = 0
+    this.songEventsIndex = 0
+    this.metronomeEventsIndex = 0
+
+    this.timeEvents = this.song._timeEvents
+    this.songEvents = this.song._events
+    this.songEvents.push(this.song._lastEvent)
+    this.metronomeEvents = this.song._metronome.events
+
+    this.numTimeEvents = this.timeEvents.length
+    this.numSongEvents = this.songEvents.length
+    this.numMetronomeEvents = this.metronomeEvents.length
   }
 
 
@@ -29,16 +43,86 @@ export default class Scheduler{
     this.timeStamp = timeStamp
   }
 
+  getEvents2(maxtime, timestamp){
+    let loop = true
+    let event
+    let result = []
+    //console.log(this.timeEventsIndex, this.songEventsIndex, this.metronomeEventsIndex)
+    while(loop){
+
+      let stop = false
+
+      if(this.timeEventsIndex < this.numTimeEvents){
+        event = this.timeEvents[this.timeEventsIndex]
+        if(event.millis < maxtime){
+          this.millisPerTick = event.millisPerTick
+          //console.log(this.millisPerTick)
+          this.timeEventsIndex++
+        }else{
+          stop = true
+        }
+      }
+
+      if(this.songEventsIndex < this.numSongEvents){
+        event = this.songEvents[this.songEventsIndex]
+        if(event.type === 0x2F){
+          loop = false
+          break
+        }
+        let millis = event.ticks * this.millisPerTick
+        if(millis < maxtime){
+          event.time = millis + timestamp
+          event.millis = millis
+          result.push(event)
+          this.songEventsIndex++
+        }else{
+          stop = true
+        }
+      }
+
+      if(this.song.useMetronome === true && this.metronomeEventsIndex < this.numMetronomeEvents){
+        event = this.metronomeEvents[this.metronomeEventsIndex]
+        let millis = event.ticks * this.millisPerTick
+        if(millis < maxtime){
+          event.time = millis + timestamp
+          event.millis = millis
+          result.push(event)
+          this.metronomeEventsIndex++
+        }else{
+          stop = true
+        }
+      }
+
+      if(stop){
+        loop = false
+        break
+      }
+    }
+    sortEvents(result)
+    return result
+  }
+
   // get the index of the event that has its millis value at or right after the provided millis value
   setIndex(millis){
-    let i = 0;
-    for(let event of this.events){
+    let i = 0
+    let event
+    for(event of this.events){
       if(event.millis >= millis){
         this.index = i;
         break;
       }
       i++;
     }
+
+    // i = 0
+    // for(event of this.timeEvents){
+    //   if(event.millis >= millis){
+    //     this.timeEventsIndex = i;
+    //     break;
+    //   }
+    //   i++;
+    // }
+
     this.beyondLoop = millis > this.song._rightLocator.millis
     this.notes = new Map()
     this.precountingDone = false
@@ -188,20 +272,21 @@ export default class Scheduler{
     }else{
       this.songCurrentMillis += diff
       this.maxtime = this.songCurrentMillis + bufferTime
-      events = this.song._getEvents(this.maxtime, (this.timeStamp - this.songStartMillis))
+      //events = this.song._getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
+      events = this.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
       //console.log('done', this.songCurrentMillis, diff, this.index, events.length)
     }
 
-    if(this.song.useMetronome === true){
-      let metronomeEvents = this.song._metronome.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
-      // if(metronomeEvents.length > 0){
-      //   console.log(this.maxtime, metronomeEvents)
-      // }
-      // metronomeEvents.forEach(e => {
-      //   e.time = (this.timeStamp + e.millis - this.songStartMillis)
-      // })
-      events.push(...metronomeEvents)
-    }
+    // if(this.song.useMetronome === true){
+    //   let metronomeEvents = this.song._metronome.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
+    //   // if(metronomeEvents.length > 0){
+    //   //   console.log(this.maxtime, metronomeEvents)
+    //   // }
+    //   // metronomeEvents.forEach(e => {
+    //   //   e.time = (this.timeStamp + e.millis - this.songStartMillis)
+    //   // })
+    //   events.push(...metronomeEvents)
+    // }
 
     numEvents = events.length
 

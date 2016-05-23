@@ -109,9 +109,10 @@ var Part = exports.Part = function () {
         track._needsUpdate = true;
       }
       if (this._song) {
-        var _song$_newEvents;
+        var _song$_events;
 
-        (_song$_newEvents = this._song._newEvents).push.apply(_song$_newEvents, events);
+        (_song$_events = this._song._events).push.apply(_song$_events, events);
+        track._songUpdate = true;
       }
       this._needsUpdate = true;
     }

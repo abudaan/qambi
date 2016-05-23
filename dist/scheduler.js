@@ -4,7 +4,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); // millis
+
 
 var _init_midi = require('./init_midi');
 
@@ -13,6 +14,8 @@ var _init_audio = require('./init_audio');
 var _midi_event = require('./midi_event');
 
 var _settings = require('./settings');
+
+var _util = require('./util');
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -40,11 +43,84 @@ var Scheduler = function () {
       this.beyondLoop = false; // tells us if the playhead has already passed the looped section
       this.precountingDone = false;
       this.setIndex(this.songStartMillis);
+
+      this.timeEventsIndex = 0;
+      this.songEventsIndex = 0;
+      this.metronomeEventsIndex = 0;
+
+      this.timeEvents = this.song._timeEvents;
+      this.songEvents = this.song._events;
+      this.songEvents.push(this.song._lastEvent);
+      this.metronomeEvents = this.song._metronome.events;
+
+      this.numTimeEvents = this.timeEvents.length;
+      this.numSongEvents = this.songEvents.length;
+      this.numMetronomeEvents = this.metronomeEvents.length;
     }
   }, {
     key: 'setTimeStamp',
     value: function setTimeStamp(timeStamp) {
       this.timeStamp = timeStamp;
+    }
+  }, {
+    key: 'getEvents2',
+    value: function getEvents2(maxtime, timestamp) {
+      var loop = true;
+      var event = void 0;
+      var result = [];
+      //console.log(this.timeEventsIndex, this.songEventsIndex, this.metronomeEventsIndex)
+      while (loop) {
+
+        var stop = false;
+
+        if (this.timeEventsIndex < this.numTimeEvents) {
+          event = this.timeEvents[this.timeEventsIndex];
+          if (event.millis < maxtime) {
+            this.millisPerTick = event.millisPerTick;
+            //console.log(this.millisPerTick)
+            this.timeEventsIndex++;
+          } else {
+            stop = true;
+          }
+        }
+
+        if (this.songEventsIndex < this.numSongEvents) {
+          event = this.songEvents[this.songEventsIndex];
+          if (event.type === 0x2F) {
+            loop = false;
+            break;
+          }
+          var millis = event.ticks * this.millisPerTick;
+          if (millis < maxtime) {
+            event.time = millis + timestamp;
+            event.millis = millis;
+            result.push(event);
+            this.songEventsIndex++;
+          } else {
+            stop = true;
+          }
+        }
+
+        if (this.song.useMetronome === true && this.metronomeEventsIndex < this.numMetronomeEvents) {
+          event = this.metronomeEvents[this.metronomeEventsIndex];
+          var _millis = event.ticks * this.millisPerTick;
+          if (_millis < maxtime) {
+            event.time = _millis + timestamp;
+            event.millis = _millis;
+            result.push(event);
+            this.metronomeEventsIndex++;
+          } else {
+            stop = true;
+          }
+        }
+
+        if (stop) {
+          loop = false;
+          break;
+        }
+      }
+      (0, _util.sortEvents)(result);
+      return result;
     }
 
     // get the index of the event that has its millis value at or right after the provided millis value
@@ -53,13 +129,14 @@ var Scheduler = function () {
     key: 'setIndex',
     value: function setIndex(millis) {
       var i = 0;
+      var event = void 0;
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
 
       try {
         for (var _iterator = this.events[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var event = _step.value;
+          event = _step.value;
 
           if (event.millis >= millis) {
             this.index = i;
@@ -67,6 +144,15 @@ var Scheduler = function () {
           }
           i++;
         }
+
+        // i = 0
+        // for(event of this.timeEvents){
+        //   if(event.millis >= millis){
+        //     this.timeEventsIndex = i;
+        //     break;
+        //   }
+        //   i++;
+        // }
       } catch (err) {
         _didIteratorError = true;
         _iteratorError = err;
@@ -251,22 +337,21 @@ var Scheduler = function () {
       } else {
         this.songCurrentMillis += diff;
         this.maxtime = this.songCurrentMillis + _settings.bufferTime;
-        events = this.song._getEvents(this.maxtime, this.timeStamp - this.songStartMillis);
+        //events = this.song._getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
+        events = this.getEvents2(this.maxtime, this.timeStamp - this.songStartMillis);
         //console.log('done', this.songCurrentMillis, diff, this.index, events.length)
       }
 
-      if (this.song.useMetronome === true) {
-        var _events2;
-
-        var metronomeEvents = this.song._metronome.getEvents2(this.maxtime, this.timeStamp - this.songStartMillis);
-        // if(metronomeEvents.length > 0){
-        //   console.log(this.maxtime, metronomeEvents)
-        // }
-        // metronomeEvents.forEach(e => {
-        //   e.time = (this.timeStamp + e.millis - this.songStartMillis)
-        // })
-        (_events2 = events).push.apply(_events2, _toConsumableArray(metronomeEvents));
-      }
+      // if(this.song.useMetronome === true){
+      //   let metronomeEvents = this.song._metronome.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
+      //   // if(metronomeEvents.length > 0){
+      //   //   console.log(this.maxtime, metronomeEvents)
+      //   // }
+      //   // metronomeEvents.forEach(e => {
+      //   //   e.time = (this.timeStamp + e.millis - this.songStartMillis)
+      //   // })
+      //   events.push(...metronomeEvents)
+      // }
 
       numEvents = events.length;
 
