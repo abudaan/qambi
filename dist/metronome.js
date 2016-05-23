@@ -23,6 +23,8 @@ var _instrument = require('./instrument');
 
 var _init_audio = require('./init_audio');
 
+var _constants = require('./constants');
+
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -44,6 +46,7 @@ var Metronome = exports.Metronome = function () {
     this.precountDuration = 0;
     this.bars = 0;
     this.index = 0;
+    this.index2 = 0;
     this.precountIndex = 0;
     this.reset();
   }
@@ -142,7 +145,46 @@ var Metronome = exports.Metronome = function () {
       (_part = this.part).addEvents.apply(_part, _toConsumableArray(this.events));
       this.bars = this.song.bars;
       //console.log('getEvents %O', this.events)
+      this.allEvents = [].concat(_toConsumableArray(this.events), _toConsumableArray(this.song._timeEvents));
+      // console.log(this.allEvents)
+      (0, _util.sortEvents)(this.allEvents);
+      (0, _parse_events.parseMIDINotes)(this.events);
       return this.events;
+    }
+  }, {
+    key: 'setIndex2',
+    value: function setIndex2(millis) {
+      this.index2 = 0;
+    }
+  }, {
+    key: 'getEvents2',
+    value: function getEvents2(maxtime, timeStamp) {
+      var result = [];
+
+      for (var i = this.index2, maxi = this.allEvents.length; i < maxi; i++) {
+
+        var event = this.allEvents[i];
+
+        if (event.type === _constants.MIDIEventTypes.TEMPO || event.type === _constants.MIDIEventTypes.TIME_SIGNATURE) {
+          if (event.millis < maxtime) {
+            this.millisPerTick = event.millisPerTick;
+            this.index2++;
+          } else {
+            break;
+          }
+        } else {
+          var millis = event.ticks * this.millisPerTick;
+          if (millis < maxtime) {
+            event.time = millis + timeStamp;
+            event.millis = millis;
+            result.push(event);
+            this.index2++;
+          } else {
+            break;
+          }
+        }
+      }
+      return result;
     }
   }, {
     key: 'addEvents',

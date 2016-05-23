@@ -251,8 +251,21 @@ var Scheduler = function () {
       } else {
         this.songCurrentMillis += diff;
         this.maxtime = this.songCurrentMillis + _settings.bufferTime;
-        events = this.getEvents();
+        events = this.song._getEvents(this.maxtime, this.timeStamp - this.songStartMillis);
         //console.log('done', this.songCurrentMillis, diff, this.index, events.length)
+      }
+
+      if (this.song.useMetronome === true) {
+        var _events2;
+
+        var metronomeEvents = this.song._metronome.getEvents2(this.maxtime, this.timeStamp - this.songStartMillis);
+        // if(metronomeEvents.length > 0){
+        //   console.log(this.maxtime, metronomeEvents)
+        // }
+        // metronomeEvents.forEach(e => {
+        //   e.time = (this.timeStamp + e.millis - this.songStartMillis)
+        // })
+        (_events2 = events).push.apply(_events2, _toConsumableArray(metronomeEvents));
       }
 
       numEvents = events.length;
@@ -281,6 +294,7 @@ var Scheduler = function () {
           //console.info('no midiNoteId', event)
           continue;
         }
+        // /console.log(event.ticks, event.time, event.millis, event.type, event._track.name)
 
         if (event.type === 'audio') {
           // to be implemented

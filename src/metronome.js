@@ -1,11 +1,13 @@
 import {Track} from './track'
 import {Part} from './part'
-import {parseEvents} from './parse_events'
+import {parseEvents, parseMIDINotes} from './parse_events'
 import {MIDIEvent} from './midi_event'
 import {checkMIDINumber} from './util'
 import {calculatePosition} from './position'
 import {Instrument} from './instrument'
 import {getInitData} from './init_audio'
+import {MIDIEventTypes} from './constants'
+import {sortEvents} from './util'
 
 
 let
@@ -34,6 +36,7 @@ export class Metronome{
     this.precountDuration = 0
     this.bars = 0
     this.index = 0
+    this.index2 = 0
     this.precountIndex = 0
     this.reset();
   }
@@ -119,7 +122,46 @@ export class Metronome{
     this.part.addEvents(...this.events)
     this.bars = this.song.bars
     //console.log('getEvents %O', this.events)
+    this.allEvents = [...this.events, ...this.song._timeEvents]
+    // console.log(this.allEvents)
+    sortEvents(this.allEvents)
+    parseMIDINotes(this.events)
     return this.events
+  }
+
+
+  setIndex2(millis){
+    this.index2 = 0
+  }
+
+  getEvents2(maxtime, timeStamp){
+    let result = []
+
+    for(let i = this.index2, maxi = this.allEvents.length; i < maxi; i++){
+
+      let event = this.allEvents[i]
+
+      if(event.type === MIDIEventTypes.TEMPO || event.type === MIDIEventTypes.TIME_SIGNATURE){
+        if(event.millis < maxtime){
+          this.millisPerTick = event.millisPerTick
+          this.index2++
+        }else{
+          break
+        }
+
+      }else{
+        let millis = event.ticks * this.millisPerTick
+        if(millis < maxtime){
+          event.time = millis + timeStamp
+          event.millis = millis
+          result.push(event)
+          this.index2++
+        }else{
+          break
+        }
+      }
+    }
+    return result
   }
 
 

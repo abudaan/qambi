@@ -170,10 +170,57 @@ var Song = exports.Song = function () {
     this._loopDuration = 0;
     this._precountBars = 0;
     this._endPrecountMillis = 0;
-    this.update();
+    //this.update()
+
+    this._index = 0;
   }
 
   _createClass(Song, [{
+    key: '_getEvents',
+    value: function _getEvents(maxtime, timeStamp) {
+      var result = [];
+
+      //console.log(maxtime)
+      for (var i = this._index, maxi = this._allEvents.length; i < maxi; i++) {
+
+        var event = this._allEvents[i];
+        //console.log(this._index, event)
+
+        if (event.type === _constants.MIDIEventTypes.TEMPO || event.type === _constants.MIDIEventTypes.TIME_SIGNATURE) {
+          if (event.millis < maxtime) {
+            this.millisPerTick = event.millisPerTick;
+            this._index++;
+          } else {
+            break;
+          }
+        } else {
+          var millis = event.ticks * this.millisPerTick;
+          if (millis < maxtime) {
+            event.time = millis + timeStamp;
+            event.millis = millis;
+            result.push(event);
+            this._index++;
+          } else {
+            break;
+          }
+        }
+      }
+      return result;
+    }
+  }, {
+    key: '_prepare',
+    value: function _prepare() {
+      var _allEvents;
+
+      //console.log(this._events)
+      (0, _parse_events.parseTimeEvents)(this, this._timeEvents);
+      (0, _parse_events.parseMIDINotes)(this._events);
+      (_allEvents = this._allEvents).push.apply(_allEvents, _toConsumableArray(this._events).concat(_toConsumableArray(this._timeEvents)));
+      (0, _util.sortEvents)(this._allEvents);
+      this._durationMillis = 4000;
+      this._metronome.getEvents();
+    }
+  }, {
     key: 'addTimeEvents',
     value: function addTimeEvents() {
       var _this = this;
@@ -377,19 +424,25 @@ var Song = exports.Song = function () {
 
       this._durationTicks = this._lastEvent.ticks;
       this._durationMillis = this._lastEvent.millis;
+      console.log(this._durationTicks);
       this._playhead.updateSong();
 
       if (this.playing === false) {
         this._playhead.set('millis', this._currentMillis);
       }
+      /*
+          // add metronome events
+          if(this._updateMetronomeEvents || this._metronome.bars !== this.bars){
+            this._metronomeEvents = parseEvents([...this._timeEvents, ...this._metronome.getEvents()])
+          }
+          this._allEvents = [...this._metronomeEvents, ...this._events]
+          sortEvents(this._allEvents)
+          //console.log('all events %O', this._allEvents)
+      */
 
-      // add metronome events
-      if (this._updateMetronomeEvents || this._metronome.bars !== this.bars) {
-        this._metronomeEvents = (0, _parse_events.parseEvents)([].concat(_toConsumableArray(this._timeEvents), _toConsumableArray(this._metronome.getEvents())));
-      }
-      this._allEvents = [].concat(_toConsumableArray(this._metronomeEvents), _toConsumableArray(this._events));
+      this._metronome.getEvents();
+      this._allEvents = [].concat(_toConsumableArray(this._timeEvents), _toConsumableArray(this._events));
       (0, _util.sortEvents)(this._allEvents);
-      //console.log('all events %O', this._allEvents)
 
       this._newParts = [];
       this._removedParts = [];
@@ -484,6 +537,7 @@ var Song = exports.Song = function () {
   }, {
     key: 'stop',
     value: function stop() {
+      console.log('STOP');
       this.precounting = false;
       this.allNotesOff();
       if (this.playing || this.paused) {
@@ -765,13 +819,15 @@ var Song = exports.Song = function () {
 
       this._ticks = this._playhead.get().ticks;
 
+      //console.log(this._currentMillis, this._durationMillis)
+
       if (this._currentMillis >= this._durationMillis) {
         var _scheduler$events;
 
-        if (this.recording === false) {
+        if (this.recording !== true) {
           this.stop();
           return;
-        } else if (this.autoSize === false) {
+        } else if (this.autoSize !== true) {
           this.stop();
           return;
         }

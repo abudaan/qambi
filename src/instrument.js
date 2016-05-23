@@ -49,6 +49,7 @@ export class Instrument{
       sampleData = this.samplesData[event.data1][event.data2];
       sample = createSample(sampleData, event)
       this.scheduledSamples[event.midiNoteId] = sample
+      //console.log(sample)
       sample.output.connect(this.output || context.destination)
       // sample.source.onended = () => {
       //   console.log('    deleting', event.midiNoteId)

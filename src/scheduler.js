@@ -188,8 +188,19 @@ export default class Scheduler{
     }else{
       this.songCurrentMillis += diff
       this.maxtime = this.songCurrentMillis + bufferTime
-      events = this.getEvents()
+      events = this.song._getEvents(this.maxtime, (this.timeStamp - this.songStartMillis))
       //console.log('done', this.songCurrentMillis, diff, this.index, events.length)
+    }
+
+    if(this.song.useMetronome === true){
+      let metronomeEvents = this.song._metronome.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
+      // if(metronomeEvents.length > 0){
+      //   console.log(this.maxtime, metronomeEvents)
+      // }
+      // metronomeEvents.forEach(e => {
+      //   e.time = (this.timeStamp + e.millis - this.songStartMillis)
+      // })
+      events.push(...metronomeEvents)
     }
 
     numEvents = events.length
@@ -219,7 +230,7 @@ export default class Scheduler{
         //console.info('no midiNoteId', event)
         continue
       }
-
+      // /console.log(event.ticks, event.time, event.millis, event.type, event._track.name)
 
       if(event.type === 'audio'){
         // to be implemented

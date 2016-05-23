@@ -77,6 +77,7 @@ var Instrument = exports.Instrument = function () {
         sampleData = this.samplesData[event.data1][event.data2];
         sample = (0, _sample.createSample)(sampleData, event);
         this.scheduledSamples[event.midiNoteId] = sample;
+        //console.log(sample)
         sample.output.connect(this.output || _init_audio.context.destination);
         // sample.source.onended = () => {
         //   console.log('    deleting', event.midiNoteId)

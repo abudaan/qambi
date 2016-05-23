@@ -27,6 +27,7 @@ var Sample = function () {
       //console.log(event.data1, event.data2)
       this.source = _init_audio.context.createOscillator();
       this.source.type = 'sine';
+      //console.log(event.frequency)
       this.source.frequency.value = event.frequency;
     } else {
       this.source = _init_audio.context.createBufferSource();

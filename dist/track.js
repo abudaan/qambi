@@ -538,6 +538,7 @@ var Track = exports.Track = function () {
 
       // send to javascript instrument
       if (this._instrument !== null) {
+        //console.log(this.name, event)
         this._instrument.processMIDIEvent(event, event.time / 1000);
       }
 

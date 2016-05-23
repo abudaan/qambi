@@ -1,7 +1,7 @@
 //@ flow
 
 import {MIDIEventTypes} from './constants'
-import {parseTimeEvents, parseEvents} from './parse_events'
+import {parseTimeEvents, parseEvents, parseMIDINotes} from './parse_events'
 //import {addTask, removeTask} from './heartbeat'
 import {context, masterGain} from './init_audio'
 import Scheduler from './scheduler'
@@ -128,9 +128,54 @@ export class Song{
     this._loopDuration = 0
     this._precountBars = 0
     this._endPrecountMillis = 0
-    this.update()
+    //this.update()
+
+    this._index = 0
   }
 
+
+  _getEvents(maxtime, timeStamp){
+    let result = []
+
+    //console.log(maxtime)
+    for(let i = this._index, maxi = this._allEvents.length; i < maxi; i++){
+
+      let event = this._allEvents[i]
+      //console.log(this._index, event)
+
+      if(event.type === MIDIEventTypes.TEMPO || event.type === MIDIEventTypes.TIME_SIGNATURE){
+        if(event.millis < maxtime){
+          this.millisPerTick = event.millisPerTick
+          this._index++
+        }else{
+          break
+        }
+
+      }else{
+        let millis = event.ticks * this.millisPerTick
+        if(millis < maxtime){
+          event.time = millis + timeStamp
+          event.millis = millis
+          result.push(event)
+          this._index++
+        }else{
+          break
+        }
+      }
+    }
+    return result
+
+  }
+
+  _prepare(){
+    //console.log(this._events)
+    parseTimeEvents(this, this._timeEvents)
+    parseMIDINotes(this._events)
+    this._allEvents.push(...this._events, ...this._timeEvents)
+    sortEvents(this._allEvents)
+    this._durationMillis = 4000
+    this._metronome.getEvents()
+  }
 
   addTimeEvents(...events){
     //@TODO: filter time events on the same tick -> use the lastly added events
@@ -317,20 +362,21 @@ export class Song{
       result: 'millis'
     }).millis
 
-
     this._lastEvent.ticks = ticks - 1
     this._lastEvent.millis = millis
 
     console.log('length', this._lastEvent.ticks, this._lastEvent.millis, this.bars)
 
+
     this._durationTicks = this._lastEvent.ticks
     this._durationMillis = this._lastEvent.millis
+    console.log(this._durationTicks)
     this._playhead.updateSong()
 
     if(this.playing === false){
       this._playhead.set('millis', this._currentMillis)
     }
-
+/*
     // add metronome events
     if(this._updateMetronomeEvents || this._metronome.bars !== this.bars){
       this._metronomeEvents = parseEvents([...this._timeEvents, ...this._metronome.getEvents()])
@@ -338,6 +384,12 @@ export class Song{
     this._allEvents = [...this._metronomeEvents, ...this._events]
     sortEvents(this._allEvents)
     //console.log('all events %O', this._allEvents)
+*/
+
+    this._metronome.getEvents()
+    this._allEvents = [...this._timeEvents, ...this._events]
+    sortEvents(this._allEvents)
+
 
     this._newParts = []
     this._removedParts = []
@@ -421,6 +473,7 @@ export class Song{
   }
 
   stop(): void{
+    console.log('STOP')
     this.precounting = false
     this.allNotesOff()
     if(this.playing || this.paused){
@@ -653,11 +706,13 @@ export class Song{
 
     this._ticks = this._playhead.get().ticks
 
+    //console.log(this._currentMillis, this._durationMillis)
+
     if(this._currentMillis >= this._durationMillis){
-      if(this.recording === false){
+      if(this.recording !== true){
         this.stop()
         return
-      }else if(this.autoSize === false){
+      }else if(this.autoSize !== true){
         this.stop()
         return
       }
