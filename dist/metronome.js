@@ -233,13 +233,16 @@ var Metronome = exports.Metronome = function () {
       this.endMillis = endPos.millis;
       this.precountDuration = endPos.millis - this.startMillis;
 
-      //console.log(this.precountDuration)
+      // do this so you can start precounting at any position in the song
+      this.timeStamp -= this.startMillis;
 
-      this.precountEvents = this.createEvents(startBar, endBar, 'precount');
+      //console.log(this.precountDuration, this.startMillis, this.endMillis)
+
+      this.precountEvents = this.createEvents(startBar, endBar - 1, 'precount');
       this.precountEvents = (0, _parse_events.parseEvents)([].concat(_toConsumableArray(this.song._timeEvents), _toConsumableArray(this.precountEvents)));
 
       //console.log(songStartPosition.bar, endPos.bar, precount, this.precountEvents.length);
-      //console.log(this.precountEvents, this.precountDuration);
+      //console.log(this.precountEvents.length, this.precountDuration);
       return this.precountDuration;
     }
   }, {

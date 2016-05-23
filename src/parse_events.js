@@ -240,6 +240,7 @@ export function parseEvents(events, isPlaying = false){
         updatePosition(event, isPlaying);
         updateEvent(event, isPlaying);
         result.push(event)
+        //console.log(event.bar)
 
         // if(event.type === 176 && event.data1 === 64){
         //   console.log(event.data2, event.barsAsString)

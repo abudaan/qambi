@@ -85,7 +85,8 @@ var Part = exports.Part = function () {
   }, {
     key: 'addEvents',
     value: function addEvents() {
-      var _this = this;
+      var _this = this,
+          _events;
 
       //console.log(events)
       var track = this._track;
@@ -97,11 +98,15 @@ var Part = exports.Part = function () {
       events.forEach(function (event) {
         event._part = _this;
         _this._eventsById.set(event.id, event);
-        _this._events.push(event);
         if (track) {
           event._track = track;
+          if (track._song) {
+            event._song = track._song;
+          }
         }
       });
+      (_events = this._events).push.apply(_events, events);
+
       if (track) {
         var _track$_events;
 
@@ -109,10 +114,10 @@ var Part = exports.Part = function () {
         track._needsUpdate = true;
       }
       if (this._song) {
-        var _song$_events;
+        var _song$_newEvents;
 
-        (_song$_events = this._song._events).push.apply(_song$_events, events);
-        track._songUpdate = true;
+        (_song$_newEvents = this._song._newEvents).push.apply(_song$_newEvents, events);
+        this._song._changedParts.push(this);
       }
       this._needsUpdate = true;
     }
@@ -133,6 +138,9 @@ var Part = exports.Part = function () {
         if (track) {
           event._track = null;
           track._eventsById.delete(event.id);
+          if (track._song) {
+            event._song = null;
+          }
         }
       });
       if (track) {
@@ -143,6 +151,7 @@ var Part = exports.Part = function () {
         var _song$_removedEvents;
 
         (_song$_removedEvents = this._song._removedEvents).push.apply(_song$_removedEvents, events);
+        this._song._changedParts.push(this);
       }
       this._createEventArray = true;
       this._needsUpdate = true;
@@ -160,6 +169,7 @@ var Part = exports.Part = function () {
       if (this._song) {
         var _song$_movedEvents3;
 
+        this._song._changedParts.push(this);
         (_song$_movedEvents3 = this._song._movedEvents).push.apply(_song$_movedEvents3, _toConsumableArray(this._events));
       }
       this._needsUpdate = true;
@@ -177,6 +187,7 @@ var Part = exports.Part = function () {
       if (this._song) {
         var _song$_movedEvents4;
 
+        this._song._changedParts.push(this);
         (_song$_movedEvents4 = this._song._movedEvents).push.apply(_song$_movedEvents4, _toConsumableArray(this._events));
       }
       this._needsUpdate = true;

@@ -7,9 +7,6 @@ exports.Song = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); //@ flow
 
-//import {addTask, removeTask} from './heartbeat'
-
-
 var _constants = require('./constants');
 
 var _parse_events = require('./parse_events');
@@ -119,8 +116,6 @@ var Song = exports.Song = function () {
     //this._timeEvents = []
     this._updateTimeEvents = true;
     this._lastEvent = new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.END_OF_TRACK);
-    //this._lastEvent._part = {}
-    //this._lastEvent._track = {}
 
     this._tracks = [];
     this._tracksById = new Map();
@@ -172,68 +167,10 @@ var Song = exports.Song = function () {
     this._loopDuration = 0;
     this._precountBars = 0;
     this._endPrecountMillis = 0;
-    //this.update()
-
-    this._index = 0;
+    this.update();
   }
 
   _createClass(Song, [{
-    key: '_getEvents',
-    value: function _getEvents(maxtime, timeStamp) {
-      var result = [];
-
-      //console.log(maxtime)
-      for (var i = this._index, maxi = this._allEvents.length; i < maxi; i++) {
-
-        var event = this._allEvents[i];
-        //console.log(this._index, event)
-
-        if (event.type === _constants.MIDIEventTypes.TEMPO || event.type === _constants.MIDIEventTypes.TIME_SIGNATURE) {
-          if (event.millis < maxtime) {
-            this.millisPerTick = event.millisPerTick;
-            this._index++;
-          } else {
-            break;
-          }
-        } else {
-          var millis = event.ticks * this.millisPerTick;
-          if (millis < maxtime) {
-            event.time = millis + timeStamp;
-            event.millis = millis;
-            result.push(event);
-            this._index++;
-          } else {
-            break;
-          }
-        }
-      }
-      (0, _util.sortEvents)(result);
-      return result;
-    }
-  }, {
-    key: 'update',
-    value: function update() {
-      //console.log(this._events)
-      if (this._updateTimeEvents) {
-        this._updateTimeEvents = false;
-        this._updateEvents = true;
-        (0, _parse_events.parseTimeEvents)(this, this._timeEvents);
-        this._metronome.getEvents();
-      }
-      if (this._updateEvents) {
-        (0, _parse_events.parseMIDINotes)(this._events);
-        //this._allEvents.push(...this._events, ...this._timeEvents)
-        //sortEvents(this._allEvents)
-        (0, _util.sortEvents)(this._events);
-        console.log('update');
-        var lastEvent = this._events[this._events.length - 1];
-        var position = this._calculatePosition('ticks', lastEvent.ticks, 'millis');
-        this._lastEvent.ticks = lastEvent.ticks;
-        this._durationMillis = position.millis;
-      }
-      //console.log(position, lastEvent, this._durationMillis)
-    }
-  }, {
     key: 'addTimeEvents',
     value: function addTimeEvents() {
       var _this = this;
@@ -261,24 +198,23 @@ var Song = exports.Song = function () {
       }
 
       tracks.forEach(function (track) {
-        var _events;
+        var _newEvents, _newParts;
 
         track._song = _this2;
         track.connect(_this2._output);
         _this2._tracks.push(track);
         _this2._tracksById.set(track.id, track);
-        (_events = _this2._events).push.apply(_events, _toConsumableArray(track._events));
+        (_newEvents = _this2._newEvents).push.apply(_newEvents, _toConsumableArray(track._events));
+        (_newParts = _this2._newParts).push.apply(_newParts, _toConsumableArray(track._parts));
       });
     }
 
     // prepare song events for playback
 
   }, {
-    key: 'update_',
-    value: function update_() {
+    key: 'update',
+    value: function update() {
       var _this3 = this;
-
-      var createEventArray = false;
 
       if (this._updateTimeEvents === false && this._removedEvents.length === 0 && this._newEvents.length === 0 && this._movedEvents.length === 0 && this._newParts.length === 0 && this._removedParts.length === 0 && this._resized === false) {
         return;
@@ -288,6 +224,8 @@ var Song = exports.Song = function () {
 
       console.group('update song');
       console.time('total');
+
+      // TIME EVENTS
 
       // check if time events are updated
       if (this._updateTimeEvents === true) {
@@ -300,13 +238,12 @@ var Song = exports.Song = function () {
       // only parse new and moved events
       var tobeParsed = [];
 
+      // PARTS
+
       // filter removed parts
       console.log('removed parts %O', this._removedParts);
       this._removedParts.forEach(function (part) {
-        var _removedEvents;
-
         _this3._partsById.delete(part.id);
-        (_removedEvents = _this3._removedEvents).push.apply(_removedEvents, _toConsumableArray(part._events));
       });
 
       // add new parts
@@ -314,7 +251,6 @@ var Song = exports.Song = function () {
       this._newParts.forEach(function (part) {
         part._song = _this3;
         _this3._partsById.set(part.id, part);
-        //this._newEvents.push(...part._events)
         part.update();
       });
 
@@ -324,19 +260,17 @@ var Song = exports.Song = function () {
         part.update();
       });
 
-      // remove events from removed parts
-      console.log('changed parts %O', this._changedParts);
+      // removed parts
+      console.log('removed parts %O', this._changedParts);
       this._removedParts.forEach(function (part) {
-        var _removedEvents2;
-
-        (_removedEvents2 = _this3._removedEvents).push.apply(_removedEvents2, _toConsumableArray(part._events));
         _this3._partsById.delete(part.id);
-        part.update();
       });
 
       if (this._removedParts.length > 0) {
         this._parts = Array.from(this._partsById.values());
       }
+
+      // EVENTS
 
       // filter removed events
       console.log('removed events %O', this._removedEvents);
@@ -345,15 +279,12 @@ var Song = exports.Song = function () {
         _this3._eventsById.delete(event.id);
       });
 
-      createEventArray = this._removedEvents.length > 0;
-
       // add new events
       console.log('new events %O', this._newEvents);
       this._newEvents.forEach(function (event) {
         _this3._eventsById.set(event.id, event);
         _this3._events.push(event);
         tobeParsed.push(event);
-        //console.log(event.id)
       });
 
       // moved events need to be parsed
@@ -362,14 +293,16 @@ var Song = exports.Song = function () {
         tobeParsed.push(event);
       });
 
-      //tobeParsed = [...tobeParsed, ...Array.from(song.movedEvents.values())]
-
-      console.time('parse');
+      // parse all new and moved events
       if (tobeParsed.length > 0) {
+        console.time('parse');
         //console.log('tobeParsed %O', tobeParsed)
+        console.log('parseEvents', tobeParsed.length);
+
         tobeParsed = [].concat(_toConsumableArray(tobeParsed), _toConsumableArray(this._timeEvents));
-        console.log('parseEvents', tobeParsed.length - this._timeEvents.length);
         (0, _parse_events.parseEvents)(tobeParsed, this.isPlaying);
+
+        // add MIDI notes to song
         tobeParsed.forEach(function (event) {
           //console.log(event.id, event.type, event.midiNote)
           if (event.type === _constants.MIDIEventTypes.NOTE_ON) {
@@ -380,17 +313,15 @@ var Song = exports.Song = function () {
             }
           }
         });
-        this._notes = Array.from(this._notesById.values());
+        console.timeEnd('parse');
       }
-      console.timeEnd('parse');
 
-      if (createEventArray) {
+      if (tobeParsed.length > 0 || this._removedEvents.length > 0) {
         console.time('to array');
         this._events = Array.from(this._eventsById.values());
         this._notes = Array.from(this._notesById.values());
         console.timeEnd('to array');
       }
-      //debugger
 
       console.time('sorting ' + this._events.length + ' events');
       (0, _util.sortEvents)(this._events);
@@ -400,13 +331,16 @@ var Song = exports.Song = function () {
       console.timeEnd('sorting ' + this._events.length + ' events');
 
       console.log('notes %O', this._notes);
-
       console.timeEnd('total');
       console.timeEnd('update song');
+
+      // SONG DURATION
 
       // get the last event of this song
       var lastEvent = this._events[this._events.length - 1];
       var lastTimeEvent = this._timeEvents[this._timeEvents.length - 1];
+
+      // check if song has already any events
       if (lastEvent instanceof _midi_event.MIDIEvent === false) {
         lastEvent = lastTimeEvent;
       } else if (lastTimeEvent.ticks > lastEvent.ticks) {
@@ -415,7 +349,6 @@ var Song = exports.Song = function () {
 
       // get the position data of the first beat in the bar after the last bar
       this.bars = Math.max(lastEvent.bar, this.bars);
-      //console.log('num bars', this.bars, lastEvent)
       var ticks = (0, _position.calculatePosition)(this, {
         type: 'barsbeats',
         target: [this.bars + 1],
@@ -436,26 +369,33 @@ var Song = exports.Song = function () {
 
       this._durationTicks = this._lastEvent.ticks;
       this._durationMillis = this._lastEvent.millis;
-      console.log(this._durationTicks);
       this._playhead.updateSong();
 
       if (this.playing === false) {
         this._playhead.set('millis', this._currentMillis);
+        (0, _eventlistener.dispatchEvent)({
+          type: 'position',
+          data: this._playhead.get().position
+        });
       }
+
+      // METRONOME
+
+      // add metronome events
+      if (this._updateMetronomeEvents || this._metronome.bars !== this.bars) {
+        this._metronomeEvents = (0, _parse_events.parseEvents)([].concat(_toConsumableArray(this._timeEvents), _toConsumableArray(this._metronome.getEvents())));
+      }
+      this._allEvents = [].concat(_toConsumableArray(this._metronomeEvents), _toConsumableArray(this._events));
+      (0, _util.sortEvents)(this._allEvents);
+      //console.log('all events %O', this._allEvents)
+
       /*
-          // add metronome events
-          if(this._updateMetronomeEvents || this._metronome.bars !== this.bars){
-            this._metronomeEvents = parseEvents([...this._timeEvents, ...this._metronome.getEvents()])
-          }
-          this._allEvents = [...this._metronomeEvents, ...this._events]
+          this._metronome.getEvents()
+          this._allEvents = [...this._events]
           sortEvents(this._allEvents)
-          //console.log('all events %O', this._allEvents)
       */
 
-      this._metronome.getEvents();
-      this._allEvents = [].concat(_toConsumableArray(this._timeEvents), _toConsumableArray(this._events));
-      (0, _util.sortEvents)(this._allEvents);
-
+      // reset
       this._newParts = [];
       this._removedParts = [];
       this._newEvents = [];
@@ -502,19 +442,20 @@ var Song = exports.Song = function () {
       this._startMillis = this._currentMillis;
 
       if (this._precountBars > 0 && this._preparedForRecording) {
-        var position = this.getPosition();
+
         // create precount events, the playhead will be moved to the first beat of the current bar
+        var position = this.getPosition();
         this._metronome.createPrecountEvents(position.bar, position.bar + this._precountBars, this._reference);
         this._currentMillis = this._calculatePosition('barsbeats', [position.bar], 'millis').millis;
         this._precountDuration = this._metronome.precountDuration;
         this._endPrecountMillis = this._currentMillis + this._precountDuration;
 
-        console.group('precount');
-        console.log('position', this.getPosition());
-        console.log('_currentMillis', this._currentMillis);
-        console.log('endPrecountMillis', this._endPrecountMillis);
-        console.log('_precountDuration', this._precountDuration);
-        console.groupEnd('precount');
+        // console.group('precount')
+        // console.log('position', this.getPosition())
+        // console.log('_currentMillis', this._currentMillis)
+        // console.log('endPrecountMillis', this._endPrecountMillis)
+        // console.log('_precountDuration', this._precountDuration)
+        // console.groupEnd('precount')
         //console.log('precountDuration', this._metronome.createPrecountEvents(this._precountBars, this._reference))
         this.precounting = true;
       } else {
@@ -531,6 +472,83 @@ var Song = exports.Song = function () {
       this._playhead.set('millis', this._currentMillis);
       this._scheduler.init(this._currentMillis);
       this._pulse();
+    }
+  }, {
+    key: '_pulse',
+    value: function _pulse() {
+      if (this.playing === false && this.precounting === false) {
+        return;
+      }
+      var now = _init_audio.context.currentTime * 1000;
+      var diff = now - this._reference;
+      this._currentMillis += diff;
+      this._reference = now;
+
+      if (this._endPrecountMillis > 0) {
+        if (this._endPrecountMillis > this._currentMillis) {
+          this._scheduler.update(diff);
+          requestAnimationFrame(this._pulse.bind(this));
+          //return because during precounting only precount metronome events get scheduled
+          return;
+        }
+        this.precounting = false;
+        this._endPrecountMillis = 0;
+        this._currentMillis -= this._precountDuration;
+        if (this._preparedForRecording) {
+          this.playing = true;
+          this.recording = true;
+        } else {
+          this.playing = true;
+          (0, _eventlistener.dispatchEvent)({ type: 'play', data: this._startMillis });
+          //dispatchEvent({type: 'play', data: this._currentMillis})
+        }
+      }
+
+      if (this._loop && this._currentMillis >= this._rightLocator.millis) {
+        this._currentMillis -= this._loopDuration;
+        this._playhead.set('millis', this._currentMillis);
+        //this._playhead.set('millis', this._leftLocator.millis) // playhead is a bit ahead only during this frame
+        (0, _eventlistener.dispatchEvent)({
+          type: 'loop',
+          data: null
+        });
+      } else {
+        this._playhead.update('millis', diff);
+      }
+
+      this._ticks = this._playhead.get().ticks;
+
+      //console.log(this._currentMillis, this._durationMillis)
+
+      if (this._currentMillis >= this._durationMillis) {
+        var _scheduler$events;
+
+        if (this.recording !== true) {
+          this.stop();
+          return;
+        } else if (this.autoSize !== true) {
+          this.stop();
+          return;
+        }
+        var _events = this._metronome.addEvents(this.bars, this.bars + 1);
+        var tobeParsed = [].concat(_toConsumableArray(_events), _toConsumableArray(this._timeEvents));
+        (0, _util.sortEvents)(tobeParsed);
+        (0, _parse_events.parseEvents)(tobeParsed);
+        (_scheduler$events = this._scheduler.events).push.apply(_scheduler$events, _toConsumableArray(_events));
+        this._scheduler.numEvents += _events.length;
+        var lastEvent = _events[_events.length - 1];
+        var extraMillis = lastEvent.ticksPerBar * lastEvent.millisPerTick;
+        this._lastEvent.ticks += lastEvent.ticksPerBar;
+        this._lastEvent.millis += extraMillis;
+        this._durationMillis += extraMillis;
+        this.bars++;
+        this._resized = true;
+        //console.log('length', this._lastEvent.ticks, this._lastEvent.millis, this.bars, lastEvent)
+      }
+
+      this._scheduler.update(diff);
+
+      requestAnimationFrame(this._pulse.bind(this));
     }
   }, {
     key: 'pause',
@@ -785,83 +803,6 @@ var Song = exports.Song = function () {
       var value = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
 
       this._precountBars = value;
-    }
-  }, {
-    key: '_pulse',
-    value: function _pulse() {
-      if (this.playing === false && this.precounting === false) {
-        return;
-      }
-      var now = _init_audio.context.currentTime * 1000;
-      var diff = now - this._reference;
-      this._currentMillis += diff;
-      this._reference = now;
-
-      if (this._endPrecountMillis > 0) {
-        if (this._endPrecountMillis > this._currentMillis) {
-          this._scheduler.update(diff);
-          requestAnimationFrame(this._pulse.bind(this));
-          //return because during precounting only precount metronome events get scheduled
-          return;
-        }
-        this.precounting = false;
-        this._endPrecountMillis = 0;
-        this._currentMillis -= this._precountDuration;
-        if (this._preparedForRecording) {
-          this.playing = true;
-          this.recording = true;
-        } else {
-          this.playing = true;
-          (0, _eventlistener.dispatchEvent)({ type: 'play', data: this._startMillis });
-          //dispatchEvent({type: 'play', data: this._currentMillis})
-        }
-      }
-
-      if (this._loop && this._currentMillis >= this._rightLocator.millis) {
-        this._currentMillis -= this._loopDuration;
-        this._playhead.set('millis', this._currentMillis);
-        //this._playhead.set('millis', this._leftLocator.millis) // playhead is a bit ahead only during this frame
-        (0, _eventlistener.dispatchEvent)({
-          type: 'loop',
-          data: null
-        });
-      } else {
-        this._playhead.update('millis', diff);
-      }
-
-      this._ticks = this._playhead.get().ticks;
-
-      //console.log(this._currentMillis, this._durationMillis)
-
-      if (this._currentMillis >= this._durationMillis) {
-        var _scheduler$events;
-
-        if (this.recording !== true) {
-          this.stop();
-          return;
-        } else if (this.autoSize !== true) {
-          this.stop();
-          return;
-        }
-        var _events2 = this._metronome.addEvents(this.bars, this.bars + 1);
-        var tobeParsed = [].concat(_toConsumableArray(_events2), _toConsumableArray(this._timeEvents));
-        (0, _util.sortEvents)(tobeParsed);
-        (0, _parse_events.parseEvents)(tobeParsed);
-        (_scheduler$events = this._scheduler.events).push.apply(_scheduler$events, _toConsumableArray(_events2));
-        this._scheduler.numEvents += _events2.length;
-        var lastEvent = _events2[_events2.length - 1];
-        var extraMillis = lastEvent.ticksPerBar * lastEvent.millisPerTick;
-        this._lastEvent.ticks += lastEvent.ticksPerBar;
-        this._lastEvent.millis += extraMillis;
-        this._durationMillis += extraMillis;
-        this.bars++;
-        this._resized = true;
-        //console.log('length', this._lastEvent.ticks, this._lastEvent.millis, this.bars, lastEvent)
-      }
-
-      this._scheduler.update(diff);
-
-      requestAnimationFrame(this._pulse.bind(this));
     }
 
     /*

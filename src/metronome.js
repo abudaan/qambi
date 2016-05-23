@@ -203,13 +203,16 @@ export class Metronome{
     this.endMillis = endPos.millis
     this.precountDuration = endPos.millis - this.startMillis
 
-    //console.log(this.precountDuration)
+    // do this so you can start precounting at any position in the song
+    this.timeStamp -= this.startMillis
 
-    this.precountEvents = this.createEvents(startBar, endBar, 'precount');
+    //console.log(this.precountDuration, this.startMillis, this.endMillis)
+
+    this.precountEvents = this.createEvents(startBar, endBar - 1, 'precount');
     this.precountEvents = parseEvents([...this.song._timeEvents, ...this.precountEvents])
 
     //console.log(songStartPosition.bar, endPos.bar, precount, this.precountEvents.length);
-    //console.log(this.precountEvents, this.precountDuration);
+    //console.log(this.precountEvents.length, this.precountDuration);
     return this.precountDuration
   }
 

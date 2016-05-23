@@ -293,23 +293,27 @@ var Track = exports.Track = function () {
         var _events;
 
         part._track = _this5;
-        _this5._partsById.set(part.id, part);
         _this5._parts.push(part);
-        if (song) {
-          part._song = song;
-          song._newParts.push(part);
-        }
+        _this5._partsById.set(part.id, part);
 
         var events = part._events;
+        (_events = _this5._events).push.apply(_events, _toConsumableArray(events));
+
+        if (song) {
+          var _song$_newEvents;
+
+          part._song = song;
+          song._newParts.push(part);
+          (_song$_newEvents = song._newEvents).push.apply(_song$_newEvents, _toConsumableArray(events));
+        }
+
         events.forEach(function (event) {
           event._track = _this5;
           if (song) {
             event._song = song;
-            song._newEvents.push(event);
           }
           _this5._eventsById.set(event.id, event);
         });
-        (_events = _this5._events).push.apply(_events, _toConsumableArray(events));
       });
       this._needsUpdate = true;
     }
@@ -327,16 +331,20 @@ var Track = exports.Track = function () {
       parts.forEach(function (part) {
         part._track = null;
         _this6._partsById.delete(part.id, part);
-        if (song) {
-          song._removedParts.push(part);
-        }
 
         var events = part._events;
+
+        if (song) {
+          var _song$_removedEvents;
+
+          song._removedParts.push(part);
+          (_song$_removedEvents = song._removedEvents).push.apply(_song$_removedEvents, _toConsumableArray(events));
+        }
+
         events.forEach(function (event) {
           event._track = null;
           if (song) {
             event._song = null;
-            //song._deletedEvents.push(event)
           }
           _this6._eventsById.delete(event.id, event);
         });
@@ -387,13 +395,14 @@ var Track = exports.Track = function () {
         part.moveTo(ticks);
       });
     }
-  }, {
-    key: 'addEvents',
-    value: function addEvents() {
-      var p = new _part.Part();
-      p.addEvents.apply(p, arguments);
-      this.addParts(p);
-    }
+    /*
+      addEvents(...events){
+        let p = new Part()
+        p.addEvents(...events)
+        this.addParts(p)
+      }
+    */
+
   }, {
     key: 'removeEvents',
     value: function removeEvents() {
@@ -413,10 +422,10 @@ var Track = exports.Track = function () {
         _this7._eventsById.delete(event.id);
       });
       if (this._song) {
-        var _song$_changedParts, _song$_removedEvents;
+        var _song$_removedEvents2, _song$_changedParts;
 
+        (_song$_removedEvents2 = this._song._removedEvents).push.apply(_song$_removedEvents2, events);
         (_song$_changedParts = this._song._changedParts).push.apply(_song$_changedParts, _toConsumableArray(Array.from(parts.entries())));
-        (_song$_removedEvents = this._song._removedEvents).push.apply(_song$_removedEvents, events);
       }
       this._needsUpdate = true;
       this._createEventArray = true;
@@ -435,10 +444,10 @@ var Track = exports.Track = function () {
         parts.set(event.part);
       });
       if (this._song) {
-        var _song$_changedParts2, _song$_movedEvents;
+        var _song$_movedEvents, _song$_changedParts2;
 
-        (_song$_changedParts2 = this._song._changedParts).push.apply(_song$_changedParts2, _toConsumableArray(Array.from(parts.entries())));
         (_song$_movedEvents = this._song._movedEvents).push.apply(_song$_movedEvents, events);
+        (_song$_changedParts2 = this._song._changedParts).push.apply(_song$_changedParts2, _toConsumableArray(Array.from(parts.entries())));
       }
     }
   }, {
@@ -455,10 +464,10 @@ var Track = exports.Track = function () {
         parts.set(event.part);
       });
       if (this._song) {
-        var _song$_changedParts3, _song$_movedEvents2;
+        var _song$_movedEvents2, _song$_changedParts3;
 
-        (_song$_changedParts3 = this._song._changedParts).push.apply(_song$_changedParts3, _toConsumableArray(Array.from(parts.entries())));
         (_song$_movedEvents2 = this._song._movedEvents).push.apply(_song$_movedEvents2, events);
+        (_song$_changedParts3 = this._song._changedParts).push.apply(_song$_changedParts3, _toConsumableArray(Array.from(parts.entries())));
       }
     }
   }, {

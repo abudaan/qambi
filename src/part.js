@@ -66,18 +66,22 @@ export class Part{
     events.forEach((event) => {
       event._part = this
       this._eventsById.set(event.id, event)
-      this._events.push(event)
       if(track){
         event._track = track
+        if(track._song){
+          event._song = track._song
+        }
       }
     })
+    this._events.push(...events)
+
     if(track){
       track._events.push(...events)
       track._needsUpdate = true
     }
     if(this._song){
-      this._song._events.push(...events)
-      track._songUpdate = true
+      this._song._newEvents.push(...events)
+      this._song._changedParts.push(this)
     }
     this._needsUpdate = true
   }
@@ -90,6 +94,9 @@ export class Part{
       if(track){
         event._track = null
         track._eventsById.delete(event.id)
+        if(track._song){
+          event._song = null
+        }
       }
     })
     if(track){
@@ -98,6 +105,7 @@ export class Part{
     }
     if(this._song){
       this._song._removedEvents.push(...events)
+      this._song._changedParts.push(this)
     }
     this._createEventArray = true
     this._needsUpdate = true
@@ -108,6 +116,7 @@ export class Part{
       event.move(ticks)
     })
     if(this._song){
+      this._song._changedParts.push(this)
       this._song._movedEvents.push(...this._events)
     }
     this._needsUpdate = true
@@ -118,6 +127,7 @@ export class Part{
       event.moveTo(ticks)
     })
     if(this._song){
+      this._song._changedParts.push(this)
       this._song._movedEvents.push(...this._events)
     }
     this._needsUpdate = true

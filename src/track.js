@@ -209,25 +209,29 @@ export class Track{
 
   addParts(...parts){
     let song = this._song
+
     parts.forEach((part) => {
+
       part._track = this
-      this._partsById.set(part.id, part)
       this._parts.push(part)
+      this._partsById.set(part.id, part)
+
+      let events = part._events
+      this._events.push(...events)
+
       if(song){
         part._song = song
         song._newParts.push(part)
+        song._newEvents.push(...events)
       }
 
-      let events = part._events
       events.forEach((event) => {
         event._track = this
         if(song){
           event._song = song
-          song._newEvents.push(event)
         }
         this._eventsById.set(event.id, event)
       })
-      this._events.push(...events)
     })
     this._needsUpdate = true
   }
@@ -238,16 +242,18 @@ export class Track{
     parts.forEach((part) => {
       part._track = null
       this._partsById.delete(part.id, part)
-      if(song){
-        song._removedParts.push(part)
-      }
 
       let events = part._events
+
+      if(song){
+        song._removedParts.push(part)
+        song._removedEvents.push(...events)
+      }
+
       events.forEach(event => {
         event._track = null
         if(song){
           event._song = null
-          //song._deletedEvents.push(event)
         }
         this._eventsById.delete(event.id, event)
       })
@@ -283,13 +289,13 @@ export class Track{
       part.moveTo(ticks)
     })
   }
-
+/*
   addEvents(...events){
     let p = new Part()
     p.addEvents(...events)
     this.addParts(p)
   }
-
+*/
   removeEvents(...events){
     let parts = new Set()
     events.forEach((event) => {
@@ -300,8 +306,8 @@ export class Track{
       this._eventsById.delete(event.id)
     })
     if(this._song){
-      this._song._changedParts.push(...Array.from(parts.entries()))
       this._song._removedEvents.push(...events)
+      this._song._changedParts.push(...Array.from(parts.entries()))
     }
     this._needsUpdate = true
     this._createEventArray = true
@@ -314,8 +320,8 @@ export class Track{
       parts.set(event.part)
     })
     if(this._song){
-      this._song._changedParts.push(...Array.from(parts.entries()))
       this._song._movedEvents.push(...events)
+      this._song._changedParts.push(...Array.from(parts.entries()))
     }
   }
 
@@ -326,8 +332,8 @@ export class Track{
       parts.set(event.part)
     })
     if(this._song){
-      this._song._changedParts.push(...Array.from(parts.entries()))
       this._song._movedEvents.push(...events)
+      this._song._changedParts.push(...Array.from(parts.entries()))
     }
   }
 

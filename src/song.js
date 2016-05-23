@@ -2,7 +2,6 @@
 
 import {MIDIEventTypes} from './constants'
 import {parseTimeEvents, parseEvents, parseMIDINotes} from './parse_events'
-//import {addTask, removeTask} from './heartbeat'
 import {context, masterGain} from './init_audio'
 import Scheduler from './scheduler'
 import {MIDIEvent} from './midi_event'
@@ -77,8 +76,6 @@ export class Song{
     //this._timeEvents = []
     this._updateTimeEvents = true
     this._lastEvent = new MIDIEvent(0, MIDIEventTypes.END_OF_TRACK)
-    //this._lastEvent._part = {}
-    //this._lastEvent._track = {}
 
     this._tracks = []
     this._tracksById = new Map()
@@ -130,66 +127,7 @@ export class Song{
     this._loopDuration = 0
     this._precountBars = 0
     this._endPrecountMillis = 0
-    //this.update()
-
-    this._index = 0
-  }
-
-
-  _getEvents(maxtime, timeStamp){
-    let result = []
-
-    //console.log(maxtime)
-    for(let i = this._index, maxi = this._allEvents.length; i < maxi; i++){
-
-      let event = this._allEvents[i]
-      //console.log(this._index, event)
-
-      if(event.type === MIDIEventTypes.TEMPO || event.type === MIDIEventTypes.TIME_SIGNATURE){
-        if(event.millis < maxtime){
-          this.millisPerTick = event.millisPerTick
-          this._index++
-        }else{
-          break
-        }
-
-      }else{
-        let millis = event.ticks * this.millisPerTick
-        if(millis < maxtime){
-          event.time = millis + timeStamp
-          event.millis = millis
-          result.push(event)
-          this._index++
-        }else{
-          break
-        }
-      }
-    }
-    sortEvents(result)
-    return result
-
-  }
-
-  update(){
-    //console.log(this._events)
-    if(this._updateTimeEvents){
-      this._updateTimeEvents = false
-      this._updateEvents = true
-      parseTimeEvents(this, this._timeEvents)
-      this._metronome.getEvents()
-    }
-    if(this._updateEvents){
-      parseMIDINotes(this._events)
-      //this._allEvents.push(...this._events, ...this._timeEvents)
-      //sortEvents(this._allEvents)
-      sortEvents(this._events)
-      console.log('update')
-      let lastEvent = this._events[this._events.length - 1]
-      let position = this._calculatePosition('ticks', lastEvent.ticks, 'millis')
-      this._lastEvent.ticks = lastEvent.ticks
-      this._durationMillis = position.millis
-    }
-    //console.log(position, lastEvent, this._durationMillis)
+    this.update()
   }
 
   addTimeEvents(...events){
@@ -209,14 +147,13 @@ export class Song{
       track.connect(this._output)
       this._tracks.push(track)
       this._tracksById.set(track.id, track)
-      this._events.push(...track._events)
+      this._newEvents.push(...track._events)
+      this._newParts.push(...track._parts)
     })
   }
 
   // prepare song events for playback
-  update_(): void{
-
-    let createEventArray = false
+  update(): void{
 
     if(this._updateTimeEvents === false
       && this._removedEvents.length === 0
@@ -234,6 +171,9 @@ export class Song{
     console.group('update song')
     console.time('total')
 
+
+// TIME EVENTS
+
     // check if time events are updated
     if(this._updateTimeEvents === true){
       //console.log('updateTimeEvents', this._timeEvents.length)
@@ -246,11 +186,12 @@ export class Song{
     let tobeParsed = []
 
 
+// PARTS
+
     // filter removed parts
     console.log('removed parts %O', this._removedParts)
     this._removedParts.forEach((part) => {
       this._partsById.delete(part.id)
-      this._removedEvents.push(...part._events)
     })
 
 
@@ -259,7 +200,6 @@ export class Song{
     this._newParts.forEach((part) => {
       part._song = this
       this._partsById.set(part.id, part)
-      //this._newEvents.push(...part._events)
       part.update()
     })
 
@@ -270,18 +210,19 @@ export class Song{
       part.update()
     })
 
-    // remove events from removed parts
-    console.log('changed parts %O', this._changedParts)
+
+    // removed parts
+    console.log('removed parts %O', this._changedParts)
     this._removedParts.forEach((part) => {
-      this._removedEvents.push(...part._events)
       this._partsById.delete(part.id)
-      part.update()
     })
 
     if(this._removedParts.length > 0){
       this._parts = Array.from(this._partsById.values())
     }
 
+
+// EVENTS
 
     // filter removed events
     console.log('removed events %O', this._removedEvents)
@@ -290,7 +231,6 @@ export class Song{
       this._eventsById.delete(event.id)
     })
 
-    createEventArray = this._removedEvents.length > 0
 
     // add new events
     console.log('new events %O', this._newEvents)
@@ -298,8 +238,8 @@ export class Song{
       this._eventsById.set(event.id, event)
       this._events.push(event)
       tobeParsed.push(event)
-      //console.log(event.id)
     })
+
 
     // moved events need to be parsed
     console.log('moved %O', this._movedEvents)
@@ -307,14 +247,17 @@ export class Song{
       tobeParsed.push(event)
     })
 
-    //tobeParsed = [...tobeParsed, ...Array.from(song.movedEvents.values())]
 
-    console.time('parse')
+    // parse all new and moved events
     if(tobeParsed.length > 0){
+      console.time('parse')
       //console.log('tobeParsed %O', tobeParsed)
+      console.log('parseEvents', tobeParsed.length)
+
       tobeParsed = [...tobeParsed, ...this._timeEvents]
-      console.log('parseEvents', tobeParsed.length - this._timeEvents.length)
       parseEvents(tobeParsed, this.isPlaying)
+
+      // add MIDI notes to song
       tobeParsed.forEach(event => {
         //console.log(event.id, event.type, event.midiNote)
         if(event.type === MIDIEventTypes.NOTE_ON){
@@ -325,18 +268,17 @@ export class Song{
           }
         }
       })
-      this._notes = Array.from(this._notesById.values())
+      console.timeEnd('parse')
     }
-    console.timeEnd('parse')
 
 
-    if(createEventArray){
+    if(tobeParsed.length > 0 || this._removedEvents.length > 0){
       console.time('to array')
       this._events = Array.from(this._eventsById.values())
       this._notes = Array.from(this._notesById.values())
       console.timeEnd('to array')
     }
-    //debugger
+
 
     console.time(`sorting ${this._events.length} events`)
     sortEvents(this._events)
@@ -346,14 +288,17 @@ export class Song{
     console.timeEnd(`sorting ${this._events.length} events`)
 
     console.log('notes %O', this._notes)
-
     console.timeEnd('total')
     console.timeEnd('update song')
 
 
+// SONG DURATION
+
     // get the last event of this song
     let lastEvent = this._events[this._events.length - 1]
     let lastTimeEvent = this._timeEvents[this._timeEvents.length - 1]
+
+    // check if song has already any events
     if(lastEvent instanceof MIDIEvent === false){
       lastEvent = lastTimeEvent
     }else if(lastTimeEvent.ticks > lastEvent.ticks){
@@ -362,7 +307,6 @@ export class Song{
 
     // get the position data of the first beat in the bar after the last bar
     this.bars = Math.max(lastEvent.bar, this.bars)
-    //console.log('num bars', this.bars, lastEvent)
     let ticks = calculatePosition(this, {
       type: 'barsbeats',
       target: [this.bars + 1],
@@ -381,16 +325,21 @@ export class Song{
 
     console.log('length', this._lastEvent.ticks, this._lastEvent.millis, this.bars)
 
-
     this._durationTicks = this._lastEvent.ticks
     this._durationMillis = this._lastEvent.millis
-    console.log(this._durationTicks)
     this._playhead.updateSong()
 
     if(this.playing === false){
       this._playhead.set('millis', this._currentMillis)
+      dispatchEvent({
+        type: 'position',
+        data: this._playhead.get().position
+      })
     }
-/*
+
+
+// METRONOME
+
     // add metronome events
     if(this._updateMetronomeEvents || this._metronome.bars !== this.bars){
       this._metronomeEvents = parseEvents([...this._timeEvents, ...this._metronome.getEvents()])
@@ -398,13 +347,14 @@ export class Song{
     this._allEvents = [...this._metronomeEvents, ...this._events]
     sortEvents(this._allEvents)
     //console.log('all events %O', this._allEvents)
+
+/*
+    this._metronome.getEvents()
+    this._allEvents = [...this._events]
+    sortEvents(this._allEvents)
 */
 
-    this._metronome.getEvents()
-    this._allEvents = [...this._timeEvents, ...this._events]
-    sortEvents(this._allEvents)
-
-
+    // reset
     this._newParts = []
     this._removedParts = []
     this._newEvents = []
@@ -441,19 +391,20 @@ export class Song{
     this._startMillis = this._currentMillis
 
     if(this._precountBars > 0 && this._preparedForRecording){
-      let position = this.getPosition()
+
       // create precount events, the playhead will be moved to the first beat of the current bar
+      let position = this.getPosition()
       this._metronome.createPrecountEvents(position.bar, position.bar + this._precountBars, this._reference)
       this._currentMillis = this._calculatePosition('barsbeats', [position.bar], 'millis').millis
       this._precountDuration = this._metronome.precountDuration
       this._endPrecountMillis = this._currentMillis + this._precountDuration
 
-      console.group('precount')
-      console.log('position', this.getPosition())
-      console.log('_currentMillis', this._currentMillis)
-      console.log('endPrecountMillis', this._endPrecountMillis)
-      console.log('_precountDuration', this._precountDuration)
-      console.groupEnd('precount')
+      // console.group('precount')
+      // console.log('position', this.getPosition())
+      // console.log('_currentMillis', this._currentMillis)
+      // console.log('endPrecountMillis', this._endPrecountMillis)
+      // console.log('_precountDuration', this._precountDuration)
+      // console.groupEnd('precount')
       //console.log('precountDuration', this._metronome.createPrecountEvents(this._precountBars, this._reference))
       this.precounting = true
     }else {
@@ -472,6 +423,79 @@ export class Song{
     this._pulse()
   }
 
+  _pulse(): void{
+    if(this.playing === false && this.precounting === false){
+      return
+    }
+    let now = context.currentTime * 1000
+    let diff = now - this._reference
+    this._currentMillis += diff
+    this._reference = now
+
+    if(this._endPrecountMillis > 0){
+      if(this._endPrecountMillis > this._currentMillis){
+        this._scheduler.update(diff)
+        requestAnimationFrame(this._pulse.bind(this))
+        //return because during precounting only precount metronome events get scheduled
+        return
+      }
+      this.precounting = false
+      this._endPrecountMillis = 0
+      this._currentMillis -= this._precountDuration
+      if(this._preparedForRecording){
+        this.playing = true
+        this.recording = true
+      }else{
+        this.playing = true
+        dispatchEvent({type: 'play', data: this._startMillis})
+        //dispatchEvent({type: 'play', data: this._currentMillis})
+      }
+    }
+
+    if(this._loop && this._currentMillis >= this._rightLocator.millis){
+      this._currentMillis -= this._loopDuration
+      this._playhead.set('millis', this._currentMillis)
+      //this._playhead.set('millis', this._leftLocator.millis) // playhead is a bit ahead only during this frame
+      dispatchEvent({
+        type: 'loop',
+        data: null
+      })
+    }else{
+      this._playhead.update('millis', diff)
+    }
+
+    this._ticks = this._playhead.get().ticks
+
+    //console.log(this._currentMillis, this._durationMillis)
+
+    if(this._currentMillis >= this._durationMillis){
+      if(this.recording !== true){
+        this.stop()
+        return
+      }else if(this.autoSize !== true){
+        this.stop()
+        return
+      }
+      let events = this._metronome.addEvents(this.bars, this.bars + 1)
+      let tobeParsed = [...events, ...this._timeEvents]
+      sortEvents(tobeParsed)
+      parseEvents(tobeParsed)
+      this._scheduler.events.push(...events)
+      this._scheduler.numEvents += events.length
+      let lastEvent = events[events.length - 1]
+      let extraMillis = lastEvent.ticksPerBar * lastEvent.millisPerTick
+      this._lastEvent.ticks += lastEvent.ticksPerBar
+      this._lastEvent.millis += extraMillis
+      this._durationMillis += extraMillis
+      this.bars++
+      this._resized = true
+      //console.log('length', this._lastEvent.ticks, this._lastEvent.millis, this.bars, lastEvent)
+    }
+
+    this._scheduler.update(diff)
+
+    requestAnimationFrame(this._pulse.bind(this))
+  }
 
   pause(): void{
     this.paused = !this.paused
@@ -675,80 +699,6 @@ export class Song{
 
   setPrecount(value = 0){
     this._precountBars = value
-  }
-
-  _pulse(): void{
-    if(this.playing === false && this.precounting === false){
-      return
-    }
-    let now = context.currentTime * 1000
-    let diff = now - this._reference
-    this._currentMillis += diff
-    this._reference = now
-
-    if(this._endPrecountMillis > 0){
-      if(this._endPrecountMillis > this._currentMillis){
-        this._scheduler.update(diff)
-        requestAnimationFrame(this._pulse.bind(this))
-        //return because during precounting only precount metronome events get scheduled
-        return
-      }
-      this.precounting = false
-      this._endPrecountMillis = 0
-      this._currentMillis -= this._precountDuration
-      if(this._preparedForRecording){
-        this.playing = true
-        this.recording = true
-      }else{
-        this.playing = true
-        dispatchEvent({type: 'play', data: this._startMillis})
-        //dispatchEvent({type: 'play', data: this._currentMillis})
-      }
-    }
-
-    if(this._loop && this._currentMillis >= this._rightLocator.millis){
-      this._currentMillis -= this._loopDuration
-      this._playhead.set('millis', this._currentMillis)
-      //this._playhead.set('millis', this._leftLocator.millis) // playhead is a bit ahead only during this frame
-      dispatchEvent({
-        type: 'loop',
-        data: null
-      })
-    }else{
-      this._playhead.update('millis', diff)
-    }
-
-    this._ticks = this._playhead.get().ticks
-
-    //console.log(this._currentMillis, this._durationMillis)
-
-    if(this._currentMillis >= this._durationMillis){
-      if(this.recording !== true){
-        this.stop()
-        return
-      }else if(this.autoSize !== true){
-        this.stop()
-        return
-      }
-      let events = this._metronome.addEvents(this.bars, this.bars + 1)
-      let tobeParsed = [...events, ...this._timeEvents]
-      sortEvents(tobeParsed)
-      parseEvents(tobeParsed)
-      this._scheduler.events.push(...events)
-      this._scheduler.numEvents += events.length
-      let lastEvent = events[events.length - 1]
-      let extraMillis = lastEvent.ticksPerBar * lastEvent.millisPerTick
-      this._lastEvent.ticks += lastEvent.ticksPerBar
-      this._lastEvent.millis += extraMillis
-      this._durationMillis += extraMillis
-      this.bars++
-      this._resized = true
-      //console.log('length', this._lastEvent.ticks, this._lastEvent.millis, this.bars, lastEvent)
-    }
-
-    this._scheduler.update(diff)
-
-    requestAnimationFrame(this._pulse.bind(this))
   }
 
   /*
