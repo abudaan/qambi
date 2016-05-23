@@ -13,7 +13,6 @@ export const defaultSong = {
   positionType: 'all',
   useMetronome: false,
   autoSize: true,
-  loop: false,
   playbackSpeed: 1,
   autoQuantize: false
 }

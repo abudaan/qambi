@@ -28,7 +28,7 @@ qambi.init({
   })
 
 ```
-[``[check live version]``](http://abudaan.github.io/qambi/examples/example1) &nbsp;-&nbsp; [``[more examples]``](http://abudaan.github.io/qambi/)
+[``[check live version]``](http://qambi.org/examples/example1) &nbsp;-&nbsp; [``[more examples]``](http://qambi.org/)
 
 The `qambi.init()` initializes WebMIDI and WebAudio and prepares the sequencer. By passing an optional object you can preload MIDI files and audio samples.
 
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 })
 ```
-[``[check live version]``](http://abudaan.github.io/qambi/examples/example2) &nbsp;-&nbsp; [``[more examples]``](http://abudaan.github.io/qambi/)
+[``[check live version]``](http://qambi.org/examples/example2) &nbsp;-&nbsp; [``[more examples]``](http://qambi.org/)
 
 
 
@@ -180,4 +180,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })
 
 ```
-[``[check live version]``](http://abudaan.github.io/qambi/examples/example3) &nbsp;-&nbsp; [``[more examples]``](http://abudaan.github.io/qambi/)
+[``[check live version]``](http://qambi.org/examples/example3) &nbsp;-&nbsp; [``[more examples]``](http://qambi.org/)

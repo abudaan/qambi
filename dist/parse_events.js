@@ -344,6 +344,7 @@ function parseMIDINotes(events) {
   var notes = {};
   var notesInTrack = void 0;
   var n = 0;
+  //console.log(events)
   var _iteratorNormalCompletion2 = true;
   var _didIteratorError2 = false;
   var _iteratorError2 = undefined;
@@ -353,7 +354,7 @@ function parseMIDINotes(events) {
       var event = _step2.value;
 
       if (typeof event._part === 'undefined' || typeof event._track === 'undefined') {
-        console.log('no part and/or track set');
+        console.log('no part and/or track set', event);
         continue;
       }
       if (event.type === 144) {

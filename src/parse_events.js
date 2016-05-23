@@ -321,9 +321,10 @@ export function parseMIDINotes(events){
   let notes = {}
   let notesInTrack
   let n = 0
+  //console.log(events)
   for(let event of events){
     if(typeof event._part === 'undefined' || typeof event._track === 'undefined'){
-      console.log('no part and/or track set')
+      console.log('no part and/or track set', event)
       continue
     }
     if(event.type === 144){

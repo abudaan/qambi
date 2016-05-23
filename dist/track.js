@@ -233,6 +233,9 @@ var Track = exports.Track = function () {
       if (this._recordId !== recordId) {
         return;
       }
+      if (this._recordedEvents.length === 0) {
+        return;
+      }
       (_recordPart = this._recordPart).addEvents.apply(_recordPart, _toConsumableArray(this._recordedEvents));
       //this._song._newEvents.push(...this._recordedEvents)
       this.addParts(this._recordPart);

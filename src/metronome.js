@@ -86,6 +86,7 @@ export class Metronome{
 
       beatsPerBar = position.nominator
       ticksPerBeat = position.ticksPerBeat
+      ticks = position.ticks
 
       for(j = 0; j < beatsPerBar; j++){
 
@@ -122,25 +123,35 @@ export class Metronome{
   }
 
 
-  createPrecountEvents(precount, timeStamp){
-    if(precount <= 0){
-      return -1
-    }
+  addEvents(startBar = 1, endBar = this.song.bars, id = 'add'){
+    // console.log(startBar, endBar)
+    let events = this.createEvents(startBar, endBar, id)
+    this.events.push(...events)
+    this.part.addEvents(...events)
+    this.bars = endBar
+    //console.log('getEvents %O', this.events, endBar)
+    return events
+  }
+
+
+  createPrecountEvents(startBar, endBar, timeStamp){
 
     this.timeStamp = timeStamp
 
 //   let songStartPosition = this.song.getPosition()
 
     let songStartPosition = calculatePosition(this.song, {
-      type: 'millis',
-      target: this.song._currentMillis,
-      result: 'all',
+      type: 'barsbeats',
+      target: [startBar],
+      result: 'millis',
     })
+    //console.log('starBar', songStartPosition.bar)
 
     let endPos = calculatePosition(this.song, {
       type: 'barsbeats',
-      target: [songStartPosition.bar + precount],
-      result: 'all',
+      //target: [songStartPosition.bar + precount, songStartPosition.beat, songStartPosition.sixteenth, songStartPosition.tick],
+      target: [endBar],
+      result: 'millis',
     })
 
     //console.log(songStartPosition, endPos)
@@ -152,7 +163,7 @@ export class Metronome{
 
     //console.log(this.precountDuration)
 
-    this.precountEvents = this.createEvents(songStartPosition.bar, endPos.bar - 1, 'precount');
+    this.precountEvents = this.createEvents(startBar, endBar, 'precount');
     this.precountEvents = parseEvents([...this.song._timeEvents, ...this.precountEvents])
 
     //console.log(songStartPosition.bar, endPos.bar, precount, this.precountEvents.length);
@@ -161,11 +172,26 @@ export class Metronome{
   }
 
 
+  setPrecountIndex(millis){
+    let i = 0;
+    for(let event of this.events){
+      if(event.millis >= millis){
+        this.precountIndex = i;
+        break;
+      }
+      i++;
+    }
+    console.log(this.precountIndex)
+  }
+
+
   // called by scheduler.js
   getPrecountEvents(maxtime){
     let events = this.precountEvents,
       maxi = events.length, i, evt,
       result = [];
+
+    //maxtime += this.precountDuration
 
     for(i = this.precountIndex; i < maxi; i++){
       evt = events[i];
@@ -196,9 +222,9 @@ export class Metronome{
   // =========== CONFIGURATION ===========
 
   updateConfig(){
-    this.init(1, this.bars, 'update');
-    this.allNotesOff();
-    this.song._scheduler.updateSong();
+    this.init(1, this.bars, 'update')
+    this.allNotesOff()
+    this.song.update()
   }
 
   // added to public API: Song.configureMetronome({})

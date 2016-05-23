@@ -9,7 +9,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _track = require('./track');
 
-var _part2 = require('./part');
+var _part3 = require('./part');
 
 var _parse_events = require('./parse_events');
 
@@ -35,7 +35,7 @@ var Metronome = exports.Metronome = function () {
 
     this.song = song;
     this.track = new _track.Track(this.song.id + '_metronome');
-    this.part = new _part2.Part();
+    this.part = new _part3.Part();
     this.track.addParts(this.part);
     this.track.connect(this.song._output);
 
@@ -102,6 +102,7 @@ var Metronome = exports.Metronome = function () {
 
         beatsPerBar = position.nominator;
         ticksPerBeat = position.ticksPerBeat;
+        ticks = position.ticks;
 
         for (j = 0; j < beatsPerBar; j++) {
 
@@ -144,26 +145,43 @@ var Metronome = exports.Metronome = function () {
       return this.events;
     }
   }, {
+    key: 'addEvents',
+    value: function addEvents() {
+      var startBar = arguments.length <= 0 || arguments[0] === undefined ? 1 : arguments[0];
+
+      var _events, _part2;
+
+      var endBar = arguments.length <= 1 || arguments[1] === undefined ? this.song.bars : arguments[1];
+      var id = arguments.length <= 2 || arguments[2] === undefined ? 'add' : arguments[2];
+
+      // console.log(startBar, endBar)
+      var events = this.createEvents(startBar, endBar, id);
+      (_events = this.events).push.apply(_events, _toConsumableArray(events));
+      (_part2 = this.part).addEvents.apply(_part2, _toConsumableArray(events));
+      this.bars = endBar;
+      //console.log('getEvents %O', this.events, endBar)
+      return events;
+    }
+  }, {
     key: 'createPrecountEvents',
-    value: function createPrecountEvents(precount, timeStamp) {
-      if (precount <= 0) {
-        return -1;
-      }
+    value: function createPrecountEvents(startBar, endBar, timeStamp) {
 
       this.timeStamp = timeStamp;
 
       //   let songStartPosition = this.song.getPosition()
 
       var songStartPosition = (0, _position.calculatePosition)(this.song, {
-        type: 'millis',
-        target: this.song._currentMillis,
-        result: 'all'
+        type: 'barsbeats',
+        target: [startBar],
+        result: 'millis'
       });
+      //console.log('starBar', songStartPosition.bar)
 
       var endPos = (0, _position.calculatePosition)(this.song, {
         type: 'barsbeats',
-        target: [songStartPosition.bar + precount],
-        result: 'all'
+        //target: [songStartPosition.bar + precount, songStartPosition.beat, songStartPosition.sixteenth, songStartPosition.tick],
+        target: [endBar],
+        result: 'millis'
       });
 
       //console.log(songStartPosition, endPos)
@@ -175,12 +193,47 @@ var Metronome = exports.Metronome = function () {
 
       //console.log(this.precountDuration)
 
-      this.precountEvents = this.createEvents(songStartPosition.bar, endPos.bar - 1, 'precount');
+      this.precountEvents = this.createEvents(startBar, endBar, 'precount');
       this.precountEvents = (0, _parse_events.parseEvents)([].concat(_toConsumableArray(this.song._timeEvents), _toConsumableArray(this.precountEvents)));
 
       //console.log(songStartPosition.bar, endPos.bar, precount, this.precountEvents.length);
       //console.log(this.precountEvents, this.precountDuration);
       return this.precountDuration;
+    }
+  }, {
+    key: 'setPrecountIndex',
+    value: function setPrecountIndex(millis) {
+      var i = 0;
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = this.events[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var event = _step.value;
+
+          if (event.millis >= millis) {
+            this.precountIndex = i;
+            break;
+          }
+          i++;
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+
+      console.log(this.precountIndex);
     }
 
     // called by scheduler.js
@@ -193,6 +246,8 @@ var Metronome = exports.Metronome = function () {
           i = void 0,
           evt = void 0,
           result = [];
+
+      //maxtime += this.precountDuration
 
       for (i = this.precountIndex; i < maxi; i++) {
         evt = events[i];
@@ -226,7 +281,7 @@ var Metronome = exports.Metronome = function () {
     value: function updateConfig() {
       this.init(1, this.bars, 'update');
       this.allNotesOff();
-      this.song._scheduler.updateSong();
+      this.song.update();
     }
 
     // added to public API: Song.configureMetronome({})

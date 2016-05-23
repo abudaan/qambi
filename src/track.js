@@ -165,6 +165,9 @@ export class Track{
     if(this._recordId !== recordId){
       return
     }
+    if(this._recordedEvents.length === 0){
+      return
+    }
     this._recordPart.addEvents(...this._recordedEvents)
     //this._song._newEvents.push(...this._recordedEvents)
     this.addParts(this._recordPart)

@@ -171,14 +171,16 @@ export default class Scheduler{
     if(this.song.precounting){
       this.songCurrentMillis += diff
       this.maxtime = this.songCurrentMillis + bufferTime
+      //console.log(this.songCurrentMillis)
       events = this.song._metronome.getPrecountEvents(this.maxtime)
 
       if(this.maxtime > this.song._metronome.endMillis && this.precountingDone === false){
         this.precountingDone = true
-        this.timeStamp += this.song._metronome.precountDuration
+        this.timeStamp += this.song._precountDuration
 
         // start scheduling events of the song -> add the first events of the song
         this.songCurrentMillis = this.songStartMillis
+        //console.log('---->', this.songCurrentMillis)
         this.songCurrentMillis += diff
         this.maxtime = this.songCurrentMillis + bufferTime
         events.push(...this.getEvents())
