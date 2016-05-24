@@ -4,7 +4,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; }; //import fetch from 'isomorphic-fetch'
+
 
 exports.decodeSample = decodeSample;
 exports.parseSamples2 = parseSamples2;
@@ -14,15 +15,7 @@ var _init_audio = require('./init_audio');
 
 var _util = require('./util');
 
-var _isomorphicFetch = require('isomorphic-fetch');
-
-var _isomorphicFetch2 = _interopRequireDefault(_isomorphicFetch);
-
 var _eventlistener = require('./eventlistener');
-
-var _qambi = require('./qambi');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function decodeSample(sample, id, every) {
   return new Promise(function (resolve) {
@@ -76,7 +69,7 @@ function loadAndParseSample(url, id, every) {
   });
 
   var executor = function executor(resolve) {
-    (0, _isomorphicFetch2.default)(url, {
+    fetch(url, {
       method: 'GET'
     }).then(function (response) {
       if (response.ok) {

@@ -6,10 +6,6 @@ Object.defineProperty(exports, "__esModule", {
 exports.songFromMIDIFile = songFromMIDIFile;
 exports.songFromMIDIFileAsync = songFromMIDIFileAsync;
 
-var _isomorphicFetch = require('isomorphic-fetch');
-
-var _isomorphicFetch2 = _interopRequireDefault(_isomorphicFetch);
-
 var _midifile = require('./midifile');
 
 var _midi_event = require('./midi_event');
@@ -24,9 +20,9 @@ var _util = require('./util');
 
 var _fetch_helpers = require('./fetch_helpers');
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 var PPQ = 960;
+//import fetch from 'isomorphic-fetch'
+
 
 function toSong(parsed) {
   var tracks = parsed.tracks;
@@ -224,7 +220,7 @@ function songFromMIDIFile(data) {
 
 function songFromMIDIFileAsync(url) {
   return new Promise(function (resolve, reject) {
-    (0, _isomorphicFetch2.default)(url).then(_fetch_helpers.status).then(_fetch_helpers.arrayBuffer).then(function (data) {
+    fetch(url).then(_fetch_helpers.status).then(_fetch_helpers.arrayBuffer).then(function (data) {
       resolve(songFromMIDIFile(data));
     }).catch(function (e) {
       reject(e);

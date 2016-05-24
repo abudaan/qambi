@@ -1,5 +1,5 @@
 
-import fetch from 'isomorphic-fetch'
+//import fetch from 'isomorphic-fetch'
 import {parseMIDIFile} from './midifile'
 import {MIDIEvent} from './midi_event'
 import {Part} from './part'

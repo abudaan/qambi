@@ -1,8 +1,7 @@
+//import fetch from 'isomorphic-fetch'
 import {context} from './init_audio'
 import {typeString, checkIfBase64, base64ToBinary} from './util'
-import fetch from 'isomorphic-fetch'
 import {dispatchEvent} from './eventlistener'
-import {qambi} from './qambi'
 
 
 export function decodeSample(sample, id, every){

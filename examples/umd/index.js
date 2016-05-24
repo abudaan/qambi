@@ -1,9 +1,8 @@
-import qambi, {
-  Instrument,
-  MIDIEvent,
-} from '../../src/qambi' // remove ../../src/
 
-document.addEventListener('DOMContentLoaded', function(){
+//document.addEventListener('DOMContentLoaded', function(){
+
+  console.log(qambi.version)
+  console.log(Instrument)
 
   qambi.init()
   .then(() => {
@@ -11,4 +10,4 @@ document.addEventListener('DOMContentLoaded', function(){
     synth.processMIDIEvent(new MIDIEvent(0, 144, 60, 100))
     synth.processMIDIEvent(new MIDIEvent(960, 128, 60, 0))
   })
-})
+//})

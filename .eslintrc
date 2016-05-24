@@ -106,7 +106,7 @@
     // "no-use-before-define": 2,
     "no-use-before-define": 0,
     // Stylistic Issues
-    "indent": [2, 2, {
+    "indent": [1, 2, {
      "SwitchCase": 1
     }],
     "brace-style": 2,

@@ -1,45 +1,128 @@
-var path = require('path');
-var gulp = require('gulp');
-var browserify = require('browserify');
-var watchify = require('watchify');
-var babelify = require('babelify');
-var source = require('vinyl-source-stream');
+var fs = require('fs')
+var path = require('path')
+var browserify = require('browserify')
+var watchify = require('watchify')
+var babelify = require('babelify')
+var gulp = require('gulp')
+var gutil = require('gulp-util')
+var es = require('event-stream')
+var source = require('vinyl-source-stream')
+var buffer = require('vinyl-buffer')
+var args = process.argv
 
-var folders = ['basic', 'basic2', 'basic3', 'create_instruments', 'example1', 'example2', 'example3', 'midifile', 'midi-recording', 'midi-sync']
-var currentFolder = 'instruments'
 
-gulp.task('watch', function () {
-  return watchify({entries: [currentFolder], extensions: ['.js'], debug: true})
+function getFolders(dir) {
+  return fs.readdirSync(dir)
+    .filter(function(file) {
+      return fs.statSync(path.join(dir, file)).isDirectory() && file !== 'css' && file !== 'js' && file !== 'data' && file !== 'node_modules'
+    })
+}
+
+gulp.task('folders', function(){
+  console.log(getFolders('./'))
+})
+
+/*
+gulp.task('watch', function(done) {
+  var folders = getFolders('./')
+  var tasks = folders.map(function(folder){
+    var b = browserify({
+      entries: [folder],
+      extensions: ['.js'],
+      debug: true,
+      cache: {},
+      packageCache: {},
+      fullPaths: true
+    })
     .transform(babelify)
-    .bundle()
-    .pipe(source('build.js'))
-    .pipe(gulp.dest(currentFolder));
-});
+    .plugin(watchify);
 
-gulp.task('build-all', function () {
+    var bundle = function(){
+      return b.bundle()
+        .pipe(source(folder))
+        .pipe(buffer())
+        .pipe(gulp.dest(folder));
+    }
 
+    b.on('update', bundle);
+    return bundle();
+  })
+  es.merge(tasks).on('end', done)
+})
+
+
+gulp.task('watch1', function () {
+  var folders = getFolders('./')
+  return folders.map(function(folder){
+    //console.log(folder)
+    watchify(browserify({
+      entries: [folder],
+      extensions: ['.js'],
+      debug: true
+    }))
+    .transform(babelify)
+    .on('log', gutil.log)
+    .on('update', function(){
+      this.bundle()
+      .pipe(source('build.js'))
+      .pipe(gulp.dest(folder))
+    })
+  })
+})
+
+function bundle(b, folder){
+  console.log(b)
+  b.bundle()
+}
+*/
+
+gulp.task('build-all', function(){
+  var folders = getFolders('./')
   folders.map(function(folder) {
     console.log(folder)
-    browserify({entries: [folder], extensions: ['.js'], debug: true})
+    return browserify({entries: [folder], extensions: ['.js'], debug: true})
       .transform(babelify)
       .bundle()
       .pipe(source('build.js'))
       .pipe(gulp.dest(folder));
-
   })
-});
+})
 
 /*
+gulp.task('build', function(){
+
+})
+
 gulp.task('watch', ['build'], function () {
-  // folders.map(function(folder) {
-  //   gulp.watch(path.join(folder, '*.js'), ['build']);
-  // })
-  gulp.watch('../../src/*.js', ['build'])
-  gulp.watch(path.join(currentFolder, 'index.js'), ['build'])
-});
+  var folders = getFolders('./')
+  folders.map(function(folder) {
+    gulp.watch(path.join(folder, '*.js'), ['build']);
+  })
+  //gulp.watch('../../src/*.js', ['build'])
+  //gulp.watch(path.join(currentFolder, 'index.js'), ['build'])
+})
 */
 
-gulp.task('default', ['watch']);
+gulp.task('watch', bundle)
+
+var folder = 'basic'
+var b = watchify(browserify({
+  entries: [folder],
+  extensions: ['.js'],
+  debug: true
+}))
+.transform(babelify)
+.on('log', gutil.log)
+.on('update', bundle)
+
+
+function bundle(){
+  return b.bundle()
+  .pipe(source('build.js'))
+  .pipe(gulp.dest(folder))
+}
+
+//gulp.task('default', ['watch'])
 
 
 //https://github.com/gulpjs/gulp/blob/master/docs/recipes/fast-browserify-builds-with-watchify.md

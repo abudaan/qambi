@@ -17,6 +17,7 @@
     "eslint-plugin-babel": "^3.2.0",
     "gulp": "3.9.1",
     "gulp-uglify": "1.5.3",
+    "minifyify": "7.3.3",
     "vinyl-source-stream": "1.1.0",
     "watchify": "^3.7.0"
   },
@@ -37,7 +38,7 @@
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "watch": "watchify ./midi-recording/index.js -t babelify -o ./midi-recording/build.js --debug --verbose",
-    "module": "browserify ../src/qambi.js  -t [ babelify --presets [es2015 stage-0 ] --plugins [ transform-es2015-modules-amd ] ] -o ../qambi.module.js"
+    "umd": "browserify ../src/qambi.js  -t [ babelify --presets [es2015 stage-0 ] --plugins [ transform-es2015-modules-umd ] ] --standalone qambi -d -p [minifyify --no-map] -o ../dist/qambi-umd.min.js"
   },
   "dependencies": {
     "isomorphic-fetch": "^2.2.1",
