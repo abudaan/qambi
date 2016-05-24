@@ -19,6 +19,9 @@ export function arrayBuffer(response){
 
 export function fetchJSON(url){
   return new Promise((resolve, reject) => {
+    // fetch(url, {
+    //   mode: 'no-cors'
+    // })
     fetch(url)
     .then(status)
     .then(json)
@@ -33,6 +36,9 @@ export function fetchJSON(url){
 
 export function fetchArraybuffer(url){
   return new Promise((resolve, reject) => {
+    // fetch(url, {
+    //   mode: 'no-cors'
+    // })
     fetch(url)
     .then(status)
     .then(arrayBuffer)

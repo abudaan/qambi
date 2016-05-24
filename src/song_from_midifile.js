@@ -1,5 +1,4 @@
-
-//import fetch from 'isomorphic-fetch'
+import fetch from 'isomorphic-fetch'
 import {parseMIDIFile} from './midifile'
 import {MIDIEvent} from './midi_event'
 import {Part} from './part'
@@ -164,6 +163,9 @@ export function songFromMIDIFileSync(data, settings = {}){
 
 export function songFromMIDIFile(url){
   return new Promise((resolve, reject) => {
+    // fetch(url, {
+    //   mode: 'no-cors'
+    // })
     fetch(url)
     .then(status)
     .then(arrayBuffer)

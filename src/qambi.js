@@ -1,4 +1,4 @@
-const version = '1.0.0-beta17'
+const version = '1.0.0-beta18'
 
 import {
   MIDIEvent

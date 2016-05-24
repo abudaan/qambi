@@ -79,7 +79,7 @@ export function init(settings = null): void{
       let data = settings[key]
 
       if(data.type === 'Song'){
-        promises.push(Song.fromMIDIFileAsync(data.url))
+        promises.push(Song.fromMIDIFile(data.url))
       }else if(data.type === 'Instrument'){
         promises.push(loadInstrument(data))
       }

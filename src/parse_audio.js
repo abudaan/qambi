@@ -1,4 +1,4 @@
-//import fetch from 'isomorphic-fetch'
+import fetch from 'isomorphic-fetch'
 import {context} from './init_audio'
 import {typeString, checkIfBase64, base64ToBinary} from './util'
 import {dispatchEvent} from './eventlistener'

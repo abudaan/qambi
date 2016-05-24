@@ -99,7 +99,7 @@ function init() {
         var data = settings[key];
 
         if (data.type === 'Song') {
-          promises.push(_song.Song.fromMIDIFileAsync(data.url));
+          promises.push(_song.Song.fromMIDIFile(data.url));
         } else if (data.type === 'Instrument') {
           promises.push(loadInstrument(data));
         }
