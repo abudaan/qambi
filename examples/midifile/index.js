@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }else if(test === 2){
 
       //console.time('song')
-      Song.fromMIDIFileAsync('../data/minute_waltz.mid')
+      Song.fromMIDIFile('../data/minute_waltz.mid')
       .then(s => {
         song = s
         //console.timeEnd('song')

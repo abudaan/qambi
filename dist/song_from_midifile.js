@@ -3,8 +3,8 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.songFromMIDIFileSync = songFromMIDIFileSync;
 exports.songFromMIDIFile = songFromMIDIFile;
-exports.songFromMIDIFileAsync = songFromMIDIFileAsync;
 
 var _midifile = require('./midifile');
 
@@ -190,7 +190,7 @@ function toSong(parsed) {
   return song;
 }
 
-function songFromMIDIFile(data) {
+function songFromMIDIFileSync(data) {
   var settings = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
   var song = null;
@@ -218,10 +218,10 @@ function songFromMIDIFile(data) {
   // } = settings
 }
 
-function songFromMIDIFileAsync(url) {
+function songFromMIDIFile(url) {
   return new Promise(function (resolve, reject) {
     fetch(url).then(_fetch_helpers.status).then(_fetch_helpers.arrayBuffer).then(function (data) {
-      resolve(songFromMIDIFile(data));
+      resolve(songFromMIDIFileSync(data));
     }).catch(function (e) {
       reject(e);
     });

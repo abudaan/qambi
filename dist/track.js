@@ -220,6 +220,7 @@ var Track = exports.Track = function () {
     key: '_startRecording',
     value: function _startRecording(recordId) {
       if (this._recordEnabled === 'midi') {
+        //console.log(recordId)
         this._recordId = recordId;
         this._recordedEvents = [];
         this._recordPart = new _part.Part(this._recordId);

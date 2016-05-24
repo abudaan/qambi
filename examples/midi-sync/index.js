@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     }else if(test === 2){
 
-      Song.fromMIDIFileAsync('../../data/minute_waltz.mid')
+      Song.fromMIDIFile('../../data/minute_waltz.mid')
       .then(s => {
         song = s
         initUI()

@@ -9,7 +9,7 @@ var es = require('event-stream')
 var source = require('vinyl-source-stream')
 var buffer = require('vinyl-buffer')
 var args = process.argv
-
+var argv = require('yargs').argv;
 
 function getFolders(dir) {
   return fs.readdirSync(dir)
@@ -105,7 +105,7 @@ gulp.task('watch', ['build'], function () {
 
 gulp.task('watch', bundle)
 
-var folder = 'basic'
+var folder = argv.d
 var b = watchify(browserify({
   entries: [folder],
   extensions: ['.js'],
@@ -117,6 +117,7 @@ var b = watchify(browserify({
 
 
 function bundle(){
+  console.log(folder)
   return b.bundle()
   .pipe(source('build.js'))
   .pipe(gulp.dest(folder))

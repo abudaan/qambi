@@ -38,7 +38,9 @@
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "watch": "watchify ./midi-recording/index.js -t babelify -o ./midi-recording/build.js --debug --verbose",
-    "umd": "browserify ../src/qambi.js  -t [ babelify --presets [es2015 stage-0 ] --plugins [ transform-es2015-modules-umd ] ] --standalone qambi -d -p [minifyify --no-map] -o ../dist/qambi-umd.min.js"
+    "umd-build": "browserify ../src/qambi.js  -t [ babelify --presets [es2015 stage-0 ] --plugins [ transform-es2015-modules-umd ] ] --standalone qambi -o ../dist/qambi-umd.js",
+    "umd-min": "browserify ../src/qambi.js  -t [ babelify --presets [es2015 stage-0 ] --plugins [ transform-es2015-modules-umd ] ] --standalone qambi -d -p [minifyify --no-map] -o ../dist/qambi-umd.min.js",
+    "umd": "npm run umd-build && npm run umd-min"
   },
   "dependencies": {
     "isomorphic-fetch": "^2.2.1",

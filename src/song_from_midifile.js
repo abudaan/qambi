@@ -135,7 +135,7 @@ function toSong(parsed){
   return song
 }
 
-export function songFromMIDIFile(data, settings = {}){
+export function songFromMIDIFileSync(data, settings = {}){
   let song = null;
 
   if(data instanceof ArrayBuffer === true){
@@ -162,13 +162,13 @@ export function songFromMIDIFile(data, settings = {}){
 }
 
 
-export function songFromMIDIFileAsync(url){
+export function songFromMIDIFile(url){
   return new Promise((resolve, reject) => {
     fetch(url)
     .then(status)
     .then(arrayBuffer)
     .then(data => {
-      resolve(songFromMIDIFile(data))
+      resolve(songFromMIDIFileSync(data))
     })
     .catch(e => {
       reject(e)

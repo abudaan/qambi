@@ -72,9 +72,9 @@ var Song = exports.Song = function () {
       return (0, _song_from_midifile.songFromMIDIFile)(data);
     }
   }, {
-    key: 'fromMIDIFileAsync',
-    value: function fromMIDIFileAsync(data) {
-      return (0, _song_from_midifile.songFromMIDIFileAsync)(data);
+    key: 'fromMIDIFileSync',
+    value: function fromMIDIFileSync(data) {
+      return (0, _song_from_midifile.songFromMIDIFileSync)(data);
     }
   }]);
 
@@ -567,7 +567,7 @@ var Song = exports.Song = function () {
   }, {
     key: 'stop',
     value: function stop() {
-      console.log('STOP');
+      //console.log('STOP')
       this.precounting = false;
       this.allNotesOff();
       if (this.playing || this.paused) {

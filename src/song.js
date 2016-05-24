@@ -5,7 +5,7 @@ import {parseTimeEvents, parseEvents, parseMIDINotes} from './parse_events'
 import {context, masterGain} from './init_audio'
 import Scheduler from './scheduler'
 import {MIDIEvent} from './midi_event'
-import {songFromMIDIFile, songFromMIDIFileAsync} from './song_from_midifile'
+import {songFromMIDIFile, songFromMIDIFileSync} from './song_from_midifile'
 import {sortEvents} from './util'
 import {calculatePosition} from './position'
 import {Playhead} from './playhead'
@@ -45,8 +45,8 @@ export class Song{
     return songFromMIDIFile(data)
   }
 
-  static fromMIDIFileAsync(data){
-    return songFromMIDIFileAsync(data)
+  static fromMIDIFileSync(data){
+    return songFromMIDIFileSync(data)
   }
 
   constructor(settings: {} = {}){
@@ -511,7 +511,7 @@ export class Song{
   }
 
   stop(): void{
-    console.log('STOP')
+    //console.log('STOP')
     this.precounting = false
     this.allNotesOff()
     if(this.playing || this.paused){

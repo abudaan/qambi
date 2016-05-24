@@ -155,6 +155,7 @@ export class Track{
 
   _startRecording(recordId){
     if(this._recordEnabled === 'midi'){
+      //console.log(recordId)
       this._recordId = recordId
       this._recordedEvents = []
       this._recordPart = new Part(this._recordId)
