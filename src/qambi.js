@@ -1,3 +1,5 @@
+const version = '1.0.0-beta17'
+
 import {
   MIDIEvent
 } from './midi_event'
@@ -71,7 +73,6 @@ const getAudioContext = function(){
   return context
 }
 
-const version = '1.0.0-beta16'
 const qambi = {
   version,
 
