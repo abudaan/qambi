@@ -121,7 +121,7 @@ export class Track{
         input.addEventListener('midimessage', e => {
 
           midiEvent = new MIDIEvent(this._song._ticks, ...e.data)
-          midiEvent.time = 0 // play immediately
+          midiEvent.time = 0 // play immediately -> see Instrument.processMIDIEvent
           midiEvent.recordMillis = context.currentTime * 1000
 
           if(midiEvent.type === MIDIEventTypes.NOTE_ON){

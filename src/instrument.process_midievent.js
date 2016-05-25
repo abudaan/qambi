@@ -2,11 +2,17 @@ import {context} from './init_audio'
 
 
 export function processMIDIEvent(event, time){
-
+  //console.log(event, time)
   let sample
 
-  if(isNaN(time) || time === 0){
-    // this happens when you play the instrument directly via a MIDI keyboard
+  if(isNaN(time)){
+    // this shouldn't happen
+    console.error('invalid time value')
+    return
+    //time = context.currentTime
+  }
+  if(time === 0){
+    // this is an event that is send from an external MIDI keyboard, it needs to be processed immediately
     time = context.currentTime
   }
 

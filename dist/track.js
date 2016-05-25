@@ -169,7 +169,7 @@ var Track = exports.Track = function () {
             input.addEventListener('midimessage', function (e) {
 
               midiEvent = new (Function.prototype.bind.apply(_midi_event.MIDIEvent, [null].concat([_this3._song._ticks], _toConsumableArray(e.data))))();
-              midiEvent.time = 0; // play immediately
+              midiEvent.time = 0; // play immediately -> see Instrument.processMIDIEvent
               midiEvent.recordMillis = _init_audio.context.currentTime * 1000;
 
               if (midiEvent.type === _qambi.MIDIEventTypes.NOTE_ON) {

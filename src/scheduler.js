@@ -23,22 +23,7 @@ export default class Scheduler{
     this.beyondLoop = false // tells us if the playhead has already passed the looped section
     this.precountingDone = false
     this.setIndex(this.songStartMillis)
-/*
-    this.timeEventsIndex = 0
-    this.songEventsIndex = 0
-    this.metronomeEventsIndex = 0
-
-    this.timeEvents = this.song._timeEvents
-    this.songEvents = this.song._events
-    this.songEvents.push(this.song._lastEvent)
-    this.metronomeEvents = this.song._metronome.events
-
-    this.numTimeEvents = this.timeEvents.length
-    this.numSongEvents = this.songEvents.length
-    this.numMetronomeEvents = this.metronomeEvents.length
-*/
   }
-
 
   setTimeStamp(timeStamp){
     this.timeStamp = timeStamp
@@ -56,17 +41,9 @@ export default class Scheduler{
       i++;
     }
 
-    // i = 0
-    // for(event of this.timeEvents){
-    //   if(event.millis >= millis){
-    //     this.timeEventsIndex = i;
-    //     break;
-    //   }
-    //   i++;
-    // }
-
     this.beyondLoop = millis > this.song._rightLocator.millis
     this.notes = new Map()
+    this.looped = false
     this.precountingDone = false
   }
 
@@ -290,7 +267,35 @@ export default class Scheduler{
   }
 
   reschedule(){
-    // use this.notes
+
+    let min = this.song.millis
+    let max = min + (bufferTime * 1000)
+    let note
+    let sample
+
+    console.log('reschedule')
+    this.notes.forEach(id => {
+      sample = this.notes[id] // the sample
+      note = sample.midiNote  // the midi note
+      console.log(note, sample)
+/*
+      if(typeof note === 'undefined' || note.state === 'removed'){
+          sample.unschedule(0, unscheduleCallback);
+          delete this.scheduledSamples[id];
+      }else if(
+              note.noteOn.millis >= min &&
+              note.noteOff.millis < max &&
+              sample.noteName === note.fullName
+          ){
+          // nothing has changed, skip
+          continue;
+      }else{
+          //console.log('unscheduled', id);
+          delete this.scheduledSamples[id];
+          sample.unschedule(null, unscheduleCallback);
+      }
+*/
+    })
   }
 
 /*

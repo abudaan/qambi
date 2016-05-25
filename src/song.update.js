@@ -180,15 +180,6 @@ export function update():void{
 
   this._durationTicks = this._lastEvent.ticks
   this._durationMillis = this._lastEvent.millis
-  this._playhead.updateSong()
-
-  if(this.playing === false){
-    this._playhead.set('millis', this._currentMillis)
-    dispatchEvent({
-      type: 'position',
-      data: this._playhead.get().position
-    })
-  }
 
 
 // METRONOME
@@ -206,6 +197,19 @@ export function update():void{
   this._allEvents = [...this._events]
   sortEvents(this._allEvents)
 */
+
+  console.log('current millis', this._currentMillis)
+  this._playhead.updateSong()
+  this._scheduler.init(this._currentMillis)
+  this._scheduler.reschedule()
+
+  if(this.playing === false){
+    this._playhead.set('millis', this._currentMillis)
+    dispatchEvent({
+      type: 'position',
+      data: this._playhead.get().position
+    })
+  }
 
   // reset
   this._newParts = []
