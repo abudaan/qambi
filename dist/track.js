@@ -621,6 +621,15 @@ var Track = exports.Track = function () {
       }
     }
   }, {
+    key: 'unschedule',
+    value: function unschedule(midiNote) {
+      var noteOn = midiNote.noteOn;
+      var noteOff = new _midi_event.MIDIEvent(0, 128, noteOn.data1, 0);
+      noteOff.midiNoteId = midiNote.id;
+      noteOff.time = -1; //context.currentTime + min
+      this.processMIDIEvent(noteOff);
+    }
+  }, {
     key: 'allNotesOff',
     value: function allNotesOff() {
       if (this._instrument !== null) {

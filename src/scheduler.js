@@ -9,6 +9,7 @@ export default class Scheduler{
 
   constructor(song){
     this.song = song
+    this.notes = new Map()
   }
 
 
@@ -23,6 +24,11 @@ export default class Scheduler{
     this.beyondLoop = false // tells us if the playhead has already passed the looped section
     this.precountingDone = false
     this.setIndex(this.songStartMillis)
+  }
+
+  updateSong(){
+    this.events = this.song._allEvents
+    this.numEvents = this.events.length
   }
 
   setTimeStamp(timeStamp){
@@ -42,7 +48,7 @@ export default class Scheduler{
     }
 
     this.beyondLoop = millis > this.song._rightLocator.millis
-    this.notes = new Map()
+    // this.notes = new Map()
     this.looped = false
     this.precountingDone = false
   }
@@ -234,6 +240,7 @@ export default class Scheduler{
 
       if(event._part === null || track === null){
         console.log(event)
+        this.notes.set(event.midiNoteId, event.midiNote)
         continue
       }
 
@@ -259,6 +266,9 @@ export default class Scheduler{
         }else if(event.type === 128){
           this.notes.delete(event.midiNoteId)
         }
+        // if(this.notes.size > 0){
+        //   console.log(this.notes)
+        // }
       }
     }
     //console.log(this.index, this.numEvents)
@@ -268,34 +278,31 @@ export default class Scheduler{
 
   reschedule(){
 
-    let min = this.song.millis
+    let min = this.song._currentMillis
     let max = min + (bufferTime * 1000)
-    let note
-    let sample
 
-    console.log('reschedule')
-    this.notes.forEach(id => {
-      sample = this.notes[id] // the sample
-      note = sample.midiNote  // the midi note
-      console.log(note, sample)
-/*
+    //console.log('reschedule', this.notes.size)
+    this.notes.forEach((note, id) => {
+      // console.log(note)
+      // console.log(note.noteOn.millis, note.noteOff.millis, min, max)
+
       if(typeof note === 'undefined' || note.state === 'removed'){
-          sample.unschedule(0, unscheduleCallback);
-          delete this.scheduledSamples[id];
-      }else if(
-              note.noteOn.millis >= min &&
-              note.noteOff.millis < max &&
-              sample.noteName === note.fullName
-          ){
-          // nothing has changed, skip
-          continue;
-      }else{
-          //console.log('unscheduled', id);
-          delete this.scheduledSamples[id];
-          sample.unschedule(null, unscheduleCallback);
+        //sample.unschedule(0, unscheduleCallback);
+        console.log('note is undefined')
+        //sample.stop(0)
+        this.notes.delete(id)
+      }else if((note.noteOn.millis >= min && note.noteOff.millis < max) === false){
+        //sample.stop(0)
+        let noteOn = note.noteOn
+        let noteOff = new MIDIEvent(0, 128, noteOn.data1, 0)
+        noteOff.midiNoteId = note.id
+        noteOff.time = 0//context.currentTime + min
+        note._track.processMIDIEvent(noteOff)
+        this.notes.delete(id)
+        console.log('stopping', id, note._track.name)
       }
-*/
     })
+    //console.log(this.notes.size)
   }
 
 /*

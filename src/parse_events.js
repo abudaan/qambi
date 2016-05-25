@@ -348,6 +348,7 @@ export function parseMIDINotes(events){
         continue
       }
       let note = new MIDINote(noteOn, noteOff)
+      note._track = noteOn._track
       note = null
       // let id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
       // noteOn.midiNoteId = id

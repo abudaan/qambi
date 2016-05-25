@@ -13,6 +13,7 @@ function processMIDIEvent(event, time) {
 
   //console.log(event, time)
   var sample = void 0;
+  var unschedule = false;
 
   if (isNaN(time)) {
     // this shouldn't happen
@@ -20,9 +21,15 @@ function processMIDIEvent(event, time) {
     return;
     //time = context.currentTime
   }
+
+  // two cases whereby the event neess to be processed immediately
   if (time === 0) {
-    // this is an event that is send from an external MIDI keyboard, it needs to be processed immediately
+    // this is an event that is send from an external MIDI keyboard
     time = _init_audio.context.currentTime;
+  } else if (time === -1) {
+    // this is an event that has been unscheduled by the scheduler, for instance because the event has been deleted
+    time = _init_audio.context.currentTime;
+    unschedule = true;
   }
 
   if (event.type === 144) {
@@ -42,7 +49,9 @@ function processMIDIEvent(event, time) {
         //console.info('sample not found for event', event.id, ' midiNote', event.midiNoteId, event)
         return;
       }
-      if (this.sustainPedalDown === true) {
+
+      // we don't want that the sustain pedal prevents the an event to unscheduled
+      if (this.sustainPedalDown === true && unschedule === false) {
         //console.log(event.midiNoteId)
         this.sustainedSamples.push(event.midiNoteId);
       } else {

@@ -80,6 +80,8 @@ export function update():void{
   // filter removed events
   console.log('removed events %O', this._removedEvents)
   this._removedEvents.forEach((event) => {
+    let track = event.midiNote._track
+    track.unschedule(event.midiNote)
     this._notesById.delete(event.midiNote.id)
     this._eventsById.delete(event.id)
   })
@@ -160,6 +162,7 @@ export function update():void{
 
   // get the position data of the first beat in the bar after the last bar
   this.bars = Math.max(lastEvent.bar, this.bars)
+  console.log('NOW', this.bars)
   let ticks = calculatePosition(this, {
     type: 'barsbeats',
     target: [this.bars + 1],
@@ -200,8 +203,9 @@ export function update():void{
 
   console.log('current millis', this._currentMillis)
   this._playhead.updateSong()
-  this._scheduler.init(this._currentMillis)
   this._scheduler.reschedule()
+  this._scheduler.init(this._currentMillis)
+  //this._scheduler.init(this._currentMillis)
 
   if(this.playing === false){
     this._playhead.set('millis', this._currentMillis)

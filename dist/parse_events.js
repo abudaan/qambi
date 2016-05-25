@@ -378,6 +378,7 @@ function parseMIDINotes(events) {
           continue;
         }
         var note = new _midi_note.MIDINote(noteOn, noteOff);
+        note._track = noteOn._track;
         note = null;
         // let id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
         // noteOn.midiNoteId = id

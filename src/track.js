@@ -439,10 +439,18 @@ export class Track{
     }
   }
 
+  unschedule(midiNote){
+    let noteOn = midiNote.noteOn
+    let noteOff = new MIDIEvent(0, 128, noteOn.data1, 0)
+    noteOff.midiNoteId = midiNote.id
+    noteOff.time = -1//context.currentTime + min
+    this.processMIDIEvent(noteOff)
+  }
+
   allNotesOff(){
     if(this._instrument !== null){
       this._instrument.allNotesOff()
     }
   }
-}
 
+}
