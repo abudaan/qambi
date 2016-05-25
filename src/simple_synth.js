@@ -1,15 +1,21 @@
 import {processMIDIEvent} from './instrument.process_midievent'
-import {typeString} from './util'
+import {SampleOscillator} from './sample_oscillator'
 
+let synthIndex = 0
 
 export class SimpleSynth{
 
-  constructor(id: string, type: string){
-    this.id = id
+  constructor(type: string){
+    this.id = this.id = `SYNTH_${synthIndex++}_${new Date().getTime()}`
     this.type = type
     this.scheduledSamples = {}
     this.sustainedSamples = []
     this.sustainPedalDown = false
+    this.sampleData = {
+      type,
+      releaseDuration: 0.4,
+      releaseEnvelope: 'equal power'
+    }
   }
 
   // mandatory
@@ -27,8 +33,8 @@ export class SimpleSynth{
     processMIDIEvent.call(this, event, time)
   }
 
-  createSample(sampleData, event){
-    return new Sample(sampleData, event)
+  createSample(event){
+    return new SampleOscillator(this.sampleData, event)
   }
 
   // stereo spread
@@ -45,5 +51,7 @@ export class SimpleSynth{
     @envelope: linear | equal_power | array of int values
   */
   setRelease(duration: number, envelope){
+    this.sampleData.releaseDuration = duration
+    this.sampleData.releaseEnvelope = envelope
   }
 }

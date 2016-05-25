@@ -1,7 +1,7 @@
 import qambi, {
   Song,
   Track,
-  Instrument,
+  SimpleSynth,
   getMIDIInputs,
 } from '../../src/qambi'
 
@@ -19,7 +19,7 @@ function main(){
   let song = new Song({bars: 4, autoSize: false})
   let track = new Track()
   track.setRecordEnabled('midi')
-  track.setInstrument(new Instrument()) // by passing a new Instrument, the simple sinewave synth is used for instrument
+  track.setInstrument(new SimpleSynth('square'))
   song.addTracks(track)
   song.update()
 

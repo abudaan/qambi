@@ -19,7 +19,6 @@ function processMIDIEvent(event, time) {
   var _this = this;
 
   var sample = void 0;
-  var sampleData = void 0;
 
   if (isNaN(time)) {
     // if you call processMIDIEvent directly on a Track instance that isn't added to a Song -> should be removed
@@ -30,8 +29,7 @@ function processMIDIEvent(event, time) {
   if (event.type === 144) {
     //console.log(144, ':', time, context.currentTime, event.millis)
 
-    sampleData = this.samplesData[event.data1][event.data2];
-    sample = this.createSample(sampleData, event);
+    sample = this.createSample(event);
     this.scheduledSamples[event.midiNoteId] = sample;
     //console.log(sample)
     sample.output.connect(this.output || _init_audio.context.destination);

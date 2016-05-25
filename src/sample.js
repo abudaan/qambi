@@ -7,28 +7,6 @@ export class Sample{
   constructor(sampleData, event){
     this.event = event
     this.sampleData = sampleData
-
-    if(this.sampleData === -1 || typeof this.sampleData.buffer === 'undefined'){
-
-      //@TODO: create dummy sample here => sinewave will be moved to SimpleSynth
-
-      // create simple synth sample
-      //console.log(event.data1, event.data2)
-      this.source = context.createOscillator();
-      this.source.type = 'sine';
-      //console.log(event.frequency)
-      this.source.frequency.value = event.frequency
-    }else{
-      this.source = context.createBufferSource()
-      //console.log(sampleData)
-      this.source.buffer = sampleData.buffer;
-      //console.log(this.source.buffer)
-    }
-    this.output = context.createGain()
-    this.volume = event.data2 / 127
-    this.output.gain.value = this.volume
-    this.source.connect(this.output)
-    //this.output.connect(context.destination)
   }
 
   start(time){

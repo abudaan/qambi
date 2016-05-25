@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getGMInstruments = exports.getInstruments = exports.setBufferTime = exports.init = exports.version = undefined;
+exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getGMInstruments = exports.getInstruments = exports.setBufferTime = exports.init = exports.version = undefined;
 
 var _midi_event = require('./midi_event');
 
@@ -16,6 +16,8 @@ var _track = require('./track');
 var _song = require('./song');
 
 var _instrument = require('./instrument');
+
+var _simple_synth = require('./simple_synth');
 
 var _midifile = require('./midifile');
 
@@ -33,7 +35,7 @@ var _settings = require('./settings');
 
 var _eventlistener = require('./eventlistener');
 
-var version = '1.0.0-beta18';
+var version = '1.0.0-beta19';
 
 var getAudioContext = function getAudioContext() {
   return _init_audio.context;
@@ -99,6 +101,9 @@ var qambi = {
 
   // from ./instrument
   Instrument: _instrument.Instrument,
+
+  // from ./simple_synth
+  SimpleSynth: _simple_synth.SimpleSynth,
 
   log: function log(id) {
     switch (id) {
@@ -174,3 +179,7 @@ exports.
 
 // from ./instrument
 Instrument = _instrument.Instrument;
+exports.
+
+// from ./simple_synth
+SimpleSynth = _simple_synth.SimpleSynth;

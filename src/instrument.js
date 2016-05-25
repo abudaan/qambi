@@ -3,14 +3,17 @@ import {parseSamples} from './parse_audio'
 import {processMIDIEvent} from './instrument.process_midievent'
 import {typeString} from './util'
 import {fetchJSON} from './fetch_helpers'
-import {Sample} from './sample'
+import {SampleBuffer} from './sample_buffer'
 
+
+let instrumentIndex = 0
 
 export class Instrument{
 
-  constructor(id: string, type: string){
-    this.id = id
-    this.type = type
+  constructor(name: string, type: string){
+    this.id = this.id = `I_${instrumentIndex++}_${new Date().getTime()}`
+    this.name = name || this.id
+    console.log(type)
     // create a samples data object for all 128 velocity levels of all 128 notes
     this.samplesData = new Array(128).fill(-1);
     this.samplesData = this.samplesData.map(function(){
@@ -37,8 +40,8 @@ export class Instrument{
     processMIDIEvent.call(this, event, time)
   }
 
-  createSample(sampleData, event){
-    return new Sample(sampleData, event)
+  createSample(event){
+    return new SampleBuffer(this.samplesData[event.data1][event.data2], event)
   }
 
   _loadJSON(data){

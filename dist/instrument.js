@@ -21,16 +21,19 @@ var _util = require('./util');
 
 var _fetch_helpers = require('./fetch_helpers');
 
-var _sample = require('./sample');
+var _sample_buffer = require('./sample_buffer');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var instrumentIndex = 0;
+
 var Instrument = exports.Instrument = function () {
-  function Instrument(id, type) {
+  function Instrument(name, type) {
     _classCallCheck(this, Instrument);
 
-    this.id = id;
-    this.type = type;
+    this.id = this.id = 'I_' + instrumentIndex++ + '_' + new Date().getTime();
+    this.name = name || this.id;
+    console.log(type);
     // create a samples data object for all 128 velocity levels of all 128 notes
     this.samplesData = new Array(128).fill(-1);
     this.samplesData = this.samplesData.map(function () {
@@ -68,8 +71,8 @@ var Instrument = exports.Instrument = function () {
     }
   }, {
     key: 'createSample',
-    value: function createSample(sampleData, event) {
-      return new _sample.Sample(sampleData, event);
+    value: function createSample(event) {
+      return new _sample_buffer.SampleBuffer(this.samplesData[event.data1][event.data2], event);
     }
   }, {
     key: '_loadJSON',

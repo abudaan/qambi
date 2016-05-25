@@ -1,4 +1,4 @@
-const version = '1.0.0-beta18'
+const version = '1.0.0-beta19'
 
 import {
   MIDIEvent
@@ -23,6 +23,10 @@ import {
 import {
   Instrument,
 } from './instrument'
+
+import {
+  SimpleSynth,
+} from './simple_synth'
 
 import {
   parseMIDIFile
@@ -134,6 +138,9 @@ const qambi = {
   // from ./instrument
   Instrument,
 
+  // from ./simple_synth
+  SimpleSynth,
+
   log(id){
     switch(id){
       case 'functions':
@@ -212,4 +219,7 @@ export {
 
   // from ./instrument
   Instrument,
+
+  // from ./simple_synth
+  SimpleSynth,
 }
