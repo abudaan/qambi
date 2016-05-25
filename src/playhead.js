@@ -3,12 +3,12 @@ import {dispatchEvent} from './eventlistener.js'
 import {sortEvents} from './util.js'
 
 const range = 10 // milliseconds or ticks
-let instanceId = 0
+let instanceIndex = 0
 
 export class Playhead{
 
   constructor(song, type = 'all'){
-    this.id = `POS ${instanceId++} ${new Date().getTime()}`
+    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
     this.song = song
     this.type = type
     this.lastEvent = null

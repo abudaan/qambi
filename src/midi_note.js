@@ -1,6 +1,6 @@
 import {MIDIEvent} from './midi_event'
 
-let midiNoteIndex = 0
+let instanceIndex = 0
 
 export class MIDINote{
 
@@ -10,7 +10,7 @@ export class MIDINote{
       console.warn('cannot create MIDINote')
       return
     }
-    this.id = `MN_${midiNoteIndex++}_${new Date().getTime()}`
+    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
     this.noteOn = noteon
     noteon.midiNote = this
     noteon.midiNoteId = this.id

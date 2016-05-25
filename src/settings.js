@@ -37,7 +37,7 @@ const heartbeatInstruments = new Map([
     name: 'CK Ice Skates (synth)',
     description: 'uses Detunized samples',
   }],
-  ['shk-squareroot', {
+  ['shk2-squareroot', {
     name: 'SHK squareroot (synth)',
     description: 'uses Detunized samples',
   }],

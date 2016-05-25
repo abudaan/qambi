@@ -1,36 +1,23 @@
-import {processMIDIEvent} from './instrument.process_midievent'
+import {Instrument} from './instrument'
 import {SampleOscillator} from './sample_oscillator'
 
-let synthIndex = 0
+let instanceIndex = 0
 
-export class SimpleSynth{
+export class SimpleSynth extends Instrument{
 
-  constructor(type: string){
-    this.id = this.id = `SYNTH_${synthIndex++}_${new Date().getTime()}`
+  constructor(type: string, name: string){
+    super()
+    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
+    this.name = name || this.id
     this.type = type
     this.scheduledSamples = {}
     this.sustainedSamples = []
     this.sustainPedalDown = false
     this.sampleData = {
       type,
-      releaseDuration: 0.4,
+      releaseDuration: 0.3,
       releaseEnvelope: 'equal power'
     }
-  }
-
-  // mandatory
-  connect(output){
-    this.output = output
-  }
-
-  // mandatory
-  disconnect(){
-    this.output = null
-  }
-
-  // mandatory
-  processMIDIEvent(event, time){
-    processMIDIEvent.call(this, event, time)
   }
 
   createSample(event){

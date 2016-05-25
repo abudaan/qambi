@@ -1,21 +1,14 @@
-import {Instrument} from './instrument'
 import {context} from './init_audio'
-
-const ppq = 480
-const bpm = 120
-const playbackSpeed = 1
-const millisPerTick = (1 / playbackSpeed * 60) / bpm / ppq
 
 
 export function processMIDIEvent(event, time){
 
   let sample
 
-  if(isNaN(time)){
-    // if you call processMIDIEvent directly on a Track instance that isn't added to a Song -> should be removed
-    time = context.currentTime + (event.ticks * millisPerTick)
+  if(isNaN(time) || time === 0){
+    // this happens when you play the instrument directly via a MIDI keyboard
+    time = context.currentTime
   }
-  //console.log(time)
 
   if(event.type === 144){
     //console.log(144, ':', time, context.currentTime, event.millis)

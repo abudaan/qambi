@@ -10,7 +10,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 // @ flow
 
-var midiEventIndex = 0;
+var instanceIndex = 0;
 
 var MIDIEvent = exports.MIDIEvent = function () {
   function MIDIEvent(ticks, type, data1) {
@@ -18,7 +18,7 @@ var MIDIEvent = exports.MIDIEvent = function () {
 
     _classCallCheck(this, MIDIEvent);
 
-    this.id = "ME_" + midiEventIndex++ + "_" + new Date().getTime();
+    this.id = this.constructor.name + "_" + instanceIndex++ + "_" + new Date().getTime();
     this.ticks = ticks;
     this.type = type;
     this.data1 = data1;

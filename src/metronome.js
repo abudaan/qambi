@@ -4,7 +4,7 @@ import {parseEvents, parseMIDINotes} from './parse_events'
 import {MIDIEvent} from './midi_event'
 import {checkMIDINumber} from './util'
 import {calculatePosition} from './position'
-import {Instrument} from './instrument'
+import {Sampler} from './sampler'
 import {getInitData} from './init_audio'
 import {MIDIEventTypes} from './constants'
 import {sortEvents} from './util'
@@ -45,7 +45,7 @@ export class Metronome{
   reset(){
 
     let data = getInitData()
-    let instrument = new Instrument('metronome')
+    let instrument = new Sampler('metronome')
     instrument.updateSampleData({
       note: 60,
       buffer: data.lowtick,

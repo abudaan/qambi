@@ -25,7 +25,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var trackIndex = 0;
+var instanceIndex = 0;
 
 var Track = exports.Track = function () {
   function Track() {
@@ -33,7 +33,7 @@ var Track = exports.Track = function () {
 
     _classCallCheck(this, Track);
 
-    this.id = 'TR_' + trackIndex++ + '_' + new Date().getTime();
+    this.id = this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
     this.name = name || this.id;
     this.channel = 0;
     this.muted = false;
@@ -64,13 +64,26 @@ var Track = exports.Track = function () {
     value: function setInstrument() {
       var instrument = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
 
+      if (instrument !== null
+      // check if the mandatory functions of an instrument are present (Interface Instrument)
+       && typeof instrument.connect === 'function' && typeof instrument.disconnect === 'function' && typeof instrument.processMIDIEvent === 'function' && typeof instrument.allNotesOff === 'function') {
+        this.removeInstrument();
+        this._instrument = instrument;
+        this._instrument.connect(this._output);
+      } else if (instrument === null) {
+        // if you pass null as argument the current instrument will be removed, same as removeInstrument
+        this.removeInstrument();
+      } else {
+        console.log('Invalid instrument, and instrument should have the methods "connect", "disconnect", "processMIDIEvent" and "allNotesOff"');
+      }
+    }
+  }, {
+    key: 'removeInstrument',
+    value: function removeInstrument() {
       if (this._instrument !== null) {
         this._instrument.allNotesOff();
         this._instrument.disconnect();
-      }
-      this._instrument = instrument;
-      if (this._instrument !== null) {
-        this._instrument.connect(this._output);
+        this._instrument = null;
       }
     }
   }, {

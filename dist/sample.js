@@ -47,7 +47,7 @@ var Sample = exports.Sample = function () {
       var releaseDuration = _sampleData2.releaseDuration;
       var releaseEnvelope = _sampleData2.releaseEnvelope;
       var releaseEnvelopeArray = _sampleData2.releaseEnvelopeArray;
-
+      //console.log(releaseDuration, releaseEnvelope)
 
       this.source.onended = cb;
 
@@ -87,12 +87,12 @@ function fadeOut(gainNode, settings) {
       i = void 0,
       maxi = void 0;
 
-  //console.log(settings.releaseEnvelope)
+  //console.log(settings)
   switch (settings.releaseEnvelope) {
 
     case 'linear':
       gainNode.gain.linearRampToValueAtTime(gainNode.gain.value, now);
-      gainNode.gain.linearRampToValueAtTime(0, now + settings.releaseDuration);
+      gainNode.gain.linearRampToValueAtTime(0.0, now + settings.releaseDuration);
       break;
 
     case 'equal power':

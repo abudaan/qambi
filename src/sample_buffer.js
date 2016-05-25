@@ -1,10 +1,13 @@
 import {Sample} from './sample'
 import {context} from './init_audio'
 
+let instanceIndex = 0
+
 export class SampleBuffer extends Sample{
 
   constructor(sampleData, event){
     super(sampleData, event)
+    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
 
     if(this.sampleData === -1 || typeof this.sampleData.buffer === 'undefined'){
       // create dummy source

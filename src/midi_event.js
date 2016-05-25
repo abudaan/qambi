@@ -1,11 +1,11 @@
 // @ flow
 
-let midiEventIndex = 0
+let instanceIndex = 0
 
 export class MIDIEvent{
 
   constructor(ticks: number, type: number, data1: number, data2: number = -1){
-    this.id = `ME_${midiEventIndex++}_${new Date().getTime()}`
+    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
     this.ticks = ticks
     this.type = type
     this.data1 = data1

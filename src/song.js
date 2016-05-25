@@ -15,7 +15,7 @@ import {defaultSong} from './settings'
 import {saveAsMIDIFile} from './save_midifile'
 import {update} from './song.update'
 
-let songIndex = 0
+let instanceIndex = 0
 let recordingIndex = 0
 
 
@@ -62,7 +62,7 @@ export class Song{
 
   constructor(settings: {} = {}){
 
-    this.id = `S_${songIndex++}_${new Date().getTime()}`;
+    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
 
     ({
       name: this.name = this.id,

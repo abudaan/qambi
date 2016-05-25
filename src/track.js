@@ -7,12 +7,12 @@ import {context} from './init_audio'
 import {MIDIEventTypes} from './qambi'
 
 
-let trackIndex = 0
+let instanceIndex = 0
 
 export class Track{
 
   constructor(name: string = null){
-    this.id = `TR_${trackIndex++}_${new Date().getTime()}`
+    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
     this.name = name || this.id
     this.channel = 0
     this.muted = false
@@ -39,13 +39,29 @@ export class Track{
   }
 
   setInstrument(instrument = null){
+    if(instrument !== null
+      // check if the mandatory functions of an instrument are present (Interface Instrument)
+      && typeof instrument.connect === 'function'
+      && typeof instrument.disconnect === 'function'
+      && typeof instrument.processMIDIEvent === 'function'
+      && typeof instrument.allNotesOff === 'function'
+    ){
+      this.removeInstrument()
+      this._instrument = instrument
+      this._instrument.connect(this._output)
+    }else if(instrument === null){
+      // if you pass null as argument the current instrument will be removed, same as removeInstrument
+      this.removeInstrument()
+    }else{
+      console.log('Invalid instrument, and instrument should have the methods "connect", "disconnect", "processMIDIEvent" and "allNotesOff"')
+    }
+  }
+
+  removeInstrument(){
     if(this._instrument !== null){
       this._instrument.allNotesOff()
       this._instrument.disconnect()
-    }
-    this._instrument = instrument
-    if(this._instrument !== null){
-      this._instrument.connect(this._output)
+      this._instrument = null
     }
   }
 

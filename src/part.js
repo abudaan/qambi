@@ -2,12 +2,12 @@
 
 import {sortEvents} from './util'
 
-let partIndex = 0
+let instanceIndex = 0
 
 export class Part{
 
   constructor(name: string = null){
-    this.id = `MP_${partIndex++}_${new Date().getTime()}`
+    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
     this.name = name || this.id
     this.muted = false
     this._track = null

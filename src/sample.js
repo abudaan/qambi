@@ -1,7 +1,6 @@
 import {context} from './init_audio.js'
 import {getEqualPowerCurve} from './util.js'
 
-
 export class Sample{
 
   constructor(sampleData, event){
@@ -22,7 +21,7 @@ export class Sample{
 
   stop(time, cb){
     let {releaseDuration, releaseEnvelope, releaseEnvelopeArray} = this.sampleData
-
+    //console.log(releaseDuration, releaseEnvelope)
     this.source.onended = cb
 
     if(releaseDuration && releaseEnvelope){
@@ -56,12 +55,12 @@ export function fadeOut(gainNode, settings){
   let now = context.currentTime
   let values, i, maxi
 
-  //console.log(settings.releaseEnvelope)
+  //console.log(settings)
   switch(settings.releaseEnvelope){
 
     case 'linear':
       gainNode.gain.linearRampToValueAtTime(gainNode.gain.value, now)
-      gainNode.gain.linearRampToValueAtTime(0, now + settings.releaseDuration)
+      gainNode.gain.linearRampToValueAtTime(0.0, now + settings.releaseDuration)
       break
 
     case 'equal power':

@@ -11,7 +11,7 @@ var _midi_event = require('./midi_event');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var midiNoteIndex = 0;
+var instanceIndex = 0;
 
 var MIDINote = exports.MIDINote = function () {
   function MIDINote(noteon, noteoff) {
@@ -22,7 +22,7 @@ var MIDINote = exports.MIDINote = function () {
       console.warn('cannot create MIDINote');
       return;
     }
-    this.id = 'MN_' + midiNoteIndex++ + '_' + new Date().getTime();
+    this.id = this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
     this.noteOn = noteon;
     noteon.midiNote = this;
     noteon.midiNoteId = this.id;

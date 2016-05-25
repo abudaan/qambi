@@ -13,7 +13,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var partIndex = 0;
+var instanceIndex = 0;
 
 var Part = exports.Part = function () {
   function Part() {
@@ -21,7 +21,7 @@ var Part = exports.Part = function () {
 
     _classCallCheck(this, Part);
 
-    this.id = 'MP_' + partIndex++ + '_' + new Date().getTime();
+    this.id = this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
     this.name = name || this.id;
     this.muted = false;
     this._track = null;
