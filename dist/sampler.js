@@ -79,7 +79,7 @@ var Sampler = exports.Sampler = function (_Instrument) {
 
       if (typeof data.release !== 'undefined') {
         this.setRelease(data.release[0], data.release[1]);
-        console.log(1, data.release[0], data.release[1]);
+        //console.log(1, data.release[0], data.release[1])
       }
 
       //return Promise.resolve()
@@ -93,7 +93,7 @@ var Sampler = exports.Sampler = function (_Instrument) {
           }
           if (typeof data.release !== 'undefined') {
             _this2.setRelease(data.release[0], data.release[1]);
-            console.log(2, data.release[0], data.release[1]);
+            //console.log(2, data.release[0], data.release[1])
           }
           return (0, _parse_audio.parseSamples)(data);
         }).then(function (result) {

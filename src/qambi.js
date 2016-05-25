@@ -25,6 +25,10 @@ import {
 } from './instrument'
 
 import {
+  Sampler,
+} from './sampler'
+
+import {
   SimpleSynth,
 } from './simple_synth'
 
@@ -141,6 +145,9 @@ const qambi = {
   // from ./simple_synth
   SimpleSynth,
 
+  // from ./sampler
+  Sampler,
+
   log(id){
     switch(id){
       case 'functions':
@@ -222,4 +229,7 @@ export {
 
   // from ./simple_synth
   SimpleSynth,
+
+  // from ./sampler
+  Sampler,
 }

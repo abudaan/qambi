@@ -44,7 +44,7 @@ export class Sampler extends Instrument{
 
     if(typeof data.release !== 'undefined'){
       this.setRelease(data.release[0], data.release[1])
-      console.log(1, data.release[0], data.release[1])
+      //console.log(1, data.release[0], data.release[1])
     }
 
     //return Promise.resolve()
@@ -59,7 +59,7 @@ export class Sampler extends Instrument{
         }
         if(typeof data.release !== 'undefined'){
           this.setRelease(data.release[0], data.release[1])
-          console.log(2, data.release[0], data.release[1])
+          //console.log(2, data.release[0], data.release[1])
         }
         return parseSamples(data)
       })

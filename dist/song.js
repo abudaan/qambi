@@ -31,7 +31,7 @@ var _metronome = require('./metronome');
 
 var _eventlistener = require('./eventlistener');
 
-var _settings2 = require('./settings');
+var _settings = require('./settings');
 
 var _save_midifile = require('./save_midifile');
 
@@ -91,13 +91,37 @@ var Song = exports.Song = function () {
   }]);
 
   function Song() {
-    var _settings, _settings$name, _settings$ppq, _settings$bpm, _settings$bars, _settings$nominator, _settings$denominator, _settings$quantizeVal, _settings$fixedLength, _settings$useMetronom, _settings$autoSize, _settings$playbackSpe, _settings$autoQuantiz;
-
     var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
     _classCallCheck(this, Song);
 
-    this.id = (this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime())((_settings = settings, _settings$name = _settings.name, this.name = _settings$name === undefined ? this.id : _settings$name, _settings$ppq = _settings.ppq, this.ppq = _settings$ppq === undefined ? _settings2.defaultSong.ppq : _settings$ppq, _settings$bpm = _settings.bpm, this.bpm = _settings$bpm === undefined ? _settings2.defaultSong.bpm : _settings$bpm, _settings$bars = _settings.bars, this.bars = _settings$bars === undefined ? _settings2.defaultSong.bars : _settings$bars, _settings$nominator = _settings.nominator, this.nominator = _settings$nominator === undefined ? _settings2.defaultSong.nominator : _settings$nominator, _settings$denominator = _settings.denominator, this.denominator = _settings$denominator === undefined ? _settings2.defaultSong.denominator : _settings$denominator, _settings$quantizeVal = _settings.quantizeValue, this.quantizeValue = _settings$quantizeVal === undefined ? _settings2.defaultSong.quantizeValue : _settings$quantizeVal, _settings$fixedLength = _settings.fixedLengthValue, this.fixedLengthValue = _settings$fixedLength === undefined ? _settings2.defaultSong.fixedLengthValue : _settings$fixedLength, _settings$useMetronom = _settings.useMetronome, this.useMetronome = _settings$useMetronom === undefined ? _settings2.defaultSong.useMetronome : _settings$useMetronom, _settings$autoSize = _settings.autoSize, this.autoSize = _settings$autoSize === undefined ? _settings2.defaultSong.autoSize : _settings$autoSize, _settings$playbackSpe = _settings.playbackSpeed, this.playbackSpeed = _settings$playbackSpe === undefined ? _settings2.defaultSong.playbackSpeed : _settings$playbackSpe, _settings$autoQuantiz = _settings.autoQuantize, this.autoQuantize = _settings$autoQuantiz === undefined ? _settings2.defaultSong.autoQuantize : _settings$autoQuantiz, _settings));
+    this.id = this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
+
+    var _settings$name = settings.name;
+    this.name = _settings$name === undefined ? this.id : _settings$name;
+    var _settings$ppq = settings.ppq;
+    this.ppq = _settings$ppq === undefined ? _settings.defaultSong.ppq : _settings$ppq;
+    var _settings$bpm = settings.bpm;
+    this.bpm = _settings$bpm === undefined ? _settings.defaultSong.bpm : _settings$bpm;
+    var _settings$bars = settings.bars;
+    this.bars = _settings$bars === undefined ? _settings.defaultSong.bars : _settings$bars;
+    var _settings$nominator = settings.nominator;
+    this.nominator = _settings$nominator === undefined ? _settings.defaultSong.nominator : _settings$nominator;
+    var _settings$denominator = settings.denominator;
+    this.denominator = _settings$denominator === undefined ? _settings.defaultSong.denominator : _settings$denominator;
+    var _settings$quantizeVal = settings.quantizeValue;
+    this.quantizeValue = _settings$quantizeVal === undefined ? _settings.defaultSong.quantizeValue : _settings$quantizeVal;
+    var _settings$fixedLength = settings.fixedLengthValue;
+    this.fixedLengthValue = _settings$fixedLength === undefined ? _settings.defaultSong.fixedLengthValue : _settings$fixedLength;
+    var _settings$useMetronom = settings.useMetronome;
+    this.useMetronome = _settings$useMetronom === undefined ? _settings.defaultSong.useMetronome : _settings$useMetronom;
+    var _settings$autoSize = settings.autoSize;
+    this.autoSize = _settings$autoSize === undefined ? _settings.defaultSong.autoSize : _settings$autoSize;
+    var _settings$playbackSpe = settings.playbackSpeed;
+    this.playbackSpeed = _settings$playbackSpe === undefined ? _settings.defaultSong.playbackSpeed : _settings$playbackSpe;
+    var _settings$autoQuantiz = settings.autoQuantize;
+    this.autoQuantize = _settings$autoQuantiz === undefined ? _settings.defaultSong.autoQuantize : _settings$autoQuantiz;
+
 
     this._timeEvents = [new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TEMPO, this.bpm), new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TIME_SIGNATURE, this.nominator, this.denominator)];
 

@@ -1,7 +1,7 @@
 import qambi, {
   Song,
   Track,
-  Instrument,
+  Sampler,
   getMIDIInputs,
   getInstruments,
   getGMInstruments,
@@ -12,15 +12,15 @@ document.addEventListener('DOMContentLoaded', function(){
 
   let song
   let track
-  let instrument
+  let sampler
 
   qambi.init()
   .then(() => {
     song = new Song()
     track = new Track()
-    instrument = new Instrument()
+    sampler = new Sampler()
     song.addTracks(track)
-    track.setInstrument(instrument)
+    track.setInstrument(sampler)
     initUI()
   })
 
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function(){
     selectInstrument.addEventListener('change', () => {
       let key = selectInstrument.options[selectInstrument.selectedIndex].id
       let url = `${path}/${key}.json`
-      instrument.parseSampleData({url})
+      sampler.parseSampleData({url})
       .then(() => {
         console.log(`loaded: ${key}`)
       })

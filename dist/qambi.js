@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getGMInstruments = exports.getInstruments = exports.setBufferTime = exports.init = exports.version = undefined;
+exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getGMInstruments = exports.getInstruments = exports.setBufferTime = exports.init = exports.version = undefined;
 
 var _midi_event = require('./midi_event');
 
@@ -16,6 +16,8 @@ var _track = require('./track');
 var _song = require('./song');
 
 var _instrument = require('./instrument');
+
+var _sampler = require('./sampler');
 
 var _simple_synth = require('./simple_synth');
 
@@ -105,6 +107,9 @@ var qambi = {
   // from ./simple_synth
   SimpleSynth: _simple_synth.SimpleSynth,
 
+  // from ./sampler
+  Sampler: _sampler.Sampler,
+
   log: function log(id) {
     switch (id) {
       case 'functions':
@@ -183,3 +188,7 @@ exports.
 
 // from ./simple_synth
 SimpleSynth = _simple_synth.SimpleSynth;
+exports.
+
+// from ./sampler
+Sampler = _sampler.Sampler;

@@ -62,7 +62,7 @@ export class Song{
 
   constructor(settings: {} = {}){
 
-    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
+    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`;
 
     ({
       name: this.name = this.id,
