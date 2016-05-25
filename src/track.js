@@ -4,7 +4,6 @@ import {MIDINote} from './midi_note'
 import {getMIDIInputById, getMIDIOutputById} from './init_midi'
 import {sortEvents} from './util'
 import {context} from './init_audio'
-import {Instrument} from './instrument'
 import {MIDIEventTypes} from './qambi'
 
 
@@ -33,6 +32,9 @@ export class Track{
     this._instrument = null
     this._tmpRecordedNotes = new Map()
     this._recordedEvents = []
+    this.scheduledSamples = {}
+    this.sustainedSamples = []
+    this.sustainPedalDown = false
     //this.setInstrument(new Instrument('sinewave'))
   }
 
@@ -374,10 +376,34 @@ export class Track{
     }
   }
 
+  setPanning(){
+    // add pannernode -> reverb will be an channel FX
+  }
+
+  addEffect(){
+
+  }
+
+  addEffectAt(index: number){
+
+  }
+
+  removeEffect(index: number){
+
+  }
+
+  getEffects(){
+
+  }
+
+  getEffectAt(index: number){
+
+  }
+
+  // method is called by scheduler during playback and directly when used with an external keyboard
   processMIDIEvent(event, useLatency = false){
 
     let latency = useLatency ? this.latency : 0
-    //console.log(latency)
 
     // send to javascript instrument
     if(this._instrument !== null){
@@ -394,6 +420,12 @@ export class Track{
           port.send([event.type + this.channel, event.data1], event.time + latency)
         }
       }
+    }
+  }
+
+  allNotesOff(){
+    if(this._instrument !== null){
+      this._instrument.allNotesOff()
     }
   }
 }

@@ -351,6 +351,11 @@ var Scheduler = function () {
       //return this.index >= 10
       return this.index >= this.numEvents; // last event of song
     }
+  }, {
+    key: 'reschedule',
+    value: function reschedule() {}
+    // use this.notes
+
 
     /*
       allNotesOff(){

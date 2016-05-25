@@ -3,11 +3,11 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.Sample = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 exports.fadeOut = fadeOut;
-exports.createSample = createSample;
 
 var _init_audio = require('./init_audio.js');
 
@@ -15,7 +15,7 @@ var _util = require('./util.js');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Sample = function () {
+var Sample = exports.Sample = function () {
   function Sample(sampleData, event) {
     _classCallCheck(this, Sample);
 
@@ -23,6 +23,9 @@ var Sample = function () {
     this.sampleData = sampleData;
 
     if (this.sampleData === -1 || typeof this.sampleData.buffer === 'undefined') {
+
+      //@TODO: create dummy sample here => sinewave will be moved to SimpleSynth
+
       // create simple synth sample
       //console.log(event.data1, event.data2)
       this.source = _init_audio.context.createOscillator();
@@ -48,7 +51,6 @@ var Sample = function () {
       var _sampleData = this.sampleData;
       var sustainStart = _sampleData.sustainStart;
       var sustainEnd = _sampleData.sustainEnd;
-      var releaseEnvelopeArray = _sampleData.releaseEnvelopeArray;
       //console.log(sustainStart, sustainEnd)
 
       if (sustainStart && sustainEnd) {
@@ -132,12 +134,4 @@ function fadeOut(gainNode, settings) {
 
     default:
   }
-}
-
-function createSample() {
-  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
-
-  return new (Function.prototype.bind.apply(Sample, [null].concat(args)))();
 }

@@ -11,26 +11,19 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _sample = require('./sample');
-
-var _init_audio = require('./init_audio');
-
 var _note = require('./note');
 
 var _parse_audio = require('./parse_audio');
 
-var _util = require('./util');
+var _instrument = require('./instrument.process_midievent');
 
-var _eventlistener = require('./eventlistener');
+var _util = require('./util');
 
 var _fetch_helpers = require('./fetch_helpers');
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var _sample = require('./sample');
 
-var ppq = 480;
-var bpm = 120;
-var playbackSpeed = 1;
-var millisPerTick = 1 / playbackSpeed * 60 / bpm / ppq;
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Instrument = exports.Instrument = function () {
   function Instrument(id, type) {
@@ -49,106 +42,34 @@ var Instrument = exports.Instrument = function () {
     this.sustainPedalDown = false;
   }
 
+  // mandatory
+
+
   _createClass(Instrument, [{
     key: 'connect',
     value: function connect(output) {
       this.output = output;
     }
+
+    // mandatory
+
   }, {
     key: 'disconnect',
     value: function disconnect() {
       this.output = null;
     }
+
+    // mandatory
+
   }, {
     key: 'processMIDIEvent',
     value: function processMIDIEvent(event, time) {
-      var _this = this;
-
-      var sample = void 0,
-          sampleData = void 0;
-      if (isNaN(time)) {
-        time = _init_audio.context.currentTime + event.ticks * millisPerTick;
-      }
-      //console.log(time)
-
-      if (event.type === 144) {
-        //console.log(144, ':', time, context.currentTime, event.millis)
-
-        sampleData = this.samplesData[event.data1][event.data2];
-        sample = (0, _sample.createSample)(sampleData, event);
-        this.scheduledSamples[event.midiNoteId] = sample;
-        //console.log(sample)
-        sample.output.connect(this.output || _init_audio.context.destination);
-        // sample.source.onended = () => {
-        //   console.log('    deleting', event.midiNoteId)
-        //   delete this.scheduledSamples[event.midiNoteId]
-        // }
-        sample.start(time);
-        //console.log('scheduling', event.id, event.midiNoteId)
-        //console.log('start', event.midiNoteId)
-      } else if (event.type === 128) {
-          //console.log(128, ':', time, context.currentTime, event.millis)
-          sample = this.scheduledSamples[event.midiNoteId];
-          if (typeof sample === 'undefined') {
-            //console.info('sample not found for event', event.id, ' midiNote', event.midiNoteId, event)
-            return;
-          }
-          if (this.sustainPedalDown === true) {
-            //console.log(event.midiNoteId)
-            this.sustainedSamples.push(event.midiNoteId);
-          } else {
-            sample.stop(time, function () {
-              //console.log('stop', time, event.midiNoteId)
-              delete _this.scheduledSamples[event.midiNoteId];
-            });
-            //sample.stop(time)
-          }
-        } else if (event.type === 176) {
-            // sustain pedal
-            if (event.data1 === 64) {
-              if (event.data2 === 127) {
-                this.sustainPedalDown = true;
-                ///*
-                (0, _eventlistener.dispatchEvent)({
-                  type: 'sustainpedal',
-                  data: 'down'
-                });
-                //*/
-                //console.log('sustain pedal down')
-              } else if (event.data2 === 0) {
-                  this.sustainPedalDown = false;
-                  this.sustainedSamples.forEach(function (midiNoteId) {
-                    sample = _this.scheduledSamples[midiNoteId];
-                    if (sample) {
-                      //sample.stop(time)
-                      sample.stop(time, function () {
-                        //console.log('stop', midiNoteId)
-                        delete _this.scheduledSamples[midiNoteId];
-                      });
-                    }
-                  });
-                  //console.log('sustain pedal up', this.sustainedSamples)
-                  this.sustainedSamples = [];
-                  ///*
-                  (0, _eventlistener.dispatchEvent)({
-                    type: 'sustainpedal',
-                    data: 'up'
-                  });
-                  //*/
-                  //this.stopSustain(time);
-                }
-
-              // panning
-            } else if (event.data1 === 10) {
-                // panning is *not* exactly timed -> not possible (yet) with WebAudio
-                //console.log(data2, remap(data2, 0, 127, -1, 1));
-                //track.setPanning(remap(data2, 0, 127, -1, 1));
-
-                // volume
-              } else if (event.data1 === 7) {
-                  // to be implemented
-                }
-          }
+      _instrument.processMIDIEvent.call(this, event, time);
+    }
+  }, {
+    key: 'createSample',
+    value: function createSample(sampleData, event) {
+      return new _sample.Sample(sampleData, event);
     }
   }, {
     key: '_loadJSON',
@@ -164,7 +85,7 @@ var Instrument = exports.Instrument = function () {
   }, {
     key: 'parseSampleData',
     value: function parseSampleData(data) {
-      var _this2 = this;
+      var _this = this;
 
       // check if we have to overrule the baseUrl of the sampels
       var baseUrl = null;
@@ -180,14 +101,14 @@ var Instrument = exports.Instrument = function () {
       //return Promise.resolve()
 
       return new Promise(function (resolve, reject) {
-        _this2._loadJSON(data).then(function (json) {
+        _this._loadJSON(data).then(function (json) {
           //console.log(json)
           data = json;
           if (baseUrl !== null) {
             json.baseUrl = baseUrl;
           }
           if (typeof data.release !== 'undefined') {
-            _this2.setRelease(data.release[0], data.release[1]);
+            _this.setRelease(data.release[0], data.release[1]);
             console.log(2, data.release[0], data.release[1]);
           }
           return (0, _parse_audio.parseSamples)(data);
@@ -219,7 +140,7 @@ var Instrument = exports.Instrument = function () {
                       sd.buffer = buffer[i];
                     }
                     sd.note = parseInt(noteId, 10);
-                    _this2._updateSampleData(sd);
+                    _this._updateSampleData(sd);
                   });
                 } else {
 
@@ -231,7 +152,7 @@ var Instrument = exports.Instrument = function () {
                     sampleData.buffer = buffer;
                   }
                   sampleData.note = parseInt(noteId, 10);
-                  _this2._updateSampleData(sampleData);
+                  _this._updateSampleData(sampleData);
                 }
               };
 
@@ -267,7 +188,7 @@ var Instrument = exports.Instrument = function () {
                   sampleData.buffer = sample.buffer;
                 }
                 sampleData.note = sample;
-                _this2._updateSampleData(sampleData);
+                _this._updateSampleData(sampleData);
                 //this.updateSampleData(sampleData)
               }
             });
@@ -293,7 +214,7 @@ var Instrument = exports.Instrument = function () {
   }, {
     key: 'updateSampleData',
     value: function updateSampleData() {
-      var _this3 = this;
+      var _this2 = this;
 
       for (var _len = arguments.length, data = Array(_len), _key = 0; _key < _len; _key++) {
         data[_key] = arguments[_key];
@@ -304,17 +225,20 @@ var Instrument = exports.Instrument = function () {
         //console.log(noteData, typeString(noteData))
         if ((0, _util.typeString)(noteData) === 'array') {
           noteData.forEach(function (velocityLayer) {
-            _this3._updateSampleData(velocityLayer);
+            _this2._updateSampleData(velocityLayer);
           });
         } else {
-          _this3._updateSampleData(noteData);
+          _this2._updateSampleData(noteData);
         }
       });
     }
   }, {
+    key: 'clearSampleData',
+    value: function clearSampleData() {}
+  }, {
     key: '_updateSampleData',
     value: function _updateSampleData() {
-      var _this4 = this;
+      var _this3 = this;
 
       var data = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
@@ -397,7 +321,7 @@ var Instrument = exports.Instrument = function () {
           } else {
             delete sampleData.releaseEnvelopeArray;
           }
-          _this4.samplesData[note][i] = sampleData;
+          _this3.samplesData[note][i] = sampleData;
         }
         //console.log('%O', this.samplesData[note])
       });
@@ -438,33 +362,6 @@ var Instrument = exports.Instrument = function () {
         });
       });
       //console.log('%O', this.samplesData)
-    }
-  }, {
-    key: 'allNotesOff',
-    value: function allNotesOff() {
-      var _this5 = this;
-
-      this.sustainedSamples = [];
-      if (this.sustainPedalDown === true) {
-        (0, _eventlistener.dispatchEvent)({
-          type: 'sustainpedal',
-          data: 'up'
-        });
-      }
-      this.sustainPedalDown = false;
-
-      Object.keys(this.scheduledSamples).forEach(function (sampleId) {
-        //console.log('  stopping', sampleId, this.id)
-        var sample = _this5.scheduledSamples[sampleId];
-        //console.log(sample)
-        _this5.scheduledSamples[sampleId].stop(_init_audio.context.currentTime, function () {
-          //console.log('allNotesOff', sample.event.midiNoteId)
-          delete _this5.scheduledSamples[sample.event.midiNoteId];
-        });
-      });
-      this.scheduledSamples = {};
-
-      //console.log('allNotesOff', this.sustainedSamples.length, this.scheduledSamples)
     }
   }]);
 

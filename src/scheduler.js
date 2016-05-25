@@ -289,6 +289,10 @@ export default class Scheduler{
     return this.index >= this.numEvents // last event of song
   }
 
+  reschedule(){
+    // use this.notes
+  }
+
 /*
   allNotesOff(){
     let timeStamp = context.currentTime * 1000

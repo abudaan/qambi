@@ -2,13 +2,16 @@ import {context} from './init_audio.js'
 import {getEqualPowerCurve} from './util.js'
 
 
-class Sample{
+export class Sample{
 
   constructor(sampleData, event){
     this.event = event
     this.sampleData = sampleData
 
     if(this.sampleData === -1 || typeof this.sampleData.buffer === 'undefined'){
+
+      //@TODO: create dummy sample here => sinewave will be moved to SimpleSynth
+
       // create simple synth sample
       //console.log(event.data1, event.data2)
       this.source = context.createOscillator();
@@ -29,7 +32,7 @@ class Sample{
   }
 
   start(time){
-    let {sustainStart, sustainEnd, releaseEnvelopeArray} = this.sampleData
+    let {sustainStart, sustainEnd} = this.sampleData
     //console.log(sustainStart, sustainEnd)
     if(sustainStart && sustainEnd){
       this.source.loop = true
@@ -101,10 +104,3 @@ export function fadeOut(gainNode, settings){
     default:
   }
 }
-
-
-export function createSample(...args){
-  return new Sample(...args)
-}
-
-

@@ -19,8 +19,6 @@ var _util = require('./util');
 
 var _init_audio = require('./init_audio');
 
-var _instrument = require('./instrument');
-
 var _qambi = require('./qambi');
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -55,6 +53,9 @@ var Track = exports.Track = function () {
     this._instrument = null;
     this._tmpRecordedNotes = new Map();
     this._recordedEvents = [];
+    this.scheduledSamples = {};
+    this.sustainedSamples = [];
+    this.sustainPedalDown = false;
     //this.setInstrument(new Instrument('sinewave'))
   }
 
@@ -538,13 +539,35 @@ var Track = exports.Track = function () {
       }
     }
   }, {
+    key: 'setPanning',
+    value: function setPanning() {
+      // add pannernode -> reverb will be an channel FX
+    }
+  }, {
+    key: 'addEffect',
+    value: function addEffect() {}
+  }, {
+    key: 'addEffectAt',
+    value: function addEffectAt(index) {}
+  }, {
+    key: 'removeEffect',
+    value: function removeEffect(index) {}
+  }, {
+    key: 'getEffects',
+    value: function getEffects() {}
+  }, {
+    key: 'getEffectAt',
+    value: function getEffectAt(index) {}
+
+    // method is called by scheduler during playback and directly when used with an external keyboard
+
+  }, {
     key: 'processMIDIEvent',
     value: function processMIDIEvent(event) {
       var useLatency = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
 
 
       var latency = useLatency ? this.latency : 0;
-      //console.log(latency)
 
       // send to javascript instrument
       if (this._instrument !== null) {
@@ -582,6 +605,13 @@ var Track = exports.Track = function () {
             throw _iteratorError2;
           }
         }
+      }
+    }
+  }, {
+    key: 'allNotesOff',
+    value: function allNotesOff() {
+      if (this._instrument !== null) {
+        this._instrument.allNotesOff();
       }
     }
   }]);
