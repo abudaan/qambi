@@ -8,35 +8,28 @@ import qambi, {
 
 document.addEventListener('DOMContentLoaded', function(){
 
-  getNoteData({fullName: 'G#-1'})
-  getNoteData({fullName: 'G#-2'})
-  getNoteData({fullName: 'G#10'})
-  return
-
-
   qambi.init({
     song: {
       type: 'Song',
       url: '../data/mozk545a.mid'
     },
-    // piano: {
-    //   type: 'Instrument',
-    //   url: '../../instruments/heartbeat/city-piano-light.json'
-    // }
+    piano: {
+      type: 'Instrument',
+      url: '../../instruments/heartbeat/city-piano-light.json'
+    }
   })
   .then((data) => {
 
     let {song, piano} = data
-    let synth = new SimpleSynth('square')
+    //let synth = new SimpleSynth('square')
 
     song.getTracks().forEach(track => {
-      //track.setInstrument(piano)
-      track.setInstrument(synth)
+      track.setInstrument(piano)
+      //track.setInstrument(synth)
       track.connectMIDIInputs(...getMIDIInputs())
     })
 
     initUI(song)
-
   })
 
 
@@ -64,21 +57,24 @@ document.addEventListener('DOMContentLoaded', function(){
       song.stop()
     })
 
-
     let track = song.getTracks()[0];
-    ['a', 'b', 'c', 'd', 'e', 'f', 'g'].forEach(key => {
+    ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'].forEach(key => {
 
       let btnKey = document.getElementById(key)
 
-      btnKey.addEventListener('mousedown', () => {
-        let noteNumber = getNoteData(key).noteNumber
-        track.processMIDIEvent(new MIDIEvent(0, MIDIEventTypes.NOTE_ON, noteNumber, 100))
-      })
-
-      btnKey.addEventListener('mouseup', () => {
-        let noteNumber = getNoteData(key).noteNumber
-        track.processMIDIEvent(new MIDIEvent(0, MIDIEventTypes.NOTE_OFF, noteNumber))
-      })
+      btnKey.addEventListener('mousedown', startNote, false)
+      btnKey.addEventListener('mouseup', stopNote, false)
+      btnKey.addEventListener('mouseout', stopNote, false)
     })
+
+    function startNote(){
+      let noteNumber = getNoteData({fullName: this.id}).number
+      track.processMIDIEvent(new MIDIEvent(0, MIDIEventTypes.NOTE_ON, noteNumber, 100))
+    }
+
+    function stopNote(){
+      let noteNumber = getNoteData({fullName: this.id}).number
+      track.processMIDIEvent(new MIDIEvent(0, MIDIEventTypes.NOTE_OFF, noteNumber))
+    }
   }
 })

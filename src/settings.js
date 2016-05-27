@@ -73,4 +73,5 @@ export const getGMInstruments = function(){
 }
 
 
-export const noteNameMode = 'sharp'
+export let noteNameMode = 'sharp'
+export let pitch = 440

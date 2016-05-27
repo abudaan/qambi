@@ -13,7 +13,7 @@ function processMIDIEvent(event) {
 
   var time = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
 
-  console.log(event, time);
+  //console.log(event, time)
   var sample = void 0;
   var unschedule = false;
 

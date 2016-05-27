@@ -176,7 +176,7 @@ export class Sampler extends Instrument{
     }
 
     // get notenumber from notename and check if the notenumber is valid
-    let n = getNoteData(note)
+    let n = getNoteData({number: note})
     if(n === false){
       console.warn('not a valid note id')
       return

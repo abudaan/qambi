@@ -247,7 +247,7 @@ var Sampler = exports.Sampler = function (_Instrument) {
       }
 
       // get notenumber from notename and check if the notenumber is valid
-      var n = (0, _note.getNoteData)(note);
+      var n = (0, _note.getNoteData)({ number: note });
       if (n === false) {
         console.warn('not a valid note id');
         return;

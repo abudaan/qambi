@@ -70,3 +70,4 @@ var getGMInstruments = exports.getGMInstruments = function getGMInstruments() {
 };
 
 var noteNameMode = exports.noteNameMode = 'sharp';
+var pitch = exports.pitch = 440;
