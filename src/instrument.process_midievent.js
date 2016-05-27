@@ -1,8 +1,8 @@
 import {context} from './init_audio'
 
 
-export function processMIDIEvent(event, time){
-  //console.log(event, time)
+export function processMIDIEvent(event, time = 0){
+  console.log(event, time)
   let sample
   let unschedule = false
 

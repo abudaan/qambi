@@ -8,10 +8,12 @@ exports.allNotesOff = allNotesOff;
 
 var _init_audio = require('./init_audio');
 
-function processMIDIEvent(event, time) {
+function processMIDIEvent(event) {
   var _this = this;
 
-  //console.log(event, time)
+  var time = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
+
+  console.log(event, time);
   var sample = void 0;
   var unschedule = false;
 

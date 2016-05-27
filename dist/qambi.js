@@ -3,7 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getGMInstruments = exports.getInstruments = exports.setBufferTime = exports.init = exports.version = undefined;
+exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getGMInstruments = exports.getInstruments = exports.setBufferTime = exports.init = exports.version = undefined;
+
+var _note = require('./note');
 
 var _midi_event = require('./midi_event');
 
@@ -45,6 +47,8 @@ var getAudioContext = function getAudioContext() {
 
 var qambi = {
   version: version,
+  // from ./note
+  getNoteData: _note.getNoteData,
 
   // from ./init
   init: _init.init,
@@ -160,6 +164,10 @@ exports.getMIDIInputIds = _init_midi.getMIDIInputIds;
 exports.getMIDIOutputIds = _init_midi.getMIDIOutputIds;
 exports.getMIDIInputsById = _init_midi.getMIDIInputsById;
 exports.getMIDIOutputsById = _init_midi.getMIDIOutputsById;
+exports.
+
+// from ./note
+getNoteData = _note.getNoteData;
 exports.
 
 // from ./midi_event

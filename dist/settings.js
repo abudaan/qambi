@@ -68,3 +68,5 @@ Object.keys(gmInstruments).forEach(function (key) {
 var getGMInstruments = exports.getGMInstruments = function getGMInstruments() {
   return gmMap;
 };
+
+var noteNameMode = exports.noteNameMode = 'sharp';

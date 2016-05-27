@@ -1,6 +1,6 @@
 import qambi from './qambi'
 import {Song} from './song'
-import {Instrument} from './instrument'
+import {Sampler} from './sampler'
 import {initAudio} from './init_audio'
 import {initMIDI} from './init_midi'
 
@@ -35,10 +35,10 @@ export let Blob = (() => {
 
 
 function loadInstrument(data){
-  let instrument = new Instrument()
+  let sampler = new Sampler()
   return new Promise((resolve, reject) => {
-    instrument.parseSampleData(data)
-    .then(() => resolve(instrument))
+    sampler.parseSampleData(data)
+    .then(() => resolve(sampler))
   })
 }
 

@@ -518,40 +518,6 @@ var Track = exports.Track = function () {
       this._needsUpdate = false;
     }
   }, {
-    key: 'allNotesOff',
-    value: function allNotesOff() {
-      if (this._instrument !== null) {
-        this._instrument.allNotesOff();
-      }
-
-      var timeStamp = _init_audio.context.currentTime * 1000 + this.latency;
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this._midiOutputs.values()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var output = _step.value;
-
-          output.send([0xB0, 0x7B, 0x00], timeStamp); // stop all notes
-          output.send([0xB0, 0x79, 0x00], timeStamp); // reset all controllers
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-    }
-  }, {
     key: 'setPanning',
     value: function setPanning() {
       // add pannernode -> reverb will be an channel FX
@@ -581,41 +547,42 @@ var Track = exports.Track = function () {
 
 
       var latency = useLatency ? this.latency : 0;
+      var time = event.time || 0; // for instance for onscreen keyboard
 
       // send to javascript instrument
       if (this._instrument !== null) {
         //console.log(this.name, event)
-        this._instrument.processMIDIEvent(event, event.time / 1000);
+        this._instrument.processMIDIEvent(event, time / 1000);
       }
 
       // send to external hardware or software instrument
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
 
       try {
-        for (var _iterator2 = this._midiOutputs.values()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var port = _step2.value;
+        for (var _iterator = this._midiOutputs.values()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var port = _step.value;
 
           if (port) {
             if (event.type === 128 || event.type === 144 || event.type === 176) {
-              port.send([event.type + this.channel, event.data1, event.data2], event.time + latency);
+              port.send([event.type + this.channel, event.data1, event.data2], time + latency);
             } else if (event.type === 192 || event.type === 224) {
-              port.send([event.type + this.channel, event.data1], event.time + latency);
+              port.send([event.type + this.channel, event.data1], time + latency);
             }
           }
         }
       } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
+        _didIteratorError = true;
+        _iteratorError = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return) {
-            _iterator2.return();
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
           }
         } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
+          if (_didIteratorError) {
+            throw _iteratorError;
           }
         }
       }
@@ -634,6 +601,33 @@ var Track = exports.Track = function () {
     value: function allNotesOff() {
       if (this._instrument !== null) {
         this._instrument.allNotesOff();
+      }
+
+      var timeStamp = _init_audio.context.currentTime * 1000 + this.latency;
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+
+      try {
+        for (var _iterator2 = this._midiOutputs.values()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var output = _step2.value;
+
+          output.send([0xB0, 0x7B, 0x00], timeStamp); // stop all notes
+          output.send([0xB0, 0x79, 0x00], timeStamp); // reset all controllers
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2.return) {
+            _iterator2.return();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
+        }
       }
     }
   }]);

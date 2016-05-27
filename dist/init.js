@@ -12,7 +12,7 @@ var _qambi2 = _interopRequireDefault(_qambi);
 
 var _song = require('./song');
 
-var _instrument = require('./instrument');
+var _sampler = require('./sampler');
 
 var _init_audio = require('./init_audio');
 
@@ -48,10 +48,10 @@ var Blob = exports.Blob = function () {
 }();
 
 function loadInstrument(data) {
-  var instrument = new _instrument.Instrument();
+  var sampler = new _sampler.Sampler();
   return new Promise(function (resolve, reject) {
-    instrument.parseSampleData(data).then(function () {
-      return resolve(instrument);
+    sampler.parseSampleData(data).then(function () {
+      return resolve(sampler);
     });
   });
 }

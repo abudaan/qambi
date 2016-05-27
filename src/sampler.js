@@ -1,5 +1,5 @@
 import {Instrument} from './instrument'
-import {createNote} from './note'
+import {getNoteData} from './note'
 import {parseSamples} from './parse_audio'
 import {typeString} from './util'
 import {fetchJSON} from './fetch_helpers'
@@ -176,7 +176,7 @@ export class Sampler extends Instrument{
     }
 
     // get notenumber from notename and check if the notenumber is valid
-    let n = createNote(note)
+    let n = getNoteData(note)
     if(n === false){
       console.warn('not a valid note id')
       return

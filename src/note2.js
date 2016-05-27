@@ -11,15 +11,14 @@
 
 'use strict';
 
-import {typeString} from './util'
-import {noteNameMode} from './settings'
+import {typeString} from './util';
+//import {noteNameMode} from './settings';
 
-const pow = Math.pow
-const floor = Math.floor
-//const checkNoteName = /^[A-G]{1}(b{0,2}}|#{0,2})[\-]{0,1}[0-9]{1}$/
-const checkNoteName = /^[A-G]{1}(b|bb|#|##)[\-]{0,1}$/
-const checkFullNoteName = /^[A-G]{1}(b|bb|#|##){0,1}(\-1|[0-9]{1})$/
-const regexGetOctave = /(\-1|[0-9]{1})$/
+let
+  errorMsg,
+  warningMsg,
+  pow = Math.pow,
+  floor = Math.floor;
 
 const noteNames = {
   sharp : ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
@@ -47,41 +46,103 @@ const noteNames = {
     }
 */
 
-export function getNoteData(settings){
-  let {
-    fullName,
-    noteName,
+export function createNote(...args){
+  let
+    numArgs = args.length,
+    data,
     octave,
-    mode: mode = noteNameMode,
+    noteName,
     noteNumber,
-    frequency,
-  } = settings
+    noteNameMode,
+    arg0 = args[0],
+    arg1 = args[1],
+    arg2 = args[2],
+    type0 = typeString(arg0),
+    type1 = typeString(arg1),
+    type2 = typeString(arg2);
 
-  if(
-       typeof fullName !== 'string'
-    && typeof noteName !== 'string'
-    && typeof noteNumber !== 'number'
-    && typeof frequency !== 'number'){
-    return
-  }
+  errorMsg = '';
+  warningMsg = '';
 
-  let tmp
-
-  if(noteNumber){
-    ({
-      fullName,
-      noteName,
-      octave
-    } = _getNoteName(noteNumber, mode))
-  }else{
-
-    if(checkFullNoteName.test(fullName)){
-      octave = _getOctave(fullName)
+  // argument: note number
+  //console.log(numArgs, type0)
+  if(numArgs === 1 && type0 === 'number'){
+    if(arg0 < 0 || arg0 > 127){
+      errorMsg = 'please provide a note number >= 0 and <= 127 ' +  arg0;
+    }else{
+      noteNumber = arg0;
+      data = _getNoteName(noteNumber);
+      noteName = data[0];
+      octave = data[1];
     }
+
+
+  // arguments: full note name
+  }else if(numArgs === 1 && type0 === 'string'){
+    data = _checkNoteName(arg0);
+    if(errorMsg === ''){
+      noteName = data[0];
+      octave = data[1];
+      noteNumber = _getNoteNumber(noteName, octave);
+    }
+
+  // arguments: note name, octave
+  }else if(numArgs === 2 && type0 === 'string' && type1 === 'number'){
+    data = _checkNoteName(arg0, arg1);
+    if(errorMsg === ''){
+      noteName = data[0];
+      octave = data[1];
+      noteNumber = _getNoteNumber(noteName, octave);
+    }
+
+  // arguments: full note name, note name mode -> for converting between note name modes
+  }else if(numArgs === 2 && type0 === 'string' && type1 === 'string'){
+    data = _checkNoteName(arg0);
+    if(errorMsg === ''){
+      noteNameMode = _checkNoteNameMode(arg1);
+      noteName = data[0];
+      octave = data[1];
+      noteNumber = _getNoteNumber(noteName, octave);
+    }
+
+
+  // arguments: note number, note name mode
+  }else if(numArgs === 2 && typeString(arg0) === 'number' && typeString(arg1) === 'string'){
+    if(arg0 < 0 || arg0 > 127){
+      errorMsg = 'please provide a note number >= 0 and <= 127 ' + arg0;
+    }else{
+      noteNameMode = _checkNoteNameMode(arg1);
+      noteNumber = arg0;
+      data = _getNoteName(noteNumber, noteNameMode);
+      noteName = data[0];
+      octave = data[1];
+    }
+
+
+  // arguments: note name, octave, note name mode
+  }else if(numArgs === 3 && type0 === 'string' && type1 === 'number' && type2 === 'string'){
+    data = _checkNoteName(arg0, arg1);
+    if(errorMsg === ''){
+      noteNameMode = _checkNoteNameMode(arg2);
+      noteName = data[0];
+      octave = data[1];
+      noteNumber = _getNoteNumber(noteName,octave);
+    }
+
+  }else{
+    errorMsg = 'wrong arguments, please consult documentation';
   }
 
+  if(errorMsg){
+    console.error(errorMsg);
+    return false;
+  }
 
-  let data = {
+  if(warningMsg){
+    console.warn(warningMsg);
+  }
+
+  let note = {
     name: noteName,
     octave: octave,
     fullName: noteName + octave,
@@ -89,9 +150,8 @@ export function getNoteData(settings){
     frequency: _getFrequency(noteNumber),
     blackKey: _isBlackKey(noteNumber)
   }
-  console.log(data)
-  //Object.freeze(data);
-  return data
+  Object.freeze(note);
+  return note;
 }
 
 
@@ -100,16 +160,7 @@ function _getNoteName(number, mode = 'sharp') {
   //let octave = Math.floor((number / 12) - 2), // → in Cubase central C = C3 instead of C4
   let octave = floor((number / 12) - 1);
   let noteName = noteNames[mode][number % 12];
-  return {
-    fullName: `${noteName}${octave}`,
-    noteName,
-    octave,
-  }
-}
-
-
-function _getOctave(fullName){
-  return parseInt(fullName.match(regexGetOctave)[0])
+  return [noteName, octave];
 }
 
 
@@ -129,11 +180,12 @@ function _getNoteNumber(name, octave) {
   let number = (index + 12) + (octave * 12);// → midi standard + scientific naming, see: http://en.wikipedia.org/wiki/Middle_C and http://en.wikipedia.org/wiki/Scientific_pitch_notation
 
   if(number < 0 || number > 127){
-    errorMsg = 'please provide a note between C-1 and G9';
+    errorMsg = 'please provide a note between C0 and G10';
     return;
   }
   return number;
 }
+
 
 function _getFrequency(number){
   //return config.get('pitch') * pow(2,(number - 69)/12); // midi standard, see: http://en.wikipedia.org/wiki/MIDI_Tuning_Standard
@@ -232,4 +284,58 @@ function _isBlackKey(noteNumber){
   }
 
   return black;
+}
+
+
+export function getNoteNumber(...args){
+  let note = createNote(...args);
+  if(note){
+    return note.number;
+  }
+  return errorMsg;
+}
+
+
+export function getNoteName(...args){
+  let note = createNote(...args);
+  if(note){
+    return note.name;
+  }
+  return false;
+}
+
+
+export function getNoteOctave(...args){
+  let note = createNote(...args);
+  if(note){
+    return note.octave;
+  }
+  return false;
+}
+
+
+export function getFullNoteName(...args){
+  let note = createNote(...args);
+  if(note){
+    return note.fullName;
+  }
+  return false;
+}
+
+
+export function getFrequency(...args){
+  let note = createNote(...args);
+  if(note){
+    return note.frequency;
+  }
+  return false;
+}
+
+
+export function isBlackKey(...args){
+  let note = createNote(...args);
+  if(note){
+    return note.blackKey;
+  }
+  return false;
 }

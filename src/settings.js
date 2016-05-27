@@ -71,3 +71,6 @@ Object.keys(gmInstruments).forEach(key => {
 export const getGMInstruments = function(){
   return gmMap
 }
+
+
+export const noteNameMode = 'sharp'

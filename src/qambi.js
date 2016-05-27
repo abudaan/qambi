@@ -1,6 +1,10 @@
 const version = '1.0.0-beta19'
 
 import {
+  getNoteData,
+} from './note'
+
+import {
   MIDIEvent
 } from './midi_event'
 
@@ -83,6 +87,9 @@ const getAudioContext = function(){
 
 const qambi = {
   version,
+  // from ./note
+  getNoteData,
+
 
   // from ./init
   init,
@@ -208,6 +215,9 @@ export {
   getMIDIOutputIds,
   getMIDIInputsById,
   getMIDIOutputsById,
+
+  // from ./note
+  getNoteData,
 
   // from ./midi_event
   MIDIEvent,

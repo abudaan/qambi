@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <title>qambi</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <script>
+      if(window.location.hostname === 'abudaan.github.io'){
+        window.location = window.location.href.replace('abudaan.github.io/qambi', 'qambi.org')
+      }
+    </script>
+    <!-- you can remove the first script tag in your own code, it is GA -->
+    <script>if(window.location.hostname === 'abudaan.github.io' || window.location.hostname === 'qambi.org'){(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o), m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m) })(window,document,'script','https://www.google-analytics.com/analytics.js','ga'); ga('create', 'UA-5081547-11', 'auto'); ga('send', 'pageview');}</script>
+    <script src="build.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../css/prism.css">
+    <link rel="stylesheet" type="text/css" href="../css/examples.css">
+    <style>
+      input[type='range']{
+        width: 500px;
+      }
+      ul{
+        list-style-type: circle;
+        list-style-position: inside;
+      }
+      #loading{
+        color: red;
+      }
+      div{
+        margin-bottom: 10px;
+      }
+      #keyboard button{
+        margin-top: 30px;
+        float: left;
+      }
+    </style>
+ </head>
+  <body>
+    <div id="app">
+      <div id="loading">Loading...</div>
+      <button id="play" disabled>play</button>
+      <button id="pause" disabled>pause</button>
+      <button id="stop" disabled>stop</button>
+      <div class="cf" id="keyboard">
+        <button id='c'>C</button>
+        <button id='d'>D</button>
+        <button id='e'>E</button>
+        <button id='f'>F</button>
+        <button id='g'>G</button>
+        <button id='a'>A</button>
+        <button id='b'>B</button>
+      </div>
+    </div>
+    <pre class="line-numbers" data-src="index.js"></pre>
+    <script src="../js/prism.js"></script>
+  </body>
+</html>

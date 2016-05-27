@@ -380,18 +380,6 @@ export class Track{
     this._needsUpdate = false
   }
 
-  allNotesOff(){
-    if(this._instrument !== null){
-      this._instrument.allNotesOff()
-    }
-
-    let timeStamp = (context.currentTime * 1000) + this.latency
-    for(let output of this._midiOutputs.values()){
-      output.send([0xB0, 0x7B, 0x00], timeStamp) // stop all notes
-      output.send([0xB0, 0x79, 0x00], timeStamp) // reset all controllers
-    }
-  }
-
   setPanning(){
     // add pannernode -> reverb will be an channel FX
   }
@@ -420,20 +408,21 @@ export class Track{
   processMIDIEvent(event, useLatency = false){
 
     let latency = useLatency ? this.latency : 0
+    let time = event.time || 0 // for instance for onscreen keyboard
 
     // send to javascript instrument
     if(this._instrument !== null){
       //console.log(this.name, event)
-      this._instrument.processMIDIEvent(event, event.time / 1000)
+      this._instrument.processMIDIEvent(event, time / 1000)
     }
 
     // send to external hardware or software instrument
     for(let port of this._midiOutputs.values()){
       if(port){
         if(event.type === 128 || event.type === 144 || event.type === 176){
-          port.send([event.type + this.channel, event.data1, event.data2], event.time + latency)
+          port.send([event.type + this.channel, event.data1, event.data2], time + latency)
         }else if(event.type === 192 || event.type === 224){
-          port.send([event.type + this.channel, event.data1], event.time + latency)
+          port.send([event.type + this.channel, event.data1], time + latency)
         }
       }
     }
@@ -450,6 +439,12 @@ export class Track{
   allNotesOff(){
     if(this._instrument !== null){
       this._instrument.allNotesOff()
+    }
+
+    let timeStamp = (context.currentTime * 1000) + this.latency
+    for(let output of this._midiOutputs.values()){
+      output.send([0xB0, 0x7B, 0x00], timeStamp) // stop all notes
+      output.send([0xB0, 0x79, 0x00], timeStamp) // reset all controllers
     }
   }
 

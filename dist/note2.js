@@ -14,18 +14,22 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getNoteData = getNoteData;
+exports.createNote = createNote;
+exports.getNoteNumber = getNoteNumber;
+exports.getNoteName = getNoteName;
+exports.getNoteOctave = getNoteOctave;
+exports.getFullNoteName = getFullNoteName;
+exports.getFrequency = getFrequency;
+exports.isBlackKey = isBlackKey;
 
 var _util = require('./util');
 
-var _settings = require('./settings');
+//import {noteNameMode} from './settings';
 
-var pow = Math.pow;
-var floor = Math.floor;
-//const checkNoteName = /^[A-G]{1}(b{0,2}}|#{0,2})[\-]{0,1}[0-9]{1}$/
-var checkNoteName = /^[A-G]{1}(b|bb|#|##)[\-]{0,1}$/;
-var checkFullNoteName = /^[A-G]{1}(b|bb|#|##){0,1}(\-1|[0-9]{1})$/;
-var regexGetOctave = /(\-1|[0-9]{1})$/;
+var errorMsg = void 0,
+    warningMsg = void 0,
+    pow = Math.pow,
+    floor = Math.floor;
 
 var noteNames = {
   sharp: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
@@ -52,36 +56,98 @@ var noteNames = {
     }
 */
 
-function getNoteData(settings) {
-  var fullName = settings.fullName;
-  var noteName = settings.noteName;
-  var octave = settings.octave;
-  var _settings$mode = settings.mode;
-  var mode = _settings$mode === undefined ? _settings.noteNameMode : _settings$mode;
-  var noteNumber = settings.noteNumber;
-  var frequency = settings.frequency;
+function createNote() {
+  var numArgs = arguments.length,
+      data = void 0,
+      octave = void 0,
+      noteName = void 0,
+      noteNumber = void 0,
+      noteNameMode = void 0,
+      arg0 = arguments.length <= 0 ? undefined : arguments[0],
+      arg1 = arguments.length <= 1 ? undefined : arguments[1],
+      arg2 = arguments.length <= 2 ? undefined : arguments[2],
+      type0 = (0, _util.typeString)(arg0),
+      type1 = (0, _util.typeString)(arg1),
+      type2 = (0, _util.typeString)(arg2);
 
+  errorMsg = '';
+  warningMsg = '';
 
-  if (typeof fullName !== 'string' && typeof noteName !== 'string' && typeof noteNumber !== 'number' && typeof frequency !== 'number') {
-    return;
-  }
-
-  var tmp = void 0;
-
-  if (noteNumber) {
-    var _getNoteName2 = _getNoteName(noteNumber, mode);
-
-    fullName = _getNoteName2.fullName;
-    noteName = _getNoteName2.noteName;
-    octave = _getNoteName2.octave;
-  } else {
-
-    if (checkFullNoteName.test(fullName)) {
-      octave = _getOctave(fullName);
+  // argument: note number
+  //console.log(numArgs, type0)
+  if (numArgs === 1 && type0 === 'number') {
+    if (arg0 < 0 || arg0 > 127) {
+      errorMsg = 'please provide a note number >= 0 and <= 127 ' + arg0;
+    } else {
+      noteNumber = arg0;
+      data = _getNoteName(noteNumber);
+      noteName = data[0];
+      octave = data[1];
     }
+
+    // arguments: full note name
+  } else if (numArgs === 1 && type0 === 'string') {
+      data = _checkNoteName(arg0);
+      if (errorMsg === '') {
+        noteName = data[0];
+        octave = data[1];
+        noteNumber = _getNoteNumber(noteName, octave);
+      }
+
+      // arguments: note name, octave
+    } else if (numArgs === 2 && type0 === 'string' && type1 === 'number') {
+        data = _checkNoteName(arg0, arg1);
+        if (errorMsg === '') {
+          noteName = data[0];
+          octave = data[1];
+          noteNumber = _getNoteNumber(noteName, octave);
+        }
+
+        // arguments: full note name, note name mode -> for converting between note name modes
+      } else if (numArgs === 2 && type0 === 'string' && type1 === 'string') {
+          data = _checkNoteName(arg0);
+          if (errorMsg === '') {
+            noteNameMode = _checkNoteNameMode(arg1);
+            noteName = data[0];
+            octave = data[1];
+            noteNumber = _getNoteNumber(noteName, octave);
+          }
+
+          // arguments: note number, note name mode
+        } else if (numArgs === 2 && (0, _util.typeString)(arg0) === 'number' && (0, _util.typeString)(arg1) === 'string') {
+            if (arg0 < 0 || arg0 > 127) {
+              errorMsg = 'please provide a note number >= 0 and <= 127 ' + arg0;
+            } else {
+              noteNameMode = _checkNoteNameMode(arg1);
+              noteNumber = arg0;
+              data = _getNoteName(noteNumber, noteNameMode);
+              noteName = data[0];
+              octave = data[1];
+            }
+
+            // arguments: note name, octave, note name mode
+          } else if (numArgs === 3 && type0 === 'string' && type1 === 'number' && type2 === 'string') {
+              data = _checkNoteName(arg0, arg1);
+              if (errorMsg === '') {
+                noteNameMode = _checkNoteNameMode(arg2);
+                noteName = data[0];
+                octave = data[1];
+                noteNumber = _getNoteNumber(noteName, octave);
+              }
+            } else {
+              errorMsg = 'wrong arguments, please consult documentation';
+            }
+
+  if (errorMsg) {
+    console.error(errorMsg);
+    return false;
   }
 
-  var data = {
+  if (warningMsg) {
+    console.warn(warningMsg);
+  }
+
+  var note = {
     name: noteName,
     octave: octave,
     fullName: noteName + octave,
@@ -89,9 +155,8 @@ function getNoteData(settings) {
     frequency: _getFrequency(noteNumber),
     blackKey: _isBlackKey(noteNumber)
   };
-  console.log(data);
-  //Object.freeze(data);
-  return data;
+  Object.freeze(note);
+  return note;
 }
 
 //function _getNoteName(number, mode = config.get('noteNameMode')) {
@@ -101,15 +166,7 @@ function _getNoteName(number) {
   //let octave = Math.floor((number / 12) - 2), // → in Cubase central C = C3 instead of C4
   var octave = floor(number / 12 - 1);
   var noteName = noteNames[mode][number % 12];
-  return {
-    fullName: '' + noteName + octave,
-    noteName: noteName,
-    octave: octave
-  };
-}
-
-function _getOctave(fullName) {
-  return parseInt(fullName.match(regexGetOctave)[0]);
+  return [noteName, octave];
 }
 
 function _getNoteNumber(name, octave) {
@@ -152,7 +209,7 @@ function _getNoteNumber(name, octave) {
   var number = index + 12 + octave * 12; // → midi standard + scientific naming, see: http://en.wikipedia.org/wiki/Middle_C and http://en.wikipedia.org/wiki/Scientific_pitch_notation
 
   if (number < 0 || number > 127) {
-    errorMsg = 'please provide a note between C-1 and G9';
+    errorMsg = 'please provide a note between C0 and G10';
     return;
   }
   return number;
@@ -297,4 +354,52 @@ function _isBlackKey(noteNumber) {
   }
 
   return black;
+}
+
+function getNoteNumber() {
+  var note = createNote.apply(undefined, arguments);
+  if (note) {
+    return note.number;
+  }
+  return errorMsg;
+}
+
+function getNoteName() {
+  var note = createNote.apply(undefined, arguments);
+  if (note) {
+    return note.name;
+  }
+  return false;
+}
+
+function getNoteOctave() {
+  var note = createNote.apply(undefined, arguments);
+  if (note) {
+    return note.octave;
+  }
+  return false;
+}
+
+function getFullNoteName() {
+  var note = createNote.apply(undefined, arguments);
+  if (note) {
+    return note.fullName;
+  }
+  return false;
+}
+
+function getFrequency() {
+  var note = createNote.apply(undefined, arguments);
+  if (note) {
+    return note.frequency;
+  }
+  return false;
+}
+
+function isBlackKey() {
+  var note = createNote.apply(undefined, arguments);
+  if (note) {
+    return note.blackKey;
+  }
+  return false;
 }
