@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Blob = exports.requestAnimationFrame = exports.getUserMedia = undefined;
+exports.Blob = exports.rAF = exports.getUserMedia = undefined;
 exports.init = init;
 
 var _qambi = require('./qambi');
@@ -29,7 +29,7 @@ var getUserMedia = exports.getUserMedia = function () {
   };
 }();
 
-var requestAnimationFrame = exports.requestAnimationFrame = function () {
+var rAF = exports.rAF = function () {
   if (typeof navigator !== 'undefined') {
     return window.requestAnimationFrame || window.webkitRequestAnimationFrame;
   }

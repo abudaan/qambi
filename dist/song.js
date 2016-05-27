@@ -299,6 +299,13 @@ var Song = exports.Song = function () {
       if (this.playing === false && this.precounting === false) {
         return;
       }
+
+      if (this._performUpdate === true) {
+        this._performUpdate = false;
+        //console.log('pulse update', this._currentMillis)
+        _song._update.call(this);
+      }
+
       var now = _init_audio.context.currentTime * 1000;
       var diff = now - this._reference;
       this._currentMillis += diff;

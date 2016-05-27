@@ -78,7 +78,7 @@ var Playhead = exports.Playhead = function () {
       this.numEvents = this.events.length;
       this.numNotes = this.notes.length;
       this.numParts = this.parts.length;
-      //this.set('millis', this.song._millis)
+      this.set('millis', this.song._currentMillis);
     }
   }, {
     key: 'calculate',

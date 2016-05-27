@@ -60,7 +60,9 @@ function processMIDIEvent(event) {
         this.sustainedSamples.push(event.midiNoteId);
       } else {
         sample.stop(time, function () {
-          //console.log('stop', time, event.midiNoteId)
+          if (unschedule === true) {
+            console.log('stop', time, event.midiNoteId);
+          }
           delete _this.scheduledSamples[event.midiNoteId];
         });
         //sample.stop(time)

@@ -5,8 +5,18 @@ import {MIDIEventTypes} from './constants'
 import {calculatePosition} from './position'
 import {MIDIEvent} from './midi_event'
 import {dispatchEvent} from './eventlistener'
+import {bufferTime} from './settings'
+
 
 export function update():void{
+  if(this.playing === false){
+    _update.call(this)
+  }else{
+    this._performUpdate = true
+  }
+}
+
+export function _update():void{
 
   if(this._updateTimeEvents === false
     && this._removedEvents.length === 0
@@ -21,8 +31,8 @@ export function update():void{
   //debug
   //this.isPlaying = true
 
-  console.group('update song')
-  console.time('total')
+  //console.groupCollapsed('update song')
+  console.time('updating song took')
 
 
 // TIME EVENTS
@@ -32,7 +42,7 @@ export function update():void{
     //console.log('updateTimeEvents', this._timeEvents.length)
     parseTimeEvents(this, this._timeEvents, this.isPlaying)
     this._updateTimeEvents = false
-    console.log('time events %O', this._timeEvents)
+    //console.log('time events %O', this._timeEvents)
   }
 
   // only parse new and moved events
@@ -42,14 +52,14 @@ export function update():void{
 // PARTS
 
   // filter removed parts
-  console.log('removed parts %O', this._removedParts)
+  //console.log('removed parts %O', this._removedParts)
   this._removedParts.forEach((part) => {
     this._partsById.delete(part.id)
   })
 
 
   // add new parts
-  console.log('new parts %O', this._newParts)
+  //console.log('new parts %O', this._newParts)
   this._newParts.forEach((part) => {
     part._song = this
     this._partsById.set(part.id, part)
@@ -58,14 +68,14 @@ export function update():void{
 
 
   // update changed parts
-  console.log('changed parts %O', this._changedParts)
+  //console.log('changed parts %O', this._changedParts)
   this._changedParts.forEach((part) => {
     part.update()
   })
 
 
   // removed parts
-  console.log('removed parts %O', this._changedParts)
+  //console.log('removed parts %O', this._changedParts)
   this._removedParts.forEach((part) => {
     this._partsById.delete(part.id)
   })
@@ -78,17 +88,20 @@ export function update():void{
 // EVENTS
 
   // filter removed events
-  console.log('removed events %O', this._removedEvents)
+  //console.log('removed events %O', this._removedEvents)
   this._removedEvents.forEach((event) => {
     let track = event.midiNote._track
-    track.unschedule(event.midiNote)
+    // unschedule all removed events that already have been scheduled
+    if(event.time >= this._currentMillis){
+      track.unschedule(event.midiNote)
+    }
     this._notesById.delete(event.midiNote.id)
     this._eventsById.delete(event.id)
   })
 
 
   // add new events
-  console.log('new events %O', this._newEvents)
+  //console.log('new events %O', this._newEvents)
   this._newEvents.forEach((event) => {
     this._eventsById.set(event.id, event)
     this._events.push(event)
@@ -97,7 +110,7 @@ export function update():void{
 
 
   // moved events need to be parsed
-  console.log('moved %O', this._movedEvents)
+  //console.log('moved %O', this._movedEvents)
   this._movedEvents.forEach((event) => {
     tobeParsed.push(event)
   })
@@ -105,9 +118,9 @@ export function update():void{
 
   // parse all new and moved events
   if(tobeParsed.length > 0){
-    console.time('parse')
+    //console.time('parse')
     //console.log('tobeParsed %O', tobeParsed)
-    console.log('parseEvents', tobeParsed.length)
+    //console.log('parseEvents', tobeParsed.length)
 
     tobeParsed = [...tobeParsed, ...this._timeEvents]
     parseEvents(tobeParsed, this.isPlaying)
@@ -123,28 +136,27 @@ export function update():void{
         }
       }
     })
-    console.timeEnd('parse')
+    //console.timeEnd('parse')
   }
 
 
   if(tobeParsed.length > 0 || this._removedEvents.length > 0){
-    console.time('to array')
+    //console.time('to array')
     this._events = Array.from(this._eventsById.values())
     this._notes = Array.from(this._notesById.values())
-    console.timeEnd('to array')
+    //console.timeEnd('to array')
   }
 
 
-  console.time(`sorting ${this._events.length} events`)
+  //console.time(`sorting ${this._events.length} events`)
   sortEvents(this._events)
   this._notes.sort(function(a, b){
     return a.noteOn.ticks - b.noteOn.ticks
   })
-  console.timeEnd(`sorting ${this._events.length} events`)
+  //console.timeEnd(`sorting ${this._events.length} events`)
 
-  console.log('notes %O', this._notes)
-  console.timeEnd('total')
-  console.timeEnd('update song')
+  //console.log('notes %O', this._notes)
+  console.timeEnd('updating song took')
 
 
 // SONG DURATION
@@ -162,7 +174,6 @@ export function update():void{
 
   // get the position data of the first beat in the bar after the last bar
   this.bars = Math.max(lastEvent.bar, this.bars)
-  console.log('NOW', this.bars)
   let ticks = calculatePosition(this, {
     type: 'barsbeats',
     target: [this.bars + 1],
@@ -179,7 +190,7 @@ export function update():void{
   this._lastEvent.ticks = ticks - 1
   this._lastEvent.millis = millis
 
-  console.log('length', this._lastEvent.ticks, this._lastEvent.millis, this.bars)
+  //console.log('length', this._lastEvent.ticks, this._lastEvent.millis, this.bars)
 
   this._durationTicks = this._lastEvent.ticks
   this._durationMillis = this._lastEvent.millis
@@ -201,11 +212,11 @@ export function update():void{
   sortEvents(this._allEvents)
 */
 
-  console.log('current millis', this._currentMillis)
+  //console.log('current millis', this._currentMillis)
   this._playhead.updateSong()
-  this._scheduler.reschedule()
-  this._scheduler.init(this._currentMillis)
-  //this._scheduler.init(this._currentMillis)
+  //this._scheduler.unschedule()
+  //this.allNotesOff()
+  this._scheduler.updateSong()
 
   if(this.playing === false){
     this._playhead.set('millis', this._currentMillis)
@@ -223,5 +234,5 @@ export function update():void{
   this._removedEvents = []
   this._resized = false
 
-  console.groupEnd('update song')
+  //console.groupEnd('update song')
 }

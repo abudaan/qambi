@@ -13,7 +13,7 @@ import {Metronome} from './metronome'
 import {addEventListener, removeEventListener, dispatchEvent} from './eventlistener'
 import {defaultSong} from './settings'
 import {saveAsMIDIFile} from './save_midifile'
-import {update} from './song.update'
+import {update, _update} from './song.update'
 
 let instanceIndex = 0
 let recordingIndex = 0
@@ -229,6 +229,13 @@ export class Song{
     if(this.playing === false && this.precounting === false){
       return
     }
+
+    if(this._performUpdate === true){
+      this._performUpdate = false
+      //console.log('pulse update', this._currentMillis)
+      _update.call(this)
+    }
+
     let now = context.currentTime * 1000
     let diff = now - this._reference
     this._currentMillis += diff

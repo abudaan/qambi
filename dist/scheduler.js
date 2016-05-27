@@ -43,13 +43,20 @@ var Scheduler = function () {
       this.prevMaxtime = 0;
       this.beyondLoop = false; // tells us if the playhead has already passed the looped section
       this.precountingDone = false;
+      this.looped = false;
       this.setIndex(this.songStartMillis);
     }
   }, {
     key: 'updateSong',
     value: function updateSong() {
+      //this.songCurrentMillis = this.song._currentMillis
       this.events = this.song._allEvents;
       this.numEvents = this.events.length;
+      this.index = 0;
+      this.maxtime = 0;
+      this.beyondLoop = false; // tells us if the playhead has already passed the looped section
+      this.precountingDone = false;
+      this.setIndex(this.song._currentMillis);
     }
   }, {
     key: 'setTimeStamp',
@@ -95,7 +102,7 @@ var Scheduler = function () {
 
       this.beyondLoop = millis > this.song._rightLocator.millis;
       // this.notes = new Map()
-      this.looped = false;
+      //this.looped = false
       this.precountingDone = false;
     }
   }, {
@@ -292,10 +299,12 @@ var Scheduler = function () {
       //   console.log(numEvents)
       // }
 
+      //console.log(this.maxtime, this.song._currentMillis, '[diff]', this.maxtime - this.prevMaxtime)
+
       for (i = 0; i < numEvents; i++) {
         event = events[i];
         track = event._track;
-        //console.log(event.millis, this.maxtime, this.prevMaxtime)
+        // console.log(this.maxtime, this.prevMaxtime, event.millis)
 
         // if(event.millis > this.maxtime){
         //   // skip events that were harvest accidently while jumping the playhead -> should happen very rarely if ever
@@ -340,38 +349,38 @@ var Scheduler = function () {
       //return this.index >= 10
       return this.index >= this.numEvents; // last event of song
     }
-  }, {
-    key: 'reschedule',
-    value: function reschedule() {
-      var _this = this;
 
-      var min = this.song._currentMillis;
-      var max = min + _settings.bufferTime * 1000;
-
-      //console.log('reschedule', this.notes.size)
-      this.notes.forEach(function (note, id) {
-        // console.log(note)
-        // console.log(note.noteOn.millis, note.noteOff.millis, min, max)
-
-        if (typeof note === 'undefined' || note.state === 'removed') {
-          //sample.unschedule(0, unscheduleCallback);
-          console.log('note is undefined');
-          //sample.stop(0)
-          _this.notes.delete(id);
-        } else if ((note.noteOn.millis >= min && note.noteOff.millis < max) === false) {
-          //sample.stop(0)
-          var noteOn = note.noteOn;
-          var noteOff = new _midi_event.MIDIEvent(0, 128, noteOn.data1, 0);
-          noteOff.midiNoteId = note.id;
-          noteOff.time = 0; //context.currentTime + min
-          note._track.processMIDIEvent(noteOff);
-          _this.notes.delete(id);
-          console.log('stopping', id, note._track.name);
-        }
-      });
-      //console.log(this.notes.size)
-    }
-
+    /*
+      unschedule(){
+    
+        let min = this.song._currentMillis
+        let max = min + (bufferTime * 1000)
+    
+        //console.log('reschedule', this.notes.size)
+        this.notes.forEach((note, id) => {
+          // console.log(note)
+          // console.log(note.noteOn.millis, note.noteOff.millis, min, max)
+    
+          if(typeof note === 'undefined' || note.state === 'removed'){
+            //sample.unschedule(0, unscheduleCallback);
+            //console.log('NOTE IS UNDEFINED')
+            //sample.stop(0)
+            this.notes.delete(id)
+          }else if((note.noteOn.millis >= min || note.noteOff.millis < max) === false){
+            //sample.stop(0)
+            let noteOn = note.noteOn
+            let noteOff = new MIDIEvent(0, 128, noteOn.data1, 0)
+            noteOff.midiNoteId = note.id
+            noteOff.time = 0//context.currentTime + min
+            note._track.processMIDIEvent(noteOff)
+            this.notes.delete(id)
+            console.log('STOPPING', id, note._track.name)
+          }
+        })
+        //console.log('NOTES', this.notes.size)
+        //this.notes.clear()
+      }
+    */
     /*
       allNotesOff(){
         let timeStamp = context.currentTime * 1000

@@ -48,7 +48,9 @@ export function processMIDIEvent(event, time = 0){
       this.sustainedSamples.push(event.midiNoteId)
     }else{
       sample.stop(time, () => {
-        //console.log('stop', time, event.midiNoteId)
+        if(unschedule === true){
+          console.log('stop', time, event.midiNoteId)
+        }
         delete this.scheduledSamples[event.midiNoteId]
       })
       //sample.stop(time)

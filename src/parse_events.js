@@ -237,9 +237,16 @@ export function parseEvents(events, isPlaying = false){
       default:
       //case 128:
       //case 144:
+
         updatePosition(event, isPlaying);
         updateEvent(event, isPlaying);
+/*
+        event.millis = millis
+*/
         result.push(event)
+
+
+
         //console.log(event.bar)
 
         // if(event.type === 176 && event.data1 === 64){

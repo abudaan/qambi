@@ -20,7 +20,7 @@ function main(){
   let song = new Song({bars: 2, autoSize: false})
   let track = new Track()
   let part = new Part()
-  let velocity = 30
+  let velocity = 10
   part.addEvents(
     new MIDIEvent(960 * 0, 144, 60, velocity),
     new MIDIEvent(960 * 1, 128, 60, 0),

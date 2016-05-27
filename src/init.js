@@ -14,7 +14,7 @@ export let getUserMedia = (() => {
 })()
 
 
-export let requestAnimationFrame = (() => {
+export let rAF = (() => {
   if(typeof navigator !== 'undefined'){
     return window.requestAnimationFrame || window.webkitRequestAnimationFrame
   }

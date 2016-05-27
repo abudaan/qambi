@@ -18,9 +18,12 @@
     "babel-plugin-transform-flow-strip-types": "^6.7.0",
     "babel-preset-es2015": "6.9.0",
     "babel-preset-stage-0": "6.5.0",
+    "babelify": "7.3.0",
+    "browserify": "13.0.1",
     "eslint": "^2.7.0",
     "eslint-plugin-babel": "^3.2.0",
-    "flow-bin": "^0.22.1"
+    "flow-bin": "^0.22.1",
+    "minifyify": "7.3.3"
   },
   "license": "MIT",
   "repository": "git@github.com:abudaan/qambi.git",
@@ -40,7 +43,10 @@
   "scripts": {
     "test": "",
     "build": "node_modules/babel-cli/bin/babel.js src --out-dir dist",
-    "watch": "node_modules/babel-cli/bin/babel.js src --watch --out-dir dist"
+    "watch": "node_modules/babel-cli/bin/babel.js src --watch --out-dir dist",
+    "umd-build": "browserify ./src/qambi.js  -t [ babelify --presets [es2015 stage-0 ] --plugins [ transform-es2015-modules-umd ] ] --standalone qambi -o ./dist/qambi-umd.js",
+    "umd-min": "browserify ./src/qambi.js  -t [ babelify --presets [es2015 stage-0 ] --plugins [ transform-es2015-modules-umd ] ] --standalone qambi -d -p [minifyify --no-map] -o ./dist/qambi-umd.min.js",
+    "umd": "npm run umd-build && npm run umd-min"
   },
   "dependencies": {
     "filesaverjs": "0.2.2",
