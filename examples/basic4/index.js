@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function(){
   qambi.init({
     song: {
       type: 'Song',
-      url: '../data/mozk545a.mid'
+      url: '../data/minute_waltz.mid'
     },
     piano: {
       type: 'Instrument',
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function(){
   .then((data) => {
 
     let {song, piano} = data
-    //let synth = new SimpleSynth('square')
+    let synth = new SimpleSynth('sine')
 
     song.getTracks().forEach(track => {
       track.setInstrument(piano)

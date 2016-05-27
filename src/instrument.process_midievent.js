@@ -1,4 +1,5 @@
 import {context} from './init_audio'
+import {dispatchEvent} from './eventlistener'
 
 
 export function processMIDIEvent(event, time = 0){

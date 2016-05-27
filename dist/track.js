@@ -28,6 +28,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var instanceIndex = 0;
 
 var Track = exports.Track = function () {
+
+  // constructor({
+  //   name,
+  //   parts, // number or array
+  // })
+
   function Track() {
     var name = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
 
@@ -56,7 +62,6 @@ var Track = exports.Track = function () {
     this.scheduledSamples = {};
     this.sustainedSamples = [];
     this.sustainPedalDown = false;
-    //this.setInstrument(new Instrument('sinewave'))
   }
 
   _createClass(Track, [{
@@ -160,37 +165,19 @@ var Track = exports.Track = function () {
           input = (0, _init_midi.getMIDIInputById)(input);
         }
         if (input instanceof MIDIInput) {
-          (function () {
 
-            _this3._midiInputs.set(input.id, input);
+          _this3._midiInputs.set(input.id, input);
 
-            var note = void 0,
-                midiEvent = void 0;
-            input.addEventListener('midimessage', function (e) {
-
-              midiEvent = new (Function.prototype.bind.apply(_midi_event.MIDIEvent, [null].concat([_this3._song._ticks], _toConsumableArray(e.data))))();
-              midiEvent.time = 0; // play immediately -> see Instrument.processMIDIEvent
-              midiEvent.recordMillis = _init_audio.context.currentTime * 1000;
-
-              if (midiEvent.type === _qambi.MIDIEventTypes.NOTE_ON) {
-                note = new _midi_note.MIDINote(midiEvent);
-                _this3._tmpRecordedNotes.set(midiEvent.data1, note);
-              } else if (midiEvent.type === _qambi.MIDIEventTypes.NOTE_OFF) {
-                note = _this3._tmpRecordedNotes.get(midiEvent.data1);
-                note.addNoteOff(midiEvent);
-                _this3._tmpRecordedNotes.delete(midiEvent.data1);
-              }
-
-              if (_this3._recordEnabled === 'midi' && _this3._song.recording === true) {
-                _this3._recordedEvents.push(midiEvent);
-              }
-              _this3.processMIDIEvent(midiEvent);
-            });
-          })();
+          input.onmidimessage = function (e) {
+            _this3._preprocessMIDIEvent(new (Function.prototype.bind.apply(_midi_event.MIDIEvent, [null].concat([_this3._song._ticks], _toConsumableArray(e.data))))());
+          };
         }
       });
       //console.log(this._midiInputs)
     }
+
+    // you can pass both port and port ids
+
   }, {
     key: 'disconnectMIDIInputs',
     value: function disconnectMIDIInputs() {
@@ -201,14 +188,19 @@ var Track = exports.Track = function () {
       }
 
       if (inputs.length === 0) {
+        this._midiInputs.forEach(function (port) {
+          port.onmidimessage = null;
+        });
         this._midiInputs.clear();
+        return;
       }
       inputs.forEach(function (port) {
         if (port instanceof MIDIInput) {
           port = port.id;
         }
-        if (_this4._midiOutputs.has(port)) {
-          _this4._midiOutputs.delete(port);
+        if (_this4._midiInputs.has(port)) {
+          _this4._midiInputs.get(port).onmidimessage = null;
+          _this4._midiInputs.delete(port);
         }
       });
       //this._midiOutputs = this._midiOutputs.filter(...outputs)
@@ -538,7 +530,34 @@ var Track = exports.Track = function () {
     key: 'getEffectAt',
     value: function getEffectAt(index) {}
 
-    // method is called by scheduler during playback and directly when used with an external keyboard
+    // method is called when a MIDI events is send by an external or on-screen keyboard
+
+  }, {
+    key: '_preProcessMIDIEvent',
+    value: function _preProcessMIDIEvent(midiEvent) {
+      midiEvent.time = 0; // play immediately -> see Instrument.processMIDIEvent
+      midiEvent.recordMillis = _init_audio.context.currentTime * 1000;
+      var note = void 0;
+
+      if (midiEvent.type === _qambi.MIDIEventTypes.NOTE_ON) {
+        note = new _midi_note.MIDINote(midiEvent);
+        this._tmpRecordedNotes.set(midiEvent.data1, note);
+      } else if (midiEvent.type === _qambi.MIDIEventTypes.NOTE_OFF) {
+        note = this._tmpRecordedNotes.get(midiEvent.data1);
+        if (typeof note === 'undefined') {
+          return;
+        }
+        note.addNoteOff(midiEvent);
+        this._tmpRecordedNotes.delete(midiEvent.data1);
+      }
+
+      if (this._recordEnabled === 'midi' && this._song.recording === true) {
+        this._recordedEvents.push(midiEvent);
+      }
+      this.processMIDIEvent(midiEvent);
+    }
+
+    // method is called by scheduler during playback
 
   }, {
     key: 'processMIDIEvent',
@@ -546,13 +565,17 @@ var Track = exports.Track = function () {
       var useLatency = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
 
 
+      if (typeof event.time === 'undefined') {
+        this._preProcessMIDIEvent(event);
+        return;
+      }
+
       var latency = useLatency ? this.latency : 0;
-      var time = event.time || 0; // for instance for onscreen keyboard
 
       // send to javascript instrument
       if (this._instrument !== null) {
         //console.log(this.name, event)
-        this._instrument.processMIDIEvent(event, time / 1000);
+        this._instrument.processMIDIEvent(event, event.time / 1000);
       }
 
       // send to external hardware or software instrument
@@ -566,9 +589,9 @@ var Track = exports.Track = function () {
 
           if (port) {
             if (event.type === 128 || event.type === 144 || event.type === 176) {
-              port.send([event.type + this.channel, event.data1, event.data2], time + latency);
+              port.send([event.type + this.channel, event.data1, event.data2], event.time + latency);
             } else if (event.type === 192 || event.type === 224) {
-              port.send([event.type + this.channel, event.data1], time + latency);
+              port.send([event.type + this.channel, event.data1], event.time + latency);
             }
           }
         }

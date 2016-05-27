@@ -8,6 +8,8 @@ exports.allNotesOff = allNotesOff;
 
 var _init_audio = require('./init_audio');
 
+var _eventlistener = require('./eventlistener');
+
 function processMIDIEvent(event) {
   var _this = this;
 
@@ -69,7 +71,7 @@ function processMIDIEvent(event) {
           if (event.data2 === 127) {
             this.sustainPedalDown = true;
             ///*
-            dispatchEvent({
+            (0, _eventlistener.dispatchEvent)({
               type: 'sustainpedal',
               data: 'down'
             });
@@ -90,7 +92,7 @@ function processMIDIEvent(event) {
               //console.log('sustain pedal up', this.sustainedSamples)
               this.sustainedSamples = [];
               ///*
-              dispatchEvent({
+              (0, _eventlistener.dispatchEvent)({
                 type: 'sustainpedal',
                 data: 'up'
               });
@@ -117,7 +119,7 @@ function allNotesOff() {
 
   this.sustainedSamples = [];
   if (this.sustainPedalDown === true) {
-    dispatchEvent({
+    (0, _eventlistener.dispatchEvent)({
       type: 'sustainpedal',
       data: 'up'
     });

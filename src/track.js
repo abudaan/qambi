@@ -11,6 +11,12 @@ let instanceIndex = 0
 
 export class Track{
 
+  // constructor({
+  //   name,
+  //   parts, // number or array
+  // })
+
+
   constructor(name: string = null){
     this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
     this.name = name || this.id
@@ -35,7 +41,6 @@ export class Track{
     this.scheduledSamples = {}
     this.sustainedSamples = []
     this.sustainPedalDown = false
-    //this.setInstrument(new Instrument('sinewave'))
   }
 
   setInstrument(instrument = null){
@@ -117,42 +122,30 @@ export class Track{
 
         this._midiInputs.set(input.id, input)
 
-        let note, midiEvent
-        input.addEventListener('midimessage', e => {
-
-          midiEvent = new MIDIEvent(this._song._ticks, ...e.data)
-          midiEvent.time = 0 // play immediately -> see Instrument.processMIDIEvent
-          midiEvent.recordMillis = context.currentTime * 1000
-
-          if(midiEvent.type === MIDIEventTypes.NOTE_ON){
-            note = new MIDINote(midiEvent)
-            this._tmpRecordedNotes.set(midiEvent.data1, note)
-          }else if(midiEvent.type === MIDIEventTypes.NOTE_OFF){
-            note = this._tmpRecordedNotes.get(midiEvent.data1)
-            note.addNoteOff(midiEvent)
-            this._tmpRecordedNotes.delete(midiEvent.data1)
-          }
-
-          if(this._recordEnabled === 'midi' && this._song.recording === true){
-            this._recordedEvents.push(midiEvent)
-          }
-          this.processMIDIEvent(midiEvent)
-        })
+        input.onmidimessage = e => {
+          this._preprocessMIDIEvent(new MIDIEvent(this._song._ticks, ...e.data))
+        }
       }
     })
     //console.log(this._midiInputs)
   }
 
+  // you can pass both port and port ids
   disconnectMIDIInputs(...inputs){
     if(inputs.length === 0){
+      this._midiInputs.forEach(port => {
+        port.onmidimessage = null
+      })
       this._midiInputs.clear()
+      return
     }
     inputs.forEach(port => {
       if(port instanceof MIDIInput){
         port = port.id
       }
-      if(this._midiOutputs.has(port)){
-        this._midiOutputs.delete(port)
+      if(this._midiInputs.has(port)){
+        this._midiInputs.get(port).onmidimessage = null
+        this._midiInputs.delete(port)
       }
     })
     //this._midiOutputs = this._midiOutputs.filter(...outputs)
@@ -404,25 +397,53 @@ export class Track{
 
   }
 
-  // method is called by scheduler during playback and directly when used with an external keyboard
+  // method is called when a MIDI events is send by an external or on-screen keyboard
+  _preProcessMIDIEvent(midiEvent){
+    midiEvent.time = 0 // play immediately -> see Instrument.processMIDIEvent
+    midiEvent.recordMillis = context.currentTime * 1000
+    let note
+
+    if(midiEvent.type === MIDIEventTypes.NOTE_ON){
+      note = new MIDINote(midiEvent)
+      this._tmpRecordedNotes.set(midiEvent.data1, note)
+    }else if(midiEvent.type === MIDIEventTypes.NOTE_OFF){
+      note = this._tmpRecordedNotes.get(midiEvent.data1)
+      if(typeof note === 'undefined'){
+        return
+      }
+      note.addNoteOff(midiEvent)
+      this._tmpRecordedNotes.delete(midiEvent.data1)
+    }
+
+    if(this._recordEnabled === 'midi' && this._song.recording === true){
+      this._recordedEvents.push(midiEvent)
+    }
+    this.processMIDIEvent(midiEvent)
+  }
+
+  // method is called by scheduler during playback
   processMIDIEvent(event, useLatency = false){
 
+    if(typeof event.time === 'undefined'){
+      this._preProcessMIDIEvent(event)
+      return
+    }
+
     let latency = useLatency ? this.latency : 0
-    let time = event.time || 0 // for instance for onscreen keyboard
 
     // send to javascript instrument
     if(this._instrument !== null){
       //console.log(this.name, event)
-      this._instrument.processMIDIEvent(event, time / 1000)
+      this._instrument.processMIDIEvent(event, event.time / 1000)
     }
 
     // send to external hardware or software instrument
     for(let port of this._midiOutputs.values()){
       if(port){
         if(event.type === 128 || event.type === 144 || event.type === 176){
-          port.send([event.type + this.channel, event.data1, event.data2], time + latency)
+          port.send([event.type + this.channel, event.data1, event.data2], event.time + latency)
         }else if(event.type === 192 || event.type === 224){
-          port.send([event.type + this.channel, event.data1], time + latency)
+          port.send([event.type + this.channel, event.data1], event.time + latency)
         }
       }
     }
