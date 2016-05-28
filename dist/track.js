@@ -52,8 +52,8 @@ var Track = exports.Track = function () {
     this._panner.setPosition(zeroValue, zeroValue, zeroValue);
     this._output = _init_audio.context.createGain();
     this._output.gain.value = this.volume;
-    //this._output.connect(this._panner)
     this._panner.connect(this._output);
+    //this._output.connect(this._panner)
     this._midiInputs = new Map();
     this._midiOutputs = new Map();
     this._song = null;
@@ -71,6 +71,8 @@ var Track = exports.Track = function () {
     this.sustainedSamples = [];
     this.sustainPedalDown = false;
     this.monitor = false;
+    this._songInput = null;
+    this._effects = [];
   }
 
   _createClass(Track, [{
@@ -107,15 +109,15 @@ var Track = exports.Track = function () {
     }
   }, {
     key: 'connect',
-    value: function connect(output) {
-      this._output.connect(output);
-      //this._panner.connect(output)
+    value: function connect(songOutput) {
+      this._songOutput = songOutput;
+      this._output.connect(this._songOutput);
     }
   }, {
     key: 'disconnect',
     value: function disconnect() {
-      this._output.disconnect();
-      //this._panner.disconnect()
+      this._output.disconnect(this._songOutput);
+      this._songOutput = null;
     }
   }, {
     key: 'connectMIDIOutputs',
@@ -523,13 +525,21 @@ var Track = exports.Track = function () {
       this._needsUpdate = false;
     }
   }, {
-    key: 'setPanning',
-    value: function setPanning() {
-      // add pannernode -> reverb will be an channel FX
-    }
-  }, {
     key: 'addEffect',
-    value: function addEffect() {}
+    value: function addEffect(effect) {
+      var numFX = this._effects.length;
+      var lastFX = void 0;
+      if (numFX === 0) {
+        lastFX = this._output;
+      } else {
+        lastFX = this._effects(numFX - 1);
+      }
+      lastFX.disconnect(this._songOutput);
+      lastFX.connect(effect);
+      effect.connect(this._songOutput);
+
+      this._effects.push(effect);
+    }
   }, {
     key: 'addEffectAt',
     value: function addEffectAt(index) {}

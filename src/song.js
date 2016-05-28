@@ -595,4 +595,14 @@ export class Song{
     return this.volume
   }
 
+  setPanning(value){
+    if(value < -1 || value > 1){
+      console.log('Song.setPanning() accepts a value between -1 (full left) and 1 (full right), you entered:', value)
+      return
+    }
+    this._tracks.forEach(track => {
+      track.setPanning(value)
+    })
+    this._pannerValue = value
+  }
 }

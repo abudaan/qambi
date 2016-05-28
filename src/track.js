@@ -30,8 +30,8 @@ export class Track{
     this._panner.setPosition(zeroValue, zeroValue, zeroValue)
     this._output = context.createGain()
     this._output.gain.value = this.volume
-    //this._output.connect(this._panner)
     this._panner.connect(this._output)
+    //this._output.connect(this._panner)
     this._midiInputs = new Map()
     this._midiOutputs = new Map()
     this._song = null
@@ -49,6 +49,8 @@ export class Track{
     this.sustainedSamples = []
     this.sustainPedalDown = false
     this.monitor = false
+    this._songInput = null
+    this._effects = []
   }
 
   setInstrument(instrument = null){
@@ -83,14 +85,14 @@ export class Track{
     return this._instrument
   }
 
-  connect(output){
-    this._output.connect(output)
-    //this._panner.connect(output)
+  connect(songOutput){
+    this._songOutput = songOutput
+    this._output.connect(this._songOutput)
   }
 
   disconnect(){
-    this._output.disconnect()
-    //this._panner.disconnect()
+    this._output.disconnect(this._songOutput)
+    this._songOutput = null
   }
 
   connectMIDIOutputs(...outputs){
@@ -386,12 +388,19 @@ export class Track{
     this._needsUpdate = false
   }
 
-  setPanning(){
-    // add pannernode -> reverb will be an channel FX
-  }
+  addEffect(effect){
+    let numFX = this._effects.length
+    let lastFX
+    if(numFX === 0){
+      lastFX = this._output
+    }else{
+      lastFX = this._effects(numFX - 1)
+    }
+    lastFX.disconnect(this._songOutput)
+    lastFX.connect(effect)
+    effect.connect(this._songOutput)
 
-  addEffect(){
-
+    this._effects.push(effect)
   }
 
   addEffectAt(index: number){
