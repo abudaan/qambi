@@ -1,7 +1,7 @@
 import qambi, {
   Song,
   MIDIEventTypes,
-  Instrument,
+  SimpleSynth,
 } from '../../src/qambi'
 
 
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function(){
         return response.arrayBuffer()
       })
       .then(data => {
-        song = Song.fromMIDIFile(data)
+        song = Song.fromMIDIFileSync(data)
         initUI()
         //console.timeEnd('song')
       })
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function initUI(){
 
     song.getTracks().forEach(track => {
-      track.setInstrument(new Instrument())
+      track.setInstrument(new SimpleSynth('sine'))
     })
 
     let btnPlay = document.getElementById('play')

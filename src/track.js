@@ -5,6 +5,7 @@ import {getMIDIInputById, getMIDIOutputById} from './init_midi'
 import {sortEvents} from './util'
 import {context} from './init_audio'
 import {MIDIEventTypes} from './qambi'
+import {dispatchEvent} from './eventlistener'
 
 
 let instanceIndex = 0
@@ -398,7 +399,7 @@ export class Track{
   }
 
   // method is called when a MIDI events is send by an external or on-screen keyboard
-  _preProcessMIDIEvent(midiEvent){
+  _preprocessMIDIEvent(midiEvent){
     midiEvent.time = 0 // play immediately -> see Instrument.processMIDIEvent
     midiEvent.recordMillis = context.currentTime * 1000
     let note
@@ -406,6 +407,10 @@ export class Track{
     if(midiEvent.type === MIDIEventTypes.NOTE_ON){
       note = new MIDINote(midiEvent)
       this._tmpRecordedNotes.set(midiEvent.data1, note)
+      dispatchEvent({
+        type: 'noteOn',
+        data: midiEvent
+      })
     }else if(midiEvent.type === MIDIEventTypes.NOTE_OFF){
       note = this._tmpRecordedNotes.get(midiEvent.data1)
       if(typeof note === 'undefined'){
@@ -413,6 +418,10 @@ export class Track{
       }
       note.addNoteOff(midiEvent)
       this._tmpRecordedNotes.delete(midiEvent.data1)
+      dispatchEvent({
+        type: 'noteOff',
+        data: midiEvent
+      })
     }
 
     if(this._recordEnabled === 'midi' && this._song.recording === true){
@@ -425,7 +434,7 @@ export class Track{
   processMIDIEvent(event, useLatency = false){
 
     if(typeof event.time === 'undefined'){
-      this._preProcessMIDIEvent(event)
+      this._preprocessMIDIEvent(event)
       return
     }
 

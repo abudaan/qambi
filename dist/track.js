@@ -21,6 +21,8 @@ var _init_audio = require('./init_audio');
 
 var _qambi = require('./qambi');
 
+var _eventlistener = require('./eventlistener');
+
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -533,8 +535,8 @@ var Track = exports.Track = function () {
     // method is called when a MIDI events is send by an external or on-screen keyboard
 
   }, {
-    key: '_preProcessMIDIEvent',
-    value: function _preProcessMIDIEvent(midiEvent) {
+    key: '_preprocessMIDIEvent',
+    value: function _preprocessMIDIEvent(midiEvent) {
       midiEvent.time = 0; // play immediately -> see Instrument.processMIDIEvent
       midiEvent.recordMillis = _init_audio.context.currentTime * 1000;
       var note = void 0;
@@ -542,6 +544,10 @@ var Track = exports.Track = function () {
       if (midiEvent.type === _qambi.MIDIEventTypes.NOTE_ON) {
         note = new _midi_note.MIDINote(midiEvent);
         this._tmpRecordedNotes.set(midiEvent.data1, note);
+        (0, _eventlistener.dispatchEvent)({
+          type: 'noteOn',
+          data: midiEvent
+        });
       } else if (midiEvent.type === _qambi.MIDIEventTypes.NOTE_OFF) {
         note = this._tmpRecordedNotes.get(midiEvent.data1);
         if (typeof note === 'undefined') {
@@ -549,6 +555,10 @@ var Track = exports.Track = function () {
         }
         note.addNoteOff(midiEvent);
         this._tmpRecordedNotes.delete(midiEvent.data1);
+        (0, _eventlistener.dispatchEvent)({
+          type: 'noteOff',
+          data: midiEvent
+        });
       }
 
       if (this._recordEnabled === 'midi' && this._song.recording === true) {
@@ -566,7 +576,7 @@ var Track = exports.Track = function () {
 
 
       if (typeof event.time === 'undefined') {
-        this._preProcessMIDIEvent(event);
+        this._preprocessMIDIEvent(event);
         return;
       }
 

@@ -214,8 +214,6 @@ export function _update():void{
 
   //console.log('current millis', this._currentMillis)
   this._playhead.updateSong()
-  //this._scheduler.unschedule()
-  //this.allNotesOff()
   this._scheduler.updateSong()
 
   if(this.playing === false){

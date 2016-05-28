@@ -74,6 +74,7 @@ export class Playhead{
 
     this.data = {}
     this.activeEvents = []
+    let sustainpedalEvents = []
 
     for(i = this.eventIndex; i < this.numEvents; i++){
       event = this.events[i]
@@ -90,6 +91,7 @@ export class Playhead{
                 type: 'sustainpedal2',
                 data: event.data2 === 127 ? 'down' : 'up'
               })
+              sustainpedalEvents.push(event)
             }
           // }else{
           //   dispatchEvent({
@@ -109,6 +111,11 @@ export class Playhead{
         break
       }
     }
+    // let num = sustainpedalEvents.length
+    // if(num > 0){
+    //   console.log(this.currentValue, num, sustainpedalEvents[num - 1].data2, sustainpedalEvents)
+    // }
+
     //console.log('-----------------')
     this.data.activeEvents = this.activeEvents
 
@@ -168,7 +175,7 @@ export class Playhead{
             collectedNotes.add(note)
             dispatchEvent({
               type: 'noteOn',
-              data: note
+              data: note.noteOn
             })
           }
         }else{
@@ -196,7 +203,7 @@ export class Playhead{
         }else{
           dispatchEvent({
             type: 'noteOff',
-            data: note
+            data: note.noteOff
           })
         }
       }

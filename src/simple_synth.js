@@ -15,7 +15,7 @@ export class SimpleSynth extends Instrument{
     this.sustainPedalDown = false
     this.sampleData = {
       type,
-      releaseDuration: 0.3,
+      releaseDuration: 0.2,
       releaseEnvelope: 'equal power'
     }
   }

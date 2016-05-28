@@ -1,4 +1,5 @@
 // @ flow
+import {getNoteData} from './note'
 
 let instanceIndex = 0
 
@@ -10,15 +11,24 @@ export class MIDIEvent{
     this.type = type
     this.data1 = data1
     this.data2 = data2
-    this.frequency = 440 * Math.pow(2, (data1 - 69) / 12)
 
-    if(data1 === 144 && data2 === 0){
-      this.data1 = 128
+    // sometimes NOTE_OFF events are sent as NOTE_ON events with a 0 velocity value
+    if(type === 144 && data2 === 0){
+      this.type = 128
     }
 
     this._part = null
     this._track = null
     this._song = null
+
+    if(type === 144 || type === 128){
+      ({
+        name: this.noteName,
+        fullName: this.fullNoteName,
+        frequency: this.frequency,
+        octave: this.octave
+      } = getNoteData({number: data1}))
+    }
     //@TODO: add all other properties
   }
 

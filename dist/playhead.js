@@ -96,6 +96,7 @@ var Playhead = exports.Playhead = function () {
 
       this.data = {};
       this.activeEvents = [];
+      var sustainpedalEvents = [];
 
       for (i = this.eventIndex; i < this.numEvents; i++) {
         event = this.events[i];
@@ -112,6 +113,7 @@ var Playhead = exports.Playhead = function () {
                   type: 'sustainpedal2',
                   data: event.data2 === 127 ? 'down' : 'up'
                 });
+                sustainpedalEvents.push(event);
               }
               // }else{
               //   dispatchEvent({
@@ -131,6 +133,11 @@ var Playhead = exports.Playhead = function () {
           break;
         }
       }
+      // let num = sustainpedalEvents.length
+      // if(num > 0){
+      //   console.log(this.currentValue, num, sustainpedalEvents[num - 1].data2, sustainpedalEvents)
+      // }
+
       //console.log('-----------------')
       this.data.activeEvents = this.activeEvents;
 
@@ -209,7 +216,7 @@ var Playhead = exports.Playhead = function () {
               collectedNotes.add(note);
               (0, _eventlistener.dispatchEvent)({
                 type: 'noteOn',
-                data: note
+                data: note.noteOn
               });
             }
           } else {
@@ -237,7 +244,7 @@ var Playhead = exports.Playhead = function () {
           } else {
             (0, _eventlistener.dispatchEvent)({
               type: 'noteOff',
-              data: note
+              data: note.noteOff
             });
           }
         }

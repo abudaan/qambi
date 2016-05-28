@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', function(){
       song.stop()
     })
 
+    // very rudimental on-screen keyboard
     let track = song.getTracks()[0];
     ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'].forEach(key => {
 
@@ -76,5 +77,20 @@ document.addEventListener('DOMContentLoaded', function(){
       let noteNumber = getNoteData({fullName: this.id}).number
       track.processMIDIEvent(new MIDIEvent(0, MIDIEventTypes.NOTE_OFF, noteNumber))
     }
+
+    song.addEventListener('noteOn', e => {
+      let btn = document.getElementById(e.data.fullNoteName)
+      if(btn){
+        btn.className = 'key-down'
+      }
+    })
+
+    song.addEventListener('noteOff', e => {
+      // console.log(e.data)
+      let btn = document.getElementById(e.data.fullNoteName)
+      if(btn){
+        btn.className = 'key-up'
+      }
+    })
   }
 })

@@ -35,7 +35,7 @@ var SimpleSynth = exports.SimpleSynth = function (_Instrument) {
     _this.sustainPedalDown = false;
     _this.sampleData = {
       type: type,
-      releaseDuration: 0.3,
+      releaseDuration: 0.2,
       releaseEnvelope: 'equal power'
     };
     return _this;
