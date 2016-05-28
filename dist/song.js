@@ -161,6 +161,7 @@ var Song = exports.Song = function () {
     this.recording = false;
     this.precounting = false;
     this.stopped = true;
+    this.looping = false;
 
     this.volume = 0.5;
     this._output = _init_audio.context.createGain();
@@ -292,6 +293,7 @@ var Song = exports.Song = function () {
 
       this._playhead.set('millis', this._currentMillis);
       this._scheduler.init(this._currentMillis);
+      this._loop = this.looping && this._currentMillis <= this._rightLocator.millis;
       this._pulse();
     }
   }, {
@@ -484,8 +486,25 @@ var Song = exports.Song = function () {
         track.allNotesOff();
       });
 
-      //this._scheduler.allNotesOff()
+      this._scheduler.allNotesOff();
       this._metronome.allNotesOff();
+    }
+  }, {
+    key: 'panic',
+    value: function panic() {
+      var _this7 = this;
+
+      return new Promise(function (resolve) {
+        _this7._tracks.forEach(function (track) {
+          track.disconnect(_this7._output);
+        });
+        setTimeout(function () {
+          _this7._tracks.forEach(function (track) {
+            track.connect(_this7._output);
+          });
+          resolve();
+        }, 100);
+      });
     }
   }, {
     key: 'getTracks',
@@ -603,11 +622,12 @@ var Song = exports.Song = function () {
       var flag = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
 
 
-      this._loop = flag !== null ? flag : !this._loop;
+      this.looping = flag !== null ? flag : !this._loop;
 
       if (this._rightLocator === false || this._leftLocator === false) {
         this._illegalLoop = true;
         this._loop = false;
+        this.looping = false;
         return false;
       }
 
@@ -615,13 +635,16 @@ var Song = exports.Song = function () {
       if (this._rightLocator.millis <= this._leftLocator.millis) {
         this._illegalLoop = true;
         this._loop = false;
+        this.looping = false;
         return false;
       }
 
       this._loopDuration = this._rightLocator.millis - this._leftLocator.millis;
       //console.log(this._loop, this._loopDuration)
       this._scheduler.beyondLoop = this._currentMillis > this._rightLocator.millis;
-      return this._loop;
+      this._loop = this.looping && this._currentMillis <= this._rightLocator.millis;
+      //console.log(this._loop, this.looping)
+      return this.looping;
     }
   }, {
     key: 'setPrecount',

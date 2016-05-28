@@ -93,7 +93,7 @@ export function _update():void{
     let track = event.midiNote._track
     // unschedule all removed events that already have been scheduled
     if(event.time >= this._currentMillis){
-      track.unschedule(event.midiNote)
+      track.unschedule(event)
     }
     this._notesById.delete(event.midiNote.id)
     this._eventsById.delete(event.id)

@@ -4,6 +4,7 @@ import qambi, {
   Part,
   MIDIEvent,
   SimpleSynth,
+  getMIDIOutputs,
 } from '../../src/qambi'
 
 
@@ -42,6 +43,7 @@ function main(){
 
   track.addParts(part)
   track.setInstrument(new SimpleSynth('sine'))
+  track.connectMIDIOutputs(...getMIDIOutputs())
   song.addTracks(track)
   song.update()
   song.setLeftLocator('barsbeats', 1)

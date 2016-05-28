@@ -2,6 +2,7 @@ import qambi, {
   Song,
   MIDIEventTypes,
   SimpleSynth,
+  getMIDIOutputs,
 } from '../../src/qambi'
 
 
@@ -46,14 +47,17 @@ document.addEventListener('DOMContentLoaded', function(){
   function initUI(){
 
     song.getTracks().forEach(track => {
-      track.setInstrument(new SimpleSynth('sine'))
+      //track.setInstrument(new SimpleSynth('sine'))
+      track.connectMIDIOutputs(...getMIDIOutputs())
     })
+
 
     let btnPlay = document.getElementById('play')
     let btnPause = document.getElementById('pause')
     let btnStop = document.getElementById('stop')
     let btnLoop = document.getElementById('loop')
     let btnDelete = document.getElementById('delete')
+    let btnPanic = document.getElementById('panic')
     let divTempo = document.getElementById('tempo')
     let divSustain = document.getElementById('sustain')
     let divSustain2 = document.getElementById('sustain2')
@@ -68,6 +72,7 @@ document.addEventListener('DOMContentLoaded', function(){
     btnStop.disabled = false
     btnLoop.disabled = false
     btnDelete.disabled = false
+    btnPanic.disabled = false
 
     btnPlay.addEventListener('click', function(){
       //song.play('barsbeats', 4, 1, 1, 0)
@@ -86,8 +91,15 @@ document.addEventListener('DOMContentLoaded', function(){
 
     btnLoop.addEventListener('click', function(){
       let loop = song.setLoop()
-      console.log(loop)
+      // console.log(loop)
       btnLoop.innerHTML = loop ? 'stop loop' : 'start loop'
+    })
+
+    btnPanic.addEventListener('click', function(){
+      song.panic()
+      .then(() => {
+        console.log('all is well')
+      })
     })
 
 

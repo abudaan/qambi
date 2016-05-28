@@ -96,7 +96,7 @@ function _update() {
     var track = event.midiNote._track;
     // unschedule all removed events that already have been scheduled
     if (event.time >= _this._currentMillis) {
-      track.unschedule(event.midiNote);
+      track.unschedule(event);
     }
     _this._notesById.delete(event.midiNote.id);
     _this._eventsById.delete(event.id);

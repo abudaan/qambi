@@ -34,8 +34,7 @@ export default class Scheduler{
     this.numEvents = this.events.length
     this.index = 0
     this.maxtime = 0
-    this.beyondLoop = false // tells us if the playhead has already passed the looped section
-    this.precountingDone = false
+    //this.precountingDone = false
     this.setIndex(this.song._currentMillis)
   }
 
@@ -318,7 +317,7 @@ export default class Scheduler{
     //this.notes.clear()
   }
 */
-/*
+
   allNotesOff(){
     let timeStamp = context.currentTime * 1000
     let outputs = getMIDIOutputs()
@@ -327,7 +326,6 @@ export default class Scheduler{
       output.send([0xB0, 0x79, 0x00], timeStamp) // reset all controllers
     })
   }
-*/
 }
 
 

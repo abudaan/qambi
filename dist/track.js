@@ -61,7 +61,7 @@ var Track = exports.Track = function () {
     this._instrument = null;
     this._tmpRecordedNotes = new Map();
     this._recordedEvents = [];
-    this.scheduledSamples = {};
+    this.scheduledSamples = new Map();
     this.sustainedSamples = [];
     this.sustainPedalDown = false;
   }
@@ -73,7 +73,7 @@ var Track = exports.Track = function () {
 
       if (instrument !== null
       // check if the mandatory functions of an instrument are present (Interface Instrument)
-       && typeof instrument.connect === 'function' && typeof instrument.disconnect === 'function' && typeof instrument.processMIDIEvent === 'function' && typeof instrument.allNotesOff === 'function') {
+       && typeof instrument.connect === 'function' && typeof instrument.disconnect === 'function' && typeof instrument.processMIDIEvent === 'function' && typeof instrument.allNotesOff === 'function' && typeof instrument.unschedule === 'function') {
         this.removeInstrument();
         this._instrument = instrument;
         this._instrument.connect(this._output);
@@ -81,7 +81,7 @@ var Track = exports.Track = function () {
         // if you pass null as argument the current instrument will be removed, same as removeInstrument
         this.removeInstrument();
       } else {
-        console.log('Invalid instrument, and instrument should have the methods "connect", "disconnect", "processMIDIEvent" and "allNotesOff"');
+        console.log('Invalid instrument, and instrument should have the methods "connect", "disconnect", "processMIDIEvent", "unschedule" and "allNotesOff"');
       }
     }
   }, {
@@ -580,8 +580,6 @@ var Track = exports.Track = function () {
         return;
       }
 
-      var latency = useLatency ? this.latency : 0;
-
       // send to javascript instrument
       if (this._instrument !== null) {
         //console.log(this.name, event)
@@ -589,6 +587,12 @@ var Track = exports.Track = function () {
       }
 
       // send to external hardware or software instrument
+      this._sendToExternalMIDIOutputs(event, useLatency);
+    }
+  }, {
+    key: '_sendToExternalMIDIOutputs',
+    value: function _sendToExternalMIDIOutputs(event, useLatency) {
+      var latency = useLatency ? this.latency : 0;
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
@@ -622,12 +626,23 @@ var Track = exports.Track = function () {
     }
   }, {
     key: 'unschedule',
-    value: function unschedule(midiNote) {
-      var noteOn = midiNote.noteOn;
-      var noteOff = new _midi_event.MIDIEvent(0, 128, noteOn.data1, 0);
-      noteOff.midiNoteId = midiNote.id;
-      noteOff.time = -1; //context.currentTime + min
-      this.processMIDIEvent(noteOff);
+    value: function unschedule(midiEvent) {
+
+      if (this._instrument !== null) {
+        this._instrument.unschedule(midiEvent);
+      }
+
+      if (this._midiOutputs.size === 0) {
+        return;
+      }
+
+      if (midiEvent.type === 144) {
+        var midiNote = midiEvent.midiNote;
+        var noteOff = new _midi_event.MIDIEvent(0, 128, midiEvent.data1, 0);
+        noteOff.midiNoteId = midiNote.id;
+        noteOff.time = _init_audio.context.currentTime;
+        this._sendToExternalMIDIOutputs(noteOff, true);
+      }
     }
   }, {
     key: 'allNotesOff',
@@ -636,32 +651,11 @@ var Track = exports.Track = function () {
         this._instrument.allNotesOff();
       }
 
-      var timeStamp = _init_audio.context.currentTime * 1000 + this.latency;
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
-
-      try {
-        for (var _iterator2 = this._midiOutputs.values()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var output = _step2.value;
-
-          output.send([0xB0, 0x7B, 0x00], timeStamp); // stop all notes
-          output.send([0xB0, 0x79, 0x00], timeStamp); // reset all controllers
-        }
-      } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return) {
-            _iterator2.return();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
-          }
-        }
-      }
+      // let timeStamp = (context.currentTime * 1000) + this.latency
+      // for(let output of this._midiOutputs.values()){
+      //   output.send([0xB0, 0x7B, 0x00], timeStamp) // stop all notes
+      //   output.send([0xB0, 0x79, 0x00], timeStamp) // reset all controllers
+      // }
     }
   }]);
 

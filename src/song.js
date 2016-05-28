@@ -120,6 +120,7 @@ export class Song{
     this.recording = false
     this.precounting = false
     this.stopped = true
+    this.looping = false
 
     this.volume = 0.5
     this._output = context.createGain()
@@ -223,6 +224,7 @@ export class Song{
 
     this._playhead.set('millis', this._currentMillis)
     this._scheduler.init(this._currentMillis)
+    this._loop = this.looping && this._currentMillis <= this._rightLocator.millis
     this._pulse()
   }
 
@@ -396,8 +398,22 @@ export class Song{
       track.allNotesOff()
     })
 
-    //this._scheduler.allNotesOff()
+    this._scheduler.allNotesOff()
     this._metronome.allNotesOff()
+  }
+
+  panic(){
+    return new Promise(resolve => {
+      this._tracks.forEach((track) => {
+        track.disconnect(this._output)
+      })
+      setTimeout(() => {
+        this._tracks.forEach((track) => {
+          track.connect(this._output)
+        })
+        resolve()
+      }, 100)
+    })
   }
 
   getTracks(){
@@ -484,11 +500,12 @@ export class Song{
 
   setLoop(flag = null){
 
-    this._loop = flag !== null ? flag : !this._loop
+    this.looping = flag !== null ? flag : !this._loop
 
     if(this._rightLocator === false || this._leftLocator === false){
       this._illegalLoop = true
       this._loop = false
+      this.looping = false
       return false
     }
 
@@ -496,13 +513,16 @@ export class Song{
     if(this._rightLocator.millis <= this._leftLocator.millis){
       this._illegalLoop = true
       this._loop = false
+      this.looping = false
       return false
     }
 
     this._loopDuration = this._rightLocator.millis - this._leftLocator.millis
     //console.log(this._loop, this._loopDuration)
     this._scheduler.beyondLoop = this._currentMillis > this._rightLocator.millis
-    return this._loop
+    this._loop = this.looping && this._currentMillis <= this._rightLocator.millis
+    //console.log(this._loop, this.looping)
+    return this.looping
   }
 
   setPrecount(value = 0){

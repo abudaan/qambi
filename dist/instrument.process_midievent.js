@@ -17,7 +17,6 @@ function processMIDIEvent(event) {
 
   //console.log(event, time)
   var sample = void 0;
-  var unschedule = false;
 
   if (isNaN(time)) {
     // this shouldn't happen
@@ -26,44 +25,37 @@ function processMIDIEvent(event) {
     //time = context.currentTime
   }
 
-  // two cases whereby the event neess to be processed immediately
+  // this is an event that is send from an external MIDI keyboard
   if (time === 0) {
-    // this is an event that is send from an external MIDI keyboard
     time = _init_audio.context.currentTime;
-  } else if (time === -1) {
-    // this is an event that has been unscheduled by the scheduler, for instance because the event has been deleted
-    time = _init_audio.context.currentTime;
-    unschedule = true;
   }
 
   if (event.type === 144) {
     //console.log(144, ':', time, context.currentTime, event.millis)
 
     sample = this.createSample(event);
-    this.scheduledSamples[event.midiNoteId] = sample;
+    this.scheduledSamples.set(event.midiNoteId, sample);
     //console.log(sample)
-    sample.output.connect(this.output || _init_audio.context.destination);
+    sample.output.connect(this.output);
     sample.start(time);
     //console.log('scheduling', event.id, event.midiNoteId)
     //console.log('start', event.midiNoteId)
   } else if (event.type === 128) {
       //console.log(128, ':', time, context.currentTime, event.millis)
-      sample = this.scheduledSamples[event.midiNoteId];
+      sample = this.scheduledSamples.get(event.midiNoteId);
       if (typeof sample === 'undefined') {
         //console.info('sample not found for event', event.id, ' midiNote', event.midiNoteId, event)
         return;
       }
 
       // we don't want that the sustain pedal prevents the an event to unscheduled
-      if (this.sustainPedalDown === true && unschedule === false) {
+      if (this.sustainPedalDown === true) {
         //console.log(event.midiNoteId)
         this.sustainedSamples.push(event.midiNoteId);
       } else {
         sample.stop(time, function () {
-          if (unschedule === true) {
-            console.log('stop', time, event.midiNoteId);
-          }
-          delete _this.scheduledSamples[event.midiNoteId];
+          // console.log('stop', time, event.midiNoteId)
+          _this.scheduledSamples.delete(event.midiNoteId);
         });
         //sample.stop(time)
       }
@@ -82,12 +74,12 @@ function processMIDIEvent(event) {
           } else if (event.data2 === 0) {
               this.sustainPedalDown = false;
               this.sustainedSamples.forEach(function (midiNoteId) {
-                sample = _this.scheduledSamples[midiNoteId];
+                sample = _this.scheduledSamples.get(midiNoteId);
                 if (sample) {
                   //sample.stop(time)
                   sample.stop(time, function () {
                     //console.log('stop', midiNoteId)
-                    delete _this.scheduledSamples[midiNoteId];
+                    _this.scheduledSamples.delete(midiNoteId);
                   });
                 }
               });
@@ -117,8 +109,6 @@ function processMIDIEvent(event) {
 
 // allows you to call allNotesOff per track/instrument
 function allNotesOff() {
-  var _this2 = this;
-
   this.sustainedSamples = [];
   if (this.sustainPedalDown === true) {
     (0, _eventlistener.dispatchEvent)({
@@ -128,16 +118,25 @@ function allNotesOff() {
   }
   this.sustainPedalDown = false;
 
-  Object.keys(this.scheduledSamples).forEach(function (sampleId) {
+  this.scheduledSamples.forEach(function (sample) {
     //console.log('  stopping', sampleId, this.id)
-    var sample = _this2.scheduledSamples[sampleId];
+    //let sample = this.scheduledSamples[sampleId]
+    // try{
+    //   sample.source.stop()
+    // }catch(e){
+    //   //
+    // }
+    //sample.sampleData = {releaseDuration: 0} // remove release and such -> we need to stop the sound immediately
     //console.log(sample)
-    _this2.scheduledSamples[sampleId].stop(_init_audio.context.currentTime, function () {
-      //console.log('allNotesOff', sample.event.midiNoteId)
-      delete _this2.scheduledSamples[sample.event.midiNoteId];
-    });
-  });
-  this.scheduledSamples = {};
 
-  //console.log('allNotesOff', this.sustainedSamples.length, this.scheduledSamples)
+    // sample.stop(context.currentTime, () => {
+    //   //console.log('allNotesOff', sample.event.midiNoteId)
+    //   this.scheduledSamples.delete(sample.event.midiNoteId)
+    // })
+    sample.stop(_init_audio.context.currentTime);
+  });
+
+  this.scheduledSamples.clear();
+
+  //console.log('allNotesOff', this.scheduledSamples.size)
 }

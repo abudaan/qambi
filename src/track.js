@@ -39,7 +39,7 @@ export class Track{
     this._instrument = null
     this._tmpRecordedNotes = new Map()
     this._recordedEvents = []
-    this.scheduledSamples = {}
+    this.scheduledSamples = new Map()
     this.sustainedSamples = []
     this.sustainPedalDown = false
   }
@@ -51,6 +51,7 @@ export class Track{
       && typeof instrument.disconnect === 'function'
       && typeof instrument.processMIDIEvent === 'function'
       && typeof instrument.allNotesOff === 'function'
+      && typeof instrument.unschedule === 'function'
     ){
       this.removeInstrument()
       this._instrument = instrument
@@ -59,7 +60,7 @@ export class Track{
       // if you pass null as argument the current instrument will be removed, same as removeInstrument
       this.removeInstrument()
     }else{
-      console.log('Invalid instrument, and instrument should have the methods "connect", "disconnect", "processMIDIEvent" and "allNotesOff"')
+      console.log('Invalid instrument, and instrument should have the methods "connect", "disconnect", "processMIDIEvent", "unschedule" and "allNotesOff"')
     }
   }
 
@@ -438,8 +439,6 @@ export class Track{
       return
     }
 
-    let latency = useLatency ? this.latency : 0
-
     // send to javascript instrument
     if(this._instrument !== null){
       //console.log(this.name, event)
@@ -447,6 +446,11 @@ export class Track{
     }
 
     // send to external hardware or software instrument
+    this._sendToExternalMIDIOutputs(event, useLatency)
+  }
+
+  _sendToExternalMIDIOutputs(event, useLatency){
+    let latency = useLatency ? this.latency : 0
     for(let port of this._midiOutputs.values()){
       if(port){
         if(event.type === 128 || event.type === 144 || event.type === 176){
@@ -458,12 +462,23 @@ export class Track{
     }
   }
 
-  unschedule(midiNote){
-    let noteOn = midiNote.noteOn
-    let noteOff = new MIDIEvent(0, 128, noteOn.data1, 0)
-    noteOff.midiNoteId = midiNote.id
-    noteOff.time = -1//context.currentTime + min
-    this.processMIDIEvent(noteOff)
+  unschedule(midiEvent){
+
+    if(this._instrument !== null){
+      this._instrument.unschedule(midiEvent)
+    }
+
+    if(this._midiOutputs.size === 0){
+      return
+    }
+
+    if(midiEvent.type === 144){
+      let midiNote = midiEvent.midiNote
+      let noteOff = new MIDIEvent(0, 128, midiEvent.data1, 0)
+      noteOff.midiNoteId = midiNote.id
+      noteOff.time = context.currentTime
+      this._sendToExternalMIDIOutputs(noteOff, true)
+    }
   }
 
   allNotesOff(){
@@ -471,11 +486,11 @@ export class Track{
       this._instrument.allNotesOff()
     }
 
-    let timeStamp = (context.currentTime * 1000) + this.latency
-    for(let output of this._midiOutputs.values()){
-      output.send([0xB0, 0x7B, 0x00], timeStamp) // stop all notes
-      output.send([0xB0, 0x79, 0x00], timeStamp) // reset all controllers
-    }
+    // let timeStamp = (context.currentTime * 1000) + this.latency
+    // for(let output of this._midiOutputs.values()){
+    //   output.send([0xB0, 0x7B, 0x00], timeStamp) // stop all notes
+    //   output.send([0xB0, 0x79, 0x00], timeStamp) // reset all controllers
+    // }
   }
 
 }

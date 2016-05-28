@@ -10,9 +10,6 @@ export class SimpleSynth extends Instrument{
     this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
     this.name = name || this.id
     this.type = type
-    this.scheduledSamples = {}
-    this.sustainedSamples = []
-    this.sustainPedalDown = false
     this.sampleData = {
       type,
       releaseDuration: 0.2,

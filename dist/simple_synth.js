@@ -30,9 +30,6 @@ var SimpleSynth = exports.SimpleSynth = function (_Instrument) {
     _this.id = _this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
     _this.name = name || _this.id;
     _this.type = type;
-    _this.scheduledSamples = {};
-    _this.sustainedSamples = [];
-    _this.sustainPedalDown = false;
     _this.sampleData = {
       type: type,
       releaseDuration: 0.2,

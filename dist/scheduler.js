@@ -54,8 +54,7 @@ var Scheduler = function () {
       this.numEvents = this.events.length;
       this.index = 0;
       this.maxtime = 0;
-      this.beyondLoop = false; // tells us if the playhead has already passed the looped section
-      this.precountingDone = false;
+      //this.precountingDone = false
       this.setIndex(this.song._currentMillis);
     }
   }, {
@@ -381,17 +380,17 @@ var Scheduler = function () {
         //this.notes.clear()
       }
     */
-    /*
-      allNotesOff(){
-        let timeStamp = context.currentTime * 1000
-        let outputs = getMIDIOutputs()
-        outputs.forEach((output) => {
-          output.send([0xB0, 0x7B, 0x00], timeStamp) // stop all notes
-          output.send([0xB0, 0x79, 0x00], timeStamp) // reset all controllers
-        })
-      }
-    */
 
+  }, {
+    key: 'allNotesOff',
+    value: function allNotesOff() {
+      var timeStamp = _init_audio.context.currentTime * 1000;
+      var outputs = (0, _init_midi.getMIDIOutputs)();
+      outputs.forEach(function (output) {
+        output.send([0xB0, 0x7B, 0x00], timeStamp); // stop all notes
+        output.send([0xB0, 0x79, 0x00], timeStamp); // reset all controllers
+      });
+    }
   }]);
 
   return Scheduler;
