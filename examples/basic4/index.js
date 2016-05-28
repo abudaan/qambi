@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function(){
     let synth = new SimpleSynth('sine')
 
     song.getTracks().forEach(track => {
+      // during development is it recommended to set the instrument to 'synth' so you don't have to wait for all piano samples to be loaded and parsed
       track.setInstrument(piano)
       //track.setInstrument(synth)
       track.connectMIDIInputs(...getMIDIInputs())
@@ -78,8 +79,11 @@ document.addEventListener('DOMContentLoaded', function(){
       track.processMIDIEvent(new MIDIEvent(0, MIDIEventTypes.NOTE_OFF, noteNumber))
     }
 
+    // add listeners for all noteon and noteoff events
     song.addEventListener('noteOn', e => {
+      // console.log(e.data)
       let btn = document.getElementById(e.data.fullNoteName)
+      // check if this key exists on the on-screen keyboard
       if(btn){
         btn.className = 'key-down'
       }
