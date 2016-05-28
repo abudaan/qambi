@@ -42,6 +42,7 @@ export class Track{
     this.scheduledSamples = new Map()
     this.sustainedSamples = []
     this.sustainPedalDown = false
+    this.monitor = false
   }
 
   setInstrument(instrument = null){
@@ -125,7 +126,9 @@ export class Track{
         this._midiInputs.set(input.id, input)
 
         input.onmidimessage = e => {
-          this._preprocessMIDIEvent(new MIDIEvent(this._song._ticks, ...e.data))
+          if(this.monitor === true){
+            this._preprocessMIDIEvent(new MIDIEvent(this._song._ticks, ...e.data))
+          }
         }
       }
     })
