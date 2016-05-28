@@ -168,6 +168,7 @@ function _update() {
   } else if (lastTimeEvent.ticks > lastEvent.ticks) {
     lastEvent = lastTimeEvent;
   }
+  //console.log(lastEvent)
 
   // get the position data of the first beat in the bar after the last bar
   this.bars = Math.max(lastEvent.bar, this.bars);

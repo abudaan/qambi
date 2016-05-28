@@ -582,4 +582,17 @@ export class Song{
   saveAsMIDIFile(name){
     saveAsMIDIFile(this, name)
   }
+
+  setVolume(value){
+    if(value < 0 || value > 1){
+      console.log('Song.setVolume() accepts a value between 0 and 1, you entered:', value)
+      return
+    }
+    this.volume = value
+  }
+
+  getVolume(){
+    return this.volume
+  }
+
 }

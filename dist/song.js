@@ -711,6 +711,20 @@ var Song = exports.Song = function () {
     value: function saveAsMIDIFile(name) {
       (0, _save_midifile.saveAsMIDIFile)(this, name);
     }
+  }, {
+    key: 'setVolume',
+    value: function setVolume(value) {
+      if (value < 0 || value > 1) {
+        console.log('Song.setVolume() accepts a value between 0 and 1, you entered:', value);
+        return;
+      }
+      this.volume = value;
+    }
+  }, {
+    key: 'getVolume',
+    value: function getVolume() {
+      return this.volume;
+    }
   }]);
 
   return Song;

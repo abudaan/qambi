@@ -22,23 +22,24 @@ function main(){
   let track = new Track()
   let part = new Part()
   let velocity = 10
+  let noteDuration = 959
   part.addEvents(
     new MIDIEvent(960 * 0, 144, 60, velocity),
-    new MIDIEvent(960 * 1, 128, 60, 0),
+    new MIDIEvent(960 * 0 + noteDuration, 128, 60, 0),
     new MIDIEvent(960 * 1, 144, 62, velocity),
-    new MIDIEvent(960 * 2, 128, 62, 0),
+    new MIDIEvent(960 * 1 + noteDuration, 128, 62, 0),
     new MIDIEvent(960 * 2, 144, 64, velocity),
-    new MIDIEvent(960 * 3, 128, 64, 0),
+    new MIDIEvent(960 * 2 + noteDuration, 128, 64, 0),
     new MIDIEvent(960 * 3, 144, 65, velocity),
-    new MIDIEvent(960 * 4, 128, 65, 0),
+    new MIDIEvent(960 * 3 + noteDuration, 128, 65, 0),
     new MIDIEvent(960 * 4, 144, 67, velocity),
-    new MIDIEvent(960 * 5, 128, 67, 0),
+    new MIDIEvent(960 * 4 + noteDuration, 128, 67, 0),
     new MIDIEvent(960 * 5, 144, 65, velocity),
-    new MIDIEvent(960 * 6, 128, 65, 0),
+    new MIDIEvent(960 * 5 + noteDuration, 128, 65, 0),
     new MIDIEvent(960 * 6, 144, 64, velocity),
-    new MIDIEvent(960 * 7, 128, 64, 0),
+    new MIDIEvent(960 * 6 + noteDuration, 128, 64, 0),
     new MIDIEvent(960 * 7, 144, 62, velocity),
-    new MIDIEvent(960 * 8, 128, 62, 0),
+    new MIDIEvent(960 * 7 + noteDuration, 128, 62, 0),
   )
 
   track.addParts(part)

@@ -51,7 +51,7 @@ export function initAudio(){
   // set up the elementary audio nodes
   compressor = context.createDynamicsCompressor()
   compressor.connect(context.destination)
-  masterGain = context.createGainNode()
+  masterGain = context.createGain()
   masterGain.connect(context.destination)
   masterGain.gain.value = 0.5
   initialized = true
@@ -175,7 +175,7 @@ export function getInitData(){
 // this doesn't seem to be necessary anymore on iOS anymore
 let unlockWebAudio = function(){
   let src = context.createOscillator()
-  let gainNode = context.createGainNode()
+  let gainNode = context.createGain()
   gainNode.gain.value = 0
   src.connect(gainNode)
   gainNode.connect(context.destination)

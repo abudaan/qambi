@@ -66,7 +66,7 @@ function initAudio() {
   compressor.connect(context.destination);
   exports.
   //console.log('already done')
-  masterGain = masterGain = context.createGainNode();
+  masterGain = masterGain = context.createGain();
   masterGain.connect(context.destination);
   masterGain.gain.value = 0.5;
   initialized = true;
@@ -189,7 +189,7 @@ function getInitData() {
 // this doesn't seem to be necessary anymore on iOS anymore
 var _unlockWebAudio = function unlockWebAudio() {
   var src = context.createOscillator();
-  var gainNode = context.createGainNode();
+  var gainNode = context.createGain();
   gainNode.gain.value = 0;
   src.connect(gainNode);
   gainNode.connect(context.destination);

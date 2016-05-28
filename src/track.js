@@ -8,6 +8,7 @@ import {MIDIEventTypes} from './qambi'
 import {dispatchEvent} from './eventlistener'
 
 
+const zeroValue = 0.00000000000000001
 let instanceIndex = 0
 
 export class Track{
@@ -24,8 +25,13 @@ export class Track{
     this.channel = 0
     this.muted = false
     this.volume = 0.5
+    this._panner = context.createPanner()
+    this._panner.panningModel = 'equalpower'
+    this._panner.setPosition(zeroValue, zeroValue, zeroValue)
     this._output = context.createGain()
     this._output.gain.value = this.volume
+    //this._output.connect(this._panner)
+    this._panner.connect(this._output)
     this._midiInputs = new Map()
     this._midiOutputs = new Map()
     this._song = null
@@ -56,7 +62,7 @@ export class Track{
     ){
       this.removeInstrument()
       this._instrument = instrument
-      this._instrument.connect(this._output)
+      this._instrument.connect(this._panner)
     }else if(instrument === null){
       // if you pass null as argument the current instrument will be removed, same as removeInstrument
       this.removeInstrument()
@@ -79,10 +85,12 @@ export class Track{
 
   connect(output){
     this._output.connect(output)
+    //this._panner.connect(output)
   }
 
   disconnect(){
     this._output.disconnect()
+    //this._panner.disconnect()
   }
 
   connectMIDIOutputs(...outputs){
@@ -494,6 +502,27 @@ export class Track{
     //   output.send([0xB0, 0x7B, 0x00], timeStamp) // stop all notes
     //   output.send([0xB0, 0x79, 0x00], timeStamp) // reset all controllers
     // }
+  }
+
+  setPanning(value){
+    if(value < -1 || value > 1){
+      console.log('Track.setPanning() accepts a value between -1 (full left) and 1 (full right), you entered:', value)
+      return
+    }
+    let x = value
+    let y = 0
+    let z = 1 - Math.abs(x)
+
+    x = x === 0 ? zeroValue : x
+    y = y === 0 ? zeroValue : y
+    z = z === 0 ? zeroValue : z
+
+    this._panner.setPosition(x, y, z)
+    this._panningValue = value
+  }
+
+  getPanning(){
+    return this._panningValue
   }
 
 }
