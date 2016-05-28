@@ -24,8 +24,8 @@ export function decodeSample(sample, id, every){
           }
         },
 
-        function onError(e){
-          console.log(`error decoding audiodata ${e} [ID: ${id}]`);
+        function onError(){
+          console.log(`error decoding audiodata [ID: ${id}]`);
           //reject(e); // don't use reject because we use this as a nested promise and we don't want the parent promise to reject
           if(typeof id !== 'undefined'){
             resolve({id})

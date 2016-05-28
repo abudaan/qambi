@@ -5,11 +5,11 @@
 import samples from './samples'
 import {parseSamples} from './parse_audio'
 
-let
-  masterGain,
-  compressor,
-  initialized = false,
-  data
+let data
+let masterGain
+let compressor
+let initialized = false
+
 
 export let context = (function(){
   //console.log('init AudioContext')
@@ -172,4 +172,22 @@ export function getInitData(){
   return data
 }
 
-export {masterGain, compressor as masterCompressor, setMasterVolume, getMasterVolume, getCompressionReduction, enableMasterCompressor, configureMasterCompressor}
+// this doesn't seem to be necessary anymore on iOS anymore
+let unlockWebAudio = function(){
+  let src = context.createOscillator()
+  let gainNode = context.createGainNode()
+  gainNode.gain.value = 0
+  src.connect(gainNode)
+  gainNode.connect(context.destination)
+  if(typeof src.noteOn !== 'undefined'){
+    src.start = src.noteOn
+    src.stop = src.noteOff
+  }
+  src.start(0)
+  src.stop(0.001)
+  unlockWebAudio = function(){
+    //console.log('already done')
+  }
+}
+
+export {masterGain, unlockWebAudio, compressor as masterCompressor, setMasterVolume, getMasterVolume, getCompressionReduction, enableMasterCompressor, configureMasterCompressor}

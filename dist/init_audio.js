@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.configureMasterCompressor = exports.enableMasterCompressor = exports.getCompressionReduction = exports.getMasterVolume = exports.setMasterVolume = exports.masterCompressor = exports.masterGain = exports.context = undefined;
+exports.configureMasterCompressor = exports.enableMasterCompressor = exports.getCompressionReduction = exports.getMasterVolume = exports.setMasterVolume = exports.masterCompressor = exports.unlockWebAudio = exports.masterGain = exports.context = undefined;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; }; /*
                                                                                                                                                                                                                                                     Sets up the basic audio routing, tests which audio formats are supported and parses the samples for the metronome ticks.
@@ -20,10 +20,10 @@ var _parse_audio = require('./parse_audio');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var masterGain = void 0,
-    compressor = void 0,
-    initialized = false,
-    data = void 0;
+var data = void 0;
+var masterGain = void 0;
+var compressor = void 0;
+var initialized = false;
 
 var context = exports.context = function () {
   //console.log('init AudioContext')
@@ -64,7 +64,9 @@ function initAudio() {
   // set up the elementary audio nodes
   exports.masterCompressor = compressor = context.createDynamicsCompressor();
   compressor.connect(context.destination);
-  exports.masterGain = masterGain = context.createGainNode();
+  exports.
+  //console.log('already done')
+  masterGain = masterGain = context.createGainNode();
   masterGain.connect(context.destination);
   masterGain.gain.value = 0.5;
   initialized = true;
@@ -184,7 +186,24 @@ function getInitData() {
   return data;
 }
 
+// this doesn't seem to be necessary anymore on iOS anymore
+var _unlockWebAudio = function unlockWebAudio() {
+  var src = context.createOscillator();
+  var gainNode = context.createGainNode();
+  gainNode.gain.value = 0;
+  src.connect(gainNode);
+  gainNode.connect(context.destination);
+  if (typeof src.noteOn !== 'undefined') {
+    src.start = src.noteOn;
+    src.stop = src.noteOff;
+  }
+  src.start(0);
+  src.stop(0.001);
+  exports.unlockWebAudio = _unlockWebAudio = function unlockWebAudio() {};
+};
+
 exports.masterGain = masterGain;
+exports.unlockWebAudio = _unlockWebAudio;
 exports.masterCompressor = compressor;
 exports.setMasterVolume = _setMasterVolume;
 exports.getMasterVolume = _getMasterVolume;

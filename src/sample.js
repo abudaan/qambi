@@ -33,10 +33,18 @@ export class Sample{
           releaseEnvelopeArray,
         })
       }
-      this.source.stop(time + releaseDuration)
+      try{
+        this.source.stop(time + releaseDuration)
+      }catch(e){
+        // in Firefox and Safari you can not call stop more than once
+      }
       this.checkPhase()
     }else{
-      this.source.stop(time)
+      try{
+        this.source.stop(time)
+      }catch(e){
+        // in Firefox and Safari you can not call stop more than once
+      }
     }
   }
 
@@ -56,28 +64,35 @@ export function fadeOut(gainNode, settings){
   let values, i, maxi
 
   //console.log(settings)
-  switch(settings.releaseEnvelope){
+  try{
+    switch(settings.releaseEnvelope){
 
-    case 'linear':
-      gainNode.gain.linearRampToValueAtTime(gainNode.gain.value, now)
-      gainNode.gain.linearRampToValueAtTime(0.0, now + settings.releaseDuration)
-      break
+      case 'linear':
+        gainNode.gain.linearRampToValueAtTime(gainNode.gain.value, now)
+        gainNode.gain.linearRampToValueAtTime(0.0, now + settings.releaseDuration)
+        break
 
-    case 'equal power':
-    case 'equal_power':
-      values = getEqualPowerCurve(100, 'fadeOut', gainNode.gain.value)
-      gainNode.gain.setValueCurveAtTime(values, now, settings.releaseDuration)
-      break
+      case 'equal power':
+      case 'equal_power':
+        values = getEqualPowerCurve(100, 'fadeOut', gainNode.gain.value)
+        gainNode.gain.setValueCurveAtTime(values, now, settings.releaseDuration)
+        break
 
-    case 'array':
-      maxi = settings.releaseEnvelopeArray.length
-      values = new Float32Array(maxi)
-      for(i = 0; i < maxi; i++){
-        values[i] = settings.releaseEnvelopeArray[i] * gainNode.gain.value
-      }
-      gainNode.gain.setValueCurveAtTime(values, now, settings.releaseDuration)
-      break
+      case 'array':
+        maxi = settings.releaseEnvelopeArray.length
+        values = new Float32Array(maxi)
+        for(i = 0; i < maxi; i++){
+          values[i] = settings.releaseEnvelopeArray[i] * gainNode.gain.value
+        }
+        gainNode.gain.setValueCurveAtTime(values, now, settings.releaseDuration)
+        break
 
-    default:
+      default:
+    }
+  }catch(e){
+    // in Firefox and Safari you can not call setValueCurveAtTime and linearRampToValueAtTime more than once
+
+    //console.log(values, now, settings.releaseDuration)
+    //console.log(e, gainNode)
   }
 }

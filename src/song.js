@@ -2,7 +2,7 @@
 
 import {MIDIEventTypes} from './constants'
 import {parseEvents} from './parse_events'
-import {context, masterGain} from './init_audio'
+import {context, masterGain, unlockWebAudio} from './init_audio'
 import Scheduler from './scheduler'
 import {MIDIEvent} from './midi_event'
 import {songFromMIDIFile, songFromMIDIFileSync} from './song_from_midifile'
@@ -168,6 +168,7 @@ export class Song{
   }
 
   play(type, ...args): void{
+    //unlockWebAudio()
     this._play(type, ...args)
     if(this._precountBars > 0){
       dispatchEvent({type: 'precounting', data: this._currentMillis})

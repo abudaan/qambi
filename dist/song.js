@@ -232,6 +232,7 @@ var Song = exports.Song = function () {
         args[_key3 - 1] = arguments[_key3];
       }
 
+      //unlockWebAudio()
       this._play.apply(this, [type].concat(args));
       if (this._precountBars > 0) {
         (0, _eventlistener.dispatchEvent)({ type: 'precounting', data: this._currentMillis });

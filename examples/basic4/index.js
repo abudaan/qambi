@@ -13,10 +13,10 @@ document.addEventListener('DOMContentLoaded', function(){
       type: 'Song',
       url: '../data/minute_waltz.mid'
     },
-    piano: {
-      type: 'Instrument',
-      url: '../../instruments/heartbeat/city-piano-light.json'
-    }
+    // piano: {
+    //   type: 'Instrument',
+    //   url: '../../instruments/heartbeat/city-piano-light.json'
+    // }
   })
   .then((data) => {
 
@@ -25,8 +25,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
     song.getTracks().forEach(track => {
       // during development is it recommended to set the instrument to 'synth' so you don't have to wait for all piano samples to be loaded and parsed
-      track.setInstrument(piano)
-      //track.setInstrument(synth)
+      //track.setInstrument(piano)
+      track.setInstrument(synth)
       // listen to all connected MIDI input devices
       track.connectMIDIInputs(...getMIDIInputs())
     })
