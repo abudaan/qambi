@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function(){
       // during development is it recommended to set the instrument to 'synth' so you don't have to wait for all piano samples to be loaded and parsed
       track.setInstrument(piano)
       //track.setInstrument(synth)
+      // listen to all connected MIDI input devices
       track.connectMIDIInputs(...getMIDIInputs())
     })
 
