@@ -2,15 +2,16 @@
 
 Qambi is a rebuild of [heartbeat](https://abudaan.github.io/heartbeat) in es6. It is still work in progress and not all functionality has been ported yet. If you need a well-tested sequencer for your project you'd better use heartbeat.
 
-You can install it via npm
+
+#####Installation
+
+Recommended is to install qambi via npm:
 
 ```
 $ npm install qambi
 ```
 
-You can also add qambi as an AMD module or as a global variable to your project, in the `dist` folder you will find the files `qambi-umd.js` and `qambi-umd.min.js`
-
-AMD:
+But you can also add qambi as an AMD module:
 ```javascript
 requirejs.config({
   paths: {
@@ -20,7 +21,8 @@ requirejs.config({
 
 ```
 
-Global variable:
+
+Or as a global variable:
 ```html
   <script src="//qambi.org/dist/qambi-umd.min.js"></script>
   <script src="//qambi.org/dist/globals.js"></script>
@@ -28,6 +30,7 @@ Global variable:
 The last script file creates global variable for all qambi modules, it is not mandotory. If you add it you can for instance create a new song with `new Song()`, if you ommit it you have to type `new qambi.Song()`.
 
 
+#####Examples
 
 Here is a simple example that plays back an existing MIDI file:
 
@@ -56,5 +59,19 @@ qambi.init({
 
 ```
 
-You can find more examples in the `examples` folder and you can test some live examples [here](http://qambi.org). Documentation is work in progress, you can find it [here](https://github.com/abudaan/qambi/wiki).
+Here you can test some live examples:
+
+  1. Creates a song form a MIDI file and plays it back using City Piano, a qambi sample instrument with 4 velocity layer: [link](http://qambi.org/examples/example1/)
+  2. Create song from scratch and save it as MIDI file: [link](http://qambi.org/examples/example2/)
+  3. Play instruments using your MIDI keyboard: [link](http://qambi.org/examples/example3/)
+  4. Record MIDI: [link](http://qambi.org/examples/midi-recording/)
+  5. Playback a MIDI file via an external softsynth: [link](http://qambi.org/examples/midi-sync/) and a screencast explaining how to use it on [youtube](https://www.youtube.com/embed/zj1Sof90N7k)
+
+You can find more examples in the [examples](https://github.com/abudaan/qambi/tree/gh-pages/examples) folder of the repository. Documentation is work in progress, see the [wiki](https://github.com/abudaan/qambi/wiki).
+
+
+#####Playgrounds
+
+You can try qambi without installation by using the qambi templates on [jsbin](http://jsbin.com/kosuva/6/edit?js,output) or [codepen](http://codepen.io/abudaan/pen/YqmMbK?editors=0010)
+
 
