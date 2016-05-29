@@ -108,18 +108,6 @@ var Track = exports.Track = function () {
       return this._instrument;
     }
   }, {
-    key: 'connect',
-    value: function connect(songOutput) {
-      this._songOutput = songOutput;
-      this._output.connect(this._songOutput);
-    }
-  }, {
-    key: 'disconnect',
-    value: function disconnect() {
-      this._output.disconnect(this._songOutput);
-      this._songOutput = null;
-    }
-  }, {
     key: 'connectMIDIOutputs',
     value: function connectMIDIOutputs() {
       var _this = this;
@@ -524,35 +512,117 @@ var Track = exports.Track = function () {
       (0, _util.sortEvents)(this._events);
       this._needsUpdate = false;
     }
+
+    /*
+      routing: sample source -> panner -> gain -> [...fx] -> song output
+    */
+
+  }, {
+    key: 'connect',
+    value: function connect(songOutput) {
+      this._songOutput = songOutput;
+      this._output.connect(this._songOutput);
+    }
+  }, {
+    key: 'disconnect',
+    value: function disconnect() {
+      this._output.disconnect(this._songOutput);
+      this._songOutput = null;
+    }
+  }, {
+    key: '_checkEffect',
+    value: function _checkEffect(effect) {
+      if (typeof effect.setInput !== 'function' || typeof effect.setOutput !== 'function' || typeof effect.getOutput !== 'function' || typeof effect.disconnect !== 'function') {
+        console.log('Invalid channel fx, and channel fx should have the methods "setInput", "setOutput", "getOutput" and "disconnect"');
+        return false;
+      }
+      return true;
+    }
   }, {
     key: 'addEffect',
     value: function addEffect(effect) {
+      if (this._checkEffect(effect) === false) {
+        return;
+      }
       var numFX = this._effects.length;
       var lastFX = void 0;
+      var output = void 0;
       if (numFX === 0) {
         lastFX = this._output;
+        lastFX.disconnect(this._songOutput);
+        output = this._output;
       } else {
-        lastFX = this._effects(numFX - 1);
+        lastFX = this._effects[numFX - 1];
+        lastFX.disconnect();
+        output = lastFX.getOutput();
       }
-      lastFX.disconnect(this._songOutput);
-      lastFX.connect(effect);
-      effect.connect(this._songOutput);
+
+      effect.setInput(output);
+      effect.setOutput(this._songOutput);
 
       this._effects.push(effect);
     }
   }, {
     key: 'addEffectAt',
-    value: function addEffectAt(index) {}
+    value: function addEffectAt(effect, index) {
+      if (this._checkEffect(effect) === false) {
+        return;
+      }
+      this._effects.splice(index, 0, effect);
+    }
   }, {
     key: 'removeEffect',
-    value: function removeEffect(index) {}
+    value: function removeEffect(index) {
+      var _this8 = this;
+
+      if (isNaN(index)) {
+        return;
+      }
+      this._effects.forEach(function (fx) {
+        fx.disconnect();
+      });
+      this._effects.splice(index, 1);
+
+      var numFX = this._effects.length;
+
+      if (numFX === 0) {
+        this._output.connect(this._songOutput);
+        return;
+      }
+
+      var lastFX = this._output;
+      this._effects.forEach(function (fx, i) {
+        fx.setInput(lastFX);
+        if (i === numFX - 1) {
+          fx.setOutput(_this8._songOutput);
+        } else {
+          fx.setOutput(_this8._effects[i + 1]);
+        }
+        lastFX = fx;
+      });
+    }
   }, {
     key: 'getEffects',
-    value: function getEffects() {}
+    value: function getEffects() {
+      return this._effects;
+    }
   }, {
     key: 'getEffectAt',
-    value: function getEffectAt(index) {}
-
+    value: function getEffectAt(index) {
+      if (isNaN(index)) {
+        return null;
+      }
+      return this._effects[index];
+    }
+    /*
+      getOutput(){
+        return this._output
+      }
+    
+      setInput(source){
+        source.connect(this._songOutput)
+      }
+    */
     // method is called when a MIDI events is send by an external or on-screen keyboard
 
   }, {

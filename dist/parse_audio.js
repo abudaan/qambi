@@ -74,6 +74,7 @@ function loadAndParseSample(url, id, every) {
   });
 
   var executor = function executor(resolve) {
+    // console.log(url)
     (0, _isomorphicFetch2.default)(url, {
       method: 'GET'
     }).then(function (response) {

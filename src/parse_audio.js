@@ -62,6 +62,7 @@ function loadAndParseSample(url, id, every){
   })
 
   let executor = function(resolve){
+    // console.log(url)
     fetch(url, {
       method: 'GET'
     }).then(

@@ -7,6 +7,12 @@ import qambi, {
   getAudioContext,
 } from '../../src/qambi' // use "from 'qambi'" in your own code! so without the extra "../../"
 
+
+import {
+  ConvolutionReverb
+} from '../../src/convolution_reverb'
+
+
 document.addEventListener('DOMContentLoaded', function(){
 
   // during development is it recommended to set the instrument to 'synth' so you don't have to wait for all piano samples to be loaded and parsed
@@ -43,15 +49,15 @@ document.addEventListener('DOMContentLoaded', function(){
     let btnPlay = document.getElementById('play')
     let btnPause = document.getElementById('pause')
     let btnStop = document.getElementById('stop')
-    let btnDelay = document.getElementById('delay')
+    let btnFX = document.getElementById('fx')
     let divLoading = document.getElementById('loading')
     let rangePanner = document.getElementById('panning')
+    let rangeReverb = document.getElementById('reverb')
     divLoading.innerHTML = ''
 
     btnPlay.disabled = false
     btnPause.disabled = false
     btnStop.disabled = false
-    btnDelay.disabled = false
 
     btnPlay.addEventListener('click', function(){
       song.play()
@@ -65,21 +71,33 @@ document.addEventListener('DOMContentLoaded', function(){
       song.stop()
     })
 
-    let hasFilter = false
-    let filter = getAudioContext().createBiquadFilter()
-    filter.type = 'lowshelf'
-    filter.frequency.value = 2000
-    filter.gain.value = 1
-    console.log(getAudioContext().createConvolver())
-    btnDelay.addEventListener('click', function(){
-      hasFilter = !hasFilter
-      song.getTracks().forEach(t => {
-        t.addEffect(filter)
-      })
-      // if(hasFilter){
-      // }
-    })
+    let hasReverb = false
+    let reverb
+    ConvolutionReverb.load('../data/100-Reverb.mp3')
+    .then(
+      r => {
+        reverb = r
+        reverb.setAmount(0.5)
+        btnFX.disabled = false
+      }
+    )
 
+    btnFX.addEventListener('click', function(){
+      hasReverb = !hasReverb
+      if(hasReverb){
+        song.getTracks().forEach(t => {
+          t.addEffect(reverb)
+        })
+        btnFX.innerHTML = 'remove reverb'
+        rangeReverb.disabled = false
+      }else{
+        song.getTracks().forEach(t => {
+          t.removeEffect(0)
+        })
+        btnFX.innerHTML = 'add reverb'
+        rangeReverb.disabled = true
+      }
+    })
     // very rudimental on-screen keyboard
     let track = song.getTracks()[0]
     let keys = new Map();
@@ -139,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function(){
         t.setPanning(e.target.valueAsNumber)
       })
       //song.setPanning(e.target.valueAsNumber)
-      console.log(e.target.valueAsNumber)
+      //console.log(e.target.valueAsNumber)
     }
 
     rangePanner.addEventListener('mousedown', e => {
@@ -148,6 +166,23 @@ document.addEventListener('DOMContentLoaded', function(){
 
     rangePanner.addEventListener('mouseup', e => {
       rangePanner.removeEventListener('mousemove', setPanning, false)
+    })
+
+
+    function setReverb(e){
+      if(hasReverb === false){
+        return
+      }
+      reverb.setAmount(e.target.valueAsNumber)
+      //console.log(e.target.valueAsNumber)
+    }
+
+    rangeReverb.addEventListener('mousedown', e => {
+      rangeReverb.addEventListener('mousemove', setReverb, false)
+    })
+
+    rangeReverb.addEventListener('mouseup', e => {
+      rangeReverb.removeEventListener('mousemove', setReverb, false)
     })
 
   }

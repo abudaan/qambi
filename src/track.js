@@ -85,16 +85,6 @@ export class Track{
     return this._instrument
   }
 
-  connect(songOutput){
-    this._songOutput = songOutput
-    this._output.connect(this._songOutput)
-  }
-
-  disconnect(){
-    this._output.disconnect(this._songOutput)
-    this._songOutput = null
-  }
-
   connectMIDIOutputs(...outputs){
     //console.log(outputs)
     outputs.forEach(output => {
@@ -388,37 +378,104 @@ export class Track{
     this._needsUpdate = false
   }
 
+  /*
+    routing: sample source -> panner -> gain -> [...fx] -> song output
+  */
+  connect(songOutput){
+    this._songOutput = songOutput
+    this._output.connect(this._songOutput)
+  }
+
+  disconnect(){
+    this._output.disconnect(this._songOutput)
+    this._songOutput = null
+  }
+
+  _checkEffect(effect){
+    if(typeof effect.setInput !== 'function' || typeof effect.setOutput !== 'function' || typeof effect.getOutput !== 'function' || typeof effect.disconnect !== 'function'){
+      console.log('Invalid channel fx, and channel fx should have the methods "setInput", "setOutput", "getOutput" and "disconnect"')
+      return false
+    }
+    return true
+  }
+
   addEffect(effect){
+    if(this._checkEffect(effect) === false){
+      return
+    }
     let numFX = this._effects.length
     let lastFX
+    let output
     if(numFX === 0){
       lastFX = this._output
+      lastFX.disconnect(this._songOutput)
+      output = this._output
     }else{
-      lastFX = this._effects(numFX - 1)
+      lastFX = this._effects[numFX - 1]
+      lastFX.disconnect()
+      output = lastFX.getOutput()
     }
-    lastFX.disconnect(this._songOutput)
-    lastFX.connect(effect)
-    effect.connect(this._songOutput)
+
+    effect.setInput(output)
+    effect.setOutput(this._songOutput)
 
     this._effects.push(effect)
   }
 
-  addEffectAt(index: number){
-
+  addEffectAt(effect, index: number){
+    if(this._checkEffect(effect) === false){
+      return
+    }
+    this._effects.splice(index, 0, effect)
   }
 
   removeEffect(index: number){
+    if(isNaN(index)){
+      return
+    }
+    this._effects.forEach(fx => {
+      fx.disconnect()
+    })
+    this._effects.splice(index, 1)
 
+    let numFX = this._effects.length
+
+    if(numFX === 0){
+      this._output.connect(this._songOutput)
+      return
+    }
+
+    let lastFX = this._output
+    this._effects.forEach((fx, i) => {
+      fx.setInput(lastFX)
+      if(i === numFX - 1){
+        fx.setOutput(this._songOutput)
+      }else{
+        fx.setOutput(this._effects[i + 1])
+      }
+      lastFX = fx
+    })
   }
 
   getEffects(){
-
+    return this._effects
   }
 
   getEffectAt(index: number){
-
+    if(isNaN(index)){
+      return null
+    }
+    return this._effects[index]
+  }
+/*
+  getOutput(){
+    return this._output
   }
 
+  setInput(source){
+    source.connect(this._songOutput)
+  }
+*/
   // method is called when a MIDI events is send by an external or on-screen keyboard
   _preprocessMIDIEvent(midiEvent){
     midiEvent.time = 0 // play immediately -> see Instrument.processMIDIEvent
