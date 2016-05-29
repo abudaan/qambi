@@ -1,12 +1,26 @@
-require(['qambi-umd.min'], function(qambi){
+requirejs.config({
+  paths: {
+    qambi: '//qambi.org/dist/qambi-umd.min'
+  }
+})
 
-  console.log(qambi)
+require(['qambi'], function(qambi){
+
+  console.log(Song)
 
   qambi.init()
   .then(function() {
-    var synth = new qambi.Instrument()
-    synth.processMIDIEvent(new qambi.MIDIEvent(0, 144, 60, 100))
-    synth.processMIDIEvent(new qambi.MIDIEvent(960, 128, 60, 0))
+    let song = new qambi.Song()
+    let track = new qambi.Track()
+    let part = new qambi.Part()
+    var synth = new qambi.SimpleSynth()
+
+    part.addEvents(new qambi.MIDIEvent(0, 144, 60, 100), new qambi.MIDIEvent(960, 128, 60, 0))
+    track.setInstrument(synth)
+    track.addParts(part)
+    song.addTracks(track)
+    song.update()
+    song.play()
   })
 
 })

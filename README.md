@@ -8,11 +8,26 @@ You can install it via npm
 $ npm install qambi
 ```
 
-You can also add qambi as an UMD module to your project:
+You can also add qambi as an AMD module or as a global variable to your project, in the `dist` folder you will find the files `qambi-umd.js` and `qambi-umd.min.js`
+
+AMD:
+```javascript
+requirejs.config({
+  paths: {
+    qambi: '//qambi.org/dist/qambi-umd.min'
+  }
+})
 
 ```
 
+Global variable:
+```html
+  <script src="//qambi.org/dist/qambi-umd.min.js"></script>
+  <script src="//qambi.org/dist/globals.js"></script>
 ```
+The last script file creates global variable for all qambi modules, it is not mandotory. If you add it you can for instance create a new song with `new Song()`, if you ommit it you have to type `new qambi.Song()`.
+
+
 
 Here is a simple example that plays back an existing MIDI file:
 

@@ -1,3 +1,5 @@
+// adds modules to the global scope, you can use this if you add qambi as an UMD module to your project
+
 var qambi = qambi.default
 var MIDIEvent = qambi.MIDIEvent
 var MIDINote = qambi.MIDINote
