@@ -5642,7 +5642,7 @@ module.exports = self.fetch.bind(self);
     value: true
   });
   exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getGMInstruments = exports.getInstruments = exports.setBufferTime = exports.init = exports.version = undefined;
-  var version = '1.0.0-beta21';
+  var version = '1.0.0-beta22';
 
   var getAudioContext = function getAudioContext() {
     return _init_audio.context;

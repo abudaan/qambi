@@ -41,11 +41,11 @@ import qambi from 'qambi'
 qambi.init({
     song: {
       type: 'Song',
-      url: 'http://qambi.org/midi/minute_waltz.mid'
+      url: '//qambi.org/midi/minute_waltz.mid'
     },
     piano: {
       type: 'Instrument',
-      url: 'http://qambi.org/instruments/heartbeat/city-piano-light.json'
+      url: '//qambi.org/instruments/heartbeat/city-piano-light.json'
     }
   })
   .then((data) => {
@@ -55,6 +55,8 @@ qambi.init({
     song.getTracks().forEach(track => {
       track.setInstrument(piano)
     })
+
+    song.play()
   })
 
 ```
@@ -67,8 +69,12 @@ Some live examples:
   4. Record MIDI: [link](http://qambi.org/examples/midi-recording/)
   5. Playback a MIDI file via an external softsynth: [link](http://qambi.org/examples/midi-sync/) and a screencast explaining how to use it on [youtube](https://www.youtube.com/embed/zj1Sof90N7k)
 
-More examples in the [examples](https://github.com/abudaan/qambi/tree/gh-pages/examples) folder of the repository. Documentation is work in progress, see the [wiki](https://github.com/abudaan/qambi/wiki).
+More examples in the [examples](https://github.com/abudaan/qambi/tree/gh-pages/examples) folder of the repository.
 
+
+######Documentation
+
+Documentation is work in progress, see the [wiki](https://github.com/abudaan/qambi/wiki).
 
 #####Playgrounds
 
