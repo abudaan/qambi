@@ -32,7 +32,7 @@ The last script file creates global variable for all qambi modules, it is not ma
 
 #####Examples
 
-Here is a simple example that plays back an existing MIDI file:
+A simple example that plays back an existing MIDI file:
 
 
 ``` javascript
@@ -45,7 +45,7 @@ qambi.init({
     },
     piano: {
       type: 'Instrument',
-      url: 'http://qambi.org/instruments/heartbeat/city-piano.json'
+      url: 'http://qambi.org/instruments/heartbeat/city-piano-light.json'
     }
   })
   .then((data) => {
@@ -59,7 +59,7 @@ qambi.init({
 
 ```
 
-Here you can test some live examples:
+Some live examples:
 
   1. Creates a song form a MIDI file and plays it back using City Piano, a qambi sample instrument with 4 velocity layer: [link](http://qambi.org/examples/example1/)
   2. Create song from scratch and save it as MIDI file: [link](http://qambi.org/examples/example2/)
@@ -67,7 +67,7 @@ Here you can test some live examples:
   4. Record MIDI: [link](http://qambi.org/examples/midi-recording/)
   5. Playback a MIDI file via an external softsynth: [link](http://qambi.org/examples/midi-sync/) and a screencast explaining how to use it on [youtube](https://www.youtube.com/embed/zj1Sof90N7k)
 
-You can find more examples in the [examples](https://github.com/abudaan/qambi/tree/gh-pages/examples) folder of the repository. Documentation is work in progress, see the [wiki](https://github.com/abudaan/qambi/wiki).
+More examples in the [examples](https://github.com/abudaan/qambi/tree/gh-pages/examples) folder of the repository. Documentation is work in progress, see the [wiki](https://github.com/abudaan/qambi/wiki).
 
 
 #####Playgrounds
