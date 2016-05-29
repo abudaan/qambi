@@ -48,7 +48,7 @@ qambi.init({
       url: '//qambi.org/instruments/heartbeat/city-piano-light.json'
     }
   })
-  .then((data) => {
+  .then(data => {
 
     let {song, piano} = data
 
