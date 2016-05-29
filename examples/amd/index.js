@@ -6,8 +6,6 @@ requirejs.config({
 
 require(['qambi'], function(qambi){
 
-  console.log(Song)
-
   qambi.init()
   .then(function() {
     let song = new qambi.Song()
