@@ -1,6 +1,6 @@
 ###qambi
 
-Qambi is a rebuild of [heartbeat](https://abudaan.github.io/heartbeat) in es6. It is still work in progress and not all functionality has been ported yet. If you need a well-tested sequencer for your project you'd better use heartbeat.
+Qambi is a rebuild of [heartbeat](https://abudaan.github.io/heartbeat) in es2016. It is still work in progress and not all functionality has been ported yet. If you need a well-tested sequencer for your project you'd better use heartbeat.
 
 
 #####Installation
@@ -27,7 +27,7 @@ Or as a global variable:
   <script src="//qambi.org/dist/qambi-umd.min.js"></script>
   <script src="//qambi.org/dist/globals.js"></script>
 ```
-The last script file creates global variable for all qambi modules, it is not mandotory. If you add it you can for instance create a new song with `new Song()`, if you ommit it you have to type `new qambi.Song()`.
+The last script file creates global variables for all qambi modules. This is not mandatory: if you add it you can for instance create a new song with `new Song()`, if you omit it you have to type `new qambi.Song()`.
 
 
 #####Examples
@@ -63,7 +63,7 @@ qambi.init({
 
 Some live examples:
 
-  1. Creates a song form a MIDI file and plays it back using City Piano, a qambi sample instrument with 4 velocity layer: [link](http://qambi.org/examples/example1/)
+  1. Creates a song from a MIDI file and plays it back using City Piano, a qambi sample instrument with 4 velocity layer: [link](http://qambi.org/examples/example1/)
   2. Create song from scratch and save it as MIDI file: [link](http://qambi.org/examples/example2/)
   3. Play instruments using your MIDI keyboard: [link](http://qambi.org/examples/example3/)
   4. Record MIDI: [link](http://qambi.org/examples/midi-recording/)
