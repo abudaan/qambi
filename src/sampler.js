@@ -64,42 +64,72 @@ export class Sampler extends Instrument{
         return parseSamples(data)
       })
       .then((result) => {
+        //console.log(result)
         if(typeof result === 'object'){
-          for(let noteId of Object.keys(result)) {
-            let buffer = result[noteId]
-            let sampleData = data[noteId]
+
+          // single concatenated sample
+          if(typeof result.sample !== 'undefined'){
+
+            let buffer = result.sample
+            for(let noteId of Object.keys(data)) {
+
+              if(
+                noteId === 'sample' ||
+                noteId === 'release' ||
+                noteId === 'baseUrl' ||
+                noteId === 'info'
+              ){
+                continue
+              }
+
+              let sampleData = {
+                segment: data[noteId],
+                note: parseInt(noteId, 10),
+                buffer
+              }
+
+              this._updateSampleData(sampleData)
+              //console.log(sampleData)
+            }
+
+          }else{
+
+            for(let noteId of Object.keys(result)) {
+              let buffer = result[noteId]
+              let sampleData = data[noteId]
 
 
-            if(typeof sampleData === 'undefined'){
-              console.log('sampleData is undefined', noteId)
-            }else if(typeString(buffer) === 'array'){
+              if(typeof sampleData === 'undefined'){
+                console.log('sampleData is undefined', noteId)
+              }else if(typeString(buffer) === 'array'){
 
-              //console.log(buffer, sampleData)
-              sampleData.forEach((sd, i) => {
-                //console.log(noteId, buffer[i])
-                if(typeof sd === 'string'){
-                  sd = {
-                    buffer: buffer[i]
+                //console.log(buffer, sampleData)
+                sampleData.forEach((sd, i) => {
+                  //console.log(noteId, buffer[i])
+                  if(typeof sd === 'string'){
+                    sd = {
+                      buffer: buffer[i]
+                    }
+                  }else{
+                    sd.buffer = buffer[i]
+                  }
+                  sd.note = parseInt(noteId, 10)
+                  this._updateSampleData(sd)
+                })
+
+              }else {
+
+                if(typeof sampleData === 'string'){
+                  sampleData = {
+                    buffer: buffer
                   }
                 }else{
-                  sd.buffer = buffer[i]
+                  sampleData.buffer = buffer
                 }
-                sd.note = parseInt(noteId, 10)
-                this._updateSampleData(sd)
-              })
+                sampleData.note = parseInt(noteId, 10)
+                this._updateSampleData(sampleData)
 
-            }else {
-
-              if(typeof sampleData === 'string'){
-                sampleData = {
-                  buffer: buffer
-                }
-              }else{
-                sampleData.buffer = buffer
               }
-              sampleData.note = parseInt(noteId, 10)
-              this._updateSampleData(sampleData)
-
             }
           }
 
@@ -165,6 +195,7 @@ export class Sampler extends Instrument{
       note,
       buffer = null,
       sustain = [null, null],
+      segment = [null, null],
       release = [null, 'linear'], // release duration is in seconds!
       pan = null,
       velocity = [0, 127],
@@ -185,6 +216,7 @@ export class Sampler extends Instrument{
 
     let [sustainStart, sustainEnd] = sustain
     let [releaseDuration, releaseEnvelope] = release
+    let [segmentStart, segmentEnd] = segment
     let [velocityStart, velocityEnd] = velocity
 
     if(sustain.length !== 2){
@@ -213,6 +245,8 @@ export class Sampler extends Instrument{
         sampleData.buffer = buffer || sampleData.buffer
         sampleData.sustainStart = sustainStart || sampleData.sustainStart
         sampleData.sustainEnd = sustainEnd || sampleData.sustainEnd
+        sampleData.segmentStart = segmentStart || sampleData.segmentStart
+        sampleData.segmentEnd = segmentEnd || sampleData.segmentEnd
         sampleData.releaseDuration = releaseDuration || sampleData.releaseDuration
         sampleData.releaseEnvelope = releaseEnvelope || sampleData.releaseEnvelope
         sampleData.pan = pan || sampleData.pan

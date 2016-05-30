@@ -5,7 +5,7 @@ let instanceIndex = 0
 
 export class MIDIEvent{
 
-  constructor(ticks: number, type: number, data1: number, data2: number = -1){
+  constructor(ticks: number, type: number, data1: number, data2: number = -1, channel:number = 0){
     this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
     this.ticks = ticks
     this.type = type

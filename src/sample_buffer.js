@@ -29,4 +29,20 @@ export class SampleBuffer extends Sample{
     this.source.connect(this.output)
     //this.output.connect(context.destination)
   }
+
+  //@override
+  start(time){
+    let {sustainStart, sustainEnd, segmentStart, segmentEnd} = this.sampleData
+    //console.log(sustainStart, sustainEnd, segmentStart, segmentEnd)
+    if(sustainStart && sustainEnd){
+      this.source.loop = true
+      this.source.loopStart = sustainStart
+      this.source.loopEnd = sustainEnd
+    }
+    if(segmentStart && segmentEnd){
+      this.source.start(time, segmentStart / 1000, (segmentEnd - segmentStart) / 1000)
+    }else{
+      this.source.start(time);
+    }
+  }
 }
