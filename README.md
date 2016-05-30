@@ -78,6 +78,6 @@ Documentation is work in progress, see the [wiki](https://github.com/abudaan/qam
 
 #####Playgrounds
 
-You can try qambi without installation by using the qambi templates on [jsbin](http://jsbin.com/kosuva/16/edit?js,output) or [codepen](http://codepen.io/abudaan/pen/YqmMbK?editors=0010)
+You can try qambi without installation by using the qambi templates on [jsbin](http://jsbin.com/kosuva/edit?js,output) or [codepen](http://codepen.io/abudaan/pen/YqmMbK?editors=0010)
 
 

@@ -1,4 +1,4 @@
-const version = '1.0.0-beta23'
+const version = '1.0.0-beta24'
 
 import {
   getNoteData,

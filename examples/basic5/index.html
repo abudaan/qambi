@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <title>heartbeat</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <script src="http://abumarkub.net/heartbeatjs/build/heartbeat.js"></script>
+    <script src="index.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../css/prism.css">
+    <link rel="stylesheet" type="text/css" href="../css/examples.css">
+    <style>
+      #loading{
+        color: red;
+      }
+      div{
+        margin-bottom: 10px;
+      }
+      #keyboard button{
+        margin-top: 30px;
+        float: left;
+      }
+      .key-up{
+        color: black;
+      }
+      .key-down{
+        color: red;
+      }
+    </style>
+ </head>
+  <body>
+    <div id="app">
+      <button id="play" disabled>play</button>
+      <button id="pause" disabled>pause</button>
+      <button id="stop" disabled>stop</button>
+      <div class="cf" id="keyboard">
+        <button id='C4' disabled>C</button>
+        <button id='D4' disabled>D</button>
+        <button id='E4' disabled>E</button>
+        <button id='F4' disabled>F</button>
+        <button id='G4' disabled>G</button>
+        <button id='A4' disabled>A</button>
+        <button id='B4' disabled>B</button>
+      </div>
+    </div>
+    <pre class="line-numbers" data-src="index.js"></pre>
+    <script src="../js/prism.js"></script>
+  </body>
+</html>
