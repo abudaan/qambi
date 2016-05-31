@@ -46,7 +46,8 @@
     "watch": "node_modules/babel-cli/bin/babel.js src --watch --out-dir dist",
     "umd-build": "browserify ./src/qambi.js  -t [ babelify --presets [es2015 stage-0 ] --plugins [ transform-es2015-modules-umd ] ] --standalone qambi -o ./dist/qambi-umd.js",
     "umd-min": "browserify ./src/qambi.js  -t [ babelify --presets [es2015 stage-0 ] --plugins [ transform-es2015-modules-umd ] ] --standalone qambi -d -p [minifyify --no-map] -o ./dist/qambi-umd.min.js",
-    "umd": "npm run umd-build && npm run umd-min"
+    "umd": "npm run umd-build && npm run umd-min",
+    "babel-node": "node_modules/.bin/babel-node"
   },
   "dependencies": {
     "filesaverjs": "0.2.2",

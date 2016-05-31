@@ -32,15 +32,16 @@ export class SampleBuffer extends Sample{
 
   //@override
   start(time){
-    let {sustainStart, sustainEnd, segmentStart, segmentEnd} = this.sampleData
-    //console.log(sustainStart, sustainEnd, segmentStart, segmentEnd)
+    let {sustainStart, sustainEnd, segmentStart, segmentDuration} = this.sampleData
+    //console.log(sustainStart, sustainEnd, segmentStart, segmentDuration)
     if(sustainStart && sustainEnd){
       this.source.loop = true
       this.source.loopStart = sustainStart
       this.source.loopEnd = sustainEnd
     }
-    if(segmentStart && segmentEnd){
-      this.source.start(time, segmentStart / 1000, (segmentEnd - segmentStart) / 1000)
+    if(segmentStart && segmentDuration){
+      console.log(segmentStart, segmentDuration)
+      this.source.start(time, segmentStart / 1000, segmentDuration / 1000)
     }else{
       this.source.start(time);
     }

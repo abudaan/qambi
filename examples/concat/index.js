@@ -1,4 +1,6 @@
-import qambi from '../../src/qambi' // use "from 'qambi'" in your own code! so without the extra "../../"
+import qambi, {
+  getMIDIInputs
+} from '../../src/qambi' // use "from 'qambi'" in your own code! so without the extra "../../"
 
 document.addEventListener('DOMContentLoaded', function(){
 
@@ -11,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function(){
     },
     piano: {
       type: 'Instrument',
-      url: '../../instruments/heartbeat/city-piano-light.json'
+      url: '../../instruments/heartbeat/city-piano-light-concat.json'
     }
   })
   .then((data) => {
@@ -20,10 +22,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
     song.getTracks().forEach(track => {
       track.setInstrument(piano)
+      track.monitor = true
+      track.connectMIDIInputs(...getMIDIInputs())
     })
 
     initUI(song)
-
   })
 
 

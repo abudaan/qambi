@@ -216,7 +216,7 @@ export class Sampler extends Instrument{
 
     let [sustainStart, sustainEnd] = sustain
     let [releaseDuration, releaseEnvelope] = release
-    let [segmentStart, segmentEnd] = segment
+    let [segmentStart, segmentDuration] = segment
     let [velocityStart, velocityEnd] = velocity
 
     if(sustain.length !== 2){
@@ -246,7 +246,7 @@ export class Sampler extends Instrument{
         sampleData.sustainStart = sustainStart || sampleData.sustainStart
         sampleData.sustainEnd = sustainEnd || sampleData.sustainEnd
         sampleData.segmentStart = segmentStart || sampleData.segmentStart
-        sampleData.segmentEnd = segmentEnd || sampleData.segmentEnd
+        sampleData.segmentDuration = segmentDuration || sampleData.segmentDuration
         sampleData.releaseDuration = releaseDuration || sampleData.releaseDuration
         sampleData.releaseEnvelope = releaseEnvelope || sampleData.releaseEnvelope
         sampleData.pan = pan || sampleData.pan

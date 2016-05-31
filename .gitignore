@@ -3,7 +3,4 @@ npm-debug.log
 lib/qambi
 node_modules/*
 examples/node_modules/*
-city-piano-light-concatenated.mp3
 concatenated.wav
-concatenated.mp3
-concatenated2.mp3

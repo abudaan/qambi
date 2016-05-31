@@ -5,6 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.SampleBuffer = undefined;
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _sample = require('./sample');
 
 var _init_audio = require('./init_audio');
@@ -47,6 +49,33 @@ var SampleBuffer = exports.SampleBuffer = function (_Sample) {
     //this.output.connect(context.destination)
     return _this;
   }
+
+  //@override
+
+
+  _createClass(SampleBuffer, [{
+    key: 'start',
+    value: function start(time) {
+      var _sampleData = this.sampleData;
+      var sustainStart = _sampleData.sustainStart;
+      var sustainEnd = _sampleData.sustainEnd;
+      var segmentStart = _sampleData.segmentStart;
+      var segmentDuration = _sampleData.segmentDuration;
+      //console.log(sustainStart, sustainEnd, segmentStart, segmentDuration)
+
+      if (sustainStart && sustainEnd) {
+        this.source.loop = true;
+        this.source.loopStart = sustainStart;
+        this.source.loopEnd = sustainEnd;
+      }
+      if (segmentStart && segmentDuration) {
+        console.log(segmentStart, segmentDuration);
+        this.source.start(time, segmentStart / 1000, segmentDuration / 1000);
+      } else {
+        this.source.start(time);
+      }
+    }
+  }]);
 
   return SampleBuffer;
 }(_sample.Sample);

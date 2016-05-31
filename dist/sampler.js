@@ -97,66 +97,110 @@ var Sampler = exports.Sampler = function (_Instrument) {
           }
           return (0, _parse_audio.parseSamples)(data);
         }).then(function (result) {
+          //console.log(result)
           if ((typeof result === 'undefined' ? 'undefined' : _typeof(result)) === 'object') {
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
 
-            try {
-              var _loop = function _loop() {
-                var noteId = _step.value;
+            // single concatenated sample
+            if (typeof result.sample !== 'undefined') {
 
-                var buffer = result[noteId];
-                var sampleData = data[noteId];
+              var buffer = result.sample;
+              var _iteratorNormalCompletion = true;
+              var _didIteratorError = false;
+              var _iteratorError = undefined;
 
-                if (typeof sampleData === 'undefined') {
-                  console.log('sampleData is undefined', noteId);
-                } else if ((0, _util.typeString)(buffer) === 'array') {
-
-                  //console.log(buffer, sampleData)
-                  sampleData.forEach(function (sd, i) {
-                    //console.log(noteId, buffer[i])
-                    if (typeof sd === 'string') {
-                      sd = {
-                        buffer: buffer[i]
-                      };
-                    } else {
-                      sd.buffer = buffer[i];
-                    }
-                    sd.note = parseInt(noteId, 10);
-                    _this2._updateSampleData(sd);
-                  });
-                } else {
-
-                  if (typeof sampleData === 'string') {
-                    sampleData = {
-                      buffer: buffer
-                    };
-                  } else {
-                    sampleData.buffer = buffer;
-                  }
-                  sampleData.note = parseInt(noteId, 10);
-                  _this2._updateSampleData(sampleData);
-                }
-              };
-
-              for (var _iterator = Object.keys(result)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                _loop();
-              }
-            } catch (err) {
-              _didIteratorError = true;
-              _iteratorError = err;
-            } finally {
               try {
-                if (!_iteratorNormalCompletion && _iterator.return) {
-                  _iterator.return();
+                for (var _iterator = Object.keys(data)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                  var noteId = _step.value;
+
+
+                  if (noteId === 'sample' || noteId === 'release' || noteId === 'baseUrl' || noteId === 'info') {
+                    continue;
+                  }
+
+                  var sampleData = {
+                    segment: data[noteId],
+                    note: parseInt(noteId, 10),
+                    buffer: buffer
+                  };
+
+                  _this2._updateSampleData(sampleData);
+                  //console.log(sampleData)
                 }
+              } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
               } finally {
-                if (_didIteratorError) {
-                  throw _iteratorError;
+                try {
+                  if (!_iteratorNormalCompletion && _iterator.return) {
+                    _iterator.return();
+                  }
+                } finally {
+                  if (_didIteratorError) {
+                    throw _iteratorError;
+                  }
                 }
               }
-            }
+            } else {
+                var _iteratorNormalCompletion2 = true;
+                var _didIteratorError2 = false;
+                var _iteratorError2 = undefined;
+
+                try {
+                  var _loop = function _loop() {
+                    var noteId = _step2.value;
+
+                    var buffer = result[noteId];
+                    var sampleData = data[noteId];
+
+                    if (typeof sampleData === 'undefined') {
+                      console.log('sampleData is undefined', noteId);
+                    } else if ((0, _util.typeString)(buffer) === 'array') {
+
+                      //console.log(buffer, sampleData)
+                      sampleData.forEach(function (sd, i) {
+                        //console.log(noteId, buffer[i])
+                        if (typeof sd === 'string') {
+                          sd = {
+                            buffer: buffer[i]
+                          };
+                        } else {
+                          sd.buffer = buffer[i];
+                        }
+                        sd.note = parseInt(noteId, 10);
+                        _this2._updateSampleData(sd);
+                      });
+                    } else {
+
+                      if (typeof sampleData === 'string') {
+                        sampleData = {
+                          buffer: buffer
+                        };
+                      } else {
+                        sampleData.buffer = buffer;
+                      }
+                      sampleData.note = parseInt(noteId, 10);
+                      _this2._updateSampleData(sampleData);
+                    }
+                  };
+
+                  for (var _iterator2 = Object.keys(result)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                    _loop();
+                  }
+                } catch (err) {
+                  _didIteratorError2 = true;
+                  _iteratorError2 = err;
+                } finally {
+                  try {
+                    if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                      _iterator2.return();
+                    }
+                  } finally {
+                    if (_didIteratorError2) {
+                      throw _iteratorError2;
+                    }
+                  }
+                }
+              }
           } else {
 
             result.forEach(function (sample) {
@@ -232,6 +276,8 @@ var Sampler = exports.Sampler = function (_Instrument) {
       var buffer = _data$buffer === undefined ? null : _data$buffer;
       var _data$sustain = data.sustain;
       var sustain = _data$sustain === undefined ? [null, null] : _data$sustain;
+      var _data$segment = data.segment;
+      var segment = _data$segment === undefined ? [null, null] : _data$segment;
       var _data$release = data.release;
       var release = _data$release === undefined ? [null, 'linear'] : _data$release;
       var _data$pan = data.pan;
@@ -264,6 +310,11 @@ var Sampler = exports.Sampler = function (_Instrument) {
       var releaseDuration = _release[0];
       var releaseEnvelope = _release[1];
 
+      var _segment = _slicedToArray(segment, 2);
+
+      var segmentStart = _segment[0];
+      var segmentDuration = _segment[1];
+
       var _velocity = _slicedToArray(velocity, 2);
 
       var velocityStart = _velocity[0];
@@ -295,6 +346,8 @@ var Sampler = exports.Sampler = function (_Instrument) {
           sampleData.buffer = buffer || sampleData.buffer;
           sampleData.sustainStart = sustainStart || sampleData.sustainStart;
           sampleData.sustainEnd = sustainEnd || sampleData.sustainEnd;
+          sampleData.segmentStart = segmentStart || sampleData.segmentStart;
+          sampleData.segmentDuration = segmentDuration || sampleData.segmentDuration;
           sampleData.releaseDuration = releaseDuration || sampleData.releaseDuration;
           sampleData.releaseEnvelope = releaseEnvelope || sampleData.releaseEnvelope;
           sampleData.pan = pan || sampleData.pan;

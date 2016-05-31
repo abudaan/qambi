@@ -17,6 +17,7 @@ var instanceIndex = 0;
 var MIDIEvent = exports.MIDIEvent = function () {
   function MIDIEvent(ticks, type, data1) {
     var data2 = arguments.length <= 3 || arguments[3] === undefined ? -1 : arguments[3];
+    var channel = arguments.length <= 4 || arguments[4] === undefined ? 0 : arguments[4];
 
     _classCallCheck(this, MIDIEvent);
 
