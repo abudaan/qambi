@@ -33,6 +33,7 @@ function main(data){
   let btnPause = document.getElementById('pause')
   let btnStop = document.getElementById('stop')
   let rangePitch = document.getElementById('pitch')
+  let divPitch = document.getElementById('pitch-label')
 
 
   btnPlay.disabled = false
@@ -61,7 +62,9 @@ function main(data){
   })
 
   const rangeListener = function(e){
-    updateSettings({pitch: e.target.valueAsNumber})
+    let pitch = e.target.valueAsNumber
+    updateSettings({pitch})
+    divPitch.innerHTML = `pitch: ${pitch}Hz`
     song.updatePitch()
   }
 }
