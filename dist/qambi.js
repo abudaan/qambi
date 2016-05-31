@@ -3,7 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getGMInstruments = exports.getInstruments = exports.setBufferTime = exports.init = exports.version = undefined;
+exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
+
+var _settings = require('./settings');
 
 var _note = require('./note');
 
@@ -35,8 +37,6 @@ var _parse_audio = require('./parse_audio');
 
 var _constants = require('./constants');
 
-var _settings = require('./settings');
-
 var _eventlistener = require('./eventlistener');
 
 var version = '1.0.0-beta24';
@@ -47,6 +47,11 @@ var getAudioContext = function getAudioContext() {
 
 var qambi = {
   version: version,
+
+  // from ./settings
+  updateSettings: _settings.updateSettings,
+  getSettings: _settings.getSettings,
+
   // from ./note
   getNoteData: _note.getNoteData,
 
@@ -133,9 +138,10 @@ init = _init.init;
 exports.
 
 // from ./settings
-setBufferTime = _settings.setBufferTime;
-exports.getInstruments = _settings.getInstruments;
+getInstruments = _settings.getInstruments;
 exports.getGMInstruments = _settings.getGMInstruments;
+exports.updateSettings = _settings.updateSettings;
+exports.getSettings = _settings.getSettings;
 exports.
 
 // from ./constants

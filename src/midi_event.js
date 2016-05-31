@@ -1,5 +1,6 @@
 // @ flow
 import {getNoteData} from './note'
+import {pitch} from './settings'
 
 let instanceIndex = 0
 
@@ -39,7 +40,11 @@ export class MIDIEvent{
 
   transpose(amount: number){ // may be better if not a public method?
     this.data1 += amount
-    this.frequency = 440 * Math.pow(2, (this.data1 - 69) / 12)
+    this.frequency = pitch * Math.pow(2, (this.data1 - 69) / 12)
+  }
+
+  updatePitch(newPitch){
+    this.frequency = newPitch * Math.pow(2, (this.data1 - 69) / 12)
   }
 
   move(ticks: number){

@@ -17,12 +17,6 @@ export const defaultSong = {
   autoQuantize: false
 }
 
-export let bufferTime = 200
-
-export function setBufferTime(time){
-  bufferTime = time
-}
-
 //ported heartbeat instruments: http://github.com/abudaan/heartbeat
 const heartbeatInstruments = new Map([
   ['city-piano', {
@@ -75,3 +69,60 @@ export const getGMInstruments = function(){
 
 export let noteNameMode = 'sharp'
 export let pitch = 440
+export let ppq = 960
+export let bufferTime = 200
+
+// export function setBufferTime(time){
+//   bufferTime = time
+// }
+
+export function updateSettings(data){
+  ({
+    ppq: ppq = ppq,
+    pitch: pitch = pitch,
+    bufferTime: bufferTime = bufferTime,
+    noteNameMode: noteNameMode = noteNameMode,
+  } = data)
+
+  //console.log(ppq, pitch, bufferTime, noteNameMode)
+}
+
+export function getSettings(...params){
+  let result = {}
+  params.forEach(param => {
+    switch(param){
+      case 'pitch':
+        result.pitch = pitch
+        break
+      case 'noteNameMode':
+        result.noteNameMode = noteNameMode
+        break
+      case 'bufferTime':
+        result.bufferTime = bufferTime
+        break
+      case 'ppq':
+        result.ppq = ppq
+        break
+      default:
+        // do nothing
+    }
+  })
+  return result
+}
+
+
+/*
+let songs = new Map()
+export function getSongs(){
+  return
+}
+
+export function addSong(song){
+  songs.set(song.name, song)
+}
+
+export function deleteSong(song){
+  songs.set(song.name, song)
+}
+*/
+

@@ -7,6 +7,9 @@ exports.Song = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); //@ flow
 
+//import {addSong, deleteSong} from './settings'
+
+
 var _constants = require('./constants');
 
 var _parse_events = require('./parse_events');
@@ -181,6 +184,7 @@ var Song = exports.Song = function () {
     this._precountBars = 0;
     this._endPrecountMillis = 0;
     this.update();
+    //addSong(this)
   }
 
   _createClass(Song, [{
@@ -737,6 +741,21 @@ var Song = exports.Song = function () {
       });
       this._pannerValue = value;
     }
+  }, {
+    key: 'updatePitch',
+    value: function updatePitch() {
+      var _getSettings = (0, _settings.getSettings)('pitch');
+
+      var pitch = _getSettings.pitch;
+
+      this._events.forEach(function (event) {
+        event.updatePitch(pitch);
+      });
+    }
+    // dispose(){
+    //   deleteSong(this)
+    // }
+
   }]);
 
   return Song;

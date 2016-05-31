@@ -1,6 +1,11 @@
 const version = '1.0.0-beta24'
 
 import {
+  updateSettings,
+  getSettings,
+} from './settings'
+
+import {
   getNoteData,
 } from './note'
 
@@ -87,6 +92,11 @@ const getAudioContext = function(){
 
 const qambi = {
   version,
+
+  // from ./settings
+  updateSettings,
+  getSettings,
+
   // from ./note
   getNoteData,
 
@@ -189,9 +199,10 @@ export {
   init,
 
   // from ./settings
-  setBufferTime,
   getInstruments,
   getGMInstruments,
+  updateSettings,
+  getSettings,
 
   // from ./constants
   MIDIEventTypes,

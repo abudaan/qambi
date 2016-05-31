@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function(){
     })
 
     initUI(song)
-
   })
 
 

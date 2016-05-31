@@ -18,6 +18,8 @@ var _init_audio = require('./init_audio');
 
 var _init_midi = require('./init_midi');
 
+var _settings = require('./settings');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var getUserMedia = exports.getUserMedia = function () {
@@ -87,7 +89,15 @@ function init() {
   var loadKeys = void 0;
 
   if (settings !== null) {
+
     loadKeys = Object.keys(settings);
+    var i = loadKeys.indexOf('settings');
+    if (i !== -1) {
+      (0, _settings.updateSettings)(settings.settings);
+      loadKeys.splice(i, 1);
+    }
+    //console.log(loadKeys)
+
     var _iteratorNormalCompletion = true;
     var _didIteratorError = false;
     var _iteratorError = undefined;
@@ -95,6 +105,7 @@ function init() {
     try {
       for (var _iterator = loadKeys[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
         var key = _step.value;
+
 
         var data = settings[key];
 
@@ -138,12 +149,13 @@ function init() {
           returnObj.webmidi = data.webmidi;
         } else {
           // Instruments, samples or MIDI files that got loaded during initialization
-          result[loadKeys[i - 2]] = data;
+          //result[loadKeys[i - 2]] = data
+          returnObj[loadKeys[i - 2]] = data;
         }
       });
 
       console.log('qambi', _qambi2.default.version);
-      resolve(result);
+      resolve(returnObj);
     }, function (error) {
       reject(error);
     });

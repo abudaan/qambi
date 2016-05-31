@@ -10,7 +10,7 @@
     <link rel="stylesheet" type="text/css" href="../css/examples.css">
     <style>
       input[type='range']{
-        width: 500px;
+        width: 300px;
       }
     </style>
     <script>
@@ -22,6 +22,12 @@
  </head>
   <body>
     <div id="app">
+      <button id="play" disabled>play</button>
+      <button id="pause" disabled>pause</button>
+      <button id="stop" disabled>stop</button>
+      <br>
+      <br>
+      <div class="label" disabled>pitch</div><input type='range' id="pitch" value=440 min=380 max=470 step=0.5></input>
     </div>
     <pre class="line-numbers" data-src="index.js"></pre>
     <script src="../js/prism.js"></script>

@@ -10,6 +10,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _note = require('./note');
 
+var _settings = require('./settings');
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var instanceIndex = 0;
@@ -58,7 +60,12 @@ var MIDIEvent = exports.MIDIEvent = function () {
     value: function transpose(amount) {
       // may be better if not a public method?
       this.data1 += amount;
-      this.frequency = 440 * Math.pow(2, (this.data1 - 69) / 12);
+      this.frequency = _settings.pitch * Math.pow(2, (this.data1 - 69) / 12);
+    }
+  }, {
+    key: 'updatePitch',
+    value: function updatePitch(newPitch) {
+      this.frequency = newPitch * Math.pow(2, (this.data1 - 69) / 12);
     }
   }, {
     key: 'move',

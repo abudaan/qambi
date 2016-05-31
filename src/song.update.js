@@ -5,7 +5,6 @@ import {MIDIEventTypes} from './constants'
 import {calculatePosition} from './position'
 import {MIDIEvent} from './midi_event'
 import {dispatchEvent} from './eventlistener'
-import {bufferTime} from './settings'
 
 
 export function update():void{

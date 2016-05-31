@@ -3,7 +3,8 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.setBufferTime = setBufferTime;
+exports.updateSettings = updateSettings;
+exports.getSettings = getSettings;
 //import gmInstruments from './gm_instruments'
 
 var defaultSong = exports.defaultSong = {
@@ -22,12 +23,6 @@ var defaultSong = exports.defaultSong = {
   playbackSpeed: 1,
   autoQuantize: false
 };
-
-var bufferTime = exports.bufferTime = 200;
-
-function setBufferTime(time) {
-  exports.bufferTime = bufferTime = time;
-}
 
 //ported heartbeat instruments: http://github.com/abudaan/heartbeat
 var heartbeatInstruments = new Map([['city-piano', {
@@ -71,3 +66,65 @@ var getGMInstruments = exports.getGMInstruments = function getGMInstruments() {
 
 var noteNameMode = exports.noteNameMode = 'sharp';
 var pitch = exports.pitch = 440;
+var ppq = exports.ppq = 960;
+var bufferTime = exports.bufferTime = 200;
+
+// export function setBufferTime(time){
+//   bufferTime = time
+// }
+
+function updateSettings(data) {
+
+  //console.log(ppq, pitch, bufferTime, noteNameMode)
+  var _data$ppq = data.ppq;
+  exports.ppq = ppq = _data$ppq === undefined ? ppq : _data$ppq;
+  var _data$pitch = data.pitch;
+  exports.pitch = pitch = _data$pitch === undefined ? pitch : _data$pitch;
+  var _data$bufferTime = data.bufferTime;
+  exports.bufferTime = bufferTime = _data$bufferTime === undefined ? bufferTime : _data$bufferTime;
+  var _data$noteNameMode = data.noteNameMode;
+  exports.noteNameMode = noteNameMode = _data$noteNameMode === undefined ? noteNameMode : _data$noteNameMode;
+}
+
+function getSettings() {
+  var result = {};
+
+  for (var _len = arguments.length, params = Array(_len), _key = 0; _key < _len; _key++) {
+    params[_key] = arguments[_key];
+  }
+
+  params.forEach(function (param) {
+    switch (param) {
+      case 'pitch':
+        result.pitch = pitch;
+        break;
+      case 'noteNameMode':
+        result.noteNameMode = noteNameMode;
+        break;
+      case 'bufferTime':
+        result.bufferTime = bufferTime;
+        break;
+      case 'ppq':
+        result.ppq = ppq;
+        break;
+      default:
+      // do nothing
+    }
+  });
+  return result;
+}
+
+/*
+let songs = new Map()
+export function getSongs(){
+  return
+}
+
+export function addSong(song){
+  songs.set(song.name, song)
+}
+
+export function deleteSong(song){
+  songs.set(song.name, song)
+}
+*/

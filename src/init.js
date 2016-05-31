@@ -3,6 +3,7 @@ import {Song} from './song'
 import {Sampler} from './sampler'
 import {initAudio} from './init_audio'
 import {initMIDI} from './init_midi'
+import {updateSettings} from './settings'
 
 export let getUserMedia = (() => {
   if(typeof navigator !== 'undefined'){
@@ -74,8 +75,17 @@ export function init(settings = null): void{
   let loadKeys
 
   if(settings !== null){
+
     loadKeys = Object.keys(settings)
+    let i = loadKeys.indexOf('settings')
+    if(i !== -1){
+      updateSettings(settings.settings)
+      loadKeys.splice(i, 1)
+    }
+    //console.log(loadKeys)
+
     for(let key of loadKeys){
+
       let data = settings[key]
 
       if(data.type === 'Song'){
@@ -107,12 +117,13 @@ export function init(settings = null): void{
           returnObj.webmidi = data.webmidi
         }else{
           // Instruments, samples or MIDI files that got loaded during initialization
-          result[loadKeys[i - 2]] = data
+          //result[loadKeys[i - 2]] = data
+          returnObj[loadKeys[i - 2]] = data
         }
       })
 
       console.log('qambi', qambi.version)
-      resolve(result)
+      resolve(returnObj)
     },
     (error) => {
       reject(error)

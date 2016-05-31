@@ -14,6 +14,8 @@ import {addEventListener, removeEventListener, dispatchEvent} from './eventliste
 import {defaultSong} from './settings'
 import {saveAsMIDIFile} from './save_midifile'
 import {update, _update} from './song.update'
+//import {addSong, deleteSong} from './settings'
+import {getSettings} from './settings'
 
 let instanceIndex = 0
 let recordingIndex = 0
@@ -140,6 +142,7 @@ export class Song{
     this._precountBars = 0
     this._endPrecountMillis = 0
     this.update()
+    //addSong(this)
   }
 
   addTimeEvents(...events){
@@ -605,4 +608,14 @@ export class Song{
     })
     this._pannerValue = value
   }
+
+  updatePitch(){
+    let {pitch} = getSettings('pitch')
+    this._events.forEach(event => {
+      event.updatePitch(pitch)
+    })
+  }
+  // dispose(){
+  //   deleteSong(this)
+  // }
 }
