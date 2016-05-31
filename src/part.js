@@ -6,10 +6,14 @@ let instanceIndex = 0
 
 export class Part{
 
-  constructor(name: string = null){
-    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
-    this.name = name || this.id
-    this.muted = false
+  constructor(settings = {}){
+    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`;
+
+    ({
+      name: this.name = this.id,
+      muted: this.muted = false,
+    } = settings);
+
     this._track = null
     this._song = null
     this._events = []
@@ -18,6 +22,11 @@ export class Part{
     this._createEventArray = false
     this._start = {millis: 0, ticks: 0}
     this._end = {millis: 0, ticks: 0}
+
+    let {events} = settings
+    if(typeof events !== 'undefined'){
+      this.addEvents(...events)
+    }
   }
 
   copy(){

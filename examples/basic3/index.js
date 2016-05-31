@@ -1,5 +1,5 @@
 import qambi, {
-  Instrument,
+  SimpleSynth,
   Song,
 } from '../../src/qambi'
 
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function(){
     //Song.fromMIDIFile('../data/mozk545a.mid')
     .then(song => {
 
-      let piano = new Instrument()
+      let piano = new SimpleSynth()
       song.getTracks().forEach(track => {
         track.setInstrument(piano)
       })

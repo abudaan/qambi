@@ -38,15 +38,22 @@ var Track = exports.Track = function () {
   // })
 
   function Track() {
-    var name = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+    var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
     _classCallCheck(this, Track);
 
     this.id = this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
-    this.name = name || this.id;
-    this.channel = 0;
-    this.muted = false;
-    this.volume = 0.5;
+
+    //console.log(this.name, this.channel, this.muted, this.volume)
+
+    var _settings$name = settings.name;
+    this.name = _settings$name === undefined ? this.id : _settings$name;
+    var _settings$channel = settings.channel;
+    this.channel = _settings$channel === undefined ? 0 : _settings$channel;
+    var _settings$muted = settings.muted;
+    this.muted = _settings$muted === undefined ? false : _settings$muted;
+    var _settings$volume = settings.volume;
+    this.volume = _settings$volume === undefined ? 0.5 : _settings$volume;
     this._panner = _init_audio.context.createPanner();
     this._panner.panningModel = 'equalpower';
     this._panner.setPosition(zeroValue, zeroValue, zeroValue);
@@ -73,6 +80,16 @@ var Track = exports.Track = function () {
     this.monitor = false;
     this._songInput = null;
     this._effects = [];
+
+    var parts = settings.parts;
+    var instrument = settings.instrument;
+
+    if (typeof parts !== 'undefined') {
+      this.addParts.apply(this, _toConsumableArray(parts));
+    }
+    if (typeof instrument !== 'undefined') {
+      this.setInstrument(instrument);
+    }
   }
 
   _createClass(Track, [{

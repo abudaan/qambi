@@ -29,7 +29,8 @@ var settings = {
   useMetronome: false,
   autoSize: true,
   playbackSpeed: 1,
-  autoQuantize: false
+  autoQuantize: false,
+  volume: 0.5
 };
 
 function updateSettings(data) {
@@ -67,9 +68,11 @@ function updateSettings(data) {
   settings.playbackSpeed = _data$playbackSpeed === undefined ? settings.playbackSpeed : _data$playbackSpeed;
   var _data$autoQuantize = data.autoQuantize;
   settings.autoQuantize = _data$autoQuantize === undefined ? settings.autoQuantize : _data$autoQuantize;
+  var _data$volume = data.volume;
+  settings.volume = _data$volume === undefined ? settings.volume : _data$volume;
 
 
-  console.log(settings);
+  console.log('settings: %O', settings);
 }
 
 function getSettings() {

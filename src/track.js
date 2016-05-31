@@ -19,12 +19,18 @@ export class Track{
   // })
 
 
-  constructor(name: string = null){
-    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
-    this.name = name || this.id
-    this.channel = 0
-    this.muted = false
-    this.volume = 0.5
+  constructor(settings = {}){
+    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`;
+
+    ({
+      name: this.name = this.id,
+      channel: this.channel = 0,
+      muted: this.muted = false,
+      volume: this.volume = 0.5,
+    } = settings);
+
+    //console.log(this.name, this.channel, this.muted, this.volume)
+
     this._panner = context.createPanner()
     this._panner.panningModel = 'equalpower'
     this._panner.setPosition(zeroValue, zeroValue, zeroValue)
@@ -51,6 +57,14 @@ export class Track{
     this.monitor = false
     this._songInput = null
     this._effects = []
+
+    let {parts, instrument} = settings
+    if(typeof parts !== 'undefined'){
+      this.addParts(...parts)
+    }
+    if(typeof instrument !== 'undefined'){
+      this.setInstrument(instrument)
+    }
   }
 
   setInstrument(instrument = null){

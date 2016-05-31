@@ -36,7 +36,7 @@ var Metronome = exports.Metronome = function () {
     _classCallCheck(this, Metronome);
 
     this.song = song;
-    this.track = new _track.Track(this.song.id + '_metronome');
+    this.track = new _track.Track({ name: this.song.id + '_metronome' });
     this.part = new _part3.Part();
     this.track.addParts(this.part);
     this.track.connect(this.song._output);

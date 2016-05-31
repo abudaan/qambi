@@ -8,10 +8,12 @@ import {base64ToBinary} from './util'
 import {status, json, arrayBuffer} from './fetch_helpers'
 import {getSettings} from './settings'
 
-let PPQ = getSettings().ppq
+let PPQ
 
 
 function toSong(parsed){
+  PPQ = getSettings().ppq
+
   let tracks = parsed.tracks
   let ppq = parsed.header.ticksPerBeat
   let ppqFactor = PPQ / ppq
@@ -113,11 +115,14 @@ function toSong(parsed){
 
     if(events.length > 0){
       //console.count(events.length)
-      let newTrack = new Track(trackName)
-      let part = new Part()
-      newTrack.addParts(part)
-      part.addEvents(...events)
-      newTracks.push(newTrack)
+      newTracks.push(new Track({
+        name: trackName,
+        parts: [
+          new Part({
+            events: events
+          })
+        ]
+      }))
     }
   }
 
@@ -127,10 +132,10 @@ function toSong(parsed){
     //ppq,
     bpm,
     nominator,
-    denominator
+    denominator,
+    tracks: newTracks,
+    timeEvents: timeEvents
   })
-  song.addTracks(...newTracks)
-  song.addTimeEvents(...timeEvents)
   song.update()
   return song
 }

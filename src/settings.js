@@ -19,7 +19,8 @@ let settings = {
   useMetronome: false,
   autoSize: true,
   playbackSpeed: 1,
-  autoQuantize: false
+  autoQuantize: false,
+  volume: 0.5,
 }
 
 
@@ -42,9 +43,10 @@ export function updateSettings(data){
     autoSize: settings.autoSize = settings.autoSize,
     playbackSpeed: settings.playbackSpeed = settings.playbackSpeed,
     autoQuantize: settings.autoQuantize = settings.autoQuantize,
+    volume: settings.volume = settings.volume,
   } = data)
 
-  console.log(settings)
+  console.log('settings: %O', settings)
 }
 
 

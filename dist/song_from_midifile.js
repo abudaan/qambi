@@ -28,9 +28,11 @@ var _settings = require('./settings');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var PPQ = (0, _settings.getSettings)().ppq;
+var PPQ = void 0;
 
 function toSong(parsed) {
+  PPQ = (0, _settings.getSettings)().ppq;
+
   var tracks = parsed.tracks;
   var ppq = parsed.header.ticksPerBeat;
   var ppqFactor = PPQ / ppq;
@@ -160,11 +162,12 @@ function toSong(parsed) {
 
       if (events.length > 0) {
         //console.count(events.length)
-        var newTrack = new _track.Track(trackName);
-        var part = new _part.Part();
-        newTrack.addParts(part);
-        part.addEvents.apply(part, events);
-        newTracks.push(newTrack);
+        newTracks.push(new _track.Track({
+          name: trackName,
+          parts: [new _part.Part({
+            events: events
+          })]
+        }));
       }
     }
   } catch (err) {
@@ -188,10 +191,10 @@ function toSong(parsed) {
     //ppq,
     bpm: bpm,
     nominator: nominator,
-    denominator: denominator
+    denominator: denominator,
+    tracks: newTracks,
+    timeEvents: timeEvents
   });
-  song.addTracks.apply(song, newTracks);
-  song.addTimeEvents.apply(song, timeEvents);
   song.update();
   return song;
 }

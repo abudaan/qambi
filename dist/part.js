@@ -17,13 +17,18 @@ var instanceIndex = 0;
 
 var Part = exports.Part = function () {
   function Part() {
-    var name = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+    var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
     _classCallCheck(this, Part);
 
     this.id = this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
-    this.name = name || this.id;
-    this.muted = false;
+
+    var _settings$name = settings.name;
+    this.name = _settings$name === undefined ? this.id : _settings$name;
+    var _settings$muted = settings.muted;
+    this.muted = _settings$muted === undefined ? false : _settings$muted;
+
+
     this._track = null;
     this._song = null;
     this._events = [];
@@ -32,6 +37,12 @@ var Part = exports.Part = function () {
     this._createEventArray = false;
     this._start = { millis: 0, ticks: 0 };
     this._end = { millis: 0, ticks: 0 };
+
+    var events = settings.events;
+
+    if (typeof events !== 'undefined') {
+      this.addEvents.apply(this, _toConsumableArray(events));
+    }
   }
 
   _createClass(Part, [{

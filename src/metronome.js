@@ -26,7 +26,7 @@ export class Metronome{
 
   constructor(song){
     this.song = song
-    this.track = new Track(this.song.id + '_metronome')
+    this.track = new Track({name: this.song.id + '_metronome'})
     this.part = new Part()
     this.track.addParts(this.part)
     this.track.connect(this.song._output)

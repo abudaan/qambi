@@ -133,11 +133,11 @@ var Song = exports.Song = function () {
     this.bufferTime = _settings$bufferTime === undefined ? defaultSettings.bufferTime : _settings$bufferTime;
     var _settings$noteNameMod = settings.noteNameMode;
     this.noteNameMode = _settings$noteNameMod === undefined ? defaultSettings.noteNameMode : _settings$noteNameMod;
+    var _settings$volume = settings.volume;
+    this.volume = _settings$volume === undefined ? defaultSettings.volume : _settings$volume;
 
 
-    this._timeEvents = [new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TEMPO, this.bpm), new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TIME_SIGNATURE, this.nominator, this.denominator)];
-
-    //this._timeEvents = []
+    this._timeEvents = [];
     this._updateTimeEvents = true;
     this._lastEvent = new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.END_OF_TRACK);
 
@@ -175,7 +175,6 @@ var Song = exports.Song = function () {
     this.stopped = true;
     this.looping = false;
 
-    this.volume = 0.5;
     this._output = _init_audio.context.createGain();
     this._output.gain.value = this.volume;
     this._output.connect(_init_audio.masterGain);
@@ -192,6 +191,21 @@ var Song = exports.Song = function () {
     this._loopDuration = 0;
     this._precountBars = 0;
     this._endPrecountMillis = 0;
+
+    var tracks = settings.tracks;
+    var timeEvents = settings.timeEvents;
+
+
+    if (typeof timeEvents === 'undefined') {
+      this._timeEvents = [new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TEMPO, this.bpm), new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TIME_SIGNATURE, this.nominator, this.denominator)];
+    } else {
+      this.addTimeEvents.apply(this, _toConsumableArray(timeEvents));
+    }
+
+    if (typeof track === 'undefined') {
+      this.addTracks.apply(this, _toConsumableArray(tracks));
+    }
+
     this.update();
     //addSong(this)
   }

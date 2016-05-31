@@ -84,14 +84,10 @@ export class Song{
       pitch: this.pitch = defaultSettings.pitch,
       bufferTime: this.bufferTime = defaultSettings.bufferTime,
       noteNameMode: this.noteNameMode = defaultSettings.noteNameMode,
+      volume: this.volume = defaultSettings.volume,
     } = settings);
 
-    this._timeEvents = [
-      new MIDIEvent(0, MIDIEventTypes.TEMPO, this.bpm),
-      new MIDIEvent(0, MIDIEventTypes.TIME_SIGNATURE, this.nominator, this.denominator),
-    ]
-
-    //this._timeEvents = []
+    this._timeEvents = []
     this._updateTimeEvents = true
     this._lastEvent = new MIDIEvent(0, MIDIEventTypes.END_OF_TRACK)
 
@@ -129,7 +125,6 @@ export class Song{
     this.stopped = true
     this.looping = false
 
-    this.volume = 0.5
     this._output = context.createGain()
     this._output.gain.value = this.volume
     this._output.connect(masterGain)
@@ -146,6 +141,23 @@ export class Song{
     this._loopDuration = 0
     this._precountBars = 0
     this._endPrecountMillis = 0
+
+    let {tracks, timeEvents} = settings
+
+    if(typeof timeEvents === 'undefined'){
+      this._timeEvents = [
+        new MIDIEvent(0, MIDIEventTypes.TEMPO, this.bpm),
+        new MIDIEvent(0, MIDIEventTypes.TIME_SIGNATURE, this.nominator, this.denominator),
+      ]
+    }else{
+      this.addTimeEvents(...timeEvents)
+    }
+
+    if(typeof track === 'undefined'){
+      this.addTracks(...tracks)
+    }
+
+
     this.update()
     //addSong(this)
   }
