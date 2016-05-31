@@ -11,10 +11,8 @@ import {calculatePosition} from './position'
 import {Playhead} from './playhead'
 import {Metronome} from './metronome'
 import {addEventListener, removeEventListener, dispatchEvent} from './eventlistener'
-import {defaultSong} from './settings'
 import {saveAsMIDIFile} from './save_midifile'
 import {update, _update} from './song.update'
-//import {addSong, deleteSong} from './settings'
 import {getSettings} from './settings'
 
 let instanceIndex = 0
@@ -39,6 +37,9 @@ type songSettings = {
   loop: boolean,
   playbackSpeed: number,
   autoQuantize: boolean,
+  pitch: number,
+  bufferTime: number,
+  noteNameMode: string
 }
 */
 
@@ -64,21 +65,25 @@ export class Song{
 
   constructor(settings: {} = {}){
 
-    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`;
+    this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
+    let defaultSettings = getSettings();
 
     ({
       name: this.name = this.id,
-      ppq: this.ppq = defaultSong.ppq,
-      bpm: this.bpm = defaultSong.bpm,
-      bars: this.bars = defaultSong.bars,
-      nominator: this.nominator = defaultSong.nominator,
-      denominator: this.denominator = defaultSong.denominator,
-      quantizeValue: this.quantizeValue = defaultSong.quantizeValue,
-      fixedLengthValue: this.fixedLengthValue = defaultSong.fixedLengthValue,
-      useMetronome: this.useMetronome = defaultSong.useMetronome,
-      autoSize: this.autoSize = defaultSong.autoSize,
-      playbackSpeed: this.playbackSpeed = defaultSong.playbackSpeed,
-      autoQuantize: this.autoQuantize = defaultSong.autoQuantize,
+      ppq: this.ppq = defaultSettings.ppq,
+      bpm: this.bpm = defaultSettings.bpm,
+      bars: this.bars = defaultSettings.bars,
+      nominator: this.nominator = defaultSettings.nominator,
+      denominator: this.denominator = defaultSettings.denominator,
+      quantizeValue: this.quantizeValue = defaultSettings.quantizeValue,
+      fixedLengthValue: this.fixedLengthValue = defaultSettings.fixedLengthValue,
+      useMetronome: this.useMetronome = defaultSettings.useMetronome,
+      autoSize: this.autoSize = defaultSettings.autoSize,
+      playbackSpeed: this.playbackSpeed = defaultSettings.playbackSpeed,
+      autoQuantize: this.autoQuantize = defaultSettings.autoQuantize,
+      pitch: this.pitch = defaultSettings.pitch,
+      bufferTime: this.bufferTime = defaultSettings.bufferTime,
+      noteNameMode: this.noteNameMode = defaultSettings.noteNameMode,
     } = settings);
 
     this._timeEvents = [
@@ -394,6 +399,36 @@ export class Song{
 
   configure(config){
 
+    if(typeof config.pitch !== 'undefined'){
+
+      if(config.pitch === this.pitch){
+        return
+      }
+      this.pitch = config.pitch
+      this._events.forEach(event => {
+        event.updatePitch(this.pitch)
+      })
+    }
+
+    if(typeof config.ppq !== 'undefined'){
+      if(config.ppq === this.ppq){
+        return
+      }
+      let ppqFactor = config.ppq / this.ppq
+      this.ppq = config.ppq
+      this._allEvents.forEach(e => {
+        e.ticks = event.ticks * ppqFactor
+      })
+      this._updateTimeEvents = true
+      this.update()
+    }
+
+    if(typeof config.playbackSpeed !== 'undefined'){
+      if(config.playbackSpeed === this.playbackSpeed){
+        return
+      }
+      this.playbackSpeed = config.playbackSpeed
+    }
   }
 
   allNotesOff(){
@@ -404,7 +439,7 @@ export class Song{
     this._scheduler.allNotesOff()
     this._metronome.allNotesOff()
   }
-
+/*
   panic(){
     return new Promise(resolve => {
       this._tracks.forEach((track) => {
@@ -418,7 +453,7 @@ export class Song{
       }, 100)
     })
   }
-
+*/
   getTracks(){
     return [...this._tracks]
   }
@@ -608,14 +643,4 @@ export class Song{
     })
     this._pannerValue = value
   }
-
-  updatePitch(){
-    let {pitch} = getSettings('pitch')
-    this._events.forEach(event => {
-      event.updatePitch(pitch)
-    })
-  }
-  // dispose(){
-  //   deleteSong(this)
-  // }
 }

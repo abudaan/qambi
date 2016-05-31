@@ -1,6 +1,6 @@
 // @ flow
 import {getNoteData} from './note'
-import {pitch} from './settings'
+import {getSettings} from './settings'
 
 let instanceIndex = 0
 
@@ -12,6 +12,7 @@ export class MIDIEvent{
     this.type = type
     this.data1 = data1
     this.data2 = data2
+    this.pitch = getSettings().pitch
 
     // sometimes NOTE_OFF events are sent as NOTE_ON events with a 0 velocity value
     if(type === 144 && data2 === 0){
@@ -40,11 +41,15 @@ export class MIDIEvent{
 
   transpose(amount: number){ // may be better if not a public method?
     this.data1 += amount
-    this.frequency = pitch * Math.pow(2, (this.data1 - 69) / 12)
+    this.frequency = this.pitch * Math.pow(2, (this.data1 - 69) / 12)
   }
 
   updatePitch(newPitch){
-    this.frequency = newPitch * Math.pow(2, (this.data1 - 69) / 12)
+    if(newPitch === this.pitch){
+      return
+    }
+    this.pitch = newPitch
+    this.transpose(0)
   }
 
   move(ticks: number){

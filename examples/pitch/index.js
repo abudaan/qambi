@@ -7,7 +7,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
   qambi.init({
     settings: {
-      pitch: 440
+      pitch: 440,
+      useMetronome: true
     },
     song: {
       type: 'Song',
@@ -63,8 +64,7 @@ function main(data){
 
   const rangeListener = function(e){
     let pitch = e.target.valueAsNumber
-    updateSettings({pitch})
+    song.configure({pitch})
     divPitch.innerHTML = `pitch: ${pitch}Hz`
-    song.updatePitch()
   }
 }

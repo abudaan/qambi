@@ -1,11 +1,16 @@
 //import gmInstruments from './gm_instruments'
 
-export const defaultSong = {
+//const params = ['ppq', 'bpm', 'bars', 'pitch', 'bufferTime', 'lowestNote', 'highestNote', 'noteNameMode', 'nominator', 'denominator', 'quantizeValue', 'fixedLengthValue', 'positionType', 'useMetronome', 'autoSize', 'playbackSpeed', 'autoQuantize', ]
+
+let settings = {
   ppq: 960,
   bpm: 120,
   bars: 16,
+  pitch: 440,
+  bufferTime: 200,
   lowestNote: 0,
   highestNote: 127,
+  noteNameMode: 'sharp',
   nominator: 4,
   denominator: 4,
   quantizeValue: 8,
@@ -16,6 +21,59 @@ export const defaultSong = {
   playbackSpeed: 1,
   autoQuantize: false
 }
+
+
+export function updateSettings(data){
+  ({
+    ppq: settings.ppq = settings.ppq,
+    bpm: settings.bpm = settings.bpm,
+    bars: settings.bars = settings.bars,
+    pitch: settings.pitch = settings.pitch,
+    bufferTime: settings.bufferTime = settings.bufferTime,
+    lowestNote: settings.lowestNote = settings.lowestNote,
+    highestNote: settings.highestNote = settings.highestNote,
+    noteNameMode: settings.noteNameMode = settings.noteNameMode,
+    nominator: settings.nominator = settings.nominator,
+    denominator: settings.denominator = settings.denominator,
+    quantizeValue: settings.quantizeValue = settings.quantizeValue,
+    fixedLengthValue: settings.fixedLengthValue = settings.fixedLengthValue,
+    positionType: settings.positionType = settings.positionType,
+    useMetronome: settings.useMetronome = settings.useMetronome,
+    autoSize: settings.autoSize = settings.autoSize,
+    playbackSpeed: settings.playbackSpeed = settings.playbackSpeed,
+    autoQuantize: settings.autoQuantize = settings.autoQuantize,
+  } = data)
+
+  console.log(settings)
+}
+
+
+export function getSettings(...params){
+  return {...settings}
+/*
+  let result = {}
+  params.forEach(param => {
+    switch(param){
+      case 'pitch':
+        result.pitch = pitch
+        break
+      case 'noteNameMode':
+        result.noteNameMode = noteNameMode
+        break
+      case 'bufferTime':
+        result.bufferTime = bufferTime
+        break
+      case 'ppq':
+        result.ppq = ppq
+        break
+      default:
+        // do nothing
+    }
+  })
+  return result
+*/
+}
+
 
 //ported heartbeat instruments: http://github.com/abudaan/heartbeat
 const heartbeatInstruments = new Map([
@@ -65,64 +123,4 @@ Object.keys(gmInstruments).forEach(key => {
 export const getGMInstruments = function(){
   return gmMap
 }
-
-
-export let noteNameMode = 'sharp'
-export let pitch = 440
-export let ppq = 960
-export let bufferTime = 200
-
-// export function setBufferTime(time){
-//   bufferTime = time
-// }
-
-export function updateSettings(data){
-  ({
-    ppq: ppq = ppq,
-    pitch: pitch = pitch,
-    bufferTime: bufferTime = bufferTime,
-    noteNameMode: noteNameMode = noteNameMode,
-  } = data)
-
-  //console.log(ppq, pitch, bufferTime, noteNameMode)
-}
-
-export function getSettings(...params){
-  let result = {}
-  params.forEach(param => {
-    switch(param){
-      case 'pitch':
-        result.pitch = pitch
-        break
-      case 'noteNameMode':
-        result.noteNameMode = noteNameMode
-        break
-      case 'bufferTime':
-        result.bufferTime = bufferTime
-        break
-      case 'ppq':
-        result.ppq = ppq
-        break
-      default:
-        // do nothing
-    }
-  })
-  return result
-}
-
-
-/*
-let songs = new Map()
-export function getSongs(){
-  return
-}
-
-export function addSong(song){
-  songs.set(song.name, song)
-}
-
-export function deleteSong(song){
-  songs.set(song.name, song)
-}
-*/
 

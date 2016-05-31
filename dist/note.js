@@ -22,6 +22,9 @@ var noteNames = {
   'enharmonic-flat': ['Dbb', 'Db', 'Ebb', 'Eb', 'Fb', 'Gbb', 'Gb', 'Abb', 'Ab', 'Bbb', 'Bb', 'Cb']
 };
 
+var noteNameMode = void 0;
+var pitch = void 0;
+
 /*
   settings = {
     name: 'C',
@@ -38,6 +41,11 @@ function getNoteData(settings) {
   var mode = settings.mode;
   var number = settings.number;
   var frequency = settings.frequency;
+
+  var _getSettings = (0, _settings.getSettings)();
+
+  noteNameMode = _getSettings.noteNameMode;
+  pitch = _getSettings.pitch;
 
 
   if (typeof name !== 'string' && typeof fullName !== 'string' && typeof number !== 'number' && typeof frequency !== 'number') {
@@ -95,7 +103,7 @@ function getNoteData(settings) {
 }
 
 function _getNoteName(number) {
-  var mode = arguments.length <= 1 || arguments[1] === undefined ? _settings.noteNameMode : arguments[1];
+  var mode = arguments.length <= 1 || arguments[1] === undefined ? noteNameMode : arguments[1];
 
   //let octave = Math.floor((number / 12) - 2), // → in Cubase central C = C3 instead of C4
   var octave = floor(number / 12 - 1);
@@ -166,7 +174,7 @@ function _getNoteNumber(name, octave) {
 }
 
 function _getFrequency(number) {
-  return _settings.pitch * pow(2, (number - 69) / 12); // midi standard, see: http://en.wikipedia.org/wiki/MIDI_Tuning_Standard
+  return pitch * pow(2, (number - 69) / 12); // midi standard, see: http://en.wikipedia.org/wiki/MIDI_Tuning_Standard
 }
 
 //@TODO: calculate note from frequency
@@ -180,9 +188,9 @@ function _checkNoteNameMode(mode) {
   //console.log(result)
   if (result === false) {
     if (typeof mode !== 'undefined') {
-      console.log(mode + ' is not a valid note name mode, using "' + _settings.noteNameMode + '" instead');
+      console.log(mode + ' is not a valid note name mode, using "' + noteNameMode + '" instead');
     }
-    mode = _settings.noteNameMode;
+    mode = noteNameMode;
   }
   return mode;
 }

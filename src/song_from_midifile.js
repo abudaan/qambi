@@ -6,14 +6,15 @@ import {Track} from './track'
 import {Song} from './song'
 import {base64ToBinary} from './util'
 import {status, json, arrayBuffer} from './fetch_helpers'
+import {getSettings} from './settings'
 
-const PPQ = 960
+let PPQ = getSettings().ppq
 
 
 function toSong(parsed){
   let tracks = parsed.tracks
   let ppq = parsed.header.ticksPerBeat
-  let ppqFactor = PPQ / ppq //@TODO: get ppq from config -> only necessary if you want to change the ppq of the MIDI file !
+  let ppqFactor = PPQ / ppq
   let timeEvents = []
   let bpm = -1
   let nominator = -1

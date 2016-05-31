@@ -1,4 +1,4 @@
-import {noteNameMode, pitch} from './settings'
+import {getSettings} from './settings'
 
 const pow = Math.pow
 const floor = Math.floor
@@ -15,6 +15,8 @@ const noteNames = {
   'enharmonic-flat': ['Dbb', 'Db', 'Ebb', 'Eb', 'Fb', 'Gbb', 'Gb', 'Abb', 'Ab', 'Bbb', 'Bb', 'Cb']
 }
 
+let noteNameMode
+let pitch
 
 /*
   settings = {
@@ -33,7 +35,9 @@ export function getNoteData(settings){
     mode,
     number,
     frequency,
-  } = settings
+  } = settings;
+
+  ({noteNameMode, pitch} = getSettings())
 
   if(
        typeof name !== 'string'

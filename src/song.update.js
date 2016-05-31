@@ -40,12 +40,16 @@ export function _update():void{
   if(this._updateTimeEvents === true){
     //console.log('updateTimeEvents', this._timeEvents.length)
     parseTimeEvents(this, this._timeEvents, this.isPlaying)
-    this._updateTimeEvents = false
     //console.log('time events %O', this._timeEvents)
   }
 
   // only parse new and moved events
   let tobeParsed = []
+
+  // but parse all events if the time events have been updated
+  if(this._updateTimeEvents === true){
+    tobeParsed = [...this._events]
+  }
 
 
 // PARTS
@@ -111,7 +115,10 @@ export function _update():void{
   // moved events need to be parsed
   //console.log('moved %O', this._movedEvents)
   this._movedEvents.forEach((event) => {
-    tobeParsed.push(event)
+    // don't add moved events if the time events have been updated -> they have already been added to the tobeParsed array
+    if(this._updateTimeEvents === false){
+      tobeParsed.push(event)
+    }
   })
 
 
@@ -199,7 +206,7 @@ export function _update():void{
 // METRONOME
 
   // add metronome events
-  if(this._updateMetronomeEvents || this._metronome.bars !== this.bars){
+  if(this._updateMetronomeEvents || this._metronome.bars !== this.bars || this._updateTimeEvents === true){
     this._metronomeEvents = parseEvents([...this._timeEvents, ...this._metronome.getEvents()])
   }
   this._allEvents = [...this._metronomeEvents, ...this._events]
@@ -231,6 +238,7 @@ export function _update():void{
   this._movedEvents = []
   this._removedEvents = []
   this._resized = false
+  this._updateTimeEvents = false
 
   //console.groupEnd('update song')
 }

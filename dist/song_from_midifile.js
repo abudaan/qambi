@@ -24,14 +24,16 @@ var _util = require('./util');
 
 var _fetch_helpers = require('./fetch_helpers');
 
+var _settings = require('./settings');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var PPQ = 960;
+var PPQ = (0, _settings.getSettings)().ppq;
 
 function toSong(parsed) {
   var tracks = parsed.tracks;
   var ppq = parsed.header.ticksPerBeat;
-  var ppqFactor = PPQ / ppq; //@TODO: get ppq from config -> only necessary if you want to change the ppq of the MIDI file !
+  var ppqFactor = PPQ / ppq;
   var timeEvents = [];
   var bpm = -1;
   var nominator = -1;

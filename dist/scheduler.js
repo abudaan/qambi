@@ -4,16 +4,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); // millis
-
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _init_midi = require('./init_midi');
 
 var _init_audio = require('./init_audio');
 
 var _midi_event = require('./midi_event');
-
-var _settings = require('./settings');
 
 var _util = require('./util');
 
@@ -29,6 +26,7 @@ var Scheduler = function () {
 
     this.song = song;
     this.notes = new Map();
+    this.bufferTime = song.bufferTime;
   }
 
   _createClass(Scheduler, [{
@@ -109,7 +107,7 @@ var Scheduler = function () {
     value: function getEvents() {
       var events = [];
 
-      if (this.song._loop === true && this.song._loopDuration < _settings.bufferTime) {
+      if (this.song._loop === true && this.song._loopDuration < this.bufferTime) {
         this.maxtime = this.songStartMillis + this.song._loopDuration - 1;
         //console.log(this.maxtime, this.song.loopDuration);
       }
@@ -249,7 +247,7 @@ var Scheduler = function () {
 
       if (this.song.precounting) {
         this.songCurrentMillis += diff;
-        this.maxtime = this.songCurrentMillis + _settings.bufferTime;
+        this.maxtime = this.songCurrentMillis + this.bufferTime;
         //console.log(this.songCurrentMillis)
         events = this.song._metronome.getPrecountEvents(this.maxtime);
 
@@ -268,13 +266,13 @@ var Scheduler = function () {
           this.songCurrentMillis = this.songStartMillis;
           //console.log('---->', this.songCurrentMillis)
           this.songCurrentMillis += diff;
-          this.maxtime = this.songCurrentMillis + _settings.bufferTime;
+          this.maxtime = this.songCurrentMillis + this.bufferTime;
           (_events = events).push.apply(_events, _toConsumableArray(this.getEvents()));
           //console.log(events)
         }
       } else {
           this.songCurrentMillis += diff;
-          this.maxtime = this.songCurrentMillis + _settings.bufferTime;
+          this.maxtime = this.songCurrentMillis + this.bufferTime;
           events = this.getEvents();
           //events = this.song._getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
           //events = this.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))

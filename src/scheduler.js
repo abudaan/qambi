@@ -1,7 +1,6 @@
 import {getMIDIOutputById, getMIDIOutputs} from './init_midi'
 import {context} from './init_audio'
 import {MIDIEvent} from './midi_event'
-import {bufferTime} from './settings' // millis
 import {sortEvents} from './util' // millis
 
 
@@ -10,6 +9,7 @@ export default class Scheduler{
   constructor(song){
     this.song = song
     this.notes = new Map()
+    this.bufferTime = song.bufferTime
   }
 
 
@@ -65,7 +65,7 @@ export default class Scheduler{
   getEvents(){
     let events = []
 
-    if(this.song._loop === true && this.song._loopDuration < bufferTime){
+    if(this.song._loop === true && this.song._loopDuration < this.bufferTime){
       this.maxtime = this.songStartMillis + this.song._loopDuration - 1
       //console.log(this.maxtime, this.song.loopDuration);
     }
@@ -187,7 +187,7 @@ export default class Scheduler{
 
     if(this.song.precounting){
       this.songCurrentMillis += diff
-      this.maxtime = this.songCurrentMillis + bufferTime
+      this.maxtime = this.songCurrentMillis + this.bufferTime
       //console.log(this.songCurrentMillis)
       events = this.song._metronome.getPrecountEvents(this.maxtime)
 
@@ -204,13 +204,13 @@ export default class Scheduler{
         this.songCurrentMillis = this.songStartMillis
         //console.log('---->', this.songCurrentMillis)
         this.songCurrentMillis += diff
-        this.maxtime = this.songCurrentMillis + bufferTime
+        this.maxtime = this.songCurrentMillis + this.bufferTime
         events.push(...this.getEvents())
         //console.log(events)
       }
     }else{
       this.songCurrentMillis += diff
-      this.maxtime = this.songCurrentMillis + bufferTime
+      this.maxtime = this.songCurrentMillis + this.bufferTime
       events = this.getEvents()
       //events = this.song._getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
       //events = this.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))

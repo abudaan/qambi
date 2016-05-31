@@ -5,10 +5,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Song = undefined;
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); //@ flow
-
-//import {addSong, deleteSong} from './settings'
-
 
 var _constants = require('./constants');
 
@@ -34,11 +33,11 @@ var _metronome = require('./metronome');
 
 var _eventlistener = require('./eventlistener');
 
-var _settings = require('./settings');
-
 var _save_midifile = require('./save_midifile');
 
 var _song = require('./song.update');
+
+var _settings = require('./settings');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -67,6 +66,9 @@ type songSettings = {
   loop: boolean,
   playbackSpeed: number,
   autoQuantize: boolean,
+  pitch: number,
+  bufferTime: number,
+  noteNameMode: string
 }
 */
 
@@ -99,31 +101,38 @@ var Song = exports.Song = function () {
     _classCallCheck(this, Song);
 
     this.id = this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
+    var defaultSettings = (0, _settings.getSettings)();
 
     var _settings$name = settings.name;
     this.name = _settings$name === undefined ? this.id : _settings$name;
     var _settings$ppq = settings.ppq;
-    this.ppq = _settings$ppq === undefined ? _settings.defaultSong.ppq : _settings$ppq;
+    this.ppq = _settings$ppq === undefined ? defaultSettings.ppq : _settings$ppq;
     var _settings$bpm = settings.bpm;
-    this.bpm = _settings$bpm === undefined ? _settings.defaultSong.bpm : _settings$bpm;
+    this.bpm = _settings$bpm === undefined ? defaultSettings.bpm : _settings$bpm;
     var _settings$bars = settings.bars;
-    this.bars = _settings$bars === undefined ? _settings.defaultSong.bars : _settings$bars;
+    this.bars = _settings$bars === undefined ? defaultSettings.bars : _settings$bars;
     var _settings$nominator = settings.nominator;
-    this.nominator = _settings$nominator === undefined ? _settings.defaultSong.nominator : _settings$nominator;
+    this.nominator = _settings$nominator === undefined ? defaultSettings.nominator : _settings$nominator;
     var _settings$denominator = settings.denominator;
-    this.denominator = _settings$denominator === undefined ? _settings.defaultSong.denominator : _settings$denominator;
+    this.denominator = _settings$denominator === undefined ? defaultSettings.denominator : _settings$denominator;
     var _settings$quantizeVal = settings.quantizeValue;
-    this.quantizeValue = _settings$quantizeVal === undefined ? _settings.defaultSong.quantizeValue : _settings$quantizeVal;
+    this.quantizeValue = _settings$quantizeVal === undefined ? defaultSettings.quantizeValue : _settings$quantizeVal;
     var _settings$fixedLength = settings.fixedLengthValue;
-    this.fixedLengthValue = _settings$fixedLength === undefined ? _settings.defaultSong.fixedLengthValue : _settings$fixedLength;
+    this.fixedLengthValue = _settings$fixedLength === undefined ? defaultSettings.fixedLengthValue : _settings$fixedLength;
     var _settings$useMetronom = settings.useMetronome;
-    this.useMetronome = _settings$useMetronom === undefined ? _settings.defaultSong.useMetronome : _settings$useMetronom;
+    this.useMetronome = _settings$useMetronom === undefined ? defaultSettings.useMetronome : _settings$useMetronom;
     var _settings$autoSize = settings.autoSize;
-    this.autoSize = _settings$autoSize === undefined ? _settings.defaultSong.autoSize : _settings$autoSize;
+    this.autoSize = _settings$autoSize === undefined ? defaultSettings.autoSize : _settings$autoSize;
     var _settings$playbackSpe = settings.playbackSpeed;
-    this.playbackSpeed = _settings$playbackSpe === undefined ? _settings.defaultSong.playbackSpeed : _settings$playbackSpe;
+    this.playbackSpeed = _settings$playbackSpe === undefined ? defaultSettings.playbackSpeed : _settings$playbackSpe;
     var _settings$autoQuantiz = settings.autoQuantize;
-    this.autoQuantize = _settings$autoQuantiz === undefined ? _settings.defaultSong.autoQuantize : _settings$autoQuantiz;
+    this.autoQuantize = _settings$autoQuantiz === undefined ? defaultSettings.autoQuantize : _settings$autoQuantiz;
+    var _settings$pitch = settings.pitch;
+    this.pitch = _settings$pitch === undefined ? defaultSettings.pitch : _settings$pitch;
+    var _settings$bufferTime = settings.bufferTime;
+    this.bufferTime = _settings$bufferTime === undefined ? defaultSettings.bufferTime : _settings$bufferTime;
+    var _settings$noteNameMod = settings.noteNameMode;
+    this.noteNameMode = _settings$noteNameMod === undefined ? defaultSettings.noteNameMode : _settings$noteNameMod;
 
 
     this._timeEvents = [new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TEMPO, this.bpm), new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TIME_SIGNATURE, this.nominator, this.denominator)];
@@ -482,7 +491,46 @@ var Song = exports.Song = function () {
     }
   }, {
     key: 'configure',
-    value: function configure(config) {}
+    value: function configure(config) {
+      var _this7 = this;
+
+      if (typeof config.pitch !== 'undefined') {
+
+        if (config.pitch === this.pitch) {
+          return;
+        }
+        this.pitch = config.pitch;
+        this._events.forEach(function (event) {
+          event.updatePitch(_this7.pitch);
+        });
+      }
+
+      if (typeof config.ppq !== 'undefined') {
+        var _ret = function () {
+          if (config.ppq === _this7.ppq) {
+            return {
+              v: void 0
+            };
+          }
+          var ppqFactor = config.ppq / _this7.ppq;
+          _this7.ppq = config.ppq;
+          _this7._allEvents.forEach(function (e) {
+            e.ticks = event.ticks * ppqFactor;
+          });
+          _this7._updateTimeEvents = true;
+          _this7.update();
+        }();
+
+        if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+      }
+
+      if (typeof config.playbackSpeed !== 'undefined') {
+        if (config.playbackSpeed === this.playbackSpeed) {
+          return;
+        }
+        this.playbackSpeed = config.playbackSpeed;
+      }
+    }
   }, {
     key: 'allNotesOff',
     value: function allNotesOff() {
@@ -493,23 +541,22 @@ var Song = exports.Song = function () {
       this._scheduler.allNotesOff();
       this._metronome.allNotesOff();
     }
-  }, {
-    key: 'panic',
-    value: function panic() {
-      var _this7 = this;
+    /*
+      panic(){
+        return new Promise(resolve => {
+          this._tracks.forEach((track) => {
+            track.disconnect(this._output)
+          })
+          setTimeout(() => {
+            this._tracks.forEach((track) => {
+              track.connect(this._output)
+            })
+            resolve()
+          }, 100)
+        })
+      }
+    */
 
-      return new Promise(function (resolve) {
-        _this7._tracks.forEach(function (track) {
-          track.disconnect(_this7._output);
-        });
-        setTimeout(function () {
-          _this7._tracks.forEach(function (track) {
-            track.connect(_this7._output);
-          });
-          resolve();
-        }, 100);
-      });
-    }
   }, {
     key: 'getTracks',
     value: function getTracks() {
@@ -741,21 +788,6 @@ var Song = exports.Song = function () {
       });
       this._pannerValue = value;
     }
-  }, {
-    key: 'updatePitch',
-    value: function updatePitch() {
-      var _getSettings = (0, _settings.getSettings)('pitch');
-
-      var pitch = _getSettings.pitch;
-
-      this._events.forEach(function (event) {
-        event.updatePitch(pitch);
-      });
-    }
-    // dispose(){
-    //   deleteSong(this)
-    // }
-
   }]);
 
   return Song;

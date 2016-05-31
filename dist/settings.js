@@ -3,16 +3,24 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 exports.updateSettings = updateSettings;
 exports.getSettings = getSettings;
 //import gmInstruments from './gm_instruments'
 
-var defaultSong = exports.defaultSong = {
+//const params = ['ppq', 'bpm', 'bars', 'pitch', 'bufferTime', 'lowestNote', 'highestNote', 'noteNameMode', 'nominator', 'denominator', 'quantizeValue', 'fixedLengthValue', 'positionType', 'useMetronome', 'autoSize', 'playbackSpeed', 'autoQuantize', ]
+
+var settings = {
   ppq: 960,
   bpm: 120,
   bars: 16,
+  pitch: 440,
+  bufferTime: 200,
   lowestNote: 0,
   highestNote: 127,
+  noteNameMode: 'sharp',
   nominator: 4,
   denominator: 4,
   quantizeValue: 8,
@@ -23,6 +31,72 @@ var defaultSong = exports.defaultSong = {
   playbackSpeed: 1,
   autoQuantize: false
 };
+
+function updateSettings(data) {
+  var _data$ppq = data.ppq;
+  settings.ppq = _data$ppq === undefined ? settings.ppq : _data$ppq;
+  var _data$bpm = data.bpm;
+  settings.bpm = _data$bpm === undefined ? settings.bpm : _data$bpm;
+  var _data$bars = data.bars;
+  settings.bars = _data$bars === undefined ? settings.bars : _data$bars;
+  var _data$pitch = data.pitch;
+  settings.pitch = _data$pitch === undefined ? settings.pitch : _data$pitch;
+  var _data$bufferTime = data.bufferTime;
+  settings.bufferTime = _data$bufferTime === undefined ? settings.bufferTime : _data$bufferTime;
+  var _data$lowestNote = data.lowestNote;
+  settings.lowestNote = _data$lowestNote === undefined ? settings.lowestNote : _data$lowestNote;
+  var _data$highestNote = data.highestNote;
+  settings.highestNote = _data$highestNote === undefined ? settings.highestNote : _data$highestNote;
+  var _data$noteNameMode = data.noteNameMode;
+  settings.noteNameMode = _data$noteNameMode === undefined ? settings.noteNameMode : _data$noteNameMode;
+  var _data$nominator = data.nominator;
+  settings.nominator = _data$nominator === undefined ? settings.nominator : _data$nominator;
+  var _data$denominator = data.denominator;
+  settings.denominator = _data$denominator === undefined ? settings.denominator : _data$denominator;
+  var _data$quantizeValue = data.quantizeValue;
+  settings.quantizeValue = _data$quantizeValue === undefined ? settings.quantizeValue : _data$quantizeValue;
+  var _data$fixedLengthValu = data.fixedLengthValue;
+  settings.fixedLengthValue = _data$fixedLengthValu === undefined ? settings.fixedLengthValue : _data$fixedLengthValu;
+  var _data$positionType = data.positionType;
+  settings.positionType = _data$positionType === undefined ? settings.positionType : _data$positionType;
+  var _data$useMetronome = data.useMetronome;
+  settings.useMetronome = _data$useMetronome === undefined ? settings.useMetronome : _data$useMetronome;
+  var _data$autoSize = data.autoSize;
+  settings.autoSize = _data$autoSize === undefined ? settings.autoSize : _data$autoSize;
+  var _data$playbackSpeed = data.playbackSpeed;
+  settings.playbackSpeed = _data$playbackSpeed === undefined ? settings.playbackSpeed : _data$playbackSpeed;
+  var _data$autoQuantize = data.autoQuantize;
+  settings.autoQuantize = _data$autoQuantize === undefined ? settings.autoQuantize : _data$autoQuantize;
+
+
+  console.log(settings);
+}
+
+function getSettings() {
+  return _extends({}, settings);
+  /*
+    let result = {}
+    params.forEach(param => {
+      switch(param){
+        case 'pitch':
+          result.pitch = pitch
+          break
+        case 'noteNameMode':
+          result.noteNameMode = noteNameMode
+          break
+        case 'bufferTime':
+          result.bufferTime = bufferTime
+          break
+        case 'ppq':
+          result.ppq = ppq
+          break
+        default:
+          // do nothing
+      }
+    })
+    return result
+  */
+}
 
 //ported heartbeat instruments: http://github.com/abudaan/heartbeat
 var heartbeatInstruments = new Map([['city-piano', {
@@ -63,68 +137,3 @@ Object.keys(gmInstruments).forEach(function (key) {
 var getGMInstruments = exports.getGMInstruments = function getGMInstruments() {
   return gmMap;
 };
-
-var noteNameMode = exports.noteNameMode = 'sharp';
-var pitch = exports.pitch = 440;
-var ppq = exports.ppq = 960;
-var bufferTime = exports.bufferTime = 200;
-
-// export function setBufferTime(time){
-//   bufferTime = time
-// }
-
-function updateSettings(data) {
-
-  //console.log(ppq, pitch, bufferTime, noteNameMode)
-  var _data$ppq = data.ppq;
-  exports.ppq = ppq = _data$ppq === undefined ? ppq : _data$ppq;
-  var _data$pitch = data.pitch;
-  exports.pitch = pitch = _data$pitch === undefined ? pitch : _data$pitch;
-  var _data$bufferTime = data.bufferTime;
-  exports.bufferTime = bufferTime = _data$bufferTime === undefined ? bufferTime : _data$bufferTime;
-  var _data$noteNameMode = data.noteNameMode;
-  exports.noteNameMode = noteNameMode = _data$noteNameMode === undefined ? noteNameMode : _data$noteNameMode;
-}
-
-function getSettings() {
-  var result = {};
-
-  for (var _len = arguments.length, params = Array(_len), _key = 0; _key < _len; _key++) {
-    params[_key] = arguments[_key];
-  }
-
-  params.forEach(function (param) {
-    switch (param) {
-      case 'pitch':
-        result.pitch = pitch;
-        break;
-      case 'noteNameMode':
-        result.noteNameMode = noteNameMode;
-        break;
-      case 'bufferTime':
-        result.bufferTime = bufferTime;
-        break;
-      case 'ppq':
-        result.ppq = ppq;
-        break;
-      default:
-      // do nothing
-    }
-  });
-  return result;
-}
-
-/*
-let songs = new Map()
-export function getSongs(){
-  return
-}
-
-export function addSong(song){
-  songs.set(song.name, song)
-}
-
-export function deleteSong(song){
-  songs.set(song.name, song)
-}
-*/
