@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', function(){
     initUI()
   })
 
-
   function initUI(){
 
     // setup drowndown menu for MIDI inputs

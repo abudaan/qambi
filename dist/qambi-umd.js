@@ -1272,7 +1272,7 @@ var _midimessage_event = require('./midimessage_event');
     //polyfill()
 
     navigator.requestMIDIAccess = function () {
-      console.log('webmidiapishim', navigator.requestMIDIAccess);
+      console.log('webmidiapishim 1.0.1', navigator.requestMIDIAccess);
       return (0, _midi_access.createMIDIAccess)();
     };
     /*
@@ -2638,8 +2638,7 @@ function polyfill() {
   });
   exports.getMIDIInputById = exports.getMIDIOutputById = exports.getMIDIInputIds = exports.getMIDIOutputIds = exports.getMIDIInputs = exports.getMIDIOutputs = exports.getMIDIAccess = undefined;
   exports.initMIDI = initMIDI;
-  //-> embed script in browser
-  //import 'web-midi-api' -> this version does not work in a browser
+  // you can also embed the shim as a stand-alone script in the html, then you can comment this line out
 
   /*
     Requests MIDI access, queries all inputs and outputs and stores them in alphabetical order
@@ -6832,7 +6831,7 @@ function polyfill() {
     value: true
   });
   exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
-  var version = '1.0.0-beta24';
+  var version = '1.0.0-beta25';
 
   var getAudioContext = function getAudioContext() {
     return _init_audio.context;

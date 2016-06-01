@@ -10,8 +10,7 @@ var _util = require('./util');
 
 require('webmidiapishim');
 
-//-> embed script in browser
-//import 'web-midi-api' -> this version does not work in a browser
+// you can also embed the shim as a stand-alone script in the html, then you can comment this line out
 
 /*
   Requests MIDI access, queries all inputs and outputs and stores them in alphabetical order
