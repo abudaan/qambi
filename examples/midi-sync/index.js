@@ -1,6 +1,6 @@
 import qambi, {
   Song,
-  Instrument,
+  Sampler,
   getMIDIInputs,
   getMIDIOutputs,
 } from '../../src/qambi'
@@ -11,7 +11,7 @@ import fetch from 'isomorphic-fetch'
 document.addEventListener('DOMContentLoaded', function(){
 
   let song
-  let instrument = new Instrument()
+  let instrument = new Sampler()
 
   qambi.init({
     instrument: {
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function(){
         return response.arrayBuffer()
       })
       .then(data => {
-        song = Song.fromMIDIFile(data)
+        song = Song.fromMIDIFileSync(data)
         initUI()
       })
 
@@ -69,6 +69,11 @@ document.addEventListener('DOMContentLoaded', function(){
     btnStop.disabled = false
     btnInstrument.disabled = false
     btnMetronome.disabled = false
+
+    song.getTracks().forEach(track => {
+      track.setInstrument(instrument)
+      track.monitor = true // enable track for playing back MIDI events coming from external devices
+    })
 
 
     let MIDIInputs = getMIDIInputs()
