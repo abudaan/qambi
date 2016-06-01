@@ -61,18 +61,10 @@ qambi.init({
 
 ```
 
-Some live examples:
-
-  1. Creates a song from a MIDI file and plays it back using City Piano, a qambi sample instrument with 4 velocity layer: [link](http://qambi.org/examples/example1/)
-  2. Create song from scratch and save it as MIDI file: [link](http://qambi.org/examples/example2/)
-  3. Play instruments using your MIDI keyboard: [link](http://qambi.org/examples/example3/)
-  4. Record MIDI: [link](http://qambi.org/examples/midi-recording/)
-  5. Playback a MIDI file via an external softsynth: [link](http://qambi.org/examples/midi-sync/) and a screencast explaining how to use it on [youtube](https://www.youtube.com/embed/zj1Sof90N7k)
-
-More examples in the [examples](https://github.com/abudaan/qambi/tree/gh-pages/examples) folder of the repository.
+Some live examples can be found [here](http://abudaan.github.io/qambi/examples/index.html), more examples in the [examples](https://github.com/abudaan/qambi/tree/gh-pages/examples) folder of the repository.
 
 
-######Documentation
+#####Documentation
 
 Documentation is work in progress, see the [wiki](https://github.com/abudaan/qambi/wiki).
 
