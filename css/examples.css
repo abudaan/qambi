@@ -78,15 +78,7 @@ p{
   font-size: 13px;
 }
 
-/*clearfix*/
-.cf:before,
-.cf:after {
-  content: " ";
-  display: table;
-}
-.cf:after {
-  clear: both;
-}
+
 .warn{
   font-weight: bolder;
   font-size: 14px;

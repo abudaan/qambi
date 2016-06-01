@@ -43,3 +43,14 @@ q:before, q:after {
 blockquote, q {
 	quotes: "" "";
 }
+
+
+/*clearfix*/
+.cf:before,
+.cf:after {
+  content: " ";
+  display: table;
+}
+.cf:after {
+  clear: both;
+}

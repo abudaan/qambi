@@ -1,0 +1,146 @@
+/* apply a natural box layout model to all elements */
+*, *:before, *:after {
+  -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+}
+html{
+  height: 100%;
+}
+body{
+  background-color: #fff;
+  /*font-family: Arial;*/
+  /*letter-spacing: 1px;*/
+  font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, freesans, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  /*font-family: "Open Sans";*/
+  font-size: 16px;
+  /*color: #777;*/
+  color: #333;
+  line-height: 1.5em;
+  /*overflow: hidden;*/
+  /*visibility: hidden;*/
+  /*height: 100%;*/
+  background-color: #fff;
+}
+.center {
+  margin: auto;
+  width: 90%;
+  max-width: 800px;
+  border: 1px solid #efefef;
+  padding: 20px;
+}
+p{
+  line-height: 1.7em;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+pre{
+  border: 1px solid #ddd;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.4em;
+  margin-top: 20px !important;
+}
+h1{
+  font-weight: bold;
+  font-size: 24px;
+  color: #b8cd07;
+  margin-top: 0px;
+  margin-bottom: 20px;
+  color: #333;
+}
+h2{
+  font-weight: bold;
+  font-size: 20px;
+  margin-top: 40px;
+  margin-bottom: 20px;
+  color: #333;
+}
+h3{
+  font-weight: bold;
+  font-size: 18px;
+  margin-top: 30px;
+  margin-bottom: 25px;
+  color: #333;
+}
+h4{
+  font-size: 16px;
+  color: #333;
+  font-weight: 700;
+}
+.logo{
+  margin-top: 10px;
+  margin-bottom: 20px;
+  /*cursor: pointer;*/
+  text-align: center;
+  line-height: 70px;
+  font-family: typo_round_bold;
+  font-weight: bold;
+  font-style: bold;
+  font-size: 50px;
+  letter-spacing: 4px;
+  color: #ccc;
+}
+.logo_pink{
+  color: #FF1CAE;
+  letter-spacing: 2px;
+}
+.logo_blue{
+  color: #1BB2E0;
+  letter-spacing: 2px;
+}
+.logo_green{
+  /*color: #ccc;*/
+  color: #71DE71;
+  letter-spacing: 0px;
+}
+.repos{
+  display: table;
+  margin: 0 auto;
+  text-align: center;
+}
+.github{
+  width: 200px;
+  float: left;
+}
+.npm{
+  width: 200px;
+  float: left;
+}
+
+ol{
+  margin-left: 20px;
+  list-style-type: decimal;
+}
+
+ul{
+  margin-left: 20px;
+  list-style-type: disc;
+}
+
+ol li{
+  padding: 5px;
+}
+
+ul li{
+  padding: 5px;
+}
+
+a:hover{
+  color: #4078c0;
+  text-decoration: underline;
+}
+a{
+  color: #4078c0;
+  text-decoration: none;
+}
+.example-link{
+  display: inline-block;
+  background-image: url('link.svg');
+  background-size: 20px;
+  background-repeat: no-repeat;
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}
+.example-link:hover{
+  background-image: url('link-over.svg');
+}
