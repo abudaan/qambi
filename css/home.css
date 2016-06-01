@@ -132,6 +132,9 @@ a{
   color: #4078c0;
   text-decoration: none;
 }
+a:hover .logo{
+  text-decoration: none;
+}
 .example-link{
   display: inline-block;
   background-image: url('link.svg');

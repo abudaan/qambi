@@ -202,7 +202,7 @@ var Song = exports.Song = function () {
       this.addTimeEvents.apply(this, _toConsumableArray(timeEvents));
     }
 
-    if (typeof track === 'undefined') {
+    if (typeof tracks !== 'undefined') {
       this.addTracks.apply(this, _toConsumableArray(tracks));
     }
 

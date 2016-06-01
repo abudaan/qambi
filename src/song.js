@@ -153,7 +153,7 @@ export class Song{
       this.addTimeEvents(...timeEvents)
     }
 
-    if(typeof track === 'undefined'){
+    if(typeof tracks !== 'undefined'){
       this.addTracks(...tracks)
     }
 

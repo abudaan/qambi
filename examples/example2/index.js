@@ -1,5 +1,5 @@
 import qambi, {
-  Instrument,
+  SimpleSynth,
   MIDIEvent,
   Song,
   Track,
@@ -30,13 +30,12 @@ document.addEventListener('DOMContentLoaded', function(){
     )
 
     track.addParts(part)
-    track.setInstrument(new Instrument())
+    track.setInstrument(new SimpleSynth('sine'))
 
     song.addTracks(track)
     song.update()
 
     song.play()
     song.saveAsMIDIFile('test.midi')
-
   })
 })
