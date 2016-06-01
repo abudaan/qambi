@@ -37,7 +37,7 @@
   },
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
-    "watch": "watchify ./midi-sync/index.js -t babelify -o ./midi-sync/build.js --debug --verbose"
+    "watch": "watchify ./example3/index.js -t babelify -o ./example3/build.js --debug --verbose"
   },
   "dependencies": {
     "isomorphic-fetch": "^2.2.1",

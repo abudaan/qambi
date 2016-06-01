@@ -8,10 +8,16 @@ exports.initMIDI = initMIDI;
 
 var _util = require('./util');
 
-var MIDIAccess = void 0; /*
-                           Requests MIDI access, queries all inputs and outputs and stores them in alphabetical order
-                         */
+require('webmidiapishim');
 
+//-> embed script in browser
+//import 'web-midi-api' -> this version does not work in a browser
+
+/*
+  Requests MIDI access, queries all inputs and outputs and stores them in alphabetical order
+*/
+
+var MIDIAccess = void 0;
 var initialized = false;
 var inputs = [];
 var outputs = [];

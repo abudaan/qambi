@@ -288,7 +288,1155 @@ if (typeof module !== "undefined" && module.exports) {
 require('whatwg-fetch');
 module.exports = self.fetch.bind(self);
 
-},{"whatwg-fetch":3}],3:[function(require,module,exports){
+},{"whatwg-fetch":12}],3:[function(require,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = setTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    clearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        setTimeout(drainQueue, 0);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+},{}],4:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createJazzInstance = createJazzInstance;
+exports.getJazzInstance = getJazzInstance;
+
+var _util = require('./util');
+
+var jazzPluginInitTime = 100; // milliseconds
+
+/*
+  Creates instances of the Jazz plugin if necessary. Initially the MIDIAccess creates one main Jazz instance that is used
+  to query all initially connected devices, and to track the devices that are being connected or disconnected at runtime.
+
+  For every MIDIInput and MIDIOutput that is created, MIDIAccess queries the getJazzInstance() method for a Jazz instance
+  that still have an available input or output. Because Jazz only allows one input and one output per instance, we
+  need to create new instances if more than one MIDI input or output device gets connected.
+
+  Note that an existing Jazz instance doesn't get deleted when both its input and output device are disconnected; instead it
+  will be reused if a new device gets connected.
+*/
+
+var jazzInstanceNumber = 0;
+var jazzInstances = new Map();
+
+function createJazzInstance(callback) {
+
+  var id = 'jazz_' + jazzInstanceNumber++ + '' + Date.now();
+  var instance = void 0;
+  var objRef = void 0,
+      activeX = void 0;
+
+  if ((0, _util.getDevice)().nodejs === true) {
+    objRef = new jazzMidi.MIDI();
+  } else {
+    var o1 = document.createElement('object');
+    o1.id = id + 'ie';
+    o1.classid = 'CLSID:1ACE1618-1C7D-4561-AEE1-34842AA85E90';
+    activeX = o1;
+
+    var o2 = document.createElement('object');
+    o2.id = id;
+    o2.type = 'audio/x-jazz';
+    o1.appendChild(o2);
+    objRef = o2;
+
+    var e = document.createElement('p');
+    e.appendChild(document.createTextNode('This page requires the '));
+
+    var a = document.createElement('a');
+    a.appendChild(document.createTextNode('Jazz plugin'));
+    a.href = 'http://jazz-soft.net/';
+
+    e.appendChild(a);
+    e.appendChild(document.createTextNode('.'));
+    o2.appendChild(e);
+
+    var insertionPoint = document.getElementById('MIDIPlugin');
+    if (!insertionPoint) {
+      // Create hidden element
+      insertionPoint = document.createElement('div');
+      insertionPoint.id = 'MIDIPlugin';
+      insertionPoint.style.position = 'absolute';
+      insertionPoint.style.visibility = 'hidden';
+      insertionPoint.style.left = '-9999px';
+      insertionPoint.style.top = '-9999px';
+      document.body.appendChild(insertionPoint);
+    }
+    insertionPoint.appendChild(o1);
+  }
+
+  setTimeout(function () {
+    if (objRef.isJazz === true) {
+      instance = objRef;
+    } else if (activeX.isJazz === true) {
+      instance = activeX;
+    }
+    if (typeof instance !== 'undefined') {
+      instance._perfTimeZero = performance.now();
+      jazzInstances.set(id, instance);
+    }
+    callback(instance);
+  }, jazzPluginInitTime);
+}
+
+function getJazzInstance(type, callback) {
+  var instance = null;
+  var key = type === 'input' ? 'inputInUse' : 'outputInUse';
+
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = jazzInstances.values()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var inst = _step.value;
+
+      if (inst[key] !== true) {
+        instance = inst;
+        break;
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  if (instance === null) {
+    createJazzInstance(callback);
+  } else {
+    callback(instance);
+  }
+}
+},{"./util":11}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /*
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Creates a MIDIAccess instance:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       - Creates MIDIInput and MIDIOutput instances for the initially connected MIDI devices.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       - Keeps track of newly connected devices and creates the necessary instances of MIDIInput and MIDIOutput.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       - Keeps track of disconnected devices and removes them from the inputs and/or outputs map.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       - Creates a unique id for every device and stores these ids by the name of the device:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         so when a device gets disconnected and reconnected again, it will still have the same id. This
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         is in line with the behaviour of the native MIDIAccess object.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     */
+
+exports.createMIDIAccess = createMIDIAccess;
+exports.dispatchEvent = dispatchEvent;
+exports.closeAllMIDIInputs = closeAllMIDIInputs;
+exports.getMIDIDeviceId = getMIDIDeviceId;
+
+var _jazz_instance = require('./jazz_instance');
+
+var _midi_input = require('./midi_input');
+
+var _midi_output = require('./midi_output');
+
+var _midiconnection_event = require('./midiconnection_event');
+
+var _util = require('./util');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var midiAccess = void 0;
+var jazzInstance = void 0;
+var midiInputs = new Map();
+var midiOutputs = new Map();
+var midiInputIds = new Map();
+var midiOutputIds = new Map();
+var listeners = new Set();
+
+var MIDIAccess = function () {
+  function MIDIAccess(inputs, outputs) {
+    _classCallCheck(this, MIDIAccess);
+
+    this.sysexEnabled = true;
+    this.inputs = inputs;
+    this.outputs = outputs;
+  }
+
+  _createClass(MIDIAccess, [{
+    key: 'addEventListener',
+    value: function addEventListener(type, listener, useCapture) {
+      if (type !== 'statechange') {
+        return;
+      }
+      if (listeners.has(listener) === false) {
+        listeners.add(listener);
+      }
+    }
+  }, {
+    key: 'removeEventListener',
+    value: function removeEventListener(type, listener, useCapture) {
+      if (type !== 'statechange') {
+        return;
+      }
+      if (listeners.has(listener) === true) {
+        listeners.delete(listener);
+      }
+    }
+  }]);
+
+  return MIDIAccess;
+}();
+
+function createMIDIAccess() {
+
+  return new Promise(function executor(resolve, reject) {
+
+    if (typeof midiAccess !== 'undefined') {
+      resolve(midiAccess);
+      return;
+    }
+
+    if ((0, _util.getDevice)().browser === 'ie9') {
+      reject({ message: 'WebMIDIAPIShim supports Internet Explorer 10 and above.' });
+      return;
+    }
+
+    (0, _jazz_instance.createJazzInstance)(function (instance) {
+      if (typeof instance === 'undefined') {
+        reject({ message: 'No access to MIDI devices: browser does not support the WebMIDI API and the Jazz plugin is not installed.' });
+        return;
+      }
+
+      jazzInstance = instance;
+
+      createMIDIPorts(function () {
+        setupListeners();
+        midiAccess = new MIDIAccess(midiInputs, midiOutputs);
+        resolve(midiAccess);
+      });
+    });
+  });
+}
+
+// create MIDIInput and MIDIOutput instances for all initially connected MIDI devices
+function createMIDIPorts(callback) {
+  var inputs = jazzInstance.MidiInList();
+  var outputs = jazzInstance.MidiOutList();
+  var numInputs = inputs.length;
+  var numOutputs = outputs.length;
+
+  loopCreateMIDIPort(0, numInputs, 'input', inputs, function () {
+    loopCreateMIDIPort(0, numOutputs, 'output', outputs, callback);
+  });
+}
+
+function loopCreateMIDIPort(index, max, type, list, callback) {
+  if (index < max) {
+    var name = list[index++];
+    createMIDIPort(type, name, function () {
+      loopCreateMIDIPort(index, max, type, list, callback);
+    });
+  } else {
+    callback();
+  }
+}
+
+function createMIDIPort(type, name, callback) {
+  (0, _jazz_instance.getJazzInstance)(type, function (instance) {
+    var port = void 0;
+    var info = [name, '', ''];
+    if (type === 'input') {
+      if (instance.Support('MidiInInfo')) {
+        info = instance.MidiInInfo(name);
+      }
+      port = new _midi_input.MIDIInput(info, instance);
+      midiInputs.set(port.id, port);
+    } else if (type === 'output') {
+      if (instance.Support('MidiOutInfo')) {
+        info = instance.MidiOutInfo(name);
+      }
+      port = new _midi_output.MIDIOutput(info, instance);
+      midiOutputs.set(port.id, port);
+    }
+    callback(port);
+  });
+}
+
+// lookup function: Jazz gives us the name of the connected/disconnected MIDI devices but we have stored them by id
+function getPortByName(ports, name) {
+  var port = void 0;
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = ports.values()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      port = _step.value;
+
+      if (port.name === name) {
+        break;
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  return port;
+}
+
+// keep track of connected/disconnected MIDI devices
+function setupListeners() {
+  jazzInstance.OnDisconnectMidiIn(function (name) {
+    var port = getPortByName(midiInputs, name);
+    if (typeof port !== 'undefined') {
+      port.state = 'disconnected';
+      port.close();
+      port._jazzInstance.inputInUse = false;
+      midiInputs.delete(port.id);
+      dispatchEvent(port);
+    }
+  });
+
+  jazzInstance.OnDisconnectMidiOut(function (name) {
+    var port = getPortByName(midiOutputs, name);
+    if (typeof port !== 'undefined') {
+      port.state = 'disconnected';
+      port.close();
+      port._jazzInstance.outputInUse = false;
+      midiOutputs.delete(port.id);
+      dispatchEvent(port);
+    }
+  });
+
+  jazzInstance.OnConnectMidiIn(function (name) {
+    createMIDIPort('input', name, function (port) {
+      dispatchEvent(port);
+    });
+  });
+
+  jazzInstance.OnConnectMidiOut(function (name) {
+    createMIDIPort('output', name, function (port) {
+      dispatchEvent(port);
+    });
+  });
+}
+
+// when a device gets connected/disconnected both the port and MIDIAccess dispatch a MIDIConnectionEvent
+// therefor we call the ports dispatchEvent function here as well
+function dispatchEvent(port) {
+  port.dispatchEvent(new _midiconnection_event.MIDIConnectionEvent(port, port));
+
+  var evt = new _midiconnection_event.MIDIConnectionEvent(midiAccess, port);
+
+  if (typeof midiAccess.onstatechange === 'function') {
+    midiAccess.onstatechange(evt);
+  }
+  var _iteratorNormalCompletion2 = true;
+  var _didIteratorError2 = false;
+  var _iteratorError2 = undefined;
+
+  try {
+    for (var _iterator2 = listeners[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+      var listener = _step2.value;
+
+      listener(evt);
+    }
+  } catch (err) {
+    _didIteratorError2 = true;
+    _iteratorError2 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion2 && _iterator2.return) {
+        _iterator2.return();
+      }
+    } finally {
+      if (_didIteratorError2) {
+        throw _iteratorError2;
+      }
+    }
+  }
+}
+
+function closeAllMIDIInputs() {
+  midiInputs.forEach(function (input) {
+    //input.close();
+    input._jazzInstance.MidiInClose();
+  });
+}
+
+// check if we have already created a unique id for this device, if so: reuse it, if not: create a new id and store it
+function getMIDIDeviceId(name, type) {
+  var id = void 0;
+  if (type === 'input') {
+    id = midiInputIds.get(name);
+    if (typeof id === 'undefined') {
+      id = (0, _util.generateUUID)();
+      midiInputIds.set(name, id);
+    }
+  } else if (type === 'output') {
+    id = midiOutputIds.get(name);
+    if (typeof id === 'undefined') {
+      id = (0, _util.generateUUID)();
+      midiOutputIds.set(name, id);
+    }
+  }
+  return id;
+}
+},{"./jazz_instance":4,"./midi_input":6,"./midi_output":7,"./midiconnection_event":8,"./util":11}],6:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MIDIInput = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /*
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       MIDIInput is a wrapper around an input of a Jazz instance
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     */
+
+var _util = require('./util');
+
+var _midimessage_event = require('./midimessage_event');
+
+var _midiconnection_event = require('./midiconnection_event');
+
+var _midi_access = require('./midi_access');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var midiProc = void 0;
+var nodejs = (0, _util.getDevice)().nodejs;
+
+var MIDIInput = exports.MIDIInput = function () {
+  function MIDIInput(info, instance) {
+    _classCallCheck(this, MIDIInput);
+
+    this.id = (0, _midi_access.getMIDIDeviceId)(info[0], 'input');
+    this.name = info[0];
+    this.manufacturer = info[1];
+    this.version = info[2];
+    this.type = 'input';
+    this.state = 'connected';
+    this.connection = 'pending';
+
+    this.onstatechange = null;
+    this._onmidimessage = null;
+    // because we need to implicitly open the device when an onmidimessage handler gets added
+    // we define a setter that opens the device if the set value is a function
+    Object.defineProperty(this, 'onmidimessage', {
+      set: function set(value) {
+        this._onmidimessage = value;
+        if (typeof value === 'function') {
+          this.open();
+        }
+      }
+    });
+
+    this._listeners = new Map().set('midimessage', new Set()).set('statechange', new Set());
+    this._inLongSysexMessage = false;
+    this._sysexBuffer = new Uint8Array();
+
+    this._jazzInstance = instance;
+    this._jazzInstance.inputInUse = true;
+
+    // on Linux opening and closing Jazz instances causes the plugin to crash a lot so we open
+    // the device here and don't close it when close() is called, see below
+    if ((0, _util.getDevice)().platform === 'linux') {
+      this._jazzInstance.MidiInOpen(this.name, midiProc.bind(this));
+    }
+  }
+
+  _createClass(MIDIInput, [{
+    key: 'addEventListener',
+    value: function addEventListener(type, listener, useCapture) {
+      var listeners = this._listeners.get(type);
+      if (typeof listeners === 'undefined') {
+        return;
+      }
+
+      if (listeners.has(listener) === false) {
+        listeners.add(listener);
+      }
+    }
+  }, {
+    key: 'removeEventListener',
+    value: function removeEventListener(type, listener, useCapture) {
+      var listeners = this._listeners.get(type);
+      if (typeof listeners === 'undefined') {
+        return;
+      }
+
+      if (listeners.has(listener) === false) {
+        listeners.delete(listener);
+      }
+    }
+  }, {
+    key: 'dispatchEvent',
+    value: function dispatchEvent(evt) {
+      var listeners = this._listeners.get(evt.type);
+      listeners.forEach(function (listener) {
+        listener(evt);
+      });
+
+      if (evt.type === 'midimessage') {
+        if (this._onmidimessage !== null) {
+          this._onmidimessage(evt);
+        }
+      } else if (evt.type === 'statechange') {
+        if (this.onstatechange !== null) {
+          this.onstatechange(evt);
+        }
+      }
+    }
+  }, {
+    key: 'open',
+    value: function open() {
+      if (this.connection === 'open') {
+        return;
+      }
+      if ((0, _util.getDevice)().platform !== 'linux') {
+        this._jazzInstance.MidiInOpen(this.name, midiProc.bind(this));
+      }
+      this.connection = 'open';
+      (0, _midi_access.dispatchEvent)(this); // dispatch MIDIConnectionEvent via MIDIAccess
+    }
+  }, {
+    key: 'close',
+    value: function close() {
+      if (this.connection === 'closed') {
+        return;
+      }
+      if ((0, _util.getDevice)().platform !== 'linux') {
+        this._jazzInstance.MidiInClose();
+      }
+      this.connection = 'closed';
+      (0, _midi_access.dispatchEvent)(this); // dispatch MIDIConnectionEvent via MIDIAccess
+      this._onmidimessage = null;
+      this.onstatechange = null;
+      this._listeners.get('midimessage').clear();
+      this._listeners.get('statechange').clear();
+    }
+  }, {
+    key: '_appendToSysexBuffer',
+    value: function _appendToSysexBuffer(data) {
+      var oldLength = this._sysexBuffer.length;
+      var tmpBuffer = new Uint8Array(oldLength + data.length);
+      tmpBuffer.set(this._sysexBuffer);
+      tmpBuffer.set(data, oldLength);
+      this._sysexBuffer = tmpBuffer;
+    }
+  }, {
+    key: '_bufferLongSysex',
+    value: function _bufferLongSysex(data, initialOffset) {
+      var j = initialOffset;
+      while (j < data.length) {
+        if (data[j] == 0xF7) {
+          // end of sysex!
+          j++;
+          this._appendToSysexBuffer(data.slice(initialOffset, j));
+          return j;
+        }
+        j++;
+      }
+      // didn't reach the end; just tack it on.
+      this._appendToSysexBuffer(data.slice(initialOffset, j));
+      this._inLongSysexMessage = true;
+      return j;
+    }
+  }]);
+
+  return MIDIInput;
+}();
+
+midiProc = function midiProc(timestamp, data) {
+  var length = 0;
+  var i = void 0;
+  var isSysexMessage = false;
+
+  // Jazz sometimes passes us multiple messages at once, so we need to parse them out and pass them one at a time.
+
+  for (i = 0; i < data.length; i += length) {
+    var isValidMessage = true;
+    if (this._inLongSysexMessage) {
+      i = this._bufferLongSysex(data, i);
+      if (data[i - 1] != 0xf7) {
+        // ran off the end without hitting the end of the sysex message
+        return;
+      }
+      isSysexMessage = true;
+    } else {
+      isSysexMessage = false;
+      switch (data[i] & 0xF0) {
+        case 0x00:
+          // Chew up spurious 0x00 bytes.  Fixes a Windows problem.
+          length = 1;
+          isValidMessage = false;
+          break;
+
+        case 0x80: // note off
+        case 0x90: // note on
+        case 0xA0: // polyphonic aftertouch
+        case 0xB0: // control change
+        case 0xE0:
+          // channel mode
+          length = 3;
+          break;
+
+        case 0xC0: // program change
+        case 0xD0:
+          // channel aftertouch
+          length = 2;
+          break;
+
+        case 0xF0:
+          switch (data[i]) {
+            case 0xf0:
+              // letiable-length sysex.
+              i = this._bufferLongSysex(data, i);
+              if (data[i - 1] != 0xf7) {
+                // ran off the end without hitting the end of the sysex message
+                return;
+              }
+              isSysexMessage = true;
+              break;
+
+            case 0xF1: // MTC quarter frame
+            case 0xF3:
+              // song select
+              length = 2;
+              break;
+
+            case 0xF2:
+              // song position pointer
+              length = 3;
+              break;
+
+            default:
+              length = 1;
+              break;
+          }
+          break;
+      }
+    }
+    if (!isValidMessage) {
+      continue;
+    }
+
+    var evt = {};
+    evt.receivedTime = parseFloat(timestamp.toString()) + this._jazzInstance._perfTimeZero;
+
+    if (isSysexMessage || this._inLongSysexMessage) {
+      evt.data = new Uint8Array(this._sysexBuffer);
+      this._sysexBuffer = new Uint8Array(0);
+      this._inLongSysexMessage = false;
+    } else {
+      evt.data = new Uint8Array(data.slice(i, length + i));
+    }
+
+    if (nodejs) {
+      if (this._onmidimessage) {
+        this._onmidimessage(evt);
+      }
+    } else {
+      var e = new _midimessage_event.MIDIMessageEvent(this, evt.data, evt.receivedTime);
+      this.dispatchEvent(e);
+    }
+  }
+};
+},{"./midi_access":5,"./midiconnection_event":8,"./midimessage_event":9,"./util":11}],7:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MIDIOutput = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /*
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       MIDIOutput is a wrapper around an output of a Jazz instance
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     */
+
+var _util = require('./util');
+
+var _midi_access = require('./midi_access');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var MIDIOutput = exports.MIDIOutput = function () {
+  function MIDIOutput(info, instance) {
+    _classCallCheck(this, MIDIOutput);
+
+    this.id = (0, _midi_access.getMIDIDeviceId)(info[0], 'output');
+    this.name = info[0];
+    this.manufacturer = info[1];
+    this.version = info[2];
+    this.type = 'output';
+    this.state = 'connected';
+    this.connection = 'pending';
+    this.onmidimessage = null;
+    this.onstatechange = null;
+
+    this._listeners = new Set();
+    this._inLongSysexMessage = false;
+    this._sysexBuffer = new Uint8Array();
+
+    this._jazzInstance = instance;
+    this._jazzInstance.outputInUse = true;
+    if ((0, _util.getDevice)().platform === 'linux') {
+      this._jazzInstance.MidiOutOpen(this.name);
+    }
+  }
+
+  _createClass(MIDIOutput, [{
+    key: 'open',
+    value: function open() {
+      if (this.connection === 'open') {
+        return;
+      }
+      if ((0, _util.getDevice)().platform !== 'linux') {
+        this._jazzInstance.MidiOutOpen(this.name);
+      }
+      this.connection = 'open';
+      (0, _midi_access.dispatchEvent)(this); // dispatch MIDIConnectionEvent via MIDIAccess
+    }
+  }, {
+    key: 'close',
+    value: function close() {
+      if (this.connection === 'closed') {
+        return;
+      }
+      if ((0, _util.getDevice)().platform !== 'linux') {
+        this._jazzInstance.MidiOutClose();
+      }
+      this.connection = 'closed';
+      (0, _midi_access.dispatchEvent)(this); // dispatch MIDIConnectionEvent via MIDIAccess
+      this.onstatechange = null;
+      this._listeners.clear();
+    }
+  }, {
+    key: 'send',
+    value: function send(data, timestamp) {
+      var _this = this;
+
+      var delayBeforeSend = 0;
+
+      if (data.length === 0) {
+        return false;
+      }
+
+      if (timestamp) {
+        delayBeforeSend = Math.floor(timestamp - performance.now());
+      }
+
+      if (timestamp && delayBeforeSend > 1) {
+        setTimeout(function () {
+          _this._jazzInstance.MidiOutLong(data);
+        }, delayBeforeSend);
+      } else {
+        this._jazzInstance.MidiOutLong(data);
+      }
+      return true;
+    }
+  }, {
+    key: 'clear',
+    value: function clear() {
+      // to be implemented
+    }
+  }, {
+    key: 'addEventListener',
+    value: function addEventListener(type, listener, useCapture) {
+      if (type !== 'statechange') {
+        return;
+      }
+
+      if (this._listeners.has(listener) === false) {
+        this._listeners.add(listener);
+      }
+    }
+  }, {
+    key: 'removeEventListener',
+    value: function removeEventListener(type, listener, useCapture) {
+      if (type !== 'statechange') {
+        return;
+      }
+
+      if (this._listeners.has(listener) === false) {
+        this._listeners.delete(listener);
+      }
+    }
+  }, {
+    key: 'dispatchEvent',
+    value: function dispatchEvent(evt) {
+      this._listeners.forEach(function (listener) {
+        listener(evt);
+      });
+
+      if (this.onstatechange !== null) {
+        this.onstatechange(evt);
+      }
+    }
+  }]);
+
+  return MIDIOutput;
+}();
+},{"./midi_access":5,"./util":11}],8:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var MIDIConnectionEvent = exports.MIDIConnectionEvent = function MIDIConnectionEvent(midiAccess, port) {
+  _classCallCheck(this, MIDIConnectionEvent);
+
+  this.bubbles = false;
+  this.cancelBubble = false;
+  this.cancelable = false;
+  this.currentTarget = midiAccess;
+  this.defaultPrevented = false;
+  this.eventPhase = 0;
+  this.path = [];
+  this.port = port;
+  this.returnValue = true;
+  this.srcElement = midiAccess;
+  this.target = midiAccess;
+  this.timeStamp = Date.now();
+  this.type = 'statechange';
+};
+},{}],9:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var MIDIMessageEvent = exports.MIDIMessageEvent = function MIDIMessageEvent(port, data, receivedTime) {
+  _classCallCheck(this, MIDIMessageEvent);
+
+  this.bubbles = false;
+  this.cancelBubble = false;
+  this.cancelable = false;
+  this.currentTarget = port;
+  this.data = data;
+  this.defaultPrevented = false;
+  this.eventPhase = 0;
+  this.path = [];
+  this.receivedTime = receivedTime;
+  this.returnValue = true;
+  this.srcElement = port;
+  this.target = port;
+  this.timeStamp = Date.now();
+  this.type = 'midimessage';
+};
+},{}],10:[function(require,module,exports){
+(function (global){
+'use strict';
+
+var _midi_access = require('./midi_access');
+
+var _midi_input = require('./midi_input');
+
+var _midi_output = require('./midi_output');
+
+var _midimessage_event = require('./midimessage_event');
+
+/*
+  main entry point
+*/
+//import {createMIDIAccess, closeAllMIDIInputs} from './midi_access'
+//import {polyfill, getDevice} from './util'
+
+
+(function initShim() {
+
+  if (typeof navigator.requestMIDIAccess === 'undefined') {
+
+    global.MIDIInput = _midi_input.MIDIInput;
+    global.MIDIOutput = _midi_output.MIDIOutput;
+    global.MIDIMessageEvent = _midimessage_event.MIDIMessageEvent;
+
+    //polyfill()
+
+    navigator.requestMIDIAccess = function () {
+      console.log('webmidiapishim', navigator.requestMIDIAccess);
+      return (0, _midi_access.createMIDIAccess)();
+    };
+    /*
+        if(getDevice().nodejs === true){
+          navigator.close = function(){
+            // Need to close MIDI input ports, otherwise Node.js will wait for MIDI input forever.
+            closeAllMIDIInputs()
+          }
+        }
+    */
+  }
+})();
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./midi_access":5,"./midi_input":6,"./midi_output":7,"./midimessage_event":9}],11:[function(require,module,exports){
+(function (process,global){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.generateUUID = generateUUID;
+exports.getDevice = getDevice;
+exports.polyfillPerformance = polyfillPerformance;
+exports.polyfillPromise = polyfillPromise;
+exports.polyfill = polyfill;
+/*
+  A collection of handy util methods
+*/
+
+function generateUUID() {
+  var d = new Date().getTime();
+  var uuid = new Array(64).join('x'); //'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+  uuid = uuid.replace(/[xy]/g, function (c) {
+    var r = (d + Math.random() * 16) % 16 | 0;
+    d = Math.floor(d / 16);
+    return (c == 'x' ? r : r & 0x3 | 0x8).toString(16).toUpperCase();
+  });
+  return uuid;
+}
+
+var device = void 0;
+
+// check on what type of device we are running, note that in this context a device is a computer not a MIDI device
+function getDevice() {
+
+  if (typeof device !== 'undefined') {
+    return device;
+  }
+
+  var platform = 'undetected',
+      browser = 'undetected',
+      nodejs = false;
+
+  if (navigator.nodejs) {
+    platform = process.platform;
+    device = {
+      platform: platform,
+      nodejs: true,
+      mobile: platform === 'ios' || platform === 'android'
+    };
+    return device;
+  }
+
+  var ua = navigator.userAgent;
+
+  if (ua.match(/(iPad|iPhone|iPod)/g)) {
+    platform = 'ios';
+  } else if (ua.indexOf('Android') !== -1) {
+    platform = 'android';
+  } else if (ua.indexOf('Linux') !== -1) {
+    platform = 'linux';
+  } else if (ua.indexOf('Macintosh') !== -1) {
+    platform = 'osx';
+  } else if (ua.indexOf('Windows') !== -1) {
+    platform = 'windows';
+  }
+
+  if (ua.indexOf('Chrome') !== -1) {
+    // chrome, chromium and canary
+    browser = 'chrome';
+
+    if (ua.indexOf('OPR') !== -1) {
+      browser = 'opera';
+    } else if (ua.indexOf('Chromium') !== -1) {
+      browser = 'chromium';
+    }
+  } else if (ua.indexOf('Safari') !== -1) {
+    browser = 'safari';
+  } else if (ua.indexOf('Firefox') !== -1) {
+    browser = 'firefox';
+  } else if (ua.indexOf('Trident') !== -1) {
+    browser = 'ie';
+    if (ua.indexOf('MSIE 9') !== -1) {
+      browser = 'ie9';
+    }
+  }
+
+  if (platform === 'ios') {
+    if (ua.indexOf('CriOS') !== -1) {
+      browser = 'chrome';
+    }
+  }
+
+  device = {
+    platform: platform,
+    browser: browser,
+    mobile: platform === 'ios' || platform === 'android',
+    nodejs: false
+  };
+  return device;
+}
+
+function polyfillPerformance() {
+  if (typeof performance === 'undefined') {
+    performance = {};
+  }
+  Date.now = Date.now || function () {
+    return new Date().getTime();
+  };
+
+  if (typeof performance.now === 'undefined') {
+    (function () {
+      var nowOffset = Date.now();
+      if (typeof performance.timing !== 'undefined' && typeof performance.timing.navigationStart !== 'undefined') {
+        nowOffset = performance.timing.navigationStart;
+      }
+      performance.now = function now() {
+        return Date.now() - nowOffset;
+      };
+    })();
+  }
+}
+
+// a very simple implementation of a Promise for Internet Explorer and Nodejs
+function polyfillPromise(scope) {
+  if (typeof scope.Promise !== 'function') {
+
+    scope.Promise = function (executor) {
+      this.executor = executor;
+    };
+
+    scope.Promise.prototype.then = function (resolve, reject) {
+      if (typeof resolve !== 'function') {
+        resolve = function resolve() {};
+      }
+      if (typeof reject !== 'function') {
+        reject = function reject() {};
+      }
+      this.executor(resolve, reject);
+    };
+  }
+}
+
+function polyfill() {
+  var device = getDevice();
+  if (device.browser === 'ie') {
+    polyfillPromise(window);
+  } else if (device.nodejs === true) {
+    polyfillPromise(global);
+  }
+  polyfillPerformance();
+}
+}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"_process":3}],12:[function(require,module,exports){
 (function(self) {
   'use strict';
 
@@ -723,7 +1871,7 @@ module.exports = self.fetch.bind(self);
   self.fetch.polyfill = true
 })(typeof self !== 'undefined' ? self : this);
 
-},{}],4:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -773,7 +1921,7 @@ module.exports = self.fetch.bind(self);
   exports.MIDIEventTypes = MIDIEventTypes;
 });
 
-},{}],5:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -978,7 +2126,7 @@ module.exports = self.fetch.bind(self);
   }
 });
 
-},{}],6:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(["exports"], factory);
@@ -1046,20 +2194,20 @@ module.exports = self.fetch.bind(self);
   }
 });
 
-},{}],7:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './qambi', './song', './sampler', './init_audio', './init_midi'], factory);
+    define(['exports', './qambi', './song', './sampler', './init_audio', './init_midi', './settings'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./qambi'), require('./song'), require('./sampler'), require('./init_audio'), require('./init_midi'));
+    factory(exports, require('./qambi'), require('./song'), require('./sampler'), require('./init_audio'), require('./init_midi'), require('./settings'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.qambi, global.song, global.sampler, global.init_audio, global.init_midi);
+    factory(mod.exports, global.qambi, global.song, global.sampler, global.init_audio, global.init_midi, global.settings);
     global.init = mod.exports;
   }
-})(this, function (exports, _qambi, _song, _sampler, _init_audio, _init_midi) {
+})(this, function (exports, _qambi, _song, _sampler, _init_audio, _init_midi, _settings) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -1143,7 +2291,15 @@ module.exports = self.fetch.bind(self);
     var loadKeys = void 0;
 
     if (settings !== null) {
+
       loadKeys = Object.keys(settings);
+      var i = loadKeys.indexOf('settings');
+      if (i !== -1) {
+        (0, _settings.updateSettings)(settings.settings);
+        loadKeys.splice(i, 1);
+      }
+      //console.log(loadKeys)
+
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
@@ -1151,6 +2307,7 @@ module.exports = self.fetch.bind(self);
       try {
         for (var _iterator = loadKeys[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var key = _step.value;
+
 
           var data = settings[key];
 
@@ -1194,12 +2351,13 @@ module.exports = self.fetch.bind(self);
             returnObj.webmidi = data.webmidi;
           } else {
             // Instruments, samples or MIDI files that got loaded during initialization
-            result[loadKeys[i - 2]] = data;
+            //result[loadKeys[i - 2]] = data
+            returnObj[loadKeys[i - 2]] = data;
           }
         });
 
         console.log('qambi', _qambi2.default.version);
-        resolve(result);
+        resolve(returnObj);
       }, function (error) {
         reject(error);
       });
@@ -1230,7 +2388,7 @@ module.exports = self.fetch.bind(self);
   }
 });
 
-},{"./init_audio":8,"./init_midi":9,"./qambi":22,"./sampler":26,"./song":32}],8:[function(require,module,exports){
+},{"./init_audio":17,"./init_midi":18,"./qambi":31,"./sampler":35,"./settings":39,"./song":41}],17:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './samples', './parse_audio'], factory);
@@ -1459,17 +2617,17 @@ module.exports = self.fetch.bind(self);
   exports.configureMasterCompressor = _configureMasterCompressor;
 });
 
-},{"./parse_audio":17,"./samples":27}],9:[function(require,module,exports){
+},{"./parse_audio":26,"./samples":36}],18:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './util'], factory);
+    define(['exports', './util', 'webmidiapishim'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./util'));
+    factory(exports, require('./util'), require('webmidiapishim'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.util);
+    factory(mod.exports, global.util, global.webmidiapishim);
     global.init_midi = mod.exports;
   }
 })(this, function (exports, _util) {
@@ -1480,12 +2638,14 @@ module.exports = self.fetch.bind(self);
   });
   exports.getMIDIInputById = exports.getMIDIOutputById = exports.getMIDIInputIds = exports.getMIDIOutputIds = exports.getMIDIInputs = exports.getMIDIOutputs = exports.getMIDIAccess = undefined;
   exports.initMIDI = initMIDI;
+  //-> embed script in browser
+  //import 'web-midi-api' -> this version does not work in a browser
 
+  /*
+    Requests MIDI access, queries all inputs and outputs and stores them in alphabetical order
+  */
 
-  var MIDIAccess = void 0; /*
-                             Requests MIDI access, queries all inputs and outputs and stores them in alphabetical order
-                           */
-
+  var MIDIAccess = void 0;
   var initialized = false;
   var inputs = [];
   var outputs = [];
@@ -1961,7 +3121,7 @@ module.exports = self.fetch.bind(self);
   exports.getMIDIInputById = _getMIDIInputById;
 });
 
-},{"./util":36}],10:[function(require,module,exports){
+},{"./util":45,"webmidiapishim":10}],19:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_audio', './eventlistener'], factory);
@@ -2171,7 +3331,7 @@ module.exports = self.fetch.bind(self);
   }();
 });
 
-},{"./eventlistener":5,"./init_audio":8}],11:[function(require,module,exports){
+},{"./eventlistener":14,"./init_audio":17}],20:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './track', './part', './parse_events', './midi_event', './util', './position', './sampler', './init_audio', './constants'], factory);
@@ -2235,7 +3395,7 @@ module.exports = self.fetch.bind(self);
       _classCallCheck(this, Metronome);
 
       this.song = song;
-      this.track = new _track.Track(this.song.id + '_metronome');
+      this.track = new _track.Track({ name: this.song.id + '_metronome' });
       this.part = new _part3.Part();
       this.track.addParts(this.part);
       this.track.connect(this.song._output);
@@ -2623,20 +3783,20 @@ module.exports = self.fetch.bind(self);
   }();
 });
 
-},{"./constants":4,"./init_audio":8,"./midi_event":12,"./parse_events":18,"./part":19,"./position":21,"./sampler":26,"./track":35,"./util":36}],12:[function(require,module,exports){
+},{"./constants":13,"./init_audio":17,"./midi_event":21,"./parse_events":27,"./part":28,"./position":30,"./sampler":35,"./track":44,"./util":45}],21:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './note'], factory);
+    define(['exports', './note', './settings'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./note'));
+    factory(exports, require('./note'), require('./settings'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.note);
+    factory(mod.exports, global.note, global.settings);
     global.midi_event = mod.exports;
   }
-})(this, function (exports, _note) {
+})(this, function (exports, _note, _settings) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -2673,6 +3833,7 @@ module.exports = self.fetch.bind(self);
   var MIDIEvent = exports.MIDIEvent = function () {
     function MIDIEvent(ticks, type, data1) {
       var data2 = arguments.length <= 3 || arguments[3] === undefined ? -1 : arguments[3];
+      var channel = arguments.length <= 4 || arguments[4] === undefined ? 0 : arguments[4];
 
       _classCallCheck(this, MIDIEvent);
 
@@ -2681,6 +3842,7 @@ module.exports = self.fetch.bind(self);
       this.type = type;
       this.data1 = data1;
       this.data2 = data2;
+      this.pitch = (0, _settings.getSettings)().pitch;
 
       // sometimes NOTE_OFF events are sent as NOTE_ON events with a 0 velocity value
       if (type === 144 && data2 === 0) {
@@ -2713,7 +3875,16 @@ module.exports = self.fetch.bind(self);
       value: function transpose(amount) {
         // may be better if not a public method?
         this.data1 += amount;
-        this.frequency = 440 * Math.pow(2, (this.data1 - 69) / 12);
+        this.frequency = this.pitch * Math.pow(2, (this.data1 - 69) / 12);
+      }
+    }, {
+      key: 'updatePitch',
+      value: function updatePitch(newPitch) {
+        if (newPitch === this.pitch) {
+          return;
+        }
+        this.pitch = newPitch;
+        this.transpose(0);
       }
     }, {
       key: 'move',
@@ -2737,7 +3908,7 @@ module.exports = self.fetch.bind(self);
   }();
 });
 
-},{"./note":16}],13:[function(require,module,exports){
+},{"./note":25,"./settings":39}],22:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './midi_event'], factory);
@@ -2867,7 +4038,7 @@ module.exports = self.fetch.bind(self);
   }();
 });
 
-},{"./midi_event":12}],14:[function(require,module,exports){
+},{"./midi_event":21}],23:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -3017,7 +4188,7 @@ module.exports = self.fetch.bind(self);
   exports.default = MIDIStream;
 });
 
-},{}],15:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './midi_stream'], factory);
@@ -3329,7 +4500,7 @@ module.exports = self.fetch.bind(self);
   }
 });
 
-},{"./midi_stream":14}],16:[function(require,module,exports){
+},{"./midi_stream":23}],25:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './settings'], factory);
@@ -3366,6 +4537,9 @@ module.exports = self.fetch.bind(self);
     'enharmonic-flat': ['Dbb', 'Db', 'Ebb', 'Eb', 'Fb', 'Gbb', 'Gb', 'Abb', 'Ab', 'Bbb', 'Bb', 'Cb']
   };
 
+  var noteNameMode = void 0;
+  var pitch = void 0;
+
   /*
     settings = {
       name: 'C',
@@ -3382,6 +4556,11 @@ module.exports = self.fetch.bind(self);
     var mode = settings.mode;
     var number = settings.number;
     var frequency = settings.frequency;
+
+    var _getSettings = (0, _settings.getSettings)();
+
+    noteNameMode = _getSettings.noteNameMode;
+    pitch = _getSettings.pitch;
 
 
     if (typeof name !== 'string' && typeof fullName !== 'string' && typeof number !== 'number' && typeof frequency !== 'number') {
@@ -3439,7 +4618,7 @@ module.exports = self.fetch.bind(self);
   }
 
   function _getNoteName(number) {
-    var mode = arguments.length <= 1 || arguments[1] === undefined ? _settings.noteNameMode : arguments[1];
+    var mode = arguments.length <= 1 || arguments[1] === undefined ? noteNameMode : arguments[1];
 
     //let octave = Math.floor((number / 12) - 2), // → in Cubase central C = C3 instead of C4
     var octave = floor(number / 12 - 1);
@@ -3510,7 +4689,7 @@ module.exports = self.fetch.bind(self);
   }
 
   function _getFrequency(number) {
-    return _settings.pitch * pow(2, (number - 69) / 12); // midi standard, see: http://en.wikipedia.org/wiki/MIDI_Tuning_Standard
+    return pitch * pow(2, (number - 69) / 12); // midi standard, see: http://en.wikipedia.org/wiki/MIDI_Tuning_Standard
   }
 
   //@TODO: calculate note from frequency
@@ -3524,9 +4703,9 @@ module.exports = self.fetch.bind(self);
     //console.log(result)
     if (result === false) {
       if (typeof mode !== 'undefined') {
-        console.log(mode + ' is not a valid note name mode, using "' + _settings.noteNameMode + '" instead');
+        console.log(mode + ' is not a valid note name mode, using "' + noteNameMode + '" instead');
       }
-      mode = _settings.noteNameMode;
+      mode = noteNameMode;
     }
     return mode;
   }
@@ -3551,7 +4730,7 @@ module.exports = self.fetch.bind(self);
   }
 });
 
-},{"./settings":30}],17:[function(require,module,exports){
+},{"./settings":39}],26:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'isomorphic-fetch', './init_audio', './util', './eventlistener'], factory);
@@ -3769,7 +4948,7 @@ module.exports = self.fetch.bind(self);
   }
 });
 
-},{"./eventlistener":5,"./init_audio":8,"./util":36,"isomorphic-fetch":2}],18:[function(require,module,exports){
+},{"./eventlistener":14,"./init_audio":17,"./util":45,"isomorphic-fetch":2}],27:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util', './midi_note'], factory);
@@ -4253,7 +5432,7 @@ module.exports = self.fetch.bind(self);
   }
 });
 
-},{"./midi_note":13,"./util":36}],19:[function(require,module,exports){
+},{"./midi_note":22,"./util":45}],28:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util'], factory);
@@ -4314,13 +5493,18 @@ module.exports = self.fetch.bind(self);
 
   var Part = exports.Part = function () {
     function Part() {
-      var name = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+      var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       _classCallCheck(this, Part);
 
       this.id = this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
-      this.name = name || this.id;
-      this.muted = false;
+
+      var _settings$name = settings.name;
+      this.name = _settings$name === undefined ? this.id : _settings$name;
+      var _settings$muted = settings.muted;
+      this.muted = _settings$muted === undefined ? false : _settings$muted;
+
+
       this._track = null;
       this._song = null;
       this._events = [];
@@ -4329,6 +5513,12 @@ module.exports = self.fetch.bind(self);
       this._createEventArray = false;
       this._start = { millis: 0, ticks: 0 };
       this._end = { millis: 0, ticks: 0 };
+
+      var events = settings.events;
+
+      if (typeof events !== 'undefined') {
+        this.addEvents.apply(this, _toConsumableArray(events));
+      }
     }
 
     _createClass(Part, [{
@@ -4530,7 +5720,7 @@ module.exports = self.fetch.bind(self);
   }();
 });
 
-},{"./util":36}],20:[function(require,module,exports){
+},{"./util":45}],29:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './position.js', './eventlistener.js', './util.js'], factory);
@@ -4906,7 +6096,7 @@ module.exports = self.fetch.bind(self);
   }();
 });
 
-},{"./eventlistener.js":5,"./position.js":21,"./util.js":36}],21:[function(require,module,exports){
+},{"./eventlistener.js":14,"./position.js":30,"./util.js":45}],30:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util'], factory);
@@ -5622,26 +6812,26 @@ module.exports = self.fetch.bind(self);
   */
 });
 
-},{"./util":36}],22:[function(require,module,exports){
+},{"./util":45}],31:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './note', './midi_event', './midi_note', './part', './track', './song', './instrument', './sampler', './simple_synth', './midifile', './init', './init_audio', './init_midi', './parse_audio', './constants', './settings', './eventlistener'], factory);
+    define(['exports', './settings', './note', './midi_event', './midi_note', './part', './track', './song', './instrument', './sampler', './simple_synth', './midifile', './init', './init_audio', './init_midi', './parse_audio', './constants', './eventlistener'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./note'), require('./midi_event'), require('./midi_note'), require('./part'), require('./track'), require('./song'), require('./instrument'), require('./sampler'), require('./simple_synth'), require('./midifile'), require('./init'), require('./init_audio'), require('./init_midi'), require('./parse_audio'), require('./constants'), require('./settings'), require('./eventlistener'));
+    factory(exports, require('./settings'), require('./note'), require('./midi_event'), require('./midi_note'), require('./part'), require('./track'), require('./song'), require('./instrument'), require('./sampler'), require('./simple_synth'), require('./midifile'), require('./init'), require('./init_audio'), require('./init_midi'), require('./parse_audio'), require('./constants'), require('./eventlistener'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.note, global.midi_event, global.midi_note, global.part, global.track, global.song, global.instrument, global.sampler, global.simple_synth, global.midifile, global.init, global.init_audio, global.init_midi, global.parse_audio, global.constants, global.settings, global.eventlistener);
+    factory(mod.exports, global.settings, global.note, global.midi_event, global.midi_note, global.part, global.track, global.song, global.instrument, global.sampler, global.simple_synth, global.midifile, global.init, global.init_audio, global.init_midi, global.parse_audio, global.constants, global.eventlistener);
     global.qambi = mod.exports;
   }
-})(this, function (exports, _note, _midi_event, _midi_note, _part, _track, _song, _instrument, _sampler, _simple_synth, _midifile, _init, _init_audio, _init_midi, _parse_audio, _constants, _settings, _eventlistener) {
+})(this, function (exports, _settings, _note, _midi_event, _midi_note, _part, _track, _song, _instrument, _sampler, _simple_synth, _midifile, _init, _init_audio, _init_midi, _parse_audio, _constants, _eventlistener) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getGMInstruments = exports.getInstruments = exports.setBufferTime = exports.init = exports.version = undefined;
+  exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
   var version = '1.0.0-beta24';
 
   var getAudioContext = function getAudioContext() {
@@ -5650,6 +6840,11 @@ module.exports = self.fetch.bind(self);
 
   var qambi = {
     version: version,
+
+    // from ./settings
+    updateSettings: _settings.updateSettings,
+    getSettings: _settings.getSettings,
+
     // from ./note
     getNoteData: _note.getNoteData,
 
@@ -5736,9 +6931,10 @@ module.exports = self.fetch.bind(self);
   exports.
 
   // from ./settings
-  setBufferTime = _settings.setBufferTime;
-  exports.getInstruments = _settings.getInstruments;
+  getInstruments = _settings.getInstruments;
   exports.getGMInstruments = _settings.getGMInstruments;
+  exports.updateSettings = _settings.updateSettings;
+  exports.getSettings = _settings.getSettings;
   exports.
 
   // from ./constants
@@ -5805,7 +7001,7 @@ module.exports = self.fetch.bind(self);
   Sampler = _sampler.Sampler;
 });
 
-},{"./constants":4,"./eventlistener":5,"./init":7,"./init_audio":8,"./init_midi":9,"./instrument":10,"./midi_event":12,"./midi_note":13,"./midifile":15,"./note":16,"./parse_audio":17,"./part":19,"./sampler":26,"./settings":30,"./simple_synth":31,"./song":32,"./track":35}],23:[function(require,module,exports){
+},{"./constants":13,"./eventlistener":14,"./init":16,"./init_audio":17,"./init_midi":18,"./instrument":19,"./midi_event":21,"./midi_note":22,"./midifile":24,"./note":25,"./parse_audio":26,"./part":28,"./sampler":35,"./settings":39,"./simple_synth":40,"./song":41,"./track":44}],32:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_audio.js', './util.js'], factory);
@@ -5966,7 +7162,7 @@ module.exports = self.fetch.bind(self);
   }
 });
 
-},{"./init_audio.js":8,"./util.js":36}],24:[function(require,module,exports){
+},{"./init_audio.js":17,"./util.js":45}],33:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './sample', './init_audio'], factory);
@@ -5992,6 +7188,24 @@ module.exports = self.fetch.bind(self);
       throw new TypeError("Cannot call a class as a function");
     }
   }
+
+  var _createClass = function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  }();
 
   function _possibleConstructorReturn(self, call) {
     if (!self) {
@@ -6050,11 +7264,38 @@ module.exports = self.fetch.bind(self);
       return _this;
     }
 
+    //@override
+
+
+    _createClass(SampleBuffer, [{
+      key: 'start',
+      value: function start(time) {
+        var _sampleData = this.sampleData;
+        var sustainStart = _sampleData.sustainStart;
+        var sustainEnd = _sampleData.sustainEnd;
+        var segmentStart = _sampleData.segmentStart;
+        var segmentDuration = _sampleData.segmentDuration;
+        //console.log(sustainStart, sustainEnd, segmentStart, segmentDuration)
+
+        if (sustainStart && sustainEnd) {
+          this.source.loop = true;
+          this.source.loopStart = sustainStart;
+          this.source.loopEnd = sustainEnd;
+        }
+        if (segmentStart && segmentDuration) {
+          console.log(segmentStart, segmentDuration);
+          this.source.start(time, segmentStart / 1000, segmentDuration / 1000);
+        } else {
+          this.source.start(time);
+        }
+      }
+    }]);
+
     return SampleBuffer;
   }(_sample.Sample);
 });
 
-},{"./init_audio":8,"./sample":23}],25:[function(require,module,exports){
+},{"./init_audio":17,"./sample":32}],34:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './sample', './init_audio'], factory);
@@ -6154,7 +7395,7 @@ module.exports = self.fetch.bind(self);
   }(_sample.Sample);
 });
 
-},{"./init_audio":8,"./sample":23}],26:[function(require,module,exports){
+},{"./init_audio":17,"./sample":32}],35:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './instrument', './note', './parse_audio', './util', './fetch_helpers', './sample_buffer'], factory);
@@ -6335,66 +7576,110 @@ module.exports = self.fetch.bind(self);
             }
             return (0, _parse_audio.parseSamples)(data);
           }).then(function (result) {
+            //console.log(result)
             if ((typeof result === 'undefined' ? 'undefined' : _typeof(result)) === 'object') {
-              var _iteratorNormalCompletion = true;
-              var _didIteratorError = false;
-              var _iteratorError = undefined;
 
-              try {
-                var _loop = function _loop() {
-                  var noteId = _step.value;
+              // single concatenated sample
+              if (typeof result.sample !== 'undefined') {
 
-                  var buffer = result[noteId];
-                  var sampleData = data[noteId];
+                var buffer = result.sample;
+                var _iteratorNormalCompletion = true;
+                var _didIteratorError = false;
+                var _iteratorError = undefined;
 
-                  if (typeof sampleData === 'undefined') {
-                    console.log('sampleData is undefined', noteId);
-                  } else if ((0, _util.typeString)(buffer) === 'array') {
-
-                    //console.log(buffer, sampleData)
-                    sampleData.forEach(function (sd, i) {
-                      //console.log(noteId, buffer[i])
-                      if (typeof sd === 'string') {
-                        sd = {
-                          buffer: buffer[i]
-                        };
-                      } else {
-                        sd.buffer = buffer[i];
-                      }
-                      sd.note = parseInt(noteId, 10);
-                      _this2._updateSampleData(sd);
-                    });
-                  } else {
-
-                    if (typeof sampleData === 'string') {
-                      sampleData = {
-                        buffer: buffer
-                      };
-                    } else {
-                      sampleData.buffer = buffer;
-                    }
-                    sampleData.note = parseInt(noteId, 10);
-                    _this2._updateSampleData(sampleData);
-                  }
-                };
-
-                for (var _iterator = Object.keys(result)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                  _loop();
-                }
-              } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-              } finally {
                 try {
-                  if (!_iteratorNormalCompletion && _iterator.return) {
-                    _iterator.return();
+                  for (var _iterator = Object.keys(data)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var noteId = _step.value;
+
+
+                    if (noteId === 'sample' || noteId === 'release' || noteId === 'baseUrl' || noteId === 'info') {
+                      continue;
+                    }
+
+                    var sampleData = {
+                      segment: data[noteId],
+                      note: parseInt(noteId, 10),
+                      buffer: buffer
+                    };
+
+                    _this2._updateSampleData(sampleData);
+                    //console.log(sampleData)
                   }
+                } catch (err) {
+                  _didIteratorError = true;
+                  _iteratorError = err;
                 } finally {
-                  if (_didIteratorError) {
-                    throw _iteratorError;
+                  try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                      _iterator.return();
+                    }
+                  } finally {
+                    if (_didIteratorError) {
+                      throw _iteratorError;
+                    }
                   }
                 }
-              }
+              } else {
+                  var _iteratorNormalCompletion2 = true;
+                  var _didIteratorError2 = false;
+                  var _iteratorError2 = undefined;
+
+                  try {
+                    var _loop = function _loop() {
+                      var noteId = _step2.value;
+
+                      var buffer = result[noteId];
+                      var sampleData = data[noteId];
+
+                      if (typeof sampleData === 'undefined') {
+                        console.log('sampleData is undefined', noteId);
+                      } else if ((0, _util.typeString)(buffer) === 'array') {
+
+                        //console.log(buffer, sampleData)
+                        sampleData.forEach(function (sd, i) {
+                          //console.log(noteId, buffer[i])
+                          if (typeof sd === 'string') {
+                            sd = {
+                              buffer: buffer[i]
+                            };
+                          } else {
+                            sd.buffer = buffer[i];
+                          }
+                          sd.note = parseInt(noteId, 10);
+                          _this2._updateSampleData(sd);
+                        });
+                      } else {
+
+                        if (typeof sampleData === 'string') {
+                          sampleData = {
+                            buffer: buffer
+                          };
+                        } else {
+                          sampleData.buffer = buffer;
+                        }
+                        sampleData.note = parseInt(noteId, 10);
+                        _this2._updateSampleData(sampleData);
+                      }
+                    };
+
+                    for (var _iterator2 = Object.keys(result)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                      _loop();
+                    }
+                  } catch (err) {
+                    _didIteratorError2 = true;
+                    _iteratorError2 = err;
+                  } finally {
+                    try {
+                      if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                        _iterator2.return();
+                      }
+                    } finally {
+                      if (_didIteratorError2) {
+                        throw _iteratorError2;
+                      }
+                    }
+                  }
+                }
             } else {
 
               result.forEach(function (sample) {
@@ -6470,6 +7755,8 @@ module.exports = self.fetch.bind(self);
         var buffer = _data$buffer === undefined ? null : _data$buffer;
         var _data$sustain = data.sustain;
         var sustain = _data$sustain === undefined ? [null, null] : _data$sustain;
+        var _data$segment = data.segment;
+        var segment = _data$segment === undefined ? [null, null] : _data$segment;
         var _data$release = data.release;
         var release = _data$release === undefined ? [null, 'linear'] : _data$release;
         var _data$pan = data.pan;
@@ -6502,6 +7789,11 @@ module.exports = self.fetch.bind(self);
         var releaseDuration = _release[0];
         var releaseEnvelope = _release[1];
 
+        var _segment = _slicedToArray(segment, 2);
+
+        var segmentStart = _segment[0];
+        var segmentDuration = _segment[1];
+
         var _velocity = _slicedToArray(velocity, 2);
 
         var velocityStart = _velocity[0];
@@ -6533,6 +7825,8 @@ module.exports = self.fetch.bind(self);
             sampleData.buffer = buffer || sampleData.buffer;
             sampleData.sustainStart = sustainStart || sampleData.sustainStart;
             sampleData.sustainEnd = sustainEnd || sampleData.sustainEnd;
+            sampleData.segmentStart = segmentStart || sampleData.segmentStart;
+            sampleData.segmentDuration = segmentDuration || sampleData.segmentDuration;
             sampleData.releaseDuration = releaseDuration || sampleData.releaseDuration;
             sampleData.releaseEnvelope = releaseEnvelope || sampleData.releaseEnvelope;
             sampleData.pan = pan || sampleData.pan;
@@ -6591,7 +7885,7 @@ module.exports = self.fetch.bind(self);
   }(_instrument.Instrument);
 });
 
-},{"./fetch_helpers":6,"./instrument":10,"./note":16,"./parse_audio":17,"./sample_buffer":24,"./util":36}],27:[function(require,module,exports){
+},{"./fetch_helpers":15,"./instrument":19,"./note":25,"./parse_audio":26,"./sample_buffer":33,"./util":45}],36:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -6620,7 +7914,7 @@ module.exports = self.fetch.bind(self);
   exports.default = samples;
 });
 
-},{}],28:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'filesaverjs'], factory);
@@ -6924,20 +8218,20 @@ module.exports = self.fetch.bind(self);
   }
 });
 
-},{"filesaverjs":1}],29:[function(require,module,exports){
+},{"filesaverjs":1}],38:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './init_midi', './init_audio', './midi_event', './settings', './util'], factory);
+    define(['exports', './init_midi', './init_audio', './midi_event', './util'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./init_midi'), require('./init_audio'), require('./midi_event'), require('./settings'), require('./util'));
+    factory(exports, require('./init_midi'), require('./init_audio'), require('./midi_event'), require('./util'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.init_midi, global.init_audio, global.midi_event, global.settings, global.util);
+    factory(mod.exports, global.init_midi, global.init_audio, global.midi_event, global.util);
     global.scheduler = mod.exports;
   }
-})(this, function (exports, _init_midi, _init_audio, _midi_event, _settings, _util) {
+})(this, function (exports, _init_midi, _init_audio, _midi_event, _util) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -6986,6 +8280,7 @@ module.exports = self.fetch.bind(self);
 
       this.song = song;
       this.notes = new Map();
+      this.bufferTime = song.bufferTime;
     }
 
     _createClass(Scheduler, [{
@@ -7063,7 +8358,7 @@ module.exports = self.fetch.bind(self);
       value: function getEvents() {
         var events = [];
 
-        if (this.song._loop === true && this.song._loopDuration < _settings.bufferTime) {
+        if (this.song._loop === true && this.song._loopDuration < this.bufferTime) {
           this.maxtime = this.songStartMillis + this.song._loopDuration - 1;
           //console.log(this.maxtime, this.song.loopDuration);
         }
@@ -7203,7 +8498,7 @@ module.exports = self.fetch.bind(self);
 
         if (this.song.precounting) {
           this.songCurrentMillis += diff;
-          this.maxtime = this.songCurrentMillis + _settings.bufferTime;
+          this.maxtime = this.songCurrentMillis + this.bufferTime;
           //console.log(this.songCurrentMillis)
           events = this.song._metronome.getPrecountEvents(this.maxtime);
 
@@ -7222,13 +8517,13 @@ module.exports = self.fetch.bind(self);
             this.songCurrentMillis = this.songStartMillis;
             //console.log('---->', this.songCurrentMillis)
             this.songCurrentMillis += diff;
-            this.maxtime = this.songCurrentMillis + _settings.bufferTime;
+            this.maxtime = this.songCurrentMillis + this.bufferTime;
             (_events = events).push.apply(_events, _toConsumableArray(this.getEvents()));
             //console.log(events)
           }
         } else {
             this.songCurrentMillis += diff;
-            this.maxtime = this.songCurrentMillis + _settings.bufferTime;
+            this.maxtime = this.songCurrentMillis + this.bufferTime;
             events = this.getEvents();
             //events = this.song._getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
             //events = this.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
@@ -7320,7 +8615,7 @@ module.exports = self.fetch.bind(self);
   exports.default = Scheduler;
 });
 
-},{"./init_audio":8,"./init_midi":9,"./midi_event":12,"./settings":30,"./util":36}],30:[function(require,module,exports){
+},{"./init_audio":17,"./init_midi":18,"./midi_event":21,"./util":45}],39:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -7339,15 +8634,36 @@ module.exports = self.fetch.bind(self);
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.setBufferTime = setBufferTime;
+  exports.updateSettings = updateSettings;
+  exports.getSettings = getSettings;
+
+  var _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
   //import gmInstruments from './gm_instruments'
 
-  var defaultSong = exports.defaultSong = {
+  //const params = ['ppq', 'bpm', 'bars', 'pitch', 'bufferTime', 'lowestNote', 'highestNote', 'noteNameMode', 'nominator', 'denominator', 'quantizeValue', 'fixedLengthValue', 'positionType', 'useMetronome', 'autoSize', 'playbackSpeed', 'autoQuantize', ]
+
+  var settings = {
     ppq: 960,
     bpm: 120,
     bars: 16,
+    pitch: 440,
+    bufferTime: 200,
     lowestNote: 0,
     highestNote: 127,
+    noteNameMode: 'sharp',
     nominator: 4,
     denominator: 4,
     quantizeValue: 8,
@@ -7356,13 +8672,76 @@ module.exports = self.fetch.bind(self);
     useMetronome: false,
     autoSize: true,
     playbackSpeed: 1,
-    autoQuantize: false
+    autoQuantize: false,
+    volume: 0.5
   };
 
-  var bufferTime = exports.bufferTime = 200;
+  function updateSettings(data) {
+    var _data$ppq = data.ppq;
+    settings.ppq = _data$ppq === undefined ? settings.ppq : _data$ppq;
+    var _data$bpm = data.bpm;
+    settings.bpm = _data$bpm === undefined ? settings.bpm : _data$bpm;
+    var _data$bars = data.bars;
+    settings.bars = _data$bars === undefined ? settings.bars : _data$bars;
+    var _data$pitch = data.pitch;
+    settings.pitch = _data$pitch === undefined ? settings.pitch : _data$pitch;
+    var _data$bufferTime = data.bufferTime;
+    settings.bufferTime = _data$bufferTime === undefined ? settings.bufferTime : _data$bufferTime;
+    var _data$lowestNote = data.lowestNote;
+    settings.lowestNote = _data$lowestNote === undefined ? settings.lowestNote : _data$lowestNote;
+    var _data$highestNote = data.highestNote;
+    settings.highestNote = _data$highestNote === undefined ? settings.highestNote : _data$highestNote;
+    var _data$noteNameMode = data.noteNameMode;
+    settings.noteNameMode = _data$noteNameMode === undefined ? settings.noteNameMode : _data$noteNameMode;
+    var _data$nominator = data.nominator;
+    settings.nominator = _data$nominator === undefined ? settings.nominator : _data$nominator;
+    var _data$denominator = data.denominator;
+    settings.denominator = _data$denominator === undefined ? settings.denominator : _data$denominator;
+    var _data$quantizeValue = data.quantizeValue;
+    settings.quantizeValue = _data$quantizeValue === undefined ? settings.quantizeValue : _data$quantizeValue;
+    var _data$fixedLengthValu = data.fixedLengthValue;
+    settings.fixedLengthValue = _data$fixedLengthValu === undefined ? settings.fixedLengthValue : _data$fixedLengthValu;
+    var _data$positionType = data.positionType;
+    settings.positionType = _data$positionType === undefined ? settings.positionType : _data$positionType;
+    var _data$useMetronome = data.useMetronome;
+    settings.useMetronome = _data$useMetronome === undefined ? settings.useMetronome : _data$useMetronome;
+    var _data$autoSize = data.autoSize;
+    settings.autoSize = _data$autoSize === undefined ? settings.autoSize : _data$autoSize;
+    var _data$playbackSpeed = data.playbackSpeed;
+    settings.playbackSpeed = _data$playbackSpeed === undefined ? settings.playbackSpeed : _data$playbackSpeed;
+    var _data$autoQuantize = data.autoQuantize;
+    settings.autoQuantize = _data$autoQuantize === undefined ? settings.autoQuantize : _data$autoQuantize;
+    var _data$volume = data.volume;
+    settings.volume = _data$volume === undefined ? settings.volume : _data$volume;
 
-  function setBufferTime(time) {
-    exports.bufferTime = bufferTime = time;
+
+    console.log('settings: %O', settings);
+  }
+
+  function getSettings() {
+    return _extends({}, settings);
+    /*
+      let result = {}
+      params.forEach(param => {
+        switch(param){
+          case 'pitch':
+            result.pitch = pitch
+            break
+          case 'noteNameMode':
+            result.noteNameMode = noteNameMode
+            break
+          case 'bufferTime':
+            result.bufferTime = bufferTime
+            break
+          case 'ppq':
+            result.ppq = ppq
+            break
+          default:
+            // do nothing
+        }
+      })
+      return result
+    */
   }
 
   //ported heartbeat instruments: http://github.com/abudaan/heartbeat
@@ -7404,12 +8783,9 @@ module.exports = self.fetch.bind(self);
   var getGMInstruments = exports.getGMInstruments = function getGMInstruments() {
     return gmMap;
   };
-
-  var noteNameMode = exports.noteNameMode = 'sharp';
-  var pitch = exports.pitch = 440;
 });
 
-},{}],31:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './instrument', './sample_oscillator'], factory);
@@ -7535,20 +8911,20 @@ module.exports = self.fetch.bind(self);
   }(_instrument.Instrument);
 });
 
-},{"./instrument":10,"./sample_oscillator":25}],32:[function(require,module,exports){
+},{"./instrument":19,"./sample_oscillator":34}],41:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './constants', './parse_events', './init_audio', './scheduler', './midi_event', './song_from_midifile', './util', './position', './playhead', './metronome', './eventlistener', './settings', './save_midifile', './song.update'], factory);
+    define(['exports', './constants', './parse_events', './init_audio', './scheduler', './midi_event', './song_from_midifile', './util', './position', './playhead', './metronome', './eventlistener', './save_midifile', './song.update', './settings'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./constants'), require('./parse_events'), require('./init_audio'), require('./scheduler'), require('./midi_event'), require('./song_from_midifile'), require('./util'), require('./position'), require('./playhead'), require('./metronome'), require('./eventlistener'), require('./settings'), require('./save_midifile'), require('./song.update'));
+    factory(exports, require('./constants'), require('./parse_events'), require('./init_audio'), require('./scheduler'), require('./midi_event'), require('./song_from_midifile'), require('./util'), require('./position'), require('./playhead'), require('./metronome'), require('./eventlistener'), require('./save_midifile'), require('./song.update'), require('./settings'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.constants, global.parse_events, global.init_audio, global.scheduler, global.midi_event, global.song_from_midifile, global.util, global.position, global.playhead, global.metronome, global.eventlistener, global.settings, global.save_midifile, global.song);
+    factory(mod.exports, global.constants, global.parse_events, global.init_audio, global.scheduler, global.midi_event, global.song_from_midifile, global.util, global.position, global.playhead, global.metronome, global.eventlistener, global.save_midifile, global.song, global.settings);
     global.song = mod.exports;
   }
-})(this, function (exports, _constants, _parse_events, _init_audio, _scheduler, _midi_event, _song_from_midifile, _util, _position, _playhead, _metronome, _eventlistener, _settings, _save_midifile, _song) {
+})(this, function (exports, _constants, _parse_events, _init_audio, _scheduler, _midi_event, _song_from_midifile, _util, _position, _playhead, _metronome, _eventlistener, _save_midifile, _song, _settings) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -7563,6 +8939,12 @@ module.exports = self.fetch.bind(self);
       default: obj
     };
   }
+
+  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+    return typeof obj;
+  } : function (obj) {
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+  };
 
   function _toConsumableArray(arr) {
     if (Array.isArray(arr)) {
@@ -7621,6 +9003,9 @@ module.exports = self.fetch.bind(self);
     loop: boolean,
     playbackSpeed: number,
     autoQuantize: boolean,
+    pitch: number,
+    bufferTime: number,
+    noteNameMode: string
   }
   */
 
@@ -7653,36 +9038,43 @@ module.exports = self.fetch.bind(self);
       _classCallCheck(this, Song);
 
       this.id = this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
+      var defaultSettings = (0, _settings.getSettings)();
 
       var _settings$name = settings.name;
       this.name = _settings$name === undefined ? this.id : _settings$name;
       var _settings$ppq = settings.ppq;
-      this.ppq = _settings$ppq === undefined ? _settings.defaultSong.ppq : _settings$ppq;
+      this.ppq = _settings$ppq === undefined ? defaultSettings.ppq : _settings$ppq;
       var _settings$bpm = settings.bpm;
-      this.bpm = _settings$bpm === undefined ? _settings.defaultSong.bpm : _settings$bpm;
+      this.bpm = _settings$bpm === undefined ? defaultSettings.bpm : _settings$bpm;
       var _settings$bars = settings.bars;
-      this.bars = _settings$bars === undefined ? _settings.defaultSong.bars : _settings$bars;
+      this.bars = _settings$bars === undefined ? defaultSettings.bars : _settings$bars;
       var _settings$nominator = settings.nominator;
-      this.nominator = _settings$nominator === undefined ? _settings.defaultSong.nominator : _settings$nominator;
+      this.nominator = _settings$nominator === undefined ? defaultSettings.nominator : _settings$nominator;
       var _settings$denominator = settings.denominator;
-      this.denominator = _settings$denominator === undefined ? _settings.defaultSong.denominator : _settings$denominator;
+      this.denominator = _settings$denominator === undefined ? defaultSettings.denominator : _settings$denominator;
       var _settings$quantizeVal = settings.quantizeValue;
-      this.quantizeValue = _settings$quantizeVal === undefined ? _settings.defaultSong.quantizeValue : _settings$quantizeVal;
+      this.quantizeValue = _settings$quantizeVal === undefined ? defaultSettings.quantizeValue : _settings$quantizeVal;
       var _settings$fixedLength = settings.fixedLengthValue;
-      this.fixedLengthValue = _settings$fixedLength === undefined ? _settings.defaultSong.fixedLengthValue : _settings$fixedLength;
+      this.fixedLengthValue = _settings$fixedLength === undefined ? defaultSettings.fixedLengthValue : _settings$fixedLength;
       var _settings$useMetronom = settings.useMetronome;
-      this.useMetronome = _settings$useMetronom === undefined ? _settings.defaultSong.useMetronome : _settings$useMetronom;
+      this.useMetronome = _settings$useMetronom === undefined ? defaultSettings.useMetronome : _settings$useMetronom;
       var _settings$autoSize = settings.autoSize;
-      this.autoSize = _settings$autoSize === undefined ? _settings.defaultSong.autoSize : _settings$autoSize;
+      this.autoSize = _settings$autoSize === undefined ? defaultSettings.autoSize : _settings$autoSize;
       var _settings$playbackSpe = settings.playbackSpeed;
-      this.playbackSpeed = _settings$playbackSpe === undefined ? _settings.defaultSong.playbackSpeed : _settings$playbackSpe;
+      this.playbackSpeed = _settings$playbackSpe === undefined ? defaultSettings.playbackSpeed : _settings$playbackSpe;
       var _settings$autoQuantiz = settings.autoQuantize;
-      this.autoQuantize = _settings$autoQuantiz === undefined ? _settings.defaultSong.autoQuantize : _settings$autoQuantiz;
+      this.autoQuantize = _settings$autoQuantiz === undefined ? defaultSettings.autoQuantize : _settings$autoQuantiz;
+      var _settings$pitch = settings.pitch;
+      this.pitch = _settings$pitch === undefined ? defaultSettings.pitch : _settings$pitch;
+      var _settings$bufferTime = settings.bufferTime;
+      this.bufferTime = _settings$bufferTime === undefined ? defaultSettings.bufferTime : _settings$bufferTime;
+      var _settings$noteNameMod = settings.noteNameMode;
+      this.noteNameMode = _settings$noteNameMod === undefined ? defaultSettings.noteNameMode : _settings$noteNameMod;
+      var _settings$volume = settings.volume;
+      this.volume = _settings$volume === undefined ? defaultSettings.volume : _settings$volume;
 
 
-      this._timeEvents = [new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TEMPO, this.bpm), new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TIME_SIGNATURE, this.nominator, this.denominator)];
-
-      //this._timeEvents = []
+      this._timeEvents = [];
       this._updateTimeEvents = true;
       this._lastEvent = new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.END_OF_TRACK);
 
@@ -7720,7 +9112,6 @@ module.exports = self.fetch.bind(self);
       this.stopped = true;
       this.looping = false;
 
-      this.volume = 0.5;
       this._output = _init_audio.context.createGain();
       this._output.gain.value = this.volume;
       this._output.connect(_init_audio.masterGain);
@@ -7737,7 +9128,23 @@ module.exports = self.fetch.bind(self);
       this._loopDuration = 0;
       this._precountBars = 0;
       this._endPrecountMillis = 0;
+
+      var tracks = settings.tracks;
+      var timeEvents = settings.timeEvents;
+
+
+      if (typeof timeEvents === 'undefined') {
+        this._timeEvents = [new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TEMPO, this.bpm), new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TIME_SIGNATURE, this.nominator, this.denominator)];
+      } else {
+        this.addTimeEvents.apply(this, _toConsumableArray(timeEvents));
+      }
+
+      if (typeof tracks !== 'undefined') {
+        this.addTracks.apply(this, _toConsumableArray(tracks));
+      }
+
       this.update();
+      //addSong(this)
     }
 
     _createClass(Song, [{
@@ -8035,7 +9442,46 @@ module.exports = self.fetch.bind(self);
       }
     }, {
       key: 'configure',
-      value: function configure(config) {}
+      value: function configure(config) {
+        var _this7 = this;
+
+        if (typeof config.pitch !== 'undefined') {
+
+          if (config.pitch === this.pitch) {
+            return;
+          }
+          this.pitch = config.pitch;
+          this._events.forEach(function (event) {
+            event.updatePitch(_this7.pitch);
+          });
+        }
+
+        if (typeof config.ppq !== 'undefined') {
+          var _ret = function () {
+            if (config.ppq === _this7.ppq) {
+              return {
+                v: void 0
+              };
+            }
+            var ppqFactor = config.ppq / _this7.ppq;
+            _this7.ppq = config.ppq;
+            _this7._allEvents.forEach(function (e) {
+              e.ticks = event.ticks * ppqFactor;
+            });
+            _this7._updateTimeEvents = true;
+            _this7.update();
+          }();
+
+          if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+        }
+
+        if (typeof config.playbackSpeed !== 'undefined') {
+          if (config.playbackSpeed === this.playbackSpeed) {
+            return;
+          }
+          this.playbackSpeed = config.playbackSpeed;
+        }
+      }
     }, {
       key: 'allNotesOff',
       value: function allNotesOff() {
@@ -8046,23 +9492,22 @@ module.exports = self.fetch.bind(self);
         this._scheduler.allNotesOff();
         this._metronome.allNotesOff();
       }
-    }, {
-      key: 'panic',
-      value: function panic() {
-        var _this7 = this;
+      /*
+        panic(){
+          return new Promise(resolve => {
+            this._tracks.forEach((track) => {
+              track.disconnect(this._output)
+            })
+            setTimeout(() => {
+              this._tracks.forEach((track) => {
+                track.connect(this._output)
+              })
+              resolve()
+            }, 100)
+          })
+        }
+      */
 
-        return new Promise(function (resolve) {
-          _this7._tracks.forEach(function (track) {
-            track.disconnect(_this7._output);
-          });
-          setTimeout(function () {
-            _this7._tracks.forEach(function (track) {
-              track.connect(_this7._output);
-            });
-            resolve();
-          }, 100);
-        });
-      }
     }, {
       key: 'getTracks',
       value: function getTracks() {
@@ -8300,20 +9745,20 @@ module.exports = self.fetch.bind(self);
   }();
 });
 
-},{"./constants":4,"./eventlistener":5,"./init_audio":8,"./metronome":11,"./midi_event":12,"./parse_events":18,"./playhead":20,"./position":21,"./save_midifile":28,"./scheduler":29,"./settings":30,"./song.update":33,"./song_from_midifile":34,"./util":36}],33:[function(require,module,exports){
+},{"./constants":13,"./eventlistener":14,"./init_audio":17,"./metronome":20,"./midi_event":21,"./parse_events":27,"./playhead":29,"./position":30,"./save_midifile":37,"./scheduler":38,"./settings":39,"./song.update":42,"./song_from_midifile":43,"./util":45}],42:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './parse_events', './util', './constants', './position', './midi_event', './eventlistener', './settings'], factory);
+    define(['exports', './parse_events', './util', './constants', './position', './midi_event', './eventlistener'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./parse_events'), require('./util'), require('./constants'), require('./position'), require('./midi_event'), require('./eventlistener'), require('./settings'));
+    factory(exports, require('./parse_events'), require('./util'), require('./constants'), require('./position'), require('./midi_event'), require('./eventlistener'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.parse_events, global.util, global.constants, global.position, global.midi_event, global.eventlistener, global.settings);
+    factory(mod.exports, global.parse_events, global.util, global.constants, global.position, global.midi_event, global.eventlistener);
     global.songUpdate = mod.exports;
   }
-})(this, function (exports, _parse_events, _util, _constants, _position, _midi_event, _eventlistener, _settings) {
+})(this, function (exports, _parse_events, _util, _constants, _position, _midi_event, _eventlistener) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -8360,12 +9805,16 @@ module.exports = self.fetch.bind(self);
     if (this._updateTimeEvents === true) {
       //console.log('updateTimeEvents', this._timeEvents.length)
       (0, _parse_events.parseTimeEvents)(this, this._timeEvents, this.isPlaying);
-      this._updateTimeEvents = false;
       //console.log('time events %O', this._timeEvents)
     }
 
     // only parse new and moved events
     var tobeParsed = [];
+
+    // but parse all events if the time events have been updated
+    if (this._updateTimeEvents === true) {
+      tobeParsed = [].concat(_toConsumableArray(this._events));
+    }
 
     // PARTS
 
@@ -8424,7 +9873,10 @@ module.exports = self.fetch.bind(self);
     // moved events need to be parsed
     //console.log('moved %O', this._movedEvents)
     this._movedEvents.forEach(function (event) {
-      tobeParsed.push(event);
+      // don't add moved events if the time events have been updated -> they have already been added to the tobeParsed array
+      if (_this._updateTimeEvents === false) {
+        tobeParsed.push(event);
+      }
     });
 
     // parse all new and moved events
@@ -8507,7 +9959,7 @@ module.exports = self.fetch.bind(self);
     // METRONOME
 
     // add metronome events
-    if (this._updateMetronomeEvents || this._metronome.bars !== this.bars) {
+    if (this._updateMetronomeEvents || this._metronome.bars !== this.bars || this._updateTimeEvents === true) {
       this._metronomeEvents = (0, _parse_events.parseEvents)([].concat(_toConsumableArray(this._timeEvents), _toConsumableArray(this._metronome.getEvents())));
     }
     this._allEvents = [].concat(_toConsumableArray(this._metronomeEvents), _toConsumableArray(this._events));
@@ -8539,25 +9991,26 @@ module.exports = self.fetch.bind(self);
     this._movedEvents = [];
     this._removedEvents = [];
     this._resized = false;
+    this._updateTimeEvents = false;
 
     //console.groupEnd('update song')
   }
 });
 
-},{"./constants":4,"./eventlistener":5,"./midi_event":12,"./parse_events":18,"./position":21,"./settings":30,"./util":36}],34:[function(require,module,exports){
+},{"./constants":13,"./eventlistener":14,"./midi_event":21,"./parse_events":27,"./position":30,"./util":45}],43:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', 'isomorphic-fetch', './midifile', './midi_event', './part', './track', './song', './util', './fetch_helpers'], factory);
+    define(['exports', 'isomorphic-fetch', './midifile', './midi_event', './part', './track', './song', './util', './fetch_helpers', './settings'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('isomorphic-fetch'), require('./midifile'), require('./midi_event'), require('./part'), require('./track'), require('./song'), require('./util'), require('./fetch_helpers'));
+    factory(exports, require('isomorphic-fetch'), require('./midifile'), require('./midi_event'), require('./part'), require('./track'), require('./song'), require('./util'), require('./fetch_helpers'), require('./settings'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.isomorphicFetch, global.midifile, global.midi_event, global.part, global.track, global.song, global.util, global.fetch_helpers);
+    factory(mod.exports, global.isomorphicFetch, global.midifile, global.midi_event, global.part, global.track, global.song, global.util, global.fetch_helpers, global.settings);
     global.song_from_midifile = mod.exports;
   }
-})(this, function (exports, _isomorphicFetch, _midifile, _midi_event, _part, _track, _song, _util, _fetch_helpers) {
+})(this, function (exports, _isomorphicFetch, _midifile, _midi_event, _part, _track, _song, _util, _fetch_helpers, _settings) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -8574,12 +10027,14 @@ module.exports = self.fetch.bind(self);
     };
   }
 
-  var PPQ = 960;
+  var PPQ = void 0;
 
   function toSong(parsed) {
+    PPQ = (0, _settings.getSettings)().ppq;
+
     var tracks = parsed.tracks;
     var ppq = parsed.header.ticksPerBeat;
-    var ppqFactor = PPQ / ppq; //@TODO: get ppq from config -> only necessary if you want to change the ppq of the MIDI file !
+    var ppqFactor = PPQ / ppq;
     var timeEvents = [];
     var bpm = -1;
     var nominator = -1;
@@ -8706,11 +10161,12 @@ module.exports = self.fetch.bind(self);
 
         if (events.length > 0) {
           //console.count(events.length)
-          var newTrack = new _track.Track(trackName);
-          var part = new _part.Part();
-          newTrack.addParts(part);
-          part.addEvents.apply(part, events);
-          newTracks.push(newTrack);
+          newTracks.push(new _track.Track({
+            name: trackName,
+            parts: [new _part.Part({
+              events: events
+            })]
+          }));
         }
       }
     } catch (err) {
@@ -8734,10 +10190,10 @@ module.exports = self.fetch.bind(self);
       //ppq,
       bpm: bpm,
       nominator: nominator,
-      denominator: denominator
+      denominator: denominator,
+      tracks: newTracks,
+      timeEvents: timeEvents
     });
-    song.addTracks.apply(song, newTracks);
-    song.addTimeEvents.apply(song, timeEvents);
     song.update();
     return song;
   }
@@ -8784,7 +10240,7 @@ module.exports = self.fetch.bind(self);
   }
 });
 
-},{"./fetch_helpers":6,"./midi_event":12,"./midifile":15,"./part":19,"./song":32,"./track":35,"./util":36,"isomorphic-fetch":2}],35:[function(require,module,exports){
+},{"./fetch_helpers":15,"./midi_event":21,"./midifile":24,"./part":28,"./settings":39,"./song":41,"./track":44,"./util":45,"isomorphic-fetch":2}],44:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './part', './midi_event', './midi_note', './init_midi', './util', './init_audio', './qambi', './eventlistener'], factory);
@@ -8852,15 +10308,22 @@ module.exports = self.fetch.bind(self);
     // })
 
     function Track() {
-      var name = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+      var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       _classCallCheck(this, Track);
 
       this.id = this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
-      this.name = name || this.id;
-      this.channel = 0;
-      this.muted = false;
-      this.volume = 0.5;
+
+      //console.log(this.name, this.channel, this.muted, this.volume)
+
+      var _settings$name = settings.name;
+      this.name = _settings$name === undefined ? this.id : _settings$name;
+      var _settings$channel = settings.channel;
+      this.channel = _settings$channel === undefined ? 0 : _settings$channel;
+      var _settings$muted = settings.muted;
+      this.muted = _settings$muted === undefined ? false : _settings$muted;
+      var _settings$volume = settings.volume;
+      this.volume = _settings$volume === undefined ? 0.5 : _settings$volume;
       this._panner = _init_audio.context.createPanner();
       this._panner.panningModel = 'equalpower';
       this._panner.setPosition(zeroValue, zeroValue, zeroValue);
@@ -8887,6 +10350,16 @@ module.exports = self.fetch.bind(self);
       this.monitor = false;
       this._songInput = null;
       this._effects = [];
+
+      var parts = settings.parts;
+      var instrument = settings.instrument;
+
+      if (typeof parts !== 'undefined') {
+        this.addParts.apply(this, _toConsumableArray(parts));
+      }
+      if (typeof instrument !== 'undefined') {
+        this.setInstrument(instrument);
+      }
     }
 
     _createClass(Track, [{
@@ -9591,7 +11064,7 @@ module.exports = self.fetch.bind(self);
   }();
 });
 
-},{"./eventlistener":5,"./init_audio":8,"./init_midi":9,"./midi_event":12,"./midi_note":13,"./part":19,"./qambi":22,"./util":36}],36:[function(require,module,exports){
+},{"./eventlistener":14,"./init_audio":17,"./init_midi":18,"./midi_event":21,"./midi_note":22,"./part":28,"./qambi":31,"./util":45}],45:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'isomorphic-fetch'], factory);
@@ -9853,5 +11326,5 @@ module.exports = self.fetch.bind(self);
   */
 });
 
-},{"isomorphic-fetch":2}]},{},[22])(22)
+},{"isomorphic-fetch":2}]},{},[31])(31)
 });

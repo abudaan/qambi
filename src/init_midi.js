@@ -3,6 +3,7 @@
 */
 
 import {typeString} from './util'
+import 'webmidiapishim' // you can also embed the shim as a stand-alone script in the html, then you can comment this line out
 
 
 let MIDIAccess

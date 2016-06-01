@@ -7,7 +7,8 @@
     "sequencer",
     "recording",
     "WebMIDI",
-    "WebAudio"
+    "WebAudio",
+    "Music"
   ],
   "author": "abudaan <daniel@abumarkub.net> (http://abumarkub.net)",
   "main": "dist/qambi.js",
@@ -15,6 +16,7 @@
   "devDependencies": {
     "babel-cli": "^6.7.5",
     "babel-eslint": "^6.0.2",
+    "babel-plugin-transform-es2015-modules-umd": "6.8.0",
     "babel-plugin-transform-flow-strip-types": "^6.7.0",
     "babel-preset-es2015": "6.9.0",
     "babel-preset-stage-0": "6.5.0",
@@ -51,6 +53,7 @@
   },
   "dependencies": {
     "filesaverjs": "0.2.2",
-    "isomorphic-fetch": "^2.2.1"
+    "isomorphic-fetch": "^2.2.1",
+    "webmidiapishim": "1.0.0"
   }
 }
