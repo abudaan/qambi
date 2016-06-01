@@ -19,6 +19,7 @@ function main(){
   let song = new Song({bars: 4, autoSize: false})
   let track = new Track()
   track.setRecordEnabled('midi')
+  track.monitor = true
   track.setInstrument(new SimpleSynth('square'))
   song.addTracks(track)
   song.update()
