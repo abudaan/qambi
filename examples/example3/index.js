@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function(){
     sampler = new Sampler()
     song.addTracks(track)
     track.setInstrument(sampler)
+    track.monitor = true
     initUI()
   })
 
