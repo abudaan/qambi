@@ -166,6 +166,7 @@ function _update() {
   // get the last event of this song
   var lastEvent = this._events[this._events.length - 1];
   var lastTimeEvent = this._timeEvents[this._timeEvents.length - 1];
+  //console.log(lastEvent, lastTimeEvent)
 
   // check if song has already any events
   if (lastEvent instanceof _midi_event.MIDIEvent === false) {
@@ -173,7 +174,7 @@ function _update() {
   } else if (lastTimeEvent.ticks > lastEvent.ticks) {
     lastEvent = lastTimeEvent;
   }
-  //console.log(lastEvent)
+  //console.log(lastEvent, this.bars)
 
   // get the position data of the first beat in the bar after the last bar
   this.bars = Math.max(lastEvent.bar, this.bars);

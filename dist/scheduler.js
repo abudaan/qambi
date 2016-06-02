@@ -58,7 +58,8 @@ var Scheduler = function () {
   }, {
     key: 'setTimeStamp',
     value: function setTimeStamp(timeStamp) {
-      this.timeStamp = timeStamp;
+      this.timeStamp = timeStamp; // timestamp WebAudio context -> for internal instruments
+      this.timeStamp2 = performance.now(); // timestamp since opening webpage -> for external instruments
     }
 
     // get the index of the event that has its millis value at or right after the provided millis value
@@ -132,6 +133,7 @@ var Scheduler = function () {
               //console.log(event)
               if (event.millis < rightMillis) {
                 event.time = this.timeStamp + event.millis - this.songStartMillis;
+                event.time2 = this.timeStamp2 + event.millis - this.songStartMillis;
                 events.push(event);
 
                 if (event.type === 144) {
@@ -168,6 +170,7 @@ var Scheduler = function () {
                 _event.midiNote = note;
                 _event.midiNoteId = note.id;
                 _event.time = this.timeStamp + _event.millis - this.songStartMillis;
+                _event.time2 = this.timeStamp2 + _event.millis - this.songStartMillis;
                 //console.log('added', event)
                 events.push(_event);
               }
@@ -229,6 +232,7 @@ var Scheduler = function () {
             // to be implemented
           } else {
               _event2.time = this.timeStamp + _event2.millis - this.songStartMillis;
+              _event2.time2 = this.timeStamp2 + _event2.millis - this.songStartMillis;
               events.push(_event2);
             }
           this.index++;
@@ -329,8 +333,7 @@ var Scheduler = function () {
         if (event.type === 'audio') {
           // to be implemented
         } else {
-            // convert to seconds because the audio context uses seconds for scheduling
-            track.processMIDIEvent(event, true); // true means: use latency to compensate timing for external MIDI devices, see Track.processMIDIEvent
+            track.processMIDIEvent(event);
             //console.log(context.currentTime * 1000, event.time, this.index)
             if (event.type === 144) {
               this.notes.set(event.midiNoteId, event.midiNote);
@@ -382,11 +385,13 @@ var Scheduler = function () {
   }, {
     key: 'allNotesOff',
     value: function allNotesOff() {
-      var timeStamp = _init_audio.context.currentTime * 1000;
+      var _this = this;
+
+      var timeStamp = performance.now();
       var outputs = (0, _init_midi.getMIDIOutputs)();
       outputs.forEach(function (output) {
-        output.send([0xB0, 0x7B, 0x00], timeStamp); // stop all notes
-        output.send([0xB0, 0x79, 0x00], timeStamp); // reset all controllers
+        output.send([0xB0, 0x7B, 0x00], timeStamp + _this.bufferTime); // stop all notes
+        output.send([0xB0, 0x79, 0x00], timeStamp + _this.bufferTime); // reset all controllers
       });
     }
   }]);

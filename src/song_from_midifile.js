@@ -8,15 +8,20 @@ import {base64ToBinary} from './util'
 import {status, json, arrayBuffer} from './fetch_helpers'
 import {getSettings} from './settings'
 
-let PPQ
 
-
-function toSong(parsed){
-  PPQ = getSettings().ppq
+function toSong(parsed, settings){
 
   let tracks = parsed.tracks
-  let ppq = parsed.header.ticksPerBeat
-  let ppqFactor = PPQ / ppq
+  let ppq = parsed.header.ticksPerBeat // the PPQ as set in the loaded MIDI file
+  let ppqFactor = 1
+
+  // check if we need to overrule the PPQ ofs the loaded MIDI file
+  if(typeof settings.overrulePPQ === 'undefined' || settings.overrulePPQ === true){
+    let newPPQ = getSettings().ppq
+    ppqFactor = newPPQ / ppq
+    ppq = newPPQ
+  }
+
   let timeEvents = []
   let bpm = -1
   let nominator = -1
@@ -127,16 +132,14 @@ function toSong(parsed){
   }
 
   let song = new Song({
-    ppq: PPQ,
-    playbackSpeed: 1,
-    //ppq,
+    ppq,
     bpm,
     nominator,
     denominator,
     tracks: newTracks,
     timeEvents: timeEvents
   })
-  song.update()
+  //song.update()
   return song
 }
 
@@ -145,14 +148,16 @@ export function songFromMIDIFileSync(data, settings = {}){
 
   if(data instanceof ArrayBuffer === true){
     let buffer = new Uint8Array(data);
-    song = toSong(parseMIDIFile(buffer));
+    song = toSong(parseMIDIFile(buffer), settings);
   }else if(typeof data.header !== 'undefined' && typeof data.tracks !== 'undefined'){
-    song = toSong(data);
+    // a MIDI file that has already been parsed
+    song = toSong(data, settings);
   }else{
+    // a base64 encoded MIDI file
     data = base64ToBinary(data);
     if(data instanceof ArrayBuffer === true){
       let buffer = new Uint8Array(data);
-      song = toSong(parseMIDIFile(buffer));
+      song = toSong(parseMIDIFile(buffer), settings);
     }else{
       console.error('wrong data');
     }
@@ -167,7 +172,7 @@ export function songFromMIDIFileSync(data, settings = {}){
 }
 
 
-export function songFromMIDIFile(url){
+export function songFromMIDIFile(url, settings = {}){
   return new Promise((resolve, reject) => {
     // fetch(url, {
     //   mode: 'no-cors'
@@ -176,7 +181,7 @@ export function songFromMIDIFile(url){
     .then(status)
     .then(arrayBuffer)
     .then(data => {
-      resolve(songFromMIDIFileSync(data))
+      resolve(songFromMIDIFileSync(data, settings))
     })
     .catch(e => {
       reject(e)

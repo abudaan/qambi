@@ -51,6 +51,7 @@ index = void 0,
 function getTimeEvent(song, unit, target) {
   // finds the time event that comes the closest before the target position
   var timeEvents = song._timeEvents;
+  //console.log(song._timeEvents, unit, target)
 
   for (var i = timeEvents.length - 1; i >= 0; i--) {
     var event = timeEvents[i];

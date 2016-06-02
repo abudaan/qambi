@@ -31,12 +31,6 @@ var zeroValue = 0.00000000000000001;
 var instanceIndex = 0;
 
 var Track = exports.Track = function () {
-
-  // constructor({
-  //   name,
-  //   parts, // number or array
-  // })
-
   function Track() {
     var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
@@ -70,7 +64,6 @@ var Track = exports.Track = function () {
     this._eventsById = new Map();
     this._needsUpdate = false;
     this._createEventArray = false;
-    this.latency = 100;
     this._instrument = null;
     this._tmpRecordedNotes = new Map();
     this._recordedEvents = [];
@@ -188,6 +181,7 @@ var Track = exports.Track = function () {
 
           input.onmidimessage = function (e) {
             if (_this3.monitor === true) {
+              //console.log(...e.data)
               _this3._preprocessMIDIEvent(new (Function.prototype.bind.apply(_midi_event.MIDIEvent, [null].concat([_this3._song._ticks], _toConsumableArray(e.data))))());
             }
           };
@@ -532,6 +526,7 @@ var Track = exports.Track = function () {
 
     /*
       routing: sample source -> panner -> gain -> [...fx] -> song output
+      @TODO: needs some rethinking!
     */
 
   }, {
@@ -631,22 +626,26 @@ var Track = exports.Track = function () {
       }
       return this._effects[index];
     }
-    /*
-      getOutput(){
-        return this._output
-      }
-    
-      setInput(source){
-        source.connect(this._songOutput)
-      }
-    */
+  }, {
+    key: 'getOutput',
+    value: function getOutput() {
+      return this._output;
+    }
+  }, {
+    key: 'getInput',
+    value: function getInput() {
+      return this._songOutput;
+    }
+
     // method is called when a MIDI events is send by an external or on-screen keyboard
 
   }, {
     key: '_preprocessMIDIEvent',
     value: function _preprocessMIDIEvent(midiEvent) {
-      midiEvent.time = 0; // play immediately -> see Instrument.processMIDIEvent
-      midiEvent.recordMillis = _init_audio.context.currentTime * 1000;
+      var time = _init_audio.context.currentTime * 1000;
+      midiEvent.time = time;
+      midiEvent.time2 = 0; //performance.now() -> passing 0 has the same effect as performance.now() so we choose the former
+      midiEvent.recordMillis = time;
       var note = void 0;
 
       if (midiEvent.type === _qambi.MIDIEventTypes.NOTE_ON) {
@@ -680,8 +679,6 @@ var Track = exports.Track = function () {
   }, {
     key: 'processMIDIEvent',
     value: function processMIDIEvent(event) {
-      var useLatency = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
-
 
       if (typeof event.time === 'undefined') {
         this._preprocessMIDIEvent(event);
@@ -691,16 +688,16 @@ var Track = exports.Track = function () {
       // send to javascript instrument
       if (this._instrument !== null) {
         //console.log(this.name, event)
-        this._instrument.processMIDIEvent(event, event.time / 1000);
+        this._instrument.processMIDIEvent(event);
       }
 
       // send to external hardware or software instrument
-      this._sendToExternalMIDIOutputs(event, useLatency);
+      this._sendToExternalMIDIOutputs(event);
     }
   }, {
     key: '_sendToExternalMIDIOutputs',
-    value: function _sendToExternalMIDIOutputs(event, useLatency) {
-      var latency = useLatency ? this.latency : 0;
+    value: function _sendToExternalMIDIOutputs(event) {
+      //console.log(event.time, event.millis)
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
@@ -710,11 +707,16 @@ var Track = exports.Track = function () {
           var port = _step.value;
 
           if (port) {
-            if (event.type === 128 || event.type === 144 || event.type === 176) {
-              port.send([event.type + this.channel, event.data1, event.data2], event.time + latency);
-            } else if (event.type === 192 || event.type === 224) {
-              port.send([event.type + this.channel, event.data1], event.time + latency);
+            if (event.data2 !== -1) {
+              port.send([event.type + this.channel, event.data1, event.data2], event.time2);
+            } else {
+              port.send([event.type + this.channel, event.data1], event.time2);
             }
+            // if(event.type === 128 || event.type === 144 || event.type === 176){
+            //   port.send([event.type + this.channel, event.data1, event.data2], event.time + latency)
+            // }else if(event.type === 192 || event.type === 224){
+            //   port.send([event.type, event.data1], event.time + latency)
+            // }
           }
         }
       } catch (err) {

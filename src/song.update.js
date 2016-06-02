@@ -145,7 +145,6 @@ export function _update():void{
     //console.timeEnd('parse')
   }
 
-
   if(tobeParsed.length > 0 || this._removedEvents.length > 0){
     //console.time('to array')
     this._events = Array.from(this._eventsById.values())
@@ -170,6 +169,7 @@ export function _update():void{
   // get the last event of this song
   let lastEvent = this._events[this._events.length - 1]
   let lastTimeEvent = this._timeEvents[this._timeEvents.length - 1]
+  //console.log(lastEvent, lastTimeEvent)
 
   // check if song has already any events
   if(lastEvent instanceof MIDIEvent === false){
@@ -177,7 +177,7 @@ export function _update():void{
   }else if(lastTimeEvent.ticks > lastEvent.ticks){
     lastEvent = lastTimeEvent
   }
-  //console.log(lastEvent)
+  //console.log(lastEvent, this.bars)
 
   // get the position data of the first beat in the bar after the last bar
   this.bars = Math.max(lastEvent.bar, this.bars)

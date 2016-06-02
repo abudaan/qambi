@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     if(test === 1){
 
-      fetch('../data/mozk545a.mid')
+      //fetch('../data/mozk545a.mid')
       fetch('../data/minute_waltz.mid')
       .then(response => {
         return response.arrayBuffer()
@@ -59,7 +59,6 @@ document.addEventListener('DOMContentLoaded', function(){
     let divPosition = document.getElementById('position')
     let divPositionTime = document.getElementById('position_time')
     let rangePosition = document.getElementById('playhead')
-    let rangeLatency = document.getElementById('latency')
     let selectMIDIIn = document.getElementById('midiin')
     let selectMIDIOut = document.getElementById('midiout')
     let userInteraction = false
@@ -113,12 +112,6 @@ document.addEventListener('DOMContentLoaded', function(){
       //track.disconnectMIDIOutputs() // no arguments means disconnect from all inputs
       track.connectMIDIOutputs(portId)
 */
-    })
-
-    rangeLatency.addEventListener('change', e => {
-      song.getTracks().forEach(track => {
-        track.latency = e.target.valueAsNumber
-      })
     })
 
     btnMetronome.addEventListener('click', function(){

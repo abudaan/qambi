@@ -245,8 +245,6 @@ export function parseEvents(events, isPlaying = false){
 */
         result.push(event)
 
-
-
         //console.log(event.bar)
 
         // if(event.type === 176 && event.data1 === 64){

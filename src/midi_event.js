@@ -9,10 +9,34 @@ export class MIDIEvent{
   constructor(ticks: number, type: number, data1: number, data2: number = -1, channel:number = 0){
     this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
     this.ticks = ticks
-    this.type = type
     this.data1 = data1
     this.data2 = data2
     this.pitch = getSettings().pitch
+
+    /* test whether type is a status byte or a command: */
+
+    // 1. the higher 4 bits of the status byte form the command
+    this.type = (type >> 4) * 16
+    //this.type = this.command = (type >> 4) * 16
+
+    // 2. filter channel events
+    if(this.type >= 0x80 && this.type <= 0xE0){
+      // 3. get the channel number
+      if(channel > 0){
+        // a channel is set, this overrules the channel number in the status byte
+        this.channel = channel
+      }else{
+        // extract the channel from the status byte: the lower 4 bits of the status byte form the channel number
+        this.channel = (type & 0xF)
+      }
+      //this.status = this.command + this.channel
+    }else{
+      // 4. not a channel event, set the type and command to the value of type as provided in the constructor
+      this.type = type
+      //this.type = this.command = type
+      this.channel = 0 // any
+    }
+    //console.log(type, this.type, this.command, this.status, this.channel, this.id)
 
     // sometimes NOTE_OFF events are sent as NOTE_ON events with a 0 velocity value
     if(type === 144 && data2 === 0){

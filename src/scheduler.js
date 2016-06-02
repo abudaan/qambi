@@ -40,7 +40,8 @@ export default class Scheduler{
 
 
   setTimeStamp(timeStamp){
-    this.timeStamp = timeStamp
+    this.timeStamp = timeStamp // timestamp WebAudio context -> for internal instruments
+    this.timeStamp2 = performance.now() // timestamp since opening webpage -> for external instruments
   }
 
   // get the index of the event that has its millis value at or right after the provided millis value
@@ -90,6 +91,7 @@ export default class Scheduler{
             //console.log(event)
             if(event.millis < rightMillis){
               event.time = this.timeStamp + event.millis - this.songStartMillis
+              event.time2 = this.timeStamp2 + event.millis - this.songStartMillis
               events.push(event)
 
               if(event.type === 144){
@@ -119,6 +121,7 @@ export default class Scheduler{
             event.midiNote = note
             event.midiNoteId = note.id
             event.time = this.timeStamp + event.millis - this.songStartMillis
+            event.time2 = this.timeStamp2 + event.millis - this.songStartMillis
             //console.log('added', event)
             events.push(event)
           }
@@ -165,6 +168,7 @@ export default class Scheduler{
           // to be implemented
         }else{
           event.time = (this.timeStamp + event.millis - this.songStartMillis)
+          event.time2 = (this.timeStamp2 + event.millis - this.songStartMillis)
           events.push(event);
         }
         this.index++;
@@ -268,8 +272,7 @@ export default class Scheduler{
       if(event.type === 'audio'){
         // to be implemented
       }else{
-        // convert to seconds because the audio context uses seconds for scheduling
-        track.processMIDIEvent(event, true) // true means: use latency to compensate timing for external MIDI devices, see Track.processMIDIEvent
+        track.processMIDIEvent(event)
         //console.log(context.currentTime * 1000, event.time, this.index)
         if(event.type === 144){
           this.notes.set(event.midiNoteId, event.midiNote)
@@ -319,11 +322,11 @@ export default class Scheduler{
 */
 
   allNotesOff(){
-    let timeStamp = context.currentTime * 1000
+    let timeStamp = performance.now()
     let outputs = getMIDIOutputs()
     outputs.forEach((output) => {
-      output.send([0xB0, 0x7B, 0x00], timeStamp) // stop all notes
-      output.send([0xB0, 0x79, 0x00], timeStamp) // reset all controllers
+      output.send([0xB0, 0x7B, 0x00], timeStamp + this.bufferTime) // stop all notes
+      output.send([0xB0, 0x79, 0x00], timeStamp + this.bufferTime) // reset all controllers
     })
   }
 }

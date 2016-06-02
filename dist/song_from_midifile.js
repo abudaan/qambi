@@ -28,14 +28,19 @@ var _settings = require('./settings');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var PPQ = void 0;
-
-function toSong(parsed) {
-  PPQ = (0, _settings.getSettings)().ppq;
+function toSong(parsed, settings) {
 
   var tracks = parsed.tracks;
-  var ppq = parsed.header.ticksPerBeat;
-  var ppqFactor = PPQ / ppq;
+  var ppq = parsed.header.ticksPerBeat; // the PPQ as set in the loaded MIDI file
+  var ppqFactor = 1;
+
+  // check if we need to overrule the PPQ ofs the loaded MIDI file
+  if (typeof settings.overrulePPQ === 'undefined' || settings.overrulePPQ === true) {
+    var newPPQ = (0, _settings.getSettings)().ppq;
+    ppqFactor = newPPQ / ppq;
+    ppq = newPPQ;
+  }
+
   var timeEvents = [];
   var bpm = -1;
   var nominator = -1;
@@ -186,16 +191,14 @@ function toSong(parsed) {
   }
 
   var song = new _song.Song({
-    ppq: PPQ,
-    playbackSpeed: 1,
-    //ppq,
+    ppq: ppq,
     bpm: bpm,
     nominator: nominator,
     denominator: denominator,
     tracks: newTracks,
     timeEvents: timeEvents
   });
-  song.update();
+  //song.update()
   return song;
 }
 
@@ -206,14 +209,16 @@ function songFromMIDIFileSync(data) {
 
   if (data instanceof ArrayBuffer === true) {
     var buffer = new Uint8Array(data);
-    song = toSong((0, _midifile.parseMIDIFile)(buffer));
+    song = toSong((0, _midifile.parseMIDIFile)(buffer), settings);
   } else if (typeof data.header !== 'undefined' && typeof data.tracks !== 'undefined') {
-    song = toSong(data);
+    // a MIDI file that has already been parsed
+    song = toSong(data, settings);
   } else {
+    // a base64 encoded MIDI file
     data = (0, _util.base64ToBinary)(data);
     if (data instanceof ArrayBuffer === true) {
       var _buffer = new Uint8Array(data);
-      song = toSong((0, _midifile.parseMIDIFile)(_buffer));
+      song = toSong((0, _midifile.parseMIDIFile)(_buffer), settings);
     } else {
       console.error('wrong data');
     }
@@ -228,12 +233,14 @@ function songFromMIDIFileSync(data) {
 }
 
 function songFromMIDIFile(url) {
+  var settings = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
   return new Promise(function (resolve, reject) {
     // fetch(url, {
     //   mode: 'no-cors'
     // })
     (0, _isomorphicFetch2.default)(url).then(_fetch_helpers.status).then(_fetch_helpers.arrayBuffer).then(function (data) {
-      resolve(songFromMIDIFileSync(data));
+      resolve(songFromMIDIFileSync(data, settings));
     }).catch(function (e) {
       reject(e);
     });

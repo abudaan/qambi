@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', function(){
       useMetronome: true
     })
 
-    song.update()
     song.play()
   })
 })

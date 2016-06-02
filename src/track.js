@@ -7,17 +7,10 @@ import {context} from './init_audio'
 import {MIDIEventTypes} from './qambi'
 import {dispatchEvent} from './eventlistener'
 
-
 const zeroValue = 0.00000000000000001
 let instanceIndex = 0
 
 export class Track{
-
-  // constructor({
-  //   name,
-  //   parts, // number or array
-  // })
-
 
   constructor(settings = {}){
     this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`;
@@ -47,7 +40,6 @@ export class Track{
     this._eventsById = new Map()
     this._needsUpdate = false
     this._createEventArray = false
-    this.latency = 100
     this._instrument = null
     this._tmpRecordedNotes = new Map()
     this._recordedEvents = []
@@ -141,6 +133,7 @@ export class Track{
 
         input.onmidimessage = e => {
           if(this.monitor === true){
+            //console.log(...e.data)
             this._preprocessMIDIEvent(new MIDIEvent(this._song._ticks, ...e.data))
           }
         }
@@ -394,6 +387,7 @@ export class Track{
 
   /*
     routing: sample source -> panner -> gain -> [...fx] -> song output
+    @TODO: needs some rethinking!
   */
   connect(songOutput){
     this._songOutput = songOutput
@@ -481,19 +475,21 @@ export class Track{
     }
     return this._effects[index]
   }
-/*
+
   getOutput(){
     return this._output
   }
 
-  setInput(source){
-    source.connect(this._songOutput)
+  getInput(){
+    return this._songOutput
   }
-*/
+
   // method is called when a MIDI events is send by an external or on-screen keyboard
   _preprocessMIDIEvent(midiEvent){
-    midiEvent.time = 0 // play immediately -> see Instrument.processMIDIEvent
-    midiEvent.recordMillis = context.currentTime * 1000
+    let time = context.currentTime * 1000
+    midiEvent.time = time
+    midiEvent.time2 = 0//performance.now() -> passing 0 has the same effect as performance.now() so we choose the former
+    midiEvent.recordMillis = time
     let note
 
     if(midiEvent.type === MIDIEventTypes.NOTE_ON){
@@ -523,7 +519,7 @@ export class Track{
   }
 
   // method is called by scheduler during playback
-  processMIDIEvent(event, useLatency = false){
+  processMIDIEvent(event){
 
     if(typeof event.time === 'undefined'){
       this._preprocessMIDIEvent(event)
@@ -533,22 +529,27 @@ export class Track{
     // send to javascript instrument
     if(this._instrument !== null){
       //console.log(this.name, event)
-      this._instrument.processMIDIEvent(event, event.time / 1000)
+      this._instrument.processMIDIEvent(event)
     }
 
     // send to external hardware or software instrument
-    this._sendToExternalMIDIOutputs(event, useLatency)
+    this._sendToExternalMIDIOutputs(event)
   }
 
-  _sendToExternalMIDIOutputs(event, useLatency){
-    let latency = useLatency ? this.latency : 0
+  _sendToExternalMIDIOutputs(event){
+    //console.log(event.time, event.millis)
     for(let port of this._midiOutputs.values()){
       if(port){
-        if(event.type === 128 || event.type === 144 || event.type === 176){
-          port.send([event.type + this.channel, event.data1, event.data2], event.time + latency)
-        }else if(event.type === 192 || event.type === 224){
-          port.send([event.type + this.channel, event.data1], event.time + latency)
+        if(event.data2 !== -1){
+          port.send([event.type + this.channel, event.data1, event.data2], event.time2)
+        }else{
+          port.send([event.type + this.channel, event.data1], event.time2)
         }
+        // if(event.type === 128 || event.type === 144 || event.type === 176){
+        //   port.send([event.type + this.channel, event.data1, event.data2], event.time + latency)
+        // }else if(event.type === 192 || event.type === 224){
+        //   port.send([event.type, event.data1], event.time + latency)
+        // }
       }
     }
   }

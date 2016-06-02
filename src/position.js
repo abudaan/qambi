@@ -42,6 +42,7 @@ let
 function getTimeEvent(song, unit, target){
   // finds the time event that comes the closest before the target position
   let timeEvents = song._timeEvents
+  //console.log(song._timeEvents, unit, target)
 
   for(let i = timeEvents.length - 1; i >= 0; i--){
     let event = timeEvents[i];

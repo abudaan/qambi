@@ -147,3 +147,6 @@ a:hover .logo{
 .example-link:hover{
   background-image: url('link-over.svg');
 }
+a.logo-link:hover{
+  text-decoration: none;
+}

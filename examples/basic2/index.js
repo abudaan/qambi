@@ -1,6 +1,8 @@
 import qambi, {
-  Instrument,
+  Sampler,
   MIDIEvent,
+  Track,
+  getAudioContext,
 } from '../../src/qambi'
 
 document.addEventListener('DOMContentLoaded', function(){
@@ -8,7 +10,10 @@ document.addEventListener('DOMContentLoaded', function(){
   qambi.init()
   .then(() => {
 
-    let piano = new Instrument()
+    let piano = new Sampler()
+    let track = new Track({instrument: piano})
+    track.setInstrument(piano)
+    track.connect(getAudioContext().destination)
 
     //piano.parseSampleData({release: [5, 'equal_power'], 61: '../../instruments/rhodes/FreesoundRhodes-000-061-c#3.mp3'})
     // piano.parseSampleData({
@@ -23,8 +28,9 @@ document.addEventListener('DOMContentLoaded', function(){
       //baseUrl: '../../instruments/rhodes' // url of the folder where the mp3 files are stored, can be an absolute url as well
     })
     .then(() => {
-      piano.processMIDIEvent(new MIDIEvent(0, 144, 61, 100))
-      piano.processMIDIEvent(new MIDIEvent(960, 128, 61, 0))
+      console.log('play')
+      track.processMIDIEvent(new MIDIEvent(0, 145, 61, 100, 10))
+      track.processMIDIEvent(new MIDIEvent(960, 129, 61, 0, 10))
     })
 
   })

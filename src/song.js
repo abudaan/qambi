@@ -143,7 +143,7 @@ export class Song{
     this._endPrecountMillis = 0
 
     let {tracks, timeEvents} = settings
-
+    //console.log(tracks, timeEvents)
     if(typeof timeEvents === 'undefined'){
       this._timeEvents = [
         new MIDIEvent(0, MIDIEventTypes.TEMPO, this.bpm),
@@ -159,7 +159,6 @@ export class Song{
 
 
     this.update()
-    //addSong(this)
   }
 
   addTimeEvents(...events){
@@ -260,6 +259,7 @@ export class Song{
     }
 
     let now = context.currentTime * 1000
+    //console.log(now, performance.now())
     let diff = now - this._reference
     this._currentMillis += diff
     this._reference = now

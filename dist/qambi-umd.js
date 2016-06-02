@@ -3199,9 +3199,7 @@ function polyfill() {
       value: function processMIDIEvent(event) {
         var _this = this;
 
-        var time = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
-
-        //console.log(event, time)
+        var time = event.time / 1000;
         var sample = void 0;
 
         if (isNaN(time)) {
@@ -3211,8 +3209,9 @@ function polyfill() {
           //time = context.currentTime
         }
 
-        // this is an event that is send from an external MIDI keyboard
         if (time === 0) {
+          // this shouldn't happen -> external MIDI keyboards
+          console.error('should not happen');
           time = _init_audio.context.currentTime;
         }
 
@@ -3838,10 +3837,34 @@ function polyfill() {
 
       this.id = this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
       this.ticks = ticks;
-      this.type = type;
       this.data1 = data1;
       this.data2 = data2;
       this.pitch = (0, _settings.getSettings)().pitch;
+
+      /* test whether type is a status byte or a command: */
+
+      // 1. the higher 4 bits of the status byte form the command
+      this.type = (type >> 4) * 16;
+      //this.type = this.command = (type >> 4) * 16
+
+      // 2. filter channel events
+      if (this.type >= 0x80 && this.type <= 0xE0) {
+        // 3. get the channel number
+        if (channel > 0) {
+          // a channel is set, this overrules the channel number in the status byte
+          this.channel = channel;
+        } else {
+          // extract the channel from the status byte: the lower 4 bits of the status byte form the channel number
+          this.channel = type & 0xF;
+        }
+        //this.status = this.command + this.channel
+      } else {
+          // 4. not a channel event, set the type and command to the value of type as provided in the constructor
+          this.type = type;
+          //this.type = this.command = type
+          this.channel = 0; // any
+        }
+      //console.log(type, this.type, this.command, this.status, this.channel, this.id)
 
       // sometimes NOTE_OFF events are sent as NOTE_ON events with a 0 velocity value
       if (type === 144 && data2 === 0) {
@@ -6195,6 +6218,7 @@ function polyfill() {
   function getTimeEvent(song, unit, target) {
     // finds the time event that comes the closest before the target position
     var timeEvents = song._timeEvents;
+    //console.log(song._timeEvents, unit, target)
 
     for (var i = timeEvents.length - 1; i >= 0; i--) {
       var event = timeEvents[i];
@@ -8311,7 +8335,8 @@ function polyfill() {
     }, {
       key: 'setTimeStamp',
       value: function setTimeStamp(timeStamp) {
-        this.timeStamp = timeStamp;
+        this.timeStamp = timeStamp; // timestamp WebAudio context -> for internal instruments
+        this.timeStamp2 = performance.now(); // timestamp since opening webpage -> for external instruments
       }
     }, {
       key: 'setIndex',
@@ -8382,6 +8407,7 @@ function polyfill() {
                 //console.log(event)
                 if (event.millis < rightMillis) {
                   event.time = this.timeStamp + event.millis - this.songStartMillis;
+                  event.time2 = this.timeStamp2 + event.millis - this.songStartMillis;
                   events.push(event);
 
                   if (event.type === 144) {
@@ -8418,6 +8444,7 @@ function polyfill() {
                   _event.midiNote = note;
                   _event.midiNoteId = note.id;
                   _event.time = this.timeStamp + _event.millis - this.songStartMillis;
+                  _event.time2 = this.timeStamp2 + _event.millis - this.songStartMillis;
                   //console.log('added', event)
                   events.push(_event);
                 }
@@ -8479,6 +8506,7 @@ function polyfill() {
               // to be implemented
             } else {
                 _event2.time = this.timeStamp + _event2.millis - this.songStartMillis;
+                _event2.time2 = this.timeStamp2 + _event2.millis - this.songStartMillis;
                 events.push(_event2);
               }
             this.index++;
@@ -8579,8 +8607,7 @@ function polyfill() {
           if (event.type === 'audio') {
             // to be implemented
           } else {
-              // convert to seconds because the audio context uses seconds for scheduling
-              track.processMIDIEvent(event, true); // true means: use latency to compensate timing for external MIDI devices, see Track.processMIDIEvent
+              track.processMIDIEvent(event);
               //console.log(context.currentTime * 1000, event.time, this.index)
               if (event.type === 144) {
                 this.notes.set(event.midiNoteId, event.midiNote);
@@ -8599,11 +8626,13 @@ function polyfill() {
     }, {
       key: 'allNotesOff',
       value: function allNotesOff() {
-        var timeStamp = _init_audio.context.currentTime * 1000;
+        var _this = this;
+
+        var timeStamp = performance.now();
         var outputs = (0, _init_midi.getMIDIOutputs)();
         outputs.forEach(function (output) {
-          output.send([0xB0, 0x7B, 0x00], timeStamp); // stop all notes
-          output.send([0xB0, 0x79, 0x00], timeStamp); // reset all controllers
+          output.send([0xB0, 0x7B, 0x00], timeStamp + _this.bufferTime); // stop all notes
+          output.send([0xB0, 0x79, 0x00], timeStamp + _this.bufferTime); // reset all controllers
         });
       }
     }]);
@@ -9130,7 +9159,7 @@ function polyfill() {
 
       var tracks = settings.tracks;
       var timeEvents = settings.timeEvents;
-
+      //console.log(tracks, timeEvents)
 
       if (typeof timeEvents === 'undefined') {
         this._timeEvents = [new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TEMPO, this.bpm), new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TIME_SIGNATURE, this.nominator, this.denominator)];
@@ -9143,7 +9172,6 @@ function polyfill() {
       }
 
       this.update();
-      //addSong(this)
     }
 
     _createClass(Song, [{
@@ -9273,6 +9301,7 @@ function polyfill() {
         }
 
         var now = _init_audio.context.currentTime * 1000;
+        //console.log(now, performance.now())
         var diff = now - this._reference;
         this._currentMillis += diff;
         this._reference = now;
@@ -9923,6 +9952,7 @@ function polyfill() {
     // get the last event of this song
     var lastEvent = this._events[this._events.length - 1];
     var lastTimeEvent = this._timeEvents[this._timeEvents.length - 1];
+    //console.log(lastEvent, lastTimeEvent)
 
     // check if song has already any events
     if (lastEvent instanceof _midi_event.MIDIEvent === false) {
@@ -9930,7 +9960,7 @@ function polyfill() {
     } else if (lastTimeEvent.ticks > lastEvent.ticks) {
       lastEvent = lastTimeEvent;
     }
-    //console.log(lastEvent)
+    //console.log(lastEvent, this.bars)
 
     // get the position data of the first beat in the bar after the last bar
     this.bars = Math.max(lastEvent.bar, this.bars);
@@ -10026,14 +10056,19 @@ function polyfill() {
     };
   }
 
-  var PPQ = void 0;
-
-  function toSong(parsed) {
-    PPQ = (0, _settings.getSettings)().ppq;
+  function toSong(parsed, settings) {
 
     var tracks = parsed.tracks;
-    var ppq = parsed.header.ticksPerBeat;
-    var ppqFactor = PPQ / ppq;
+    var ppq = parsed.header.ticksPerBeat; // the PPQ as set in the loaded MIDI file
+    var ppqFactor = 1;
+
+    // check if we need to overrule the PPQ ofs the loaded MIDI file
+    if (typeof settings.overrulePPQ === 'undefined' || settings.overrulePPQ === true) {
+      var newPPQ = (0, _settings.getSettings)().ppq;
+      ppqFactor = newPPQ / ppq;
+      ppq = newPPQ;
+    }
+
     var timeEvents = [];
     var bpm = -1;
     var nominator = -1;
@@ -10184,16 +10219,14 @@ function polyfill() {
     }
 
     var song = new _song.Song({
-      ppq: PPQ,
-      playbackSpeed: 1,
-      //ppq,
+      ppq: ppq,
       bpm: bpm,
       nominator: nominator,
       denominator: denominator,
       tracks: newTracks,
       timeEvents: timeEvents
     });
-    song.update();
+    //song.update()
     return song;
   }
 
@@ -10204,14 +10237,16 @@ function polyfill() {
 
     if (data instanceof ArrayBuffer === true) {
       var buffer = new Uint8Array(data);
-      song = toSong((0, _midifile.parseMIDIFile)(buffer));
+      song = toSong((0, _midifile.parseMIDIFile)(buffer), settings);
     } else if (typeof data.header !== 'undefined' && typeof data.tracks !== 'undefined') {
-      song = toSong(data);
+      // a MIDI file that has already been parsed
+      song = toSong(data, settings);
     } else {
+      // a base64 encoded MIDI file
       data = (0, _util.base64ToBinary)(data);
       if (data instanceof ArrayBuffer === true) {
         var _buffer = new Uint8Array(data);
-        song = toSong((0, _midifile.parseMIDIFile)(_buffer));
+        song = toSong((0, _midifile.parseMIDIFile)(_buffer), settings);
       } else {
         console.error('wrong data');
       }
@@ -10226,12 +10261,14 @@ function polyfill() {
   }
 
   function songFromMIDIFile(url) {
+    var settings = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
     return new Promise(function (resolve, reject) {
       // fetch(url, {
       //   mode: 'no-cors'
       // })
       (0, _isomorphicFetch2.default)(url).then(_fetch_helpers.status).then(_fetch_helpers.arrayBuffer).then(function (data) {
-        resolve(songFromMIDIFileSync(data));
+        resolve(songFromMIDIFileSync(data, settings));
       }).catch(function (e) {
         reject(e);
       });
@@ -10300,12 +10337,6 @@ function polyfill() {
   var instanceIndex = 0;
 
   var Track = exports.Track = function () {
-
-    // constructor({
-    //   name,
-    //   parts, // number or array
-    // })
-
     function Track() {
       var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
@@ -10339,7 +10370,6 @@ function polyfill() {
       this._eventsById = new Map();
       this._needsUpdate = false;
       this._createEventArray = false;
-      this.latency = 100;
       this._instrument = null;
       this._tmpRecordedNotes = new Map();
       this._recordedEvents = [];
@@ -10457,6 +10487,7 @@ function polyfill() {
 
             input.onmidimessage = function (e) {
               if (_this3.monitor === true) {
+                //console.log(...e.data)
                 _this3._preprocessMIDIEvent(new (Function.prototype.bind.apply(_midi_event.MIDIEvent, [null].concat([_this3._song._ticks], _toConsumableArray(e.data))))());
               }
             };
@@ -10801,6 +10832,7 @@ function polyfill() {
 
       /*
         routing: sample source -> panner -> gain -> [...fx] -> song output
+        @TODO: needs some rethinking!
       */
 
     }, {
@@ -10900,22 +10932,26 @@ function polyfill() {
         }
         return this._effects[index];
       }
-      /*
-        getOutput(){
-          return this._output
-        }
-      
-        setInput(source){
-          source.connect(this._songOutput)
-        }
-      */
+    }, {
+      key: 'getOutput',
+      value: function getOutput() {
+        return this._output;
+      }
+    }, {
+      key: 'getInput',
+      value: function getInput() {
+        return this._songOutput;
+      }
+
       // method is called when a MIDI events is send by an external or on-screen keyboard
 
     }, {
       key: '_preprocessMIDIEvent',
       value: function _preprocessMIDIEvent(midiEvent) {
-        midiEvent.time = 0; // play immediately -> see Instrument.processMIDIEvent
-        midiEvent.recordMillis = _init_audio.context.currentTime * 1000;
+        var time = _init_audio.context.currentTime * 1000;
+        midiEvent.time = time;
+        midiEvent.time2 = 0; //performance.now() -> passing 0 has the same effect as performance.now() so we choose the former
+        midiEvent.recordMillis = time;
         var note = void 0;
 
         if (midiEvent.type === _qambi.MIDIEventTypes.NOTE_ON) {
@@ -10949,8 +10985,6 @@ function polyfill() {
     }, {
       key: 'processMIDIEvent',
       value: function processMIDIEvent(event) {
-        var useLatency = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
-
 
         if (typeof event.time === 'undefined') {
           this._preprocessMIDIEvent(event);
@@ -10960,16 +10994,16 @@ function polyfill() {
         // send to javascript instrument
         if (this._instrument !== null) {
           //console.log(this.name, event)
-          this._instrument.processMIDIEvent(event, event.time / 1000);
+          this._instrument.processMIDIEvent(event);
         }
 
         // send to external hardware or software instrument
-        this._sendToExternalMIDIOutputs(event, useLatency);
+        this._sendToExternalMIDIOutputs(event);
       }
     }, {
       key: '_sendToExternalMIDIOutputs',
-      value: function _sendToExternalMIDIOutputs(event, useLatency) {
-        var latency = useLatency ? this.latency : 0;
+      value: function _sendToExternalMIDIOutputs(event) {
+        //console.log(event.time, event.millis)
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
         var _iteratorError = undefined;
@@ -10979,11 +11013,16 @@ function polyfill() {
             var port = _step.value;
 
             if (port) {
-              if (event.type === 128 || event.type === 144 || event.type === 176) {
-                port.send([event.type + this.channel, event.data1, event.data2], event.time + latency);
-              } else if (event.type === 192 || event.type === 224) {
-                port.send([event.type + this.channel, event.data1], event.time + latency);
+              if (event.data2 !== -1) {
+                port.send([event.type + this.channel, event.data1, event.data2], event.time2);
+              } else {
+                port.send([event.type + this.channel, event.data1], event.time2);
               }
+              // if(event.type === 128 || event.type === 144 || event.type === 176){
+              //   port.send([event.type + this.channel, event.data1, event.data2], event.time + latency)
+              // }else if(event.type === 192 || event.type === 224){
+              //   port.send([event.type, event.data1], event.time + latency)
+              // }
             }
           }
         } catch (err) {

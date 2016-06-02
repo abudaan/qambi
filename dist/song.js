@@ -194,7 +194,7 @@ var Song = exports.Song = function () {
 
     var tracks = settings.tracks;
     var timeEvents = settings.timeEvents;
-
+    //console.log(tracks, timeEvents)
 
     if (typeof timeEvents === 'undefined') {
       this._timeEvents = [new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TEMPO, this.bpm), new _midi_event.MIDIEvent(0, _constants.MIDIEventTypes.TIME_SIGNATURE, this.nominator, this.denominator)];
@@ -207,7 +207,6 @@ var Song = exports.Song = function () {
     }
 
     this.update();
-    //addSong(this)
   }
 
   _createClass(Song, [{
@@ -337,6 +336,7 @@ var Song = exports.Song = function () {
       }
 
       var now = _init_audio.context.currentTime * 1000;
+      //console.log(now, performance.now())
       var diff = now - this._reference;
       this._currentMillis += diff;
       this._reference = now;

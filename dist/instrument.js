@@ -47,9 +47,7 @@ var Instrument = exports.Instrument = function () {
     value: function processMIDIEvent(event) {
       var _this = this;
 
-      var time = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
-
-      //console.log(event, time)
+      var time = event.time / 1000;
       var sample = void 0;
 
       if (isNaN(time)) {
@@ -59,8 +57,9 @@ var Instrument = exports.Instrument = function () {
         //time = context.currentTime
       }
 
-      // this is an event that is send from an external MIDI keyboard
       if (time === 0) {
+        // this shouldn't happen -> external MIDI keyboards
+        console.error('should not happen');
         time = _init_audio.context.currentTime;
       }
 
