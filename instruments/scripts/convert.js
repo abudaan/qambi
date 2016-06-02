@@ -8,12 +8,12 @@ import fs from 'fs'
 
 let args = process.argv
 let json = args[2]
-let name = 'ck-iceskates'
+let name = 'shk2-squareroot'
 let multilayered = true
 //json = '/home/abudaan/workspace/heartbeat/assets/sso/strings/violin.mp3.112.json'
 //json = '/home/abudaan/workspace/heartbeat/assets/sso/brass/trumpet.mp3.112.json'
-json = '/home/abudaan/workspace/heartbeat/assets/detunized/ck-iceskates.mp3.128.json'
-//json = '/home/abudaan/workspace/heartbeat/assets/detunized/shk2-squareroot.mp3.128.json'
+//json = '/home/abudaan/workspace/heartbeat/assets/detunized/ck-iceskates.mp3.128.json'
+json = '/home/abudaan/workspace/heartbeat/assets/detunized/shk2-squareroot.mp3.128.json'
 //json = '/home/abudaan/workspace/heartbeat/assets/city-piano/city-piano-velocity-layers.mp3.128.json'
 
 json = JSON.parse(fs.readFileSync(json))
@@ -25,11 +25,12 @@ let result = {
   baseUrl: `https://raw.githubusercontent.com/abudaan/qambi/gh-pages/instruments/samples/${name}/`,
   release: [instrument.release_duration, instrument.release_envelope],
   info: {
-    name: 'CK - Ice Skates',
+    name: 'SHK2 - Square Root',
     url: 'http://detunized.com',
     keyrange: instrument.keyrange,
     //velocityLayers: '0-48, 49-96, 97-110, 111-127',
-    velocityLayers: '0-74, 75-105, 106-127',
+    velocityLayers: '0-90, 91-127',
+    looped: true
 //    description: 'sampled from Baldwin piano'
   }
 }
