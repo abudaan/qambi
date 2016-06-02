@@ -6855,7 +6855,7 @@ function polyfill() {
     value: true
   });
   exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
-  var version = '1.0.0-beta26';
+  var version = '1.0.0-beta27';
 
   var getAudioContext = function getAudioContext() {
     return _init_audio.context;
@@ -7543,16 +7543,20 @@ function polyfill() {
 
       _this.id = _this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
       _this.name = name || _this.id;
-
-      // create a samples data object for all 128 velocity levels of all 128 notes
-      _this.samplesData = new Array(128).fill(-1);
-      _this.samplesData = _this.samplesData.map(function () {
-        return new Array(128).fill(-1);
-      });
+      _this.clearAllSampleData();
       return _this;
     }
 
     _createClass(Sampler, [{
+      key: 'clearAllSampleData',
+      value: function clearAllSampleData() {
+        // create a samples data object for all 128 velocity levels of all 128 notes
+        this.samplesData = new Array(128).fill(-1);
+        this.samplesData = this.samplesData.map(function () {
+          return new Array(128).fill(-1);
+        });
+      }
+    }, {
       key: 'createSample',
       value: function createSample(event) {
         return new _sample_buffer.SampleBuffer(this.samplesData[event.data1][event.data2], event);
@@ -7572,6 +7576,9 @@ function polyfill() {
       key: 'parseSampleData',
       value: function parseSampleData(data) {
         var _this2 = this;
+
+        // check if we have to clear the currently loaded samples
+        var clearAll = data.clearAll;
 
         // check if we have to overrule the baseUrl of the sampels
         var baseUrl = null;
@@ -7599,7 +7606,11 @@ function polyfill() {
             }
             return (0, _parse_audio.parseSamples)(data);
           }).then(function (result) {
-            //console.log(result)
+
+            if (clearAll === true) {
+              _this2.clearAllSampleData();
+            }
+
             if ((typeof result === 'undefined' ? 'undefined' : _typeof(result)) === 'object') {
 
               // single concatenated sample
@@ -7762,9 +7773,6 @@ function polyfill() {
           }
         });
       }
-    }, {
-      key: 'clearSampleData',
-      value: function clearSampleData() {}
     }, {
       key: '_updateSampleData',
       value: function _updateSampleData() {
@@ -8783,7 +8791,7 @@ function polyfill() {
     name: 'CK Ice Skates (synth)',
     description: 'uses Detunized samples'
   }], ['shk2-squareroot', {
-    name: 'SHK squareroot (synth)',
+    name: 'SHK2 squareroot (synth)',
     description: 'uses Detunized samples'
   }], ['rhodes', {
     name: 'Rhodes (piano)',

@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function(){
         console.log(`loaded: ${key}`)
       })
 /*
-      // option 1: clear the samples of the currently loaded instrument before loading the new sampler
+      // option 2: clear the samples of the currently loaded instrument before loading the new samples
       sampler.clearAllSampleData()
       sampler.parseSampleData({url})
       .then(() => {
