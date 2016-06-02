@@ -41,16 +41,20 @@ var Sampler = exports.Sampler = function (_Instrument) {
 
     _this.id = _this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
     _this.name = name || _this.id;
-
-    // create a samples data object for all 128 velocity levels of all 128 notes
-    _this.samplesData = new Array(128).fill(-1);
-    _this.samplesData = _this.samplesData.map(function () {
-      return new Array(128).fill(-1);
-    });
+    _this.clearAllSampleData();
     return _this;
   }
 
   _createClass(Sampler, [{
+    key: 'clearAllSampleData',
+    value: function clearAllSampleData() {
+      // create a samples data object for all 128 velocity levels of all 128 notes
+      this.samplesData = new Array(128).fill(-1);
+      this.samplesData = this.samplesData.map(function () {
+        return new Array(128).fill(-1);
+      });
+    }
+  }, {
     key: 'createSample',
     value: function createSample(event) {
       return new _sample_buffer.SampleBuffer(this.samplesData[event.data1][event.data2], event);
@@ -70,6 +74,9 @@ var Sampler = exports.Sampler = function (_Instrument) {
     key: 'parseSampleData',
     value: function parseSampleData(data) {
       var _this2 = this;
+
+      // check if we have to clear the currently loaded samples
+      var clearAll = data.clearAll;
 
       // check if we have to overrule the baseUrl of the sampels
       var baseUrl = null;
@@ -97,7 +104,11 @@ var Sampler = exports.Sampler = function (_Instrument) {
           }
           return (0, _parse_audio.parseSamples)(data);
         }).then(function (result) {
-          //console.log(result)
+
+          if (clearAll === true) {
+            _this2.clearAllSampleData();
+          }
+
           if ((typeof result === 'undefined' ? 'undefined' : _typeof(result)) === 'object') {
 
             // single concatenated sample
@@ -260,9 +271,6 @@ var Sampler = exports.Sampler = function (_Instrument) {
         }
       });
     }
-  }, {
-    key: 'clearSampleData',
-    value: function clearSampleData() {}
   }, {
     key: '_updateSampleData',
     value: function _updateSampleData() {

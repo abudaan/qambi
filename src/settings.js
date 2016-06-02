@@ -92,7 +92,7 @@ const heartbeatInstruments = new Map([
     description: 'uses Detunized samples',
   }],
   ['shk2-squareroot', {
-    name: 'SHK squareroot (synth)',
+    name: 'SHK2 squareroot (synth)',
     description: 'uses Detunized samples',
   }],
   ['rhodes', {

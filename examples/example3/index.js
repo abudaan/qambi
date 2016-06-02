@@ -78,10 +78,21 @@ document.addEventListener('DOMContentLoaded', function(){
     selectInstrument.addEventListener('change', () => {
       let key = selectInstrument.options[selectInstrument.selectedIndex].id
       let url = `${path}/${key}.json`
+
+
+      // option 1: clear the samples of the currently loaded instrument after the new samples have been loaded
+      sampler.parseSampleData({url, clearAll: true})
+      .then(() => {
+        console.log(`loaded: ${key}`)
+      })
+/*
+      // option 1: clear the samples of the currently loaded instrument before loading the new sampler
+      sampler.clearAllSampleData()
       sampler.parseSampleData({url})
       .then(() => {
         console.log(`loaded: ${key}`)
       })
+*/
     })
   }
 })

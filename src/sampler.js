@@ -14,7 +14,10 @@ export class Sampler extends Instrument{
     super()
     this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`
     this.name = name || this.id
+    this.clearAllSampleData()
+  }
 
+  clearAllSampleData(){
     // create a samples data object for all 128 velocity levels of all 128 notes
     this.samplesData = new Array(128).fill(-1)
     this.samplesData = this.samplesData.map(function(){
@@ -35,6 +38,9 @@ export class Sampler extends Instrument{
 
   // load and parse
   parseSampleData(data){
+
+    // check if we have to clear the currently loaded samples
+    let clearAll = data.clearAll
 
     // check if we have to overrule the baseUrl of the sampels
     let baseUrl = null
@@ -64,7 +70,11 @@ export class Sampler extends Instrument{
         return parseSamples(data)
       })
       .then((result) => {
-        //console.log(result)
+
+        if(clearAll === true){
+          this.clearAllSampleData()
+        }
+
         if(typeof result === 'object'){
 
           // single concatenated sample
@@ -183,10 +193,6 @@ export class Sampler extends Instrument{
         this._updateSampleData(noteData)
       }
     })
-  }
-
-  clearSampleData(){
-
   }
 
   _updateSampleData(data = {}){
