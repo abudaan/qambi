@@ -408,26 +408,31 @@ export class Track{
   }
 
   addEffect(effect){
-    if(this._checkEffect(effect) === false){
-      return
-    }
-    let numFX = this._effects.length
-    let lastFX
-    let output
-    if(numFX === 0){
-      lastFX = this._output
-      lastFX.disconnect(this._songOutput)
-      output = this._output
-    }else{
-      lastFX = this._effects[numFX - 1]
-      lastFX.disconnect()
-      output = lastFX.getOutput()
-    }
 
-    effect.setInput(output)
-    effect.setOutput(this._songOutput)
+    this._output.disconnect(this._songOutput)
+    this._output.connect(effect.input)
+    effect.output.connect(this._songOutput)
 
-    this._effects.push(effect)
+    // if(this._checkEffect(effect) === false){
+    //   return
+    // }
+    // let numFX = this._effects.length
+    // let lastFX
+    // let output
+    // if(numFX === 0){
+    //   lastFX = this._output
+    //   lastFX.disconnect(this._songOutput)
+    //   output = this._output
+    // }else{
+    //   lastFX = this._effects[numFX - 1]
+    //   lastFX.disconnect()
+    //   output = lastFX.getOutput()
+    // }
+
+    // effect.setInput(output)
+    // effect.setOutput(this._songOutput)
+
+    // this._effects.push(effect)
   }
 
   addEffectAt(effect, index: number){
@@ -437,32 +442,39 @@ export class Track{
     this._effects.splice(index, 0, effect)
   }
 
-  removeEffect(index: number){
-    if(isNaN(index)){
-      return
-    }
-    this._effects.forEach(fx => {
-      fx.disconnect()
-    })
-    this._effects.splice(index, 1)
+  //removeEffect(index: number){
+  removeEffect(effect){
+    this._output.disconnect(effect.input)
+    //effect.output.disconnect(this._songOutput)
 
-    let numFX = this._effects.length
+    // this._output.disconnect(effect.input)
+    this._output.connect(this._songOutput)
 
-    if(numFX === 0){
-      this._output.connect(this._songOutput)
-      return
-    }
+    // if(isNaN(index)){
+    //   return
+    // }
+    // this._effects.forEach(fx => {
+    //   fx.disconnect()
+    // })
+    // this._effects.splice(index, 1)
 
-    let lastFX = this._output
-    this._effects.forEach((fx, i) => {
-      fx.setInput(lastFX)
-      if(i === numFX - 1){
-        fx.setOutput(this._songOutput)
-      }else{
-        fx.setOutput(this._effects[i + 1])
-      }
-      lastFX = fx
-    })
+    // let numFX = this._effects.length
+
+    // if(numFX === 0){
+    //   this._output.connect(this._songOutput)
+    //   return
+    // }
+
+    // let lastFX = this._output
+    // this._effects.forEach((fx, i) => {
+    //   fx.setInput(lastFX)
+    //   if(i === numFX - 1){
+    //     fx.setOutput(this._songOutput)
+    //   }else{
+    //     fx.setOutput(this._effects[i + 1])
+    //   }
+    //   lastFX = fx
+    // })
   }
 
   getEffects(){

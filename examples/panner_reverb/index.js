@@ -72,14 +72,13 @@ document.addEventListener('DOMContentLoaded', function(){
     })
 
     let hasReverb = false
-    let reverb
-    ConvolutionReverb.load('../data/100-Reverb.mp3')
+    let reverb = new ConvolutionReverb()
+    reverb.loadBuffer('../data/100-Reverb.mp3')
     .then(
       r => {
-        reverb = r
-        reverb.setAmount(0.5)
         btnFX.disabled = false
-      }
+      },
+      e => console.log(e)
     )
 
     btnFX.addEventListener('click', function(){
@@ -92,7 +91,8 @@ document.addEventListener('DOMContentLoaded', function(){
         rangeReverb.disabled = false
       }else{
         song.getTracks().forEach(t => {
-          t.removeEffect(0)
+          //t.removeEffect(0)
+          t.removeEffect(reverb)
         })
         btnFX.innerHTML = 'add reverb'
         rangeReverb.disabled = true

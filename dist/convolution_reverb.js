@@ -9,48 +9,86 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _init_audio = require('./init_audio');
 
-var _channel_fx = require('./channel_fx');
-
 var _parse_audio = require('./parse_audio');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+var ConvolutionReverb = exports.ConvolutionReverb = function () {
+  function ConvolutionReverb(buffer) {
+    _classCallCheck(this, ConvolutionReverb);
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+    this._nodeFX = _init_audio.context.createConvolver();
 
-var ConvolutionReverb = exports.ConvolutionReverb = function (_ChannelFX) {
-  _inherits(ConvolutionReverb, _ChannelFX);
+    if (buffer instanceof AudioBuffer) {
+      this._nodeFX.buffer = buffer;
+    }
+    this.input = _init_audio.context.createGain();
+    this.output = _init_audio.context.createGain();
 
-  _createClass(ConvolutionReverb, null, [{
-    key: 'load',
-    value: function load(url) {
+    this._dry = _init_audio.context.createGain();
+    this._wet = _init_audio.context.createGain();
+
+    this._dry.gain.value = 1;
+    this._wet.gain.value = 0;
+
+    this.input.connect(this._dry);
+    this._dry.connect(this.output);
+
+    this.input.connect(this._nodeFX);
+    this._nodeFX.connect(this._wet);
+    this._wet.connect(this.output);
+
+    this.amount = 0;
+  }
+
+  _createClass(ConvolutionReverb, [{
+    key: 'addBuffer',
+    value: function addBuffer(buffer) {
+      if (buffer instanceof AudioBuffer === false) {
+        console.log('argument is not an instance of AudioBuffer', buffer);
+        return;
+      }
+      this._nodeFX.buffer = buffer;
+    }
+  }, {
+    key: 'loadBuffer',
+    value: function loadBuffer(url) {
+      var _this = this;
+
       return new Promise(function (resolve, reject) {
         (0, _parse_audio.parseSamples)(url).then(function (buffer) {
           buffer = buffer[0];
           if (buffer instanceof AudioBuffer) {
-            resolve(new ConvolutionReverb(buffer));
+            _this._nodeFX.buffer = buffer;
+            resolve();
           } else {
             reject('could not parse to AudioBuffer', url);
           }
         });
       });
     }
+  }, {
+    key: 'setAmount',
+    value: function setAmount(value) {
+      /*
+      this.amount = value < 0 ? 0 : value > 1 ? 1 : value;
+      var gain1 = Math.cos(this.amount * 0.5 * Math.PI),
+          gain2 = Math.cos((1.0 - this.amount) * 0.5 * Math.PI);
+      this.gainNode.gain.value = gain2 * this.ratio;
+      */
+
+      if (value < 0) {
+        value = 0;
+      } else if (value > 1) {
+        value = 1;
+      }
+
+      this.amount = value;
+      this._wet.gain.value = this.amount;
+      this._dry.gain.value = 1 - this.amount;
+      //console.log('wet',this.wetGain.gain.value,'dry',this.dryGain.gain.value);
+    }
   }]);
 
-  function ConvolutionReverb(buffer) {
-    _classCallCheck(this, ConvolutionReverb);
-
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ConvolutionReverb).call(this));
-
-    if (buffer instanceof AudioBuffer === false && typeof buffer !== 'undefined') {
-      console.log('argument is not an instance of AudioBuffer', buffer);
-      return _possibleConstructorReturn(_this);
-    }
-    _this._nodeFX = _init_audio.context.createConvolver();
-    _this._nodeFX.buffer = buffer;
-    return _this;
-  }
-
   return ConvolutionReverb;
-}(_channel_fx.ChannelFX);
+}();

@@ -14,13 +14,21 @@ implement precount + preroll ✓
 
 improve position calculation
 
-implement save as MIDI file (https://github.com/eligrey/FileSaver.js/ or native: http://caniuse.com/#search=blob)
+implement save as MIDI file (https://github.com/eligrey/FileSaver.js/ or native: http://caniuse.com/#search=blob) ✓
 
 keyscaling
 
 plugins (reverb, autopan, 3rd party)
 
 find samples Conga
+
+keyeditor example
+
+export song as JSON file (and example how to use this to store history)
+
+quantize/undo quantize
+
+
 
 
 

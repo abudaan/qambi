@@ -553,26 +553,31 @@ var Track = exports.Track = function () {
   }, {
     key: 'addEffect',
     value: function addEffect(effect) {
-      if (this._checkEffect(effect) === false) {
-        return;
-      }
-      var numFX = this._effects.length;
-      var lastFX = void 0;
-      var output = void 0;
-      if (numFX === 0) {
-        lastFX = this._output;
-        lastFX.disconnect(this._songOutput);
-        output = this._output;
-      } else {
-        lastFX = this._effects[numFX - 1];
-        lastFX.disconnect();
-        output = lastFX.getOutput();
-      }
 
-      effect.setInput(output);
-      effect.setOutput(this._songOutput);
+      this._output.disconnect(this._songOutput);
+      this._output.connect(effect.input);
+      effect.output.connect(this._songOutput);
 
-      this._effects.push(effect);
+      // if(this._checkEffect(effect) === false){
+      //   return
+      // }
+      // let numFX = this._effects.length
+      // let lastFX
+      // let output
+      // if(numFX === 0){
+      //   lastFX = this._output
+      //   lastFX.disconnect(this._songOutput)
+      //   output = this._output
+      // }else{
+      //   lastFX = this._effects[numFX - 1]
+      //   lastFX.disconnect()
+      //   output = lastFX.getOutput()
+      // }
+
+      // effect.setInput(output)
+      // effect.setOutput(this._songOutput)
+
+      // this._effects.push(effect)
     }
   }, {
     key: 'addEffectAt',
@@ -582,36 +587,42 @@ var Track = exports.Track = function () {
       }
       this._effects.splice(index, 0, effect);
     }
+
+    //removeEffect(index: number){
   }, {
     key: 'removeEffect',
-    value: function removeEffect(index) {
-      var _this8 = this;
+    value: function removeEffect(effect) {
+      this._output.disconnect(effect.input);
+      //effect.output.disconnect(this._songOutput)
 
-      if (isNaN(index)) {
-        return;
-      }
-      this._effects.forEach(function (fx) {
-        fx.disconnect();
-      });
-      this._effects.splice(index, 1);
+      // this._output.disconnect(effect.input)
+      this._output.connect(this._songOutput);
 
-      var numFX = this._effects.length;
+      // if(isNaN(index)){
+      //   return
+      // }
+      // this._effects.forEach(fx => {
+      //   fx.disconnect()
+      // })
+      // this._effects.splice(index, 1)
 
-      if (numFX === 0) {
-        this._output.connect(this._songOutput);
-        return;
-      }
+      // let numFX = this._effects.length
 
-      var lastFX = this._output;
-      this._effects.forEach(function (fx, i) {
-        fx.setInput(lastFX);
-        if (i === numFX - 1) {
-          fx.setOutput(_this8._songOutput);
-        } else {
-          fx.setOutput(_this8._effects[i + 1]);
-        }
-        lastFX = fx;
-      });
+      // if(numFX === 0){
+      //   this._output.connect(this._songOutput)
+      //   return
+      // }
+
+      // let lastFX = this._output
+      // this._effects.forEach((fx, i) => {
+      //   fx.setInput(lastFX)
+      //   if(i === numFX - 1){
+      //     fx.setOutput(this._songOutput)
+      //   }else{
+      //     fx.setOutput(this._effects[i + 1])
+      //   }
+      //   lastFX = fx
+      // })
     }
   }, {
     key: 'getEffects',
