@@ -68,8 +68,8 @@ h4{
 }
 .logo{
   margin-top: 10px;
-  margin-bottom: 20px;
   /*cursor: pointer;*/
+  margin-bottom: 8px;
   text-align: center;
   line-height: 70px;
   font-family: typo_round_bold;
@@ -91,6 +91,13 @@ h4{
   /*color: #ccc;*/
   color: #71DE71;
   letter-spacing: 0px;
+}
+.pitch{
+  // font-family: typo_round_bold;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #777;
 }
 .repos{
   display: table;
@@ -163,7 +170,7 @@ nav > ul{
 }
 nav li{
   display: inline-block;
-  border: 1px solid #bbb;
+  border: 1px solid #777;
   /*border: 1px solid #FF1CAE;*/
   border-radius: 8px;
   padding: 12px;
@@ -173,7 +180,7 @@ nav li{
   text-align: center;
   color: #777;
   /*color: #FF1CAE;*/
-  /*font-weight: 700;*/
+  font-weight: 700;
   /*font-weight: 400;*/
 }
 nav li:hover{
@@ -182,4 +189,10 @@ nav li:hover{
   font-weight: 700;
   /*border: 1px dotted #FF1CAE;*/
   border: 1px dotted #fff;
+}
+code{
+  font-family: monospace;
+  font-size: 80%;
+  background-color: #efefef;
+  padding: 4px;
 }
