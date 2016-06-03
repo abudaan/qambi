@@ -351,7 +351,7 @@
     365060,
     1100
   ],
-  "baseUrl": "../../instruments/scripts/concat/",
+  "baseUrl": "https://raw.githubusercontent.com/abudaan/qambi/gh-pages/instruments/samples/city-piano-light/",
   "info": {
     "keyrange": [
       21,
@@ -365,5 +365,5 @@
     0.4,
     "equal_power"
   ],
-  "sample": "concatenated1.mp3"
+  "sample": "concatenated.mp3"
 }

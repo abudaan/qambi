@@ -16,43 +16,40 @@ document.addEventListener('DOMContentLoaded', function(){
       url: '../../instruments/heartbeat/city-piano-light-concat.json'
     }
   })
-  .then((data) => {
+  .then(main)
+})
 
-    let {song, piano} = data
 
-    song.getTracks().forEach(track => {
-      track.setInstrument(piano)
-      track.monitor = true
-      track.connectMIDIInputs(...getMIDIInputs())
-    })
+function main(data){
+  console.timeEnd('loading and parsing assets took')
 
-    initUI(song)
+  let {song, piano} = data
+
+  song.getTracks().forEach(track => {
+    track.setInstrument(piano)
+    track.monitor = true
+    track.connectMIDIInputs(...getMIDIInputs())
   })
 
+  let btnPlay = document.getElementById('play')
+  let btnPause = document.getElementById('pause')
+  let btnStop = document.getElementById('stop')
+  let divLoading = document.getElementById('loading')
+  divLoading.innerHTML = ''
 
-  function initUI(song){
-    console.timeEnd('loading and parsing assets took')
+  btnPlay.disabled = false
+  btnPause.disabled = false
+  btnStop.disabled = false
 
-    let btnPlay = document.getElementById('play')
-    let btnPause = document.getElementById('pause')
-    let btnStop = document.getElementById('stop')
-    let divLoading = document.getElementById('loading')
-    divLoading.innerHTML = ''
+  btnPlay.addEventListener('click', function(){
+    song.play()
+  })
 
-    btnPlay.disabled = false
-    btnPause.disabled = false
-    btnStop.disabled = false
+  btnPause.addEventListener('click', function(){
+    song.pause()
+  })
 
-    btnPlay.addEventListener('click', function(){
-      song.play()
-    })
-
-    btnPause.addEventListener('click', function(){
-      song.pause()
-    })
-
-    btnStop.addEventListener('click', function(){
-      song.stop()
-    })
-  }
-})
+  btnStop.addEventListener('click', function(){
+    song.stop()
+  })
+}

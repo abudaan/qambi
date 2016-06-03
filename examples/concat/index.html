@@ -38,6 +38,7 @@
   22: [1150, 450],
   ...
 }     </pre>
+      Theoretically, this version should load faster because instead of 88, only one http connection needs to be made. In practice however, it is a bit slower. This is probably because the conversion from mp3 to PCM data is slower with larger files.
       </div>
       <button id="play" disabled>play</button>
       <button id="pause" disabled>pause</button>
