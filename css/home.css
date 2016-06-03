@@ -150,3 +150,36 @@ a:hover .logo{
 a.logo-link:hover{
   text-decoration: none;
 }
+nav{
+  width: 100%;
+  max-width: 800px;
+  text-align: center;
+  // font-family: "Open Sans", Arial, "Lucida Grande", sans-serif;
+}
+nav > ul{
+  list-style-type: none;
+  margin: 0 auto;
+  display: inline;
+}
+nav li{
+  display: inline-block;
+  border: 1px solid #bbb;
+  /*border: 1px solid #FF1CAE;*/
+  border-radius: 8px;
+  padding: 12px;
+  margin: 20px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  text-align: center;
+  color: #777;
+  /*color: #FF1CAE;*/
+  /*font-weight: 700;*/
+  /*font-weight: 400;*/
+}
+nav li:hover{
+  color: #fff;
+  background-color: #71DE71;
+  font-weight: 700;
+  /*border: 1px dotted #FF1CAE;*/
+  border: 1px dotted #fff;
+}
