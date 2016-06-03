@@ -86,3 +86,9 @@ p{
   color: #ff0f0f;
   margin-bottom: 10px;
 }
+
+
+sup {
+  vertical-align: super;
+  font-size: smaller;
+}
