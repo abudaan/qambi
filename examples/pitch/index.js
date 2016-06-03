@@ -1,6 +1,5 @@
 import qambi, {
   SimpleSynth,
-  updateSettings,
 } from '../../src/qambi' // use "from 'qambi'" in your own code! so without the extra "../../"
 
 document.addEventListener('DOMContentLoaded', function(){
