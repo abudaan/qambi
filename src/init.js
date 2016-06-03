@@ -107,12 +107,13 @@ export function init(settings = null): void{
 
       result.forEach((data, i) => {
         if(i === 0){
-          // parseAudio
+          // initAudio
           returnObj.legacy = data.legacy
           returnObj.mp3 = data.mp3
           returnObj.ogg = data.ogg
         }else if(i === 1){
-          // parseMIDI
+          // initMIDI
+          returnObj.jazz = data.jazz
           returnObj.midi = data.midi
           returnObj.webmidi = data.webmidi
         }else{
@@ -122,7 +123,13 @@ export function init(settings = null): void{
         }
       })
 
-      console.log('qambi', qambi.version)
+      //console.log(returnObj.jazz)
+
+      if(returnObj.midi === false){
+        console.log('qambi', qambi.version, '[your browser has no support for MIDI]')
+      }else{
+        console.log('qambi', qambi.version)
+      }
       resolve(returnObj)
     },
     (error) => {

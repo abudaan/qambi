@@ -14,7 +14,7 @@ var argv = require('yargs').argv;
 function getFolders(dir) {
   return fs.readdirSync(dir)
     .filter(function(file) {
-      return fs.statSync(path.join(dir, file)).isDirectory() && file !== 'css' && file !== 'js' && file !== 'data' && file !== 'node_modules'
+      return fs.statSync(path.join(dir, file)).isDirectory() && file !== 'css' && file !== 'js' && file !== 'data' && file !== 'node_modules' && file !== 'lib'
     })
 }
 

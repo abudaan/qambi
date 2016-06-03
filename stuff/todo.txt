@@ -28,6 +28,10 @@ export song as JSON file (and example how to use this to store history)
 
 quantize/undo quantize
 
+look into better timed events from sustain pedal up and down
+
+optimize metronome samples, check empty mp3
+
 
 
 

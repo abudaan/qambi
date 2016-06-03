@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
+exports.ConvolutionReverb = exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
 
 var _settings = require('./settings');
 
@@ -25,6 +25,8 @@ var _sampler = require('./sampler');
 
 var _simple_synth = require('./simple_synth');
 
+var _convolution_reverb = require('./convolution_reverb');
+
 var _midifile = require('./midifile');
 
 var _init = require('./init');
@@ -39,7 +41,7 @@ var _constants = require('./constants');
 
 var _eventlistener = require('./eventlistener');
 
-var version = '1.0.0-beta27';
+var version = '1.0.0-beta28';
 
 var getAudioContext = function getAudioContext() {
   return _init_audio.context;
@@ -118,6 +120,9 @@ var qambi = {
 
   // from ./sampler
   Sampler: _sampler.Sampler,
+
+  // from ./convolution_reverb
+  ConvolutionReverb: _convolution_reverb.ConvolutionReverb,
 
   log: function log(id) {
     switch (id) {
@@ -206,3 +211,7 @@ exports.
 
 // from ./sampler
 Sampler = _sampler.Sampler;
+exports.
+
+// from ./convolution_reverb
+ConvolutionReverb = _convolution_reverb.ConvolutionReverb;

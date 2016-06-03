@@ -48,18 +48,23 @@ export function initMIDI(){
 
   return new Promise(function executor(resolve, reject){
 
+    let jazz = false
+    let midi = false
+    let webmidi = false
+
     if(typeof navigator === 'undefined'){
       initialized = true
-      resolve({midi: false})
+      resolve({midi})
     }else if(typeof navigator.requestMIDIAccess !== 'undefined'){
 
-      let jazz, midi, webmidi
 
       navigator.requestMIDIAccess().then(
 
         function onFulFilled(midiAccess){
           MIDIAccess = midiAccess
+          // @TODO: implement something in webmidiapishim that allows us to detect the Jazz plugin version
           if(typeof midiAccess._jazzInstances !== 'undefined'){
+            console.log('jazz')
             jazz = midiAccess._jazzInstances[0]._Jazz.version
             midi = true
           }else{
@@ -94,13 +99,15 @@ export function initMIDI(){
 
         function onReject(e){
           //console.log(e)
-          reject('Something went wrong while requesting MIDIAccess', e)
+          //reject('Something went wrong while requesting MIDIAccess', e)
+          initialized = true
+          resolve({midi, jazz})
         }
       )
     // browsers without WebMIDI API
     }else{
       initialized = true
-      resolve({midi: false})
+      resolve({midi})
     }
   })
 }

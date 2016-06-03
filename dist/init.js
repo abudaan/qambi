@@ -139,12 +139,13 @@ function init() {
 
       result.forEach(function (data, i) {
         if (i === 0) {
-          // parseAudio
+          // initAudio
           returnObj.legacy = data.legacy;
           returnObj.mp3 = data.mp3;
           returnObj.ogg = data.ogg;
         } else if (i === 1) {
-          // parseMIDI
+          // initMIDI
+          returnObj.jazz = data.jazz;
           returnObj.midi = data.midi;
           returnObj.webmidi = data.webmidi;
         } else {
@@ -154,7 +155,13 @@ function init() {
         }
       });
 
-      console.log('qambi', _qambi2.default.version);
+      //console.log(returnObj.jazz)
+
+      if (returnObj.midi === false) {
+        console.log('qambi', _qambi2.default.version, '[your browser has no support for MIDI]');
+      } else {
+        console.log('qambi', _qambi2.default.version);
+      }
       resolve(returnObj);
     }, function (error) {
       reject(error);

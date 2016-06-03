@@ -1924,6 +1924,132 @@ function polyfill() {
 },{}],14:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
+    define(['exports', './init_audio', './parse_audio'], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require('./init_audio'), require('./parse_audio'));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.init_audio, global.parse_audio);
+    global.convolution_reverb = mod.exports;
+  }
+})(this, function (exports, _init_audio, _parse_audio) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.ConvolutionReverb = undefined;
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  var _createClass = function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  }();
+
+  var ConvolutionReverb = exports.ConvolutionReverb = function () {
+    function ConvolutionReverb(buffer) {
+      _classCallCheck(this, ConvolutionReverb);
+
+      this._nodeFX = _init_audio.context.createConvolver();
+
+      if (buffer instanceof AudioBuffer) {
+        this._nodeFX.buffer = buffer;
+      }
+      this.input = _init_audio.context.createGain();
+      this.output = _init_audio.context.createGain();
+
+      this._dry = _init_audio.context.createGain();
+      this._wet = _init_audio.context.createGain();
+
+      this._dry.gain.value = 1;
+      this._wet.gain.value = 0;
+
+      this.input.connect(this._dry);
+      this._dry.connect(this.output);
+
+      this.input.connect(this._nodeFX);
+      this._nodeFX.connect(this._wet);
+      this._wet.connect(this.output);
+
+      this.amount = 0;
+    }
+
+    _createClass(ConvolutionReverb, [{
+      key: 'addBuffer',
+      value: function addBuffer(buffer) {
+        if (buffer instanceof AudioBuffer === false) {
+          console.log('argument is not an instance of AudioBuffer', buffer);
+          return;
+        }
+        this._nodeFX.buffer = buffer;
+      }
+    }, {
+      key: 'loadBuffer',
+      value: function loadBuffer(url) {
+        var _this = this;
+
+        return new Promise(function (resolve, reject) {
+          (0, _parse_audio.parseSamples)(url).then(function (buffer) {
+            buffer = buffer[0];
+            if (buffer instanceof AudioBuffer) {
+              _this._nodeFX.buffer = buffer;
+              resolve();
+            } else {
+              reject('could not parse to AudioBuffer', url);
+            }
+          });
+        });
+      }
+    }, {
+      key: 'setAmount',
+      value: function setAmount(value) {
+        /*
+        this.amount = value < 0 ? 0 : value > 1 ? 1 : value;
+        var gain1 = Math.cos(this.amount * 0.5 * Math.PI),
+            gain2 = Math.cos((1.0 - this.amount) * 0.5 * Math.PI);
+        this.gainNode.gain.value = gain2 * this.ratio;
+        */
+
+        if (value < 0) {
+          value = 0;
+        } else if (value > 1) {
+          value = 1;
+        }
+
+        this.amount = value;
+        this._wet.gain.value = this.amount;
+        this._dry.gain.value = 1 - this.amount;
+        //console.log('wet',this.wetGain.gain.value,'dry',this.dryGain.gain.value);
+      }
+    }]);
+
+    return ConvolutionReverb;
+  }();
+});
+
+},{"./init_audio":18,"./parse_audio":27}],15:[function(require,module,exports){
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
   } else if (typeof exports !== "undefined") {
     factory(exports);
@@ -2126,7 +2252,7 @@ function polyfill() {
   }
 });
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(["exports"], factory);
@@ -2194,7 +2320,7 @@ function polyfill() {
   }
 });
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './qambi', './song', './sampler', './init_audio', './init_midi', './settings'], factory);
@@ -2341,12 +2467,13 @@ function polyfill() {
 
         result.forEach(function (data, i) {
           if (i === 0) {
-            // parseAudio
+            // initAudio
             returnObj.legacy = data.legacy;
             returnObj.mp3 = data.mp3;
             returnObj.ogg = data.ogg;
           } else if (i === 1) {
-            // parseMIDI
+            // initMIDI
+            returnObj.jazz = data.jazz;
             returnObj.midi = data.midi;
             returnObj.webmidi = data.webmidi;
           } else {
@@ -2356,7 +2483,13 @@ function polyfill() {
           }
         });
 
-        console.log('qambi', _qambi2.default.version);
+        //console.log(returnObj.jazz)
+
+        if (returnObj.midi === false) {
+          console.log('qambi', _qambi2.default.version, '[your browser has no support for MIDI]');
+        } else {
+          console.log('qambi', _qambi2.default.version);
+        }
         resolve(returnObj);
       }, function (error) {
         reject(error);
@@ -2388,7 +2521,7 @@ function polyfill() {
   }
 });
 
-},{"./init_audio":17,"./init_midi":18,"./qambi":31,"./sampler":35,"./settings":39,"./song":41}],17:[function(require,module,exports){
+},{"./init_audio":18,"./init_midi":19,"./qambi":32,"./sampler":36,"./settings":40,"./song":42}],18:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './samples', './parse_audio'], factory);
@@ -2480,8 +2613,8 @@ function polyfill() {
 
       (0, _parse_audio.parseSamples)(_samples2.default).then(function onFulfilled(buffers) {
         //console.log(buffers)
-        data.ogg = typeof buffers.emptyOgg !== 'undefined';
-        data.mp3 = typeof buffers.emptyMp3 !== 'undefined';
+        // data.ogg = typeof buffers.emptyOgg !== 'undefined'
+        // data.mp3 = typeof buffers.emptyMp3 !== 'undefined'
         data.lowtick = buffers.lowtick;
         data.hightick = buffers.hightick;
         if (data.ogg === false && data.mp3 === false) {
@@ -2617,7 +2750,7 @@ function polyfill() {
   exports.configureMasterCompressor = _configureMasterCompressor;
 });
 
-},{"./parse_audio":26,"./samples":36}],18:[function(require,module,exports){
+},{"./parse_audio":27,"./samples":37}],19:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util', 'webmidiapishim'], factory);
@@ -2731,58 +2864,60 @@ function polyfill() {
 
     return new Promise(function executor(resolve, reject) {
 
+      var jazz = false;
+      var midi = false;
+      var webmidi = false;
+
       if (typeof navigator === 'undefined') {
         initialized = true;
-        resolve({ midi: false });
+        resolve({ midi: midi });
       } else if (typeof navigator.requestMIDIAccess !== 'undefined') {
-        (function () {
 
-          var jazz = void 0,
-              midi = void 0,
-              webmidi = void 0;
+        navigator.requestMIDIAccess().then(function onFulFilled(midiAccess) {
+          MIDIAccess = midiAccess;
+          // @TODO: implement something in webmidiapishim that allows us to detect the Jazz plugin version
+          if (typeof midiAccess._jazzInstances !== 'undefined') {
+            console.log('jazz');
+            jazz = midiAccess._jazzInstances[0]._Jazz.version;
+            midi = true;
+          } else {
+            webmidi = true;
+            midi = true;
+          }
 
-          navigator.requestMIDIAccess().then(function onFulFilled(midiAccess) {
-            MIDIAccess = midiAccess;
-            if (typeof midiAccess._jazzInstances !== 'undefined') {
-              jazz = midiAccess._jazzInstances[0]._Jazz.version;
-              midi = true;
-            } else {
-              webmidi = true;
-              midi = true;
-            }
+          getMIDIports();
 
+          // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
+          midiAccess.onconnect = function (e) {
+            console.log('device connected', e);
             getMIDIports();
+          };
 
-            // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
-            midiAccess.onconnect = function (e) {
-              console.log('device connected', e);
-              getMIDIports();
-            };
+          midiAccess.ondisconnect = function (e) {
+            console.log('device disconnected', e);
+            getMIDIports();
+          };
 
-            midiAccess.ondisconnect = function (e) {
-              console.log('device disconnected', e);
-              getMIDIports();
-            };
-
-            initialized = true;
-            resolve({
-              jazz: jazz,
-              midi: midi,
-              webmidi: webmidi,
-              inputs: inputs,
-              outputs: outputs,
-              inputsById: inputsById,
-              outputsById: outputsById
-            });
-          }, function onReject(e) {
-            //console.log(e)
-            reject('Something went wrong while requesting MIDIAccess', e);
+          initialized = true;
+          resolve({
+            jazz: jazz,
+            midi: midi,
+            webmidi: webmidi,
+            inputs: inputs,
+            outputs: outputs,
+            inputsById: inputsById,
+            outputsById: outputsById
           });
-          // browsers without WebMIDI API
-        })();
+        }, function onReject(e) {
+          //console.log(e)
+          //reject('Something went wrong while requesting MIDIAccess', e)
+          initialized = true;
+          resolve({ midi: midi, jazz: jazz });
+        });
+        // browsers without WebMIDI API
       } else {
           initialized = true;
-          resolve({ midi: false });
+          resolve({ midi: midi });
         }
     });
   }
@@ -3120,7 +3255,7 @@ function polyfill() {
   exports.getMIDIInputById = _getMIDIInputById;
 });
 
-},{"./util":45,"webmidiapishim":10}],19:[function(require,module,exports){
+},{"./util":46,"webmidiapishim":10}],20:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_audio', './eventlistener'], factory);
@@ -3240,6 +3375,7 @@ function polyfill() {
             } else {
               sample.stop(time, function () {
                 // console.log('stop', time, event.midiNoteId)
+                sample.output.disconnect();
                 _this.scheduledSamples.delete(event.midiNoteId);
               });
               //sample.stop(time)
@@ -3264,6 +3400,7 @@ function polyfill() {
                         //sample.stop(time)
                         sample.stop(time, function () {
                           //console.log('stop', midiNoteId)
+                          sample.output.disconnect();
                           _this.scheduledSamples.delete(midiNoteId);
                         });
                       }
@@ -3308,6 +3445,7 @@ function polyfill() {
 
         this.scheduledSamples.forEach(function (sample) {
           sample.stop(_init_audio.context.currentTime);
+          sample.output.disconnect();
         });
         this.scheduledSamples.clear();
       }
@@ -3320,6 +3458,7 @@ function polyfill() {
         var sample = this.scheduledSamples.get(midiEvent.midiNoteId);
         if (sample) {
           sample.stop(_init_audio.context.currentTime);
+          sample.output.disconnect();
           this.scheduledSamples.delete(midiEvent.midiNoteId);
         }
       }
@@ -3329,7 +3468,7 @@ function polyfill() {
   }();
 });
 
-},{"./eventlistener":14,"./init_audio":17}],20:[function(require,module,exports){
+},{"./eventlistener":15,"./init_audio":18}],21:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './track', './part', './parse_events', './midi_event', './util', './position', './sampler', './init_audio', './constants'], factory);
@@ -3781,7 +3920,7 @@ function polyfill() {
   }();
 });
 
-},{"./constants":13,"./init_audio":17,"./midi_event":21,"./parse_events":27,"./part":28,"./position":30,"./sampler":35,"./track":44,"./util":45}],21:[function(require,module,exports){
+},{"./constants":13,"./init_audio":18,"./midi_event":22,"./parse_events":28,"./part":29,"./position":31,"./sampler":36,"./track":45,"./util":46}],22:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './note', './settings'], factory);
@@ -3930,7 +4069,7 @@ function polyfill() {
   }();
 });
 
-},{"./note":25,"./settings":39}],22:[function(require,module,exports){
+},{"./note":26,"./settings":40}],23:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './midi_event'], factory);
@@ -4060,7 +4199,7 @@ function polyfill() {
   }();
 });
 
-},{"./midi_event":21}],23:[function(require,module,exports){
+},{"./midi_event":22}],24:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -4210,7 +4349,7 @@ function polyfill() {
   exports.default = MIDIStream;
 });
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './midi_stream'], factory);
@@ -4522,7 +4661,7 @@ function polyfill() {
   }
 });
 
-},{"./midi_stream":23}],25:[function(require,module,exports){
+},{"./midi_stream":24}],26:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './settings'], factory);
@@ -4752,7 +4891,7 @@ function polyfill() {
   }
 });
 
-},{"./settings":39}],26:[function(require,module,exports){
+},{"./settings":40}],27:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'isomorphic-fetch', './init_audio', './util', './eventlistener'], factory);
@@ -4970,7 +5109,7 @@ function polyfill() {
   }
 });
 
-},{"./eventlistener":14,"./init_audio":17,"./util":45,"isomorphic-fetch":2}],27:[function(require,module,exports){
+},{"./eventlistener":15,"./init_audio":18,"./util":46,"isomorphic-fetch":2}],28:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util', './midi_note'], factory);
@@ -5454,7 +5593,7 @@ function polyfill() {
   }
 });
 
-},{"./midi_note":22,"./util":45}],28:[function(require,module,exports){
+},{"./midi_note":23,"./util":46}],29:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util'], factory);
@@ -5742,7 +5881,7 @@ function polyfill() {
   }();
 });
 
-},{"./util":45}],29:[function(require,module,exports){
+},{"./util":46}],30:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './position.js', './eventlistener.js', './util.js'], factory);
@@ -6118,7 +6257,7 @@ function polyfill() {
   }();
 });
 
-},{"./eventlistener.js":14,"./position.js":30,"./util.js":45}],30:[function(require,module,exports){
+},{"./eventlistener.js":15,"./position.js":31,"./util.js":46}],31:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util'], factory);
@@ -6835,27 +6974,27 @@ function polyfill() {
   */
 });
 
-},{"./util":45}],31:[function(require,module,exports){
+},{"./util":46}],32:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './settings', './note', './midi_event', './midi_note', './part', './track', './song', './instrument', './sampler', './simple_synth', './midifile', './init', './init_audio', './init_midi', './parse_audio', './constants', './eventlistener'], factory);
+    define(['exports', './settings', './note', './midi_event', './midi_note', './part', './track', './song', './instrument', './sampler', './simple_synth', './convolution_reverb', './midifile', './init', './init_audio', './init_midi', './parse_audio', './constants', './eventlistener'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./settings'), require('./note'), require('./midi_event'), require('./midi_note'), require('./part'), require('./track'), require('./song'), require('./instrument'), require('./sampler'), require('./simple_synth'), require('./midifile'), require('./init'), require('./init_audio'), require('./init_midi'), require('./parse_audio'), require('./constants'), require('./eventlistener'));
+    factory(exports, require('./settings'), require('./note'), require('./midi_event'), require('./midi_note'), require('./part'), require('./track'), require('./song'), require('./instrument'), require('./sampler'), require('./simple_synth'), require('./convolution_reverb'), require('./midifile'), require('./init'), require('./init_audio'), require('./init_midi'), require('./parse_audio'), require('./constants'), require('./eventlistener'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.settings, global.note, global.midi_event, global.midi_note, global.part, global.track, global.song, global.instrument, global.sampler, global.simple_synth, global.midifile, global.init, global.init_audio, global.init_midi, global.parse_audio, global.constants, global.eventlistener);
+    factory(mod.exports, global.settings, global.note, global.midi_event, global.midi_note, global.part, global.track, global.song, global.instrument, global.sampler, global.simple_synth, global.convolution_reverb, global.midifile, global.init, global.init_audio, global.init_midi, global.parse_audio, global.constants, global.eventlistener);
     global.qambi = mod.exports;
   }
-})(this, function (exports, _settings, _note, _midi_event, _midi_note, _part, _track, _song, _instrument, _sampler, _simple_synth, _midifile, _init, _init_audio, _init_midi, _parse_audio, _constants, _eventlistener) {
+})(this, function (exports, _settings, _note, _midi_event, _midi_note, _part, _track, _song, _instrument, _sampler, _simple_synth, _convolution_reverb, _midifile, _init, _init_audio, _init_midi, _parse_audio, _constants, _eventlistener) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
-  var version = '1.0.0-beta27';
+  exports.ConvolutionReverb = exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
+  var version = '1.0.0-beta28';
 
   var getAudioContext = function getAudioContext() {
     return _init_audio.context;
@@ -6934,6 +7073,9 @@ function polyfill() {
 
     // from ./sampler
     Sampler: _sampler.Sampler,
+
+    // from ./convolution_reverb
+    ConvolutionReverb: _convolution_reverb.ConvolutionReverb,
 
     log: function log(id) {
       switch (id) {
@@ -7022,9 +7164,13 @@ function polyfill() {
 
   // from ./sampler
   Sampler = _sampler.Sampler;
+  exports.
+
+  // from ./convolution_reverb
+  ConvolutionReverb = _convolution_reverb.ConvolutionReverb;
 });
 
-},{"./constants":13,"./eventlistener":14,"./init":16,"./init_audio":17,"./init_midi":18,"./instrument":19,"./midi_event":21,"./midi_note":22,"./midifile":24,"./note":25,"./parse_audio":26,"./part":28,"./sampler":35,"./settings":39,"./simple_synth":40,"./song":41,"./track":44}],32:[function(require,module,exports){
+},{"./constants":13,"./convolution_reverb":14,"./eventlistener":15,"./init":17,"./init_audio":18,"./init_midi":19,"./instrument":20,"./midi_event":22,"./midi_note":23,"./midifile":25,"./note":26,"./parse_audio":27,"./part":29,"./sampler":36,"./settings":40,"./simple_synth":41,"./song":42,"./track":45}],33:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_audio.js', './util.js'], factory);
@@ -7185,7 +7331,7 @@ function polyfill() {
   }
 });
 
-},{"./init_audio.js":17,"./util.js":45}],33:[function(require,module,exports){
+},{"./init_audio.js":18,"./util.js":46}],34:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './sample', './init_audio'], factory);
@@ -7318,7 +7464,7 @@ function polyfill() {
   }(_sample.Sample);
 });
 
-},{"./init_audio":17,"./sample":32}],34:[function(require,module,exports){
+},{"./init_audio":18,"./sample":33}],35:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './sample', './init_audio'], factory);
@@ -7418,7 +7564,7 @@ function polyfill() {
   }(_sample.Sample);
 });
 
-},{"./init_audio":17,"./sample":32}],35:[function(require,module,exports){
+},{"./init_audio":18,"./sample":33}],36:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './instrument', './note', './parse_audio', './util', './fetch_helpers', './sample_buffer'], factory);
@@ -7916,7 +8062,7 @@ function polyfill() {
   }(_instrument.Instrument);
 });
 
-},{"./fetch_helpers":15,"./instrument":19,"./note":25,"./parse_audio":26,"./sample_buffer":33,"./util":45}],36:[function(require,module,exports){
+},{"./fetch_helpers":16,"./instrument":20,"./note":26,"./parse_audio":27,"./sample_buffer":34,"./util":46}],37:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -7936,8 +8082,8 @@ function polyfill() {
     value: true
   });
   var samples = {
-    emptyOgg: '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Y5l93VlmX3eO4Rg6v/Djqaqvm64rDKcsC7/t68az+76yjK7r+6osC78q28Kx677z/L6wLKPs+sJqy8Kw2rYx3L5uLL9wHMtr68ox675RtnV8X3gKw/N0dV15Zl3H9nV040c4fsoAAIABBwCAABPKQKEhKwKAOAEAjySJomRZoihZliiKpui6omi6rqRppqlpnmlammeapmmqsimarixpmmlanmaamqeZpmiarmuapqyKpinLpmrKsmmasuy6sm27rmzbomnKsmmasmyapiy7sqvbruzquqRZpql5nmlqnmeapmrKsmmarqt5nmp6nmiqniiqqmqqqq2qqixbnmeamuippieKqmqqpq2aqirLpqrasmmqtmyqqm27quz6sm3rummqsm2qpi2bqmrbruzqsizbui9pmmlqnmeamueZpmmasmyaqitbnqeaniiqquaJpmqqqiybpqrKlueZqieKquqJnmuaqirLpmraqmmatmyqqi2bpirLrm37vuvKsm6qqmybqmrrpmrKsmzLvu/Kqu6KpinLpqrasmmqsi3bsu/Lsqz7omnKsmmqsm2qqi7Lsm0bs2z7umiasm2qpi2bqirbsi37uizbuu/Krm+rqqzrsi37uu76rnDrujC8smz7qqz6uivbum/rMtv2fUTTlGVTNW3bVFVZdmXZ9mXb9n3RNG1bVVVbNk3VtmVZ9n1Ztm1hNE3ZNlVV1k3VtG1Zlm1htmXhdmXZt2Vb9nXXlXVf133j12Xd5rqy7cuyrfuqq/q27vvCcOuu8AoAABhwAAAIMKEMFBqyEgCIAgAAjGGMMQiNUs45B6FRyjnnIGTOQQghlcw5CCGUkjkHoZSUMucglJJSCKGUlFoLIZSUUmsFAAAUOAAABNigKbE4QKEhKwGAVAAAg+NYlueZomrasmNJnieKqqmqtu1IlueJommqqm1bnieKpqmqruvrmueJommqquvqumiapqmqruu6ui6aoqmqquu6sq6bpqqqriu7suzrpqqqquvKriz7wqq6rivLsm3rwrCqruvKsmzbtm/cuq7rvu/7wpGt67ou/MIxDEcBAOAJDgBABTasjnBSNBZYaMhKACADAIAwBiGDEEIGIYSQUkohpZQSAAAw4AAAEGBCGSg0ZEUAECcAABhDKaSUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJIKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKqaSUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKZVSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUgoAkIpwAJB6MKEMFBqyEgBIBQAAjFFKKcacgxAx5hhj0EkoKWLMOcYclJJS5RyEEFJpLbfKOQghpNRSbZlzUlqLMeYYM+ekpBRbzTmHUlKLseaaa+6ktFZrrjXnWlqrNdecc825tBZrrjnXnHPLMdecc8455xhzzjnnnHPOBQDgNDgAgB7YsDrCSdFYYKEhKwGAVAAAAhmlGHPOOegQUow55xyEECKFGHPOOQghVIw55xx0EEKoGHPMOQghhJA55xyEEEIIIXMOOugghBBCBx2EEEIIoZTOQQghhBBKKCGEEEIIIYQQOgghhBBCCCGEEEIIIYRSSgghhBBCCaGUUAAAYIEDAECADasjnBSNBRYashIAAAIAgByWoFLOhEGOQY8NQcpRMw1CTDnRmWJOajMVU5A5EJ10EhlqQdleMgsAAIAgACDABBAYICj4QgiIMQAAQYjMEAmFVbDAoAwaHOYBwANEhEQAkJigSLu4gC4DXNDFXQdCCEIQglgcQAEJODjhhife8IQbnKBTVOogAAAAAAAMAOABAOCgACIimquwuMDI0Njg6PAIAAAAAAAWAPgAADg+gIiI5iosLjAyNDY4OjwCAAAAAAAAAACAgIAAAAAAAEAAAACAgE9nZ1MABAEAAAAAAAAAXcXeFwIAAABq2npxAgEBAAo=',
-    emptyMp3: '//sQxAADwAABpAAAACAAADSAAAAETEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=',
+    //  emptyOgg: 'T2dnUwACAAAAAAAAAABdxd4XAAAAADaS0jQBHgF2b3JiaXMAAAAAAUSsAAAAAAAAgLsAAAAAAAC4AU9nZ1MAAAAAAAAAAAAAXcXeFwEAAAAaXK+QDz3/////////////////MgN2b3JiaXMtAAAAWGlwaC5PcmcgbGliVm9yYmlzIEkgMjAxMDExMDEgKFNjaGF1ZmVudWdnZXQpAAAAAAEFdm9yYmlzH0JDVgEAAAEAGGNUKUaZUtJKiRlzlDFGmWKSSomlhBZCSJ1zFFOpOdeca6y5tSCEEBpTUCkFmVKOUmkZY5ApBZlSEEtJJXQSOiedYxBbScHWmGuLQbYchA2aUkwpxJRSikIIGVOMKcWUUkpCByV0DjrmHFOOSihBuJxzq7WWlmOLqXSSSuckZExCSCmFkkoHpVNOQkg1ltZSKR1zUlJqQegghBBCtiCEDYLQkFUAAAEAwEAQGrIKAFAAABCKoRiKAoSGrAIAMgAABKAojuIojiM5kmNJFhAasgoAAAIAEAAAwHAUSZEUybEkS9IsS9NEUVV91TZVVfZ1Xdd1Xdd1IDRkFQAAAQBASKeZpRogwgxkGAgNWQUAIAAAAEYowhADQkNWAQAAAQAAYig5iCa05nxzjoNmOWgqxeZ0cCLV5kluKubmnHPOOSebc8Y455xzinJmMWgmtOaccxKDZiloJrTmnHOexOZBa6q05pxzxjmng3FGGOecc5q05kFqNtbmnHMWtKY5ai7F5pxzIuXmSW0u1eacc84555xzzjnnnHOqF6dzcE4455xzovbmWm5CF+eccz4Zp3tzQjjnnHPOOeecc84555xzgtCQVQAAEAAAQRg2hnGnIEifo4EYRYhpyKQH3aPDJGgMcgqpR6OjkVLqIJRUxkkpnSA0ZBUAAAgAACGEFFJIIYUUUkghhRRSiCGGGGLIKaecggoqqaSiijLKLLPMMssss8wy67CzzjrsMMQQQwyttBJLTbXVWGOtueecaw7SWmmttdZKKaWUUkopCA1ZBQCAAAAQCBlkkEFGIYUUUoghppxyyimooAJCQ1YBAIAAAAIAAAA8yXNER3RER3RER3RER3REx3M8R5RESZRESbRMy9RMTxVV1ZVdW9Zl3fZtYRd23fd13/d149eFYVmWZVmWZVmWZVmWZVmWZVmC0JBVAAAIAACAEEIIIYUUUkghpRhjzDHnoJNQQiA0ZBUAAAgAIAAAAMBRHMVxJEdyJMmSLEmTNEuzPM3TPE30RFEUTdNURVd0Rd20RdmUTdd0Tdl0VVm1XVm2bdnWbV+Wbd/3fd/3fd/3fd/3fd/3dR0IDVkFAEgAAOhIjqRIiqRIjuM4kiQBoSGrAAAZAAABACiKoziO40iSJEmWpEme5VmiZmqmZ3qqqAKhIasAAEAAAAEAAAAAACia4imm4imi4jmiI0qiZVqipmquKJuy67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67qu67ouEBqyCgCQAADQkRzJkRxJkRRJkRzJAUJDVgEAMgAAAgBwDMeQFMmxLEvTPM3TPE30RE/0TE8VXdEFQkNWAQCAAAACAAAAAAAwJMNSLEdzNEmUVEu1VE21VEsVVU9VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU1TdM0TSA0ZCUAAAQAwGKNweUgISUl5d4QwhCTnjEmIbVeIQSRkt4xBhWDnjKiDHLeQuMQgx4IDVkRAEQBAADGIMcQc8g5R6mTEjnnqHSUGuccpY5SZynFmGLNKJXYUqyNc45SR62jlGIsLXaUUo2pxgIAAAIcAAACLIRCQ1YEAFEAAIQxSCmkFGKMOaecQ4wp55hzhjHmHHOOOeegdFIq55x0TkrEGHOOOaecc1I6J5VzTkonoQAAgAAHAIAAC6HQkBUBQJwAgEGSPE/yNFGUNE8URVN0XVE0XdfyPNX0TFNVPdFUVVNVbdlUVVmWPM80PdNUVc80VdVUVVk2VVWWRVXVbdN1ddt0Vd2Wbdv3XVsWdlFVbd1UXds3Vdf2Xdn2fVnWdWPyPFX1TNN1PdN0ZdV1bVt1XV33TFOWTdeVZdN1bduVZV13Zdn3NdN0XdNVZdl0Xdl2ZVe3XVn2fdN1hd+VZV9XZVkYdl33hVvXleV0Xd1XZVc3Vln2fVvXheHWdWGZPE9VPdN0Xc80XVd1XV9XXdfWNdOUZdN1bdlUXVl2Zdn3XVfWdc80Zdl0Xds2XVeWXVn2fVeWdd10XV9XZVn4VVf2dVnXleHWbeE3Xdf3VVn2hVeWdeHWdWG5dV0YPlX1fVN2heF0Zd/Xhd9Zbl04ltF1fWGVbeFYZVk5fuFYlt33lWV0XV9YbdkYVlkWhl/4neX2feN4dV0Zbt3nzLrvDMfvpPvK09VtY5l93VlmX3eO4Rg6v/Djqaqvm64rDKcsC7/t68az+76yjK7r+6osC78q28Kx677z/L6wLKPs+sJqy8Kw2rYx3L5uLL9wHMtr68ox675RtnV8X3gKw/N0dV15Zl3H9nV040c4fsoAAIABBwCAABPKQKEhKwKAOAEAjySJomRZoihZliiKpui6omi6rqRppqlpnmlammeapmmqsimarixpmmlanmaamqeZpmiarmuapqyKpinLpmrKsmmasuy6sm27rmzbomnKsmmasmyapiy7sqvbruzquqRZpql5nmlqnmeapmrKsmmarqt5nmp6nmiqniiqqmqqqq2qqixbnmeamuippieKqmqqpq2aqirLpqrasmmqtmyqqm27quz6sm3rummqsm2qpi2bqmrbruzqsizbui9pmmlqnmeamueZpmmasmyaqitbnqeaniiqquaJpmqqqiybpqrKlueZqieKquqJnmuaqirLpmraqmmatmyqqi2bpirLrm37vuvKsm6qqmybqmrrpmrKsmzLvu/Kqu6KpinLpqrasmmqsi3bsu/Lsqz7omnKsmmqsm2qqi7Lsm0bs2z7umiasm2qpi2bqirbsi37uizbuu/Krm+rqqzrsi37uu76rnDrujC8smz7qqz6uivbum/rMtv2fUTTlGVTNW3bVFVZdmXZ9mXb9n3RNG1bVVVbNk3VtmVZ9n1Ztm1hNE3ZNlVV1k3VtG1Zlm1htmXhdmXZt2Vb9nXXlXVf133j12Xd5rqy7cuyrfuqq/q27vvCcOuu8AoAABhwAAAIMKEMFBqyEgCIAgAAjGGMMQiNUs45B6FRyjnnIGTOQQghlcw5CCGUkjkHoZSUMucglJJSCKGUlFoLIZSUUmsFAAAUOAAABNigKbE4QKEhKwGAVAAAg+NYlueZomrasmNJnieKqqmqtu1IlueJommqqm1bnieKpqmqruvrmueJommqquvqumiapqmqruu6ui6aoqmqquu6sq6bpqqqriu7suzrpqqqquvKriz7wqq6rivLsm3rwrCqruvKsmzbtm/cuq7rvu/7wpGt67ou/MIxDEcBAOAJDgBABTasjnBSNBZYaMhKACADAIAwBiGDEEIGIYSQUkohpZQSAAAw4AAAEGBCGSg0ZEUAECcAABhDKaSUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJIKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKqaSUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKZVSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUgoAkIpwAJB6MKEMFBqyEgBIBQAAjFFKKcacgxAx5hhj0EkoKWLMOcYclJJS5RyEEFJpLbfKOQghpNRSbZlzUlqLMeYYM+ekpBRbzTmHUlKLseaaa+6ktFZrrjXnWlqrNdecc825tBZrrjnXnHPLMdecc8455xhzzjnnnHPOBQDgNDgAgB7YsDrCSdFYYKEhKwGAVAAAAhmlGHPOOegQUow55xyEECKFGHPOOQghVIw55xx0EEKoGHPMOQghhJA55xyEEEIIIXMOOugghBBCBx2EEEIIoZTOQQghhBBKKCGEEEIIIYQQOgghhBBCCCGEEEIIIYRSSgghhBBCCaGUUAAAYIEDAECADasjnBSNBRYashIAAAIAgByWoFLOhEGOQY8NQcpRMw1CTDnRmWJOajMVU5A5EJ10EhlqQdleMgsAAIAgACDABBAYICj4QgiIMQAAQYjMEAmFVbDAoAwaHOYBwANEhEQAkJigSLu4gC4DXNDFXQdCCEIQglgcQAEJODjhhife8IQbnKBTVOogAAAAAAAMAOABAOCgACIimquwuMDI0Njg6PAIAAAAAAAWAPgAADg+gIiI5iosLjAyNDY4OjwCAAAAAAAAAACAgIAAAAAAAEAAAACAgE9nZ1MABAEAAAAAAAAAXcXeFwIAAABq2npxAgEBAAo=',
+    //  emptyMp3: '//uQxAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAABAAADQgD///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAA5TEFNRTMuOTlyAc0AAAAAAAAAABSAJAJAQgAAgAAAA0L2YLQxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//uQxAADwAABpAAAACAAADSAAAAETEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
     hightick: 'UklGRkQFAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YSAFAACx/xf/dADOACwBsP3p+6H+zAGoBOkCCwBX/EH5OvxlA4kJ2wcSArT9E/ut+HT2evUx98n6OAF5CCUMwQvfCOsJxAx0DSIMEAq9BiAB3vhz7mLkT9sR133YxN2s5QLv0vrUBnwRnxuQJeEsSDCiMd8yFS8aKFIhohUsCKj64u625OraA9HuyPnElcP+wxvJWtW25637VQ0jHPgnBTDDM1o0CzKLK+8hzhgFDOz8Se4J47DYVtG0z5fQq9LB12rfA+j99roHAhelIyMwIjdTOuU8mjwIOGoxhCb5E53/j+3k3/fTY8pTw4y/Tr+ew8DMvdsk8RcHRRkSKO4yGTkHPkU/rzzyNcgsrR94Dp/5r+Zs17zOncoDxhfE38WLyn/TeOMi9r0IRxlRKIQzyTlOPKo9yjmWMcokDRLc/Y7rudtdzu/D2L1Iu+27JcG3yYrVLujl+3UOZx1UK5Q0qzmNPDk8ZjeeMPojzhH+/jLtPd5m0hHLHsYIw5TEMMnA0jvj8fSOBiwXASZgMzM8dUBGQbI+rzjpKkIZygZT9QflcdaRyqXCz7+VwUPH784r3K7s+v0KDu8bvyeLMb43NjrhOIo0dSvQHi0PnP6i7ovg3NTxy4/Gf8X8yH/QBtvX55P2Ygb0FcUjsy4LNmI5ejiXM38r7iC8FJwHPvok7dDgQdaJzlTKIsoFzsrVkuA87d/6qAi7FQ0h9ClKMLEz3TOrMBcqYSD8E9AFd/dS6kTf6dbU0XnQv9IH2MXfZ+ln9DEAFwwdFy8giib6KawqeChgI/UbHBOTCZj/vvXe7InlFuDN3P3b0d1F4gzpifG2+u4D7Qw1FfwbnCD+IlgjWyHLHPMVog2mBL37qvP+7NvnYuTv4rvjfubN6k3wpPZ0/WkEOwtiEUsWcxm+Gl4aOhhiFDAPIwmbAtn7TPVy77zqcefr5YHmHull7enyfPmcAHgHew1REr8Vhhd/F+AV1RJ0DikJWQNc/ZP3efKd7hvs2ur46rHs5u8e9N/48/0hA/8HFgwuD04RSBIREqsQOg7mCssGMAJW/Xn4G/TK8Lbuzu0I7qTvnPJy9sX6bP84BLYIbAwdD84QYxG7EOcODAxwCFMEAQC9+7P3SvTX8XHw+u9R8KTxIvSo9+X7VQCUBJ0IMwziDj4QLhAGD9UMrgnTBZcBRv1v+Xv2UfS+8tfx+vES87z0+vb3+Zf9ZgEQBSEIUArWC8kM2QyzC5EJEAdvBHgBXP5n++r4Avd89Wj07fMw9D31Jvfp+Uj9xQD9A8QG5QhXClELrAsvC9wJ7gd6BWIC3v6O+7T4PPZN9EHzWvNf9Pz1Fvit+qL9rQCHAwEG/weCCZUKFwvDCnIJcAcQBWcCaf8Z/CD55vaB9dD0wPSP9UL3m/k7/Mz+JwEyAw8FzAY7CBsJaQk5CWkI2gatBCICYf+j/Fr6vfiV9872sfZP91z4p/lR+3H9zf89AroEFAfjCP0Jcwo8CjAJdQdgBSEDkgDQ/Vj7ZfnR95T28fUd9v32Vvg2+nb8+/6xAWoE4AbDCP4JpAqbCqQJ0weEBfgCTACT/R37M/m+9672IPY69gb3afhW+tT8qf+MAj0FggcuCScKXAriCcMIEAfyBJYCFwCP/Rz7A/l793z2F/Zn9mH37fjd+i39yf9pAt0EFAfRCNkJGAqrCZYIvgZPBJ8B6P4//M350vdz9q/1lfUq9mz3RPmi+3H+bgFVBOQG3wgHCkwK0Am7CCAHCgWmAjAA',
     lowtick: 'UklGRlQFAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAFAAB0/5v+U/4T/3gA0wFTAuUB+f8d/nT90f1q/ub+tf46/mb/8wFQA9gC7wCd/mr+FAGRA3cE6wJf/h36evmv+8v/NwRHBZUC2/60+//5EvuZ/aX/bgFOAp8Azvzh9wfzLPF68zT4y/2BAygIfQwaEjYY0x31Irwl8SOWHVESOgPh9NfpReFt22nYHddD2BXcZeDa5InqgPDx9nP+6gS4CBYLnw0zES0WXxv4HkcgLh/1G+EX1RNpD4wKigXH/6r5/fNu7lTpj+Zu5hHoXOtL71byr/Qp91L64v6OBO4JoQ5zEskU+hU1FiQVeRP7EWgP4Qr0BIT+tPid9C3y1vCh8FDxJvK28vvyy/LA8pLzU/XP95v6xvw4/uD/RAK2BSkKcg6BEScTZBMeEqkPTQxjCKEEVwFi/nv7h/hp9aDyAvHP8MfxLvM+9PX0uPW19g/4Lfr7/C4AKgNaBXQGywb0BhIHWQfWB1oIzAjtCF8IHwdtBakDVwKLAeYA8v9w/kj81/nQ94v29/XX9bz1bPUY9Uz1Z/aH+Hr7yP4MAi4F+wcfCnYLNgyfDPsMSw0sDUAMfgrcB5IEMwFb/iX8T/pT+O/1X/Mf8cbvrO+18MLyvfVP+Rf9wgAoBCEHpwnIC5EN4Q5AD3wO1Ay0CpsIvwbvBNcCbQAr/nX8Ofsf+vb4mvda9rj1z/WX9pL3a/hH+ZX6R/wn/vP/eQESA/AE+wYDCcwKFAyPDCkMFQuSCe4HVQbSBHQDCwI8ANL9JPuY+HX28vTq82PzdPMV9Az1MfZ49zD5gftx/sQBBQXLB8cJ/gqpCw8MigwWDXENXQ2rDDUL7QgDBswCdv8S/K74WPVk8hXwou4P7mvu1+9T8pz1Uvli/ZoBwgWRCcsMPg/CEEQR4RDADwoO9wusCVMH4ARSApn/ufzd+Wj3bvX78xzzx/L68qzz1vSD9qX4Gfvd/c0AhwO/BWwHmghvCQEKVQonClsJCwiIBh0F0gOgAm0BOwAx/03+XP0g/Lb6cPmX+F/4vfh++TH6s/os+7/7cvwL/Zz9XP5O/3IA3AF9AzsF9gaUCAAKHgueCzcL9wntB3sF4wIzAI396fp1+Gv2IvWn9N30p/Xi9m74G/ru+9P9k/8aAYEC1AMTBSIG0wYuB1gHkgcACGEISAhTBzEFWAKt/5L92fuU+vX50fmf+SP5i/gb+Bf4mviv+Sr7kvyb/Uj+r/4X/8r/+gCiAo0EUAaRBzwISwjqB3IHGQfCBv8FpgTMApQAKf67+5n5/vfn9jz2yPVn9SL1RPXq9SP3Dvmr+6f+sQGKBAcH+whOCh0Laws3C28KLAmDB5AFfQNoAVP/Zv3e+7P6sfnL+Cv4vPeM95b37feV+Jn51Poq/LL9mv+YAVYD3gQuBmcHSAikCIEI7Af+BuEFngQXA1sBv/9v/pf9MP3W/Fj8q/sR+6H6U/o3+mP6y/pN+/f7xvye/WH+Jf9mAD4CQAQJBisHtgf6Bw0I8QdsB1sGywT4AggBCP/o/KX6mPg19572jfaz9uf2S/cM+E35E/tW/af/5wH1A8AFKgfkB/AHgwfxBlAGgQVIBMMCJwGs/43+vP0i/Zr8Lfzl+9H76fvi+9f75fsf/In8BP10/ej9cf4O/7f/dAAcAaUBEgKMAhgDpAMEBCEEDwTfA3IDxQL8ASoBUwCG/87+J/6h/Rr9pPxk/Gb8oPwJ/XH9w/39/UD+qP41/9D/WwDeAGsBAgKdAhEDQQNAA0sDbwOVA5YDVwPOAhgCVAGRAA=='
   };
@@ -7945,7 +8091,7 @@ function polyfill() {
   exports.default = samples;
 });
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'filesaverjs'], factory);
@@ -8249,7 +8395,7 @@ function polyfill() {
   }
 });
 
-},{"filesaverjs":1}],38:[function(require,module,exports){
+},{"filesaverjs":1}],39:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_midi', './init_audio', './midi_event', './util'], factory);
@@ -8651,7 +8797,7 @@ function polyfill() {
   exports.default = Scheduler;
 });
 
-},{"./init_audio":17,"./init_midi":18,"./midi_event":21,"./util":45}],39:[function(require,module,exports){
+},{"./init_audio":18,"./init_midi":19,"./midi_event":22,"./util":46}],40:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -8821,7 +8967,7 @@ function polyfill() {
   };
 });
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './instrument', './sample_oscillator'], factory);
@@ -8947,7 +9093,7 @@ function polyfill() {
   }(_instrument.Instrument);
 });
 
-},{"./instrument":19,"./sample_oscillator":34}],41:[function(require,module,exports){
+},{"./instrument":20,"./sample_oscillator":35}],42:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './constants', './parse_events', './init_audio', './scheduler', './midi_event', './song_from_midifile', './util', './position', './playhead', './metronome', './eventlistener', './save_midifile', './song.update', './settings'], factory);
@@ -9781,7 +9927,7 @@ function polyfill() {
   }();
 });
 
-},{"./constants":13,"./eventlistener":14,"./init_audio":17,"./metronome":20,"./midi_event":21,"./parse_events":27,"./playhead":29,"./position":30,"./save_midifile":37,"./scheduler":38,"./settings":39,"./song.update":42,"./song_from_midifile":43,"./util":45}],42:[function(require,module,exports){
+},{"./constants":13,"./eventlistener":15,"./init_audio":18,"./metronome":21,"./midi_event":22,"./parse_events":28,"./playhead":30,"./position":31,"./save_midifile":38,"./scheduler":39,"./settings":40,"./song.update":43,"./song_from_midifile":44,"./util":46}],43:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './parse_events', './util', './constants', './position', './midi_event', './eventlistener'], factory);
@@ -10034,7 +10180,7 @@ function polyfill() {
   }
 });
 
-},{"./constants":13,"./eventlistener":14,"./midi_event":21,"./parse_events":27,"./position":30,"./util":45}],43:[function(require,module,exports){
+},{"./constants":13,"./eventlistener":15,"./midi_event":22,"./parse_events":28,"./position":31,"./util":46}],44:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'isomorphic-fetch', './midifile', './midi_event', './part', './track', './song', './util', './fetch_helpers', './settings'], factory);
@@ -10284,7 +10430,7 @@ function polyfill() {
   }
 });
 
-},{"./fetch_helpers":15,"./midi_event":21,"./midifile":24,"./part":28,"./settings":39,"./song":41,"./track":44,"./util":45,"isomorphic-fetch":2}],44:[function(require,module,exports){
+},{"./fetch_helpers":16,"./midi_event":22,"./midifile":25,"./part":29,"./settings":40,"./song":42,"./track":45,"./util":46,"isomorphic-fetch":2}],45:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './part', './midi_event', './midi_note', './init_midi', './util', './init_audio', './qambi', './eventlistener'], factory);
@@ -10864,29 +11010,39 @@ function polyfill() {
         }
         return true;
       }
+
+      // routing: audiosource -> panning -> track output -> effect -> song input
+
     }, {
       key: 'addEffect',
       value: function addEffect(effect) {
-        if (this._checkEffect(effect) === false) {
-          return;
-        }
-        var numFX = this._effects.length;
-        var lastFX = void 0;
-        var output = void 0;
-        if (numFX === 0) {
-          lastFX = this._output;
-          lastFX.disconnect(this._songOutput);
-          output = this._output;
-        } else {
-          lastFX = this._effects[numFX - 1];
-          lastFX.disconnect();
-          output = lastFX.getOutput();
-        }
 
-        effect.setInput(output);
-        effect.setOutput(this._songOutput);
+        //@TODO: add fx rack (currently only 1 fx can be added)
 
-        this._effects.push(effect);
+        this._output.disconnect(this._songOutput);
+        this._output.connect(effect.input);
+        effect.output.connect(this._songOutput);
+
+        // if(this._checkEffect(effect) === false){
+        //   return
+        // }
+        // let numFX = this._effects.length
+        // let lastFX
+        // let output
+        // if(numFX === 0){
+        //   lastFX = this._output
+        //   lastFX.disconnect(this._songOutput)
+        //   output = this._output
+        // }else{
+        //   lastFX = this._effects[numFX - 1]
+        //   lastFX.disconnect()
+        //   output = lastFX.getOutput()
+        // }
+
+        // effect.setInput(output)
+        // effect.setOutput(this._songOutput)
+
+        // this._effects.push(effect)
       }
     }, {
       key: 'addEffectAt',
@@ -10896,36 +11052,44 @@ function polyfill() {
         }
         this._effects.splice(index, 0, effect);
       }
+
+      //removeEffect(index: number){
     }, {
       key: 'removeEffect',
-      value: function removeEffect(index) {
-        var _this8 = this;
-
-        if (isNaN(index)) {
-          return;
+      value: function removeEffect(effect) {
+        this._output.disconnect(effect.input);
+        try {
+          effect.output.disconnect(this._songOutput);
+        } catch (e) {
+          // Chrome throws an error here, which is wrong
         }
-        this._effects.forEach(function (fx) {
-          fx.disconnect();
-        });
-        this._effects.splice(index, 1);
+        this._output.connect(this._songOutput);
 
-        var numFX = this._effects.length;
+        // if(isNaN(index)){
+        //   return
+        // }
+        // this._effects.forEach(fx => {
+        //   fx.disconnect()
+        // })
+        // this._effects.splice(index, 1)
 
-        if (numFX === 0) {
-          this._output.connect(this._songOutput);
-          return;
-        }
+        // let numFX = this._effects.length
 
-        var lastFX = this._output;
-        this._effects.forEach(function (fx, i) {
-          fx.setInput(lastFX);
-          if (i === numFX - 1) {
-            fx.setOutput(_this8._songOutput);
-          } else {
-            fx.setOutput(_this8._effects[i + 1]);
-          }
-          lastFX = fx;
-        });
+        // if(numFX === 0){
+        //   this._output.connect(this._songOutput)
+        //   return
+        // }
+
+        // let lastFX = this._output
+        // this._effects.forEach((fx, i) => {
+        //   fx.setInput(lastFX)
+        //   if(i === numFX - 1){
+        //     fx.setOutput(this._songOutput)
+        //   }else{
+        //     fx.setOutput(this._effects[i + 1])
+        //   }
+        //   lastFX = fx
+        // })
       }
     }, {
       key: 'getEffects',
@@ -11110,7 +11274,7 @@ function polyfill() {
   }();
 });
 
-},{"./eventlistener":14,"./init_audio":17,"./init_midi":18,"./midi_event":21,"./midi_note":22,"./part":28,"./qambi":31,"./util":45}],45:[function(require,module,exports){
+},{"./eventlistener":15,"./init_audio":18,"./init_midi":19,"./midi_event":22,"./midi_note":23,"./part":29,"./qambi":32,"./util":46}],46:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'isomorphic-fetch'], factory);
@@ -11372,5 +11536,5 @@ function polyfill() {
   */
 });
 
-},{"isomorphic-fetch":2}]},{},[31])(31)
+},{"isomorphic-fetch":2}]},{},[32])(32)
 });

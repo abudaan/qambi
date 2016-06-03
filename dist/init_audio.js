@@ -75,8 +75,8 @@ function initAudio() {
 
     (0, _parse_audio.parseSamples)(_samples2.default).then(function onFulfilled(buffers) {
       //console.log(buffers)
-      data.ogg = typeof buffers.emptyOgg !== 'undefined';
-      data.mp3 = typeof buffers.emptyMp3 !== 'undefined';
+      // data.ogg = typeof buffers.emptyOgg !== 'undefined'
+      // data.mp3 = typeof buffers.emptyMp3 !== 'undefined'
       data.lowtick = buffers.lowtick;
       data.hightick = buffers.hightick;
       if (data.ogg === false && data.mp3 === false) {

@@ -88,6 +88,7 @@ var Instrument = exports.Instrument = function () {
           } else {
             sample.stop(time, function () {
               // console.log('stop', time, event.midiNoteId)
+              sample.output.disconnect();
               _this.scheduledSamples.delete(event.midiNoteId);
             });
             //sample.stop(time)
@@ -112,6 +113,7 @@ var Instrument = exports.Instrument = function () {
                       //sample.stop(time)
                       sample.stop(time, function () {
                         //console.log('stop', midiNoteId)
+                        sample.output.disconnect();
                         _this.scheduledSamples.delete(midiNoteId);
                       });
                     }
@@ -156,6 +158,7 @@ var Instrument = exports.Instrument = function () {
 
       this.scheduledSamples.forEach(function (sample) {
         sample.stop(_init_audio.context.currentTime);
+        sample.output.disconnect();
       });
       this.scheduledSamples.clear();
     }
@@ -168,6 +171,7 @@ var Instrument = exports.Instrument = function () {
       var sample = this.scheduledSamples.get(midiEvent.midiNoteId);
       if (sample) {
         sample.stop(_init_audio.context.currentTime);
+        sample.output.disconnect();
         this.scheduledSamples.delete(midiEvent.midiNoteId);
       }
     }

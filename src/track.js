@@ -407,7 +407,10 @@ export class Track{
     return true
   }
 
+  // routing: audiosource -> panning -> track output -> effect -> song input
   addEffect(effect){
+
+    //@TODO: add fx rack (currently only 1 fx can be added)
 
     this._output.disconnect(this._songOutput)
     this._output.connect(effect.input)
@@ -445,9 +448,11 @@ export class Track{
   //removeEffect(index: number){
   removeEffect(effect){
     this._output.disconnect(effect.input)
-    //effect.output.disconnect(this._songOutput)
-
-    // this._output.disconnect(effect.input)
+    try{
+      effect.output.disconnect(this._songOutput)
+    }catch(e){
+      // Chrome throws an error here, which is wrong
+    }
     this._output.connect(this._songOutput)
 
     // if(isNaN(index)){

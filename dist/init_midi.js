@@ -103,58 +103,60 @@ function initMIDI() {
 
   return new Promise(function executor(resolve, reject) {
 
+    var jazz = false;
+    var midi = false;
+    var webmidi = false;
+
     if (typeof navigator === 'undefined') {
       initialized = true;
-      resolve({ midi: false });
+      resolve({ midi: midi });
     } else if (typeof navigator.requestMIDIAccess !== 'undefined') {
-      (function () {
 
-        var jazz = void 0,
-            midi = void 0,
-            webmidi = void 0;
+      navigator.requestMIDIAccess().then(function onFulFilled(midiAccess) {
+        MIDIAccess = midiAccess;
+        // @TODO: implement something in webmidiapishim that allows us to detect the Jazz plugin version
+        if (typeof midiAccess._jazzInstances !== 'undefined') {
+          console.log('jazz');
+          jazz = midiAccess._jazzInstances[0]._Jazz.version;
+          midi = true;
+        } else {
+          webmidi = true;
+          midi = true;
+        }
 
-        navigator.requestMIDIAccess().then(function onFulFilled(midiAccess) {
-          MIDIAccess = midiAccess;
-          if (typeof midiAccess._jazzInstances !== 'undefined') {
-            jazz = midiAccess._jazzInstances[0]._Jazz.version;
-            midi = true;
-          } else {
-            webmidi = true;
-            midi = true;
-          }
+        getMIDIports();
 
+        // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
+        midiAccess.onconnect = function (e) {
+          console.log('device connected', e);
           getMIDIports();
+        };
 
-          // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
-          midiAccess.onconnect = function (e) {
-            console.log('device connected', e);
-            getMIDIports();
-          };
+        midiAccess.ondisconnect = function (e) {
+          console.log('device disconnected', e);
+          getMIDIports();
+        };
 
-          midiAccess.ondisconnect = function (e) {
-            console.log('device disconnected', e);
-            getMIDIports();
-          };
-
-          initialized = true;
-          resolve({
-            jazz: jazz,
-            midi: midi,
-            webmidi: webmidi,
-            inputs: inputs,
-            outputs: outputs,
-            inputsById: inputsById,
-            outputsById: outputsById
-          });
-        }, function onReject(e) {
-          //console.log(e)
-          reject('Something went wrong while requesting MIDIAccess', e);
+        initialized = true;
+        resolve({
+          jazz: jazz,
+          midi: midi,
+          webmidi: webmidi,
+          inputs: inputs,
+          outputs: outputs,
+          inputsById: inputsById,
+          outputsById: outputsById
         });
-        // browsers without WebMIDI API
-      })();
+      }, function onReject(e) {
+        //console.log(e)
+        //reject('Something went wrong while requesting MIDIAccess', e)
+        initialized = true;
+        resolve({ midi: midi, jazz: jazz });
+      });
+      // browsers without WebMIDI API
     } else {
         initialized = true;
-        resolve({ midi: false });
+        resolve({ midi: midi });
       }
   });
 }

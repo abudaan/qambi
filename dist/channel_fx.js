@@ -11,6 +11,8 @@ var _init_audio = require('./init_audio');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+// NOT IN USE
+
 var ChannelFX = exports.ChannelFX = function () {
   function ChannelFX() {
     _classCallCheck(this, ChannelFX);

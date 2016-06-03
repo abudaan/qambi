@@ -63,6 +63,7 @@ export class Instrument{
       }else{
         sample.stop(time, () => {
           // console.log('stop', time, event.midiNoteId)
+          sample.output.disconnect()
           this.scheduledSamples.delete(event.midiNoteId)
         })
         //sample.stop(time)
@@ -87,6 +88,7 @@ export class Instrument{
               //sample.stop(time)
               sample.stop(time, () => {
                 //console.log('stop', midiNoteId)
+                sample.output.disconnect()
                 this.scheduledSamples.delete(midiNoteId)
               })
             }
@@ -128,6 +130,7 @@ export class Instrument{
 
     this.scheduledSamples.forEach(sample => {
       sample.stop(context.currentTime)
+      sample.output.disconnect()
     })
     this.scheduledSamples.clear()
   }
@@ -137,6 +140,7 @@ export class Instrument{
     let sample = this.scheduledSamples.get(midiEvent.midiNoteId)
     if(sample){
       sample.stop(context.currentTime)
+      sample.output.disconnect()
       this.scheduledSamples.delete(midiEvent.midiNoteId)
     }
   }

@@ -1,4 +1,4 @@
-const version = '1.0.0-beta27'
+const version = '1.0.0-beta28'
 
 import {
   updateSettings,
@@ -40,6 +40,10 @@ import {
 import {
   SimpleSynth,
 } from './simple_synth'
+
+import {
+  ConvolutionReverb,
+} from './convolution_reverb'
 
 import {
   parseMIDIFile
@@ -165,6 +169,9 @@ const qambi = {
   // from ./sampler
   Sampler,
 
+  // from ./convolution_reverb
+  ConvolutionReverb,
+
   log(id){
     switch(id){
       case 'functions':
@@ -253,4 +260,7 @@ export {
 
   // from ./sampler
   Sampler,
+
+  // from ./convolution_reverb
+  ConvolutionReverb,
 }
