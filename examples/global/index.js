@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function(){
   qambi.init()
   .then(function(){
 
+    // Song, Track, Part and so on are global variables as well because the globals.js script is embedded in the html
     let song = new Song()
     let track = new Track()
     let part = new Part()
@@ -15,7 +16,5 @@ document.addEventListener('DOMContentLoaded', function(){
     song.addTracks(track)
     song.update()
     song.play()
-
   })
-
 })

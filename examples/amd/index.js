@@ -20,6 +20,5 @@ require(['qambi'], function(qambi){
     song.update()
     song.play()
   })
-
 })
 
