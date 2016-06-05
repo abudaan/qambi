@@ -61,6 +61,8 @@ function main(data){
   btnReverb.disabled = false
   btnDelay.disabled = false
 
+
+  // transport controls
   btnPlay.addEventListener('click', function(){
     song.play()
   })
@@ -182,7 +184,7 @@ function main(data){
   })
 
 
-  // range inputs
+  // range inputs interaction
 
   function setPanning(e){
     song.getTracks().forEach(t => {
