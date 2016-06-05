@@ -1,68 +1,28 @@
 import {context} from './init_audio'
 
-// NOT IN USE
-
-export class ChannelFX{
+export class ChannelEffect{
 
   constructor(){
-    this.bypass = false
-    this.amount = 0//0.5
 
-    this._output = context.createGainNode()
-    this._wetGain = context.createGainNode()
-    this._dryGain = context.createGainNode()
+    this.input = context.createGain()
+    this.output = context.createGain()
 
-    this._output.gain.value = 1
-    this._wetGain.gain.value = this.amount
-    this._dryGain.gain.value = 1 - this.amount
+    this._dry = context.createGain()
+    this._wet = context.createGain()
 
-    this._wetGain.connect(this._output)
-    this._dryGain.connect(this._output)
+    this._dry.gain.value = 1
+    this._wet.gain.value = 0
+
+    this.amount = 0
   }
 
-  // mandatory
-  setInput(input){
-    if(input instanceof AudioNode === false){
-      console.log('argument is not an instance of AudioNode', input)
-      return
-    }
+  init(){
+    this.input.connect(this._dry)
+    this._dry.connect(this.output)
 
-    this._input = input
-
-    // dry channel
-    this._input.connect(this._dryGain)
-
-    // wet channel
-    this._input.connect(this._nodeFX)
-    this._nodeFX.connect(this._wetGain)
-  }
-
-  // mandatory
-  setOutput(output){
-    if(output instanceof AudioNode === false){
-      console.log('argument is not an instance of AudioNode', output)
-      return
-    }
-    this._output.disconnect()
-    this._output.connect(output)
-  }
-
-  // mandatory
-  disconnect(){
-    this._output.disconnect()
-    this._nodeFX.disconnect()
-    //console.log(this._input)
-    try{
-      this._input.disconnect(this._dryGain)
-      this._input.disconnect(this._nodeFX)
-    }catch(e){
-      console.log(e)
-    }
-  }
-
-  // mandatory
-  getOutput(){
-    return this._output
+    this.input.connect(this._nodeFX)
+    this._nodeFX.connect(this._wet)
+    this._wet.connect(this.output)
   }
 
   setAmount(value){
@@ -80,8 +40,8 @@ export class ChannelFX{
     }
 
     this.amount = value
-    this._wetGain.gain.value = this.amount
-    this._dryGain.gain.value = 1 - this.amount
+    this._wet.gain.value = this.amount
+    this._dry.gain.value = 1 - this.amount
     //console.log('wet',this.wetGain.gain.value,'dry',this.dryGain.gain.value);
   }
 }

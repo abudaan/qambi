@@ -46,6 +46,10 @@ import {
 } from './convolution_reverb'
 
 import {
+  Delay,
+} from './delay_fx'
+
+import {
   parseMIDIFile
 } from './midifile'
 
@@ -172,6 +176,9 @@ const qambi = {
   // from ./convolution_reverb
   ConvolutionReverb,
 
+  // from ./delay_fx
+  Delay,
+
   log(id){
     switch(id){
       case 'functions':
@@ -263,4 +270,7 @@ export {
 
   // from ./convolution_reverb
   ConvolutionReverb,
+
+  // from ./delay_fx
+  Delay,
 }

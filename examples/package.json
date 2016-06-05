@@ -37,7 +37,7 @@
   },
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
-    "watch": "watchify ./panner_reverb/index.js -t babelify -o ./panner_reverb/build.js --debug --verbose"
+    "watch": "watchify ./fx_chain/index.js -t babelify -o ./fx_chain/build.js --debug --verbose"
   },
   "dependencies": {
     "isomorphic-fetch": "^2.2.1",

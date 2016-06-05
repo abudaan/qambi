@@ -411,7 +411,11 @@ export class Track{
       effect.output.connect(this._songGainNode)
     }else{
       prevEffect = this._effects[this._numEffects - 1]
-      prevEffect.output.disconnect(this._songGainNode)
+      try{
+        prevEffect.output.disconnect(this._songGainNode)
+      }catch(e){
+        //Chrome throws an error here which is wrong
+      }
       prevEffect.output.connect(effect.input)
       effect.output.connect(this._songGainNode)
     }

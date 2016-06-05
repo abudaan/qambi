@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.ConvolutionReverb = exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
+exports.Delay = exports.ConvolutionReverb = exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
 
 var _settings = require('./settings');
 
@@ -26,6 +26,8 @@ var _sampler = require('./sampler');
 var _simple_synth = require('./simple_synth');
 
 var _convolution_reverb = require('./convolution_reverb');
+
+var _delay_fx = require('./delay_fx');
 
 var _midifile = require('./midifile');
 
@@ -124,6 +126,9 @@ var qambi = {
   // from ./convolution_reverb
   ConvolutionReverb: _convolution_reverb.ConvolutionReverb,
 
+  // from ./delay_fx
+  Delay: _delay_fx.Delay,
+
   log: function log(id) {
     switch (id) {
       case 'functions':
@@ -215,3 +220,7 @@ exports.
 
 // from ./convolution_reverb
 ConvolutionReverb = _convolution_reverb.ConvolutionReverb;
+exports.
+
+// from ./delay_fx
+Delay = _delay_fx.Delay;
