@@ -71,7 +71,7 @@ var Track = exports.Track = function () {
     this.sustainedSamples = [];
     this.sustainPedalDown = false;
     this.monitor = false;
-    this._songInput = null;
+    this._songGainNode = null;
     this._effects = [];
     this._numEffects = 0;
 
@@ -547,7 +547,7 @@ var Track = exports.Track = function () {
       var prevEffect = void 0;
 
       if (this._numEffects === 0) {
-        this._gainNode.disconnect(this._songInput);
+        this._gainNode.disconnect(this._songGainNode);
         this._gainNode.connect(effect.input);
         effect.output.connect(this._songGainNode);
       } else {
@@ -614,32 +614,57 @@ var Track = exports.Track = function () {
       var nextEffect = void 0;
       var prevEffect = void 0;
 
+      //console.log(index, this._effects)
+
       if (index === 0) {
+        // we remove the first effect, so disconnect from output of track
         this._gainNode.disconnect(effect.input);
 
         if (this._numEffects === 1) {
+          // no effects anymore, so connect output of track to input of the song
           try {
             effect.output.disconnect(this._songGainNode);
           } catch (e) {
             //Chrome throws an error here which is wrong
           }
-
           this._gainNode.connect(this._songGainNode);
         } else {
+          // disconnect the removed effect from the next effect in the chain, this is now the first effect in the chain...
           nextEffect = this._effects[index + 1];
+          try {
+            effect.output.disconnect(nextEffect.input);
+          } catch (e) {}
+          //Chrome throws an error here which is wrong
+
+          // ... so connect the output of the track to the input of this effect
           this._gainNode.connect(nextEffect.input);
         }
       } else {
+
         prevEffect = this._effects[index - 1];
-        if (index === this._numEffects) {
-          prevEffect.output.disconnect(this._songGainNode);
-          prevEffect.output.connect(effect.input);
-          effect.input.connect(this._songGainNode);
+        //console.log(prevEffect)
+        // disconnect the removed effect from the previous effect in the chain
+        try {
+          prevEffect.output.disconnect(effect.input);
+        } catch (e) {
+          //Chrome throws an error here which is wrong
+        }
+
+        if (index === this._numEffects - 1) {
+          // we remove the last effect in the chain, so disconnect from the input of the song
+          try {
+            effect.output.disconnect(this._songGainNode);
+          } catch (e) {}
+          //Chrome throws an error here which is wrong
+
+          // the previous effect is now the last effect to connect it to the input of the song
+          prevEffect.output.connect(this._songGainNode);
         } else {
+          // disconnect the effect from the next effect in the chain
           nextEffect = this._effects[index];
-          prevEffect.output.disconnect(nextEffect.input);
-          prevEffect.output.connect(effect.input);
-          effect.output.connect(nextEffect.input);
+          effect.output.disconnect(nextEffect.input);
+          // connect the previous effect to the next effect
+          prevEffect.output.connect(nextEffect.input);
         }
       }
 

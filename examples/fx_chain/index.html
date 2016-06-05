@@ -30,10 +30,18 @@
       .label{
         width: 150px;
       }
+      #fx_delay, #fx_reverb, #panning{
+        vertical-align: top;
+      }
+      #fx_delay, #fx_reverb{
+        display: none;
+      }
+      #panning{
+        display: inline-block;
+      }
     </style>
  </head>
   <body>
-    CURRENTLY DEFUNCT!
     <div id="app">
       <div id="loading">Loading...</div>
       <button id="play" disabled>play</button>
@@ -50,9 +58,18 @@
         <button id='A4'>A</button>
         <button id='B4'>B</button>
       </div>
-      <div class="label">panning</div><input type='range' id="panning" value=0.001 min=-1 max=1 step=0.001></input><br>
-      <div class="label">reverb</div><input type='range' id="reverb_amount" value=0 min=0 max=1 step=0.001 disabled></input>
-      <div class="label">delay</div><input type='range' id="delay_amount" value=0 min=0 max=1 step=0.001 disabled></input>
+      <div id="panning">
+        <div class="label">panning<input type='range' id="panning" value=0.001 min=-1 max=1 step=0.001></input></div>
+      </div>
+      <div id="fx_reverb">
+        <div class="label">reverb<input type='range' id="reverb_amount" value=0 min=0 max=1 step=0.001></input></div>
+      </div>
+      <div id="fx_delay">
+        <div class="label">delay<input type='range' id="delay_amount" value=0 min=0 max=1 step=0.001></input></div>
+        <div class="label">time<input type='range' id="delay_time" value=0.2 min=0 max=1 step=0.001></input></div>
+        <div class="label">feedback<input type='range' id="delay_feedback" value=0.7 min=0 max=1 step=0.001></input></div>
+        <div class="label">frequency<input type='range' id="delay_frequency" value=1000 min=0 max=20000 step=1></input></div>
+      </div>
     </div>
     <pre class="line-numbers" data-src="index.js"></pre>
     <script src="../../js/prism.js"></script>

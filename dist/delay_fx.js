@@ -56,19 +56,22 @@ var Delay = exports.Delay = function (_ChannelEffect) {
   }
 
   _createClass(Delay, [{
-    key: 'setDelayTime',
-    value: function setDelayTime(value) {
+    key: 'setTime',
+    value: function setTime(value) {
       this._nodeFX.delayTime.value = this.delayTime = value;
+      //console.log('time', value)
     }
   }, {
     key: 'setFeedback',
     value: function setFeedback(value) {
       this._feedback.gain.value = this.feedback = value;
+      //console.log('feedback', value)
     }
   }, {
-    key: 'setCutOffFrequency',
-    value: function setCutOffFrequency(value) {
+    key: 'setFrequency',
+    value: function setFrequency(value) {
       this._filter.frequency.value = this.frequency = value;
+      //console.log('frequency', value)
     }
   }]);
 

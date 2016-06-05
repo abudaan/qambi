@@ -1874,6 +1874,104 @@ function polyfill() {
 },{}],13:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
+    define(['exports', './init_audio'], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require('./init_audio'));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.init_audio);
+    global.channel_fx = mod.exports;
+  }
+})(this, function (exports, _init_audio) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.ChannelEffect = undefined;
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  var _createClass = function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  }();
+
+  var ChannelEffect = exports.ChannelEffect = function () {
+    function ChannelEffect() {
+      _classCallCheck(this, ChannelEffect);
+
+      this.input = _init_audio.context.createGain();
+      this.output = _init_audio.context.createGain();
+
+      this._dry = _init_audio.context.createGain();
+      this._wet = _init_audio.context.createGain();
+
+      this._dry.gain.value = 1;
+      this._wet.gain.value = 0;
+
+      this.amount = 0;
+    }
+
+    _createClass(ChannelEffect, [{
+      key: 'init',
+      value: function init() {
+        this.input.connect(this._dry);
+        this._dry.connect(this.output);
+
+        this.input.connect(this._nodeFX);
+        this._nodeFX.connect(this._wet);
+        this._wet.connect(this.output);
+      }
+    }, {
+      key: 'setAmount',
+      value: function setAmount(value) {
+        /*
+        this.amount = value < 0 ? 0 : value > 1 ? 1 : value;
+        var gain1 = Math.cos(this.amount * 0.5 * Math.PI),
+            gain2 = Math.cos((1.0 - this.amount) * 0.5 * Math.PI);
+        this.gainNode.gain.value = gain2 * this.ratio;
+        */
+
+        if (value < 0) {
+          value = 0;
+        } else if (value > 1) {
+          value = 1;
+        }
+
+        this.amount = value;
+        this._wet.gain.value = this.amount;
+        this._dry.gain.value = 1 - this.amount;
+        //console.log('wet',this.wetGain.gain.value,'dry',this.dryGain.gain.value);
+      }
+    }]);
+
+    return ChannelEffect;
+  }();
+});
+
+},{"./init_audio":20}],14:[function(require,module,exports){
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
   } else if (typeof exports !== "undefined") {
     factory(exports);
@@ -1921,20 +2019,20 @@ function polyfill() {
   exports.MIDIEventTypes = MIDIEventTypes;
 });
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './init_audio', './parse_audio'], factory);
+    define(['exports', './init_audio', './parse_audio', './channel_fx'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./init_audio'), require('./parse_audio'));
+    factory(exports, require('./init_audio'), require('./parse_audio'), require('./channel_fx'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.init_audio, global.parse_audio);
+    factory(mod.exports, global.init_audio, global.parse_audio, global.channel_fx);
     global.convolution_reverb = mod.exports;
   }
-})(this, function (exports, _init_audio, _parse_audio) {
+})(this, function (exports, _init_audio, _parse_audio, _channel_fx) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -1966,32 +2064,45 @@ function polyfill() {
     };
   }();
 
-  var ConvolutionReverb = exports.ConvolutionReverb = function () {
+  function _possibleConstructorReturn(self, call) {
+    if (!self) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return call && (typeof call === "object" || typeof call === "function") ? call : self;
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+
+  var ConvolutionReverb = exports.ConvolutionReverb = function (_ChannelEffect) {
+    _inherits(ConvolutionReverb, _ChannelEffect);
+
     function ConvolutionReverb(buffer) {
       _classCallCheck(this, ConvolutionReverb);
 
-      this._nodeFX = _init_audio.context.createConvolver();
+      var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ConvolutionReverb).call(this));
+
+      _this._nodeFX = _init_audio.context.createConvolver();
+      _this.init();
 
       if (buffer instanceof AudioBuffer) {
-        this._nodeFX.buffer = buffer;
+        _this._nodeFX.buffer = buffer;
       }
-      this.input = _init_audio.context.createGain();
-      this.output = _init_audio.context.createGain();
-
-      this._dry = _init_audio.context.createGain();
-      this._wet = _init_audio.context.createGain();
-
-      this._dry.gain.value = 1;
-      this._wet.gain.value = 0;
-
-      this.input.connect(this._dry);
-      this._dry.connect(this.output);
-
-      this.input.connect(this._nodeFX);
-      this._nodeFX.connect(this._wet);
-      this._wet.connect(this.output);
-
-      this.amount = 0;
+      return _this;
     }
 
     _createClass(ConvolutionReverb, [{
@@ -2006,13 +2117,13 @@ function polyfill() {
     }, {
       key: 'loadBuffer',
       value: function loadBuffer(url) {
-        var _this = this;
+        var _this2 = this;
 
         return new Promise(function (resolve, reject) {
           (0, _parse_audio.parseSamples)(url).then(function (buffer) {
             buffer = buffer[0];
             if (buffer instanceof AudioBuffer) {
-              _this._nodeFX.buffer = buffer;
+              _this2._nodeFX.buffer = buffer;
               resolve();
             } else {
               reject('could not parse to AudioBuffer', url);
@@ -2020,34 +2131,142 @@ function polyfill() {
           });
         });
       }
-    }, {
-      key: 'setAmount',
-      value: function setAmount(value) {
-        /*
-        this.amount = value < 0 ? 0 : value > 1 ? 1 : value;
-        var gain1 = Math.cos(this.amount * 0.5 * Math.PI),
-            gain2 = Math.cos((1.0 - this.amount) * 0.5 * Math.PI);
-        this.gainNode.gain.value = gain2 * this.ratio;
-        */
-
-        if (value < 0) {
-          value = 0;
-        } else if (value > 1) {
-          value = 1;
-        }
-
-        this.amount = value;
-        this._wet.gain.value = this.amount;
-        this._dry.gain.value = 1 - this.amount;
-        //console.log('wet',this.wetGain.gain.value,'dry',this.dryGain.gain.value);
-      }
     }]);
 
     return ConvolutionReverb;
-  }();
+  }(_channel_fx.ChannelEffect);
 });
 
-},{"./init_audio":18,"./parse_audio":27}],15:[function(require,module,exports){
+},{"./channel_fx":13,"./init_audio":20,"./parse_audio":29}],16:[function(require,module,exports){
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(['exports', './init_audio', './channel_fx'], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require('./init_audio'), require('./channel_fx'));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.init_audio, global.channel_fx);
+    global.delay_fx = mod.exports;
+  }
+})(this, function (exports, _init_audio, _channel_fx) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.Delay = undefined;
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  var _createClass = function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  }();
+
+  function _possibleConstructorReturn(self, call) {
+    if (!self) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return call && (typeof call === "object" || typeof call === "function") ? call : self;
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+
+  var Delay = exports.Delay = function (_ChannelEffect) {
+    _inherits(Delay, _ChannelEffect);
+
+    function Delay() {
+      var config = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+      _classCallCheck(this, Delay);
+
+      var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Delay).call(this));
+
+      _this._nodeFX = _init_audio.context.createDelay();
+
+      var _config$delayTime = config.delayTime;
+      _this.delayTime = _config$delayTime === undefined ? 0.2 : _config$delayTime;
+      var _config$feedback = config.feedback;
+      _this.feedback = _config$feedback === undefined ? 0.7 : _config$feedback;
+      var _config$frequency = config.frequency;
+      _this.frequency = _config$frequency === undefined ? 1000 : _config$frequency;
+
+
+      _this._nodeFX.delayTime.value = _this.delayTime;
+
+      _this._feedback = _init_audio.context.createGain();
+      _this._feedback.gain.value = _this.feedback;
+
+      _this._filter = _init_audio.context.createBiquadFilter();
+      _this._filter.frequency.value = _this.frequency;
+
+      _this._nodeFX.connect(_this._feedback);
+      _this._feedback.connect(_this._filter);
+      _this._filter.connect(_this._nodeFX);
+
+      _this.init();
+      return _this;
+    }
+
+    _createClass(Delay, [{
+      key: 'setTime',
+      value: function setTime(value) {
+        this._nodeFX.delayTime.value = this.delayTime = value;
+        //console.log('time', value)
+      }
+    }, {
+      key: 'setFeedback',
+      value: function setFeedback(value) {
+        this._feedback.gain.value = this.feedback = value;
+        //console.log('feedback', value)
+      }
+    }, {
+      key: 'setFrequency',
+      value: function setFrequency(value) {
+        this._filter.frequency.value = this.frequency = value;
+        //console.log('frequency', value)
+      }
+    }]);
+
+    return Delay;
+  }(_channel_fx.ChannelEffect);
+});
+
+},{"./channel_fx":13,"./init_audio":20}],17:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -2252,7 +2471,7 @@ function polyfill() {
   }
 });
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(["exports"], factory);
@@ -2320,7 +2539,7 @@ function polyfill() {
   }
 });
 
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './qambi', './song', './sampler', './init_audio', './init_midi', './settings'], factory);
@@ -2521,7 +2740,7 @@ function polyfill() {
   }
 });
 
-},{"./init_audio":18,"./init_midi":19,"./qambi":32,"./sampler":36,"./settings":40,"./song":42}],18:[function(require,module,exports){
+},{"./init_audio":20,"./init_midi":21,"./qambi":34,"./sampler":38,"./settings":42,"./song":44}],20:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './samples', './parse_audio'], factory);
@@ -2750,7 +2969,7 @@ function polyfill() {
   exports.configureMasterCompressor = _configureMasterCompressor;
 });
 
-},{"./parse_audio":27,"./samples":37}],19:[function(require,module,exports){
+},{"./parse_audio":29,"./samples":39}],21:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util', 'webmidiapishim'], factory);
@@ -3255,7 +3474,7 @@ function polyfill() {
   exports.getMIDIInputById = _getMIDIInputById;
 });
 
-},{"./util":46,"webmidiapishim":10}],20:[function(require,module,exports){
+},{"./util":48,"webmidiapishim":10}],22:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_audio', './eventlistener'], factory);
@@ -3468,7 +3687,7 @@ function polyfill() {
   }();
 });
 
-},{"./eventlistener":15,"./init_audio":18}],21:[function(require,module,exports){
+},{"./eventlistener":17,"./init_audio":20}],23:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './track', './part', './parse_events', './midi_event', './util', './position', './sampler', './init_audio', './constants'], factory);
@@ -3920,7 +4139,7 @@ function polyfill() {
   }();
 });
 
-},{"./constants":13,"./init_audio":18,"./midi_event":22,"./parse_events":28,"./part":29,"./position":31,"./sampler":36,"./track":45,"./util":46}],22:[function(require,module,exports){
+},{"./constants":14,"./init_audio":20,"./midi_event":24,"./parse_events":30,"./part":31,"./position":33,"./sampler":38,"./track":47,"./util":48}],24:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './note', './settings'], factory);
@@ -4069,7 +4288,7 @@ function polyfill() {
   }();
 });
 
-},{"./note":26,"./settings":40}],23:[function(require,module,exports){
+},{"./note":28,"./settings":42}],25:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './midi_event'], factory);
@@ -4199,7 +4418,7 @@ function polyfill() {
   }();
 });
 
-},{"./midi_event":22}],24:[function(require,module,exports){
+},{"./midi_event":24}],26:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -4349,7 +4568,7 @@ function polyfill() {
   exports.default = MIDIStream;
 });
 
-},{}],25:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './midi_stream'], factory);
@@ -4661,7 +4880,7 @@ function polyfill() {
   }
 });
 
-},{"./midi_stream":24}],26:[function(require,module,exports){
+},{"./midi_stream":26}],28:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './settings'], factory);
@@ -4891,7 +5110,7 @@ function polyfill() {
   }
 });
 
-},{"./settings":40}],27:[function(require,module,exports){
+},{"./settings":42}],29:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'isomorphic-fetch', './init_audio', './util', './eventlistener'], factory);
@@ -5109,7 +5328,7 @@ function polyfill() {
   }
 });
 
-},{"./eventlistener":15,"./init_audio":18,"./util":46,"isomorphic-fetch":2}],28:[function(require,module,exports){
+},{"./eventlistener":17,"./init_audio":20,"./util":48,"isomorphic-fetch":2}],30:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util', './midi_note'], factory);
@@ -5593,7 +5812,7 @@ function polyfill() {
   }
 });
 
-},{"./midi_note":23,"./util":46}],29:[function(require,module,exports){
+},{"./midi_note":25,"./util":48}],31:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util'], factory);
@@ -5881,7 +6100,7 @@ function polyfill() {
   }();
 });
 
-},{"./util":46}],30:[function(require,module,exports){
+},{"./util":48}],32:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './position.js', './eventlistener.js', './util.js'], factory);
@@ -6257,7 +6476,7 @@ function polyfill() {
   }();
 });
 
-},{"./eventlistener.js":15,"./position.js":31,"./util.js":46}],31:[function(require,module,exports){
+},{"./eventlistener.js":17,"./position.js":33,"./util.js":48}],33:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util'], factory);
@@ -6974,27 +7193,27 @@ function polyfill() {
   */
 });
 
-},{"./util":46}],32:[function(require,module,exports){
+},{"./util":48}],34:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './settings', './note', './midi_event', './midi_note', './part', './track', './song', './instrument', './sampler', './simple_synth', './convolution_reverb', './midifile', './init', './init_audio', './init_midi', './parse_audio', './constants', './eventlistener'], factory);
+    define(['exports', './settings', './note', './midi_event', './midi_note', './part', './track', './song', './instrument', './sampler', './simple_synth', './convolution_reverb', './delay_fx', './midifile', './init', './init_audio', './init_midi', './parse_audio', './constants', './eventlistener'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./settings'), require('./note'), require('./midi_event'), require('./midi_note'), require('./part'), require('./track'), require('./song'), require('./instrument'), require('./sampler'), require('./simple_synth'), require('./convolution_reverb'), require('./midifile'), require('./init'), require('./init_audio'), require('./init_midi'), require('./parse_audio'), require('./constants'), require('./eventlistener'));
+    factory(exports, require('./settings'), require('./note'), require('./midi_event'), require('./midi_note'), require('./part'), require('./track'), require('./song'), require('./instrument'), require('./sampler'), require('./simple_synth'), require('./convolution_reverb'), require('./delay_fx'), require('./midifile'), require('./init'), require('./init_audio'), require('./init_midi'), require('./parse_audio'), require('./constants'), require('./eventlistener'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.settings, global.note, global.midi_event, global.midi_note, global.part, global.track, global.song, global.instrument, global.sampler, global.simple_synth, global.convolution_reverb, global.midifile, global.init, global.init_audio, global.init_midi, global.parse_audio, global.constants, global.eventlistener);
+    factory(mod.exports, global.settings, global.note, global.midi_event, global.midi_note, global.part, global.track, global.song, global.instrument, global.sampler, global.simple_synth, global.convolution_reverb, global.delay_fx, global.midifile, global.init, global.init_audio, global.init_midi, global.parse_audio, global.constants, global.eventlistener);
     global.qambi = mod.exports;
   }
-})(this, function (exports, _settings, _note, _midi_event, _midi_note, _part, _track, _song, _instrument, _sampler, _simple_synth, _convolution_reverb, _midifile, _init, _init_audio, _init_midi, _parse_audio, _constants, _eventlistener) {
+})(this, function (exports, _settings, _note, _midi_event, _midi_note, _part, _track, _song, _instrument, _sampler, _simple_synth, _convolution_reverb, _delay_fx, _midifile, _init, _init_audio, _init_midi, _parse_audio, _constants, _eventlistener) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.ConvolutionReverb = exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
-  var version = '1.0.0-beta29';
+  exports.Delay = exports.ConvolutionReverb = exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
+  var version = '1.0.0-beta30';
 
   var getAudioContext = function getAudioContext() {
     return _init_audio.context;
@@ -7076,6 +7295,9 @@ function polyfill() {
 
     // from ./convolution_reverb
     ConvolutionReverb: _convolution_reverb.ConvolutionReverb,
+
+    // from ./delay_fx
+    Delay: _delay_fx.Delay,
 
     log: function log(id) {
       switch (id) {
@@ -7168,9 +7390,13 @@ function polyfill() {
 
   // from ./convolution_reverb
   ConvolutionReverb = _convolution_reverb.ConvolutionReverb;
+  exports.
+
+  // from ./delay_fx
+  Delay = _delay_fx.Delay;
 });
 
-},{"./constants":13,"./convolution_reverb":14,"./eventlistener":15,"./init":17,"./init_audio":18,"./init_midi":19,"./instrument":20,"./midi_event":22,"./midi_note":23,"./midifile":25,"./note":26,"./parse_audio":27,"./part":29,"./sampler":36,"./settings":40,"./simple_synth":41,"./song":42,"./track":45}],33:[function(require,module,exports){
+},{"./constants":14,"./convolution_reverb":15,"./delay_fx":16,"./eventlistener":17,"./init":19,"./init_audio":20,"./init_midi":21,"./instrument":22,"./midi_event":24,"./midi_note":25,"./midifile":27,"./note":28,"./parse_audio":29,"./part":31,"./sampler":38,"./settings":42,"./simple_synth":43,"./song":44,"./track":47}],35:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_audio.js', './util.js'], factory);
@@ -7331,7 +7557,7 @@ function polyfill() {
   }
 });
 
-},{"./init_audio.js":18,"./util.js":46}],34:[function(require,module,exports){
+},{"./init_audio.js":20,"./util.js":48}],36:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './sample', './init_audio'], factory);
@@ -7464,7 +7690,7 @@ function polyfill() {
   }(_sample.Sample);
 });
 
-},{"./init_audio":18,"./sample":33}],35:[function(require,module,exports){
+},{"./init_audio":20,"./sample":35}],37:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './sample', './init_audio'], factory);
@@ -7564,7 +7790,7 @@ function polyfill() {
   }(_sample.Sample);
 });
 
-},{"./init_audio":18,"./sample":33}],36:[function(require,module,exports){
+},{"./init_audio":20,"./sample":35}],38:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './instrument', './note', './parse_audio', './util', './fetch_helpers', './sample_buffer'], factory);
@@ -8062,7 +8288,7 @@ function polyfill() {
   }(_instrument.Instrument);
 });
 
-},{"./fetch_helpers":16,"./instrument":20,"./note":26,"./parse_audio":27,"./sample_buffer":34,"./util":46}],37:[function(require,module,exports){
+},{"./fetch_helpers":18,"./instrument":22,"./note":28,"./parse_audio":29,"./sample_buffer":36,"./util":48}],39:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -8091,7 +8317,7 @@ function polyfill() {
   exports.default = samples;
 });
 
-},{}],38:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'filesaverjs'], factory);
@@ -8395,7 +8621,7 @@ function polyfill() {
   }
 });
 
-},{"filesaverjs":1}],39:[function(require,module,exports){
+},{"filesaverjs":1}],41:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_midi', './init_audio', './midi_event', './util'], factory);
@@ -8797,7 +9023,7 @@ function polyfill() {
   exports.default = Scheduler;
 });
 
-},{"./init_audio":18,"./init_midi":19,"./midi_event":22,"./util":46}],40:[function(require,module,exports){
+},{"./init_audio":20,"./init_midi":21,"./midi_event":24,"./util":48}],42:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -8967,7 +9193,7 @@ function polyfill() {
   };
 });
 
-},{}],41:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './instrument', './sample_oscillator'], factory);
@@ -9093,7 +9319,7 @@ function polyfill() {
   }(_instrument.Instrument);
 });
 
-},{"./instrument":20,"./sample_oscillator":35}],42:[function(require,module,exports){
+},{"./instrument":22,"./sample_oscillator":37}],44:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './constants', './parse_events', './init_audio', './scheduler', './midi_event', './song_from_midifile', './util', './position', './playhead', './metronome', './eventlistener', './save_midifile', './song.update', './settings'], factory);
@@ -9937,7 +10163,7 @@ function polyfill() {
   }();
 });
 
-},{"./constants":13,"./eventlistener":15,"./init_audio":18,"./metronome":21,"./midi_event":22,"./parse_events":28,"./playhead":30,"./position":31,"./save_midifile":38,"./scheduler":39,"./settings":40,"./song.update":43,"./song_from_midifile":44,"./util":46}],43:[function(require,module,exports){
+},{"./constants":14,"./eventlistener":17,"./init_audio":20,"./metronome":23,"./midi_event":24,"./parse_events":30,"./playhead":32,"./position":33,"./save_midifile":40,"./scheduler":41,"./settings":42,"./song.update":45,"./song_from_midifile":46,"./util":48}],45:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './parse_events', './util', './constants', './position', './midi_event', './eventlistener'], factory);
@@ -10194,7 +10420,7 @@ function polyfill() {
   }
 });
 
-},{"./constants":13,"./eventlistener":15,"./midi_event":22,"./parse_events":28,"./position":31,"./util":46}],44:[function(require,module,exports){
+},{"./constants":14,"./eventlistener":17,"./midi_event":24,"./parse_events":30,"./position":33,"./util":48}],46:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'isomorphic-fetch', './midifile', './midi_event', './part', './track', './song', './util', './fetch_helpers', './settings'], factory);
@@ -10444,7 +10670,7 @@ function polyfill() {
   }
 });
 
-},{"./fetch_helpers":16,"./midi_event":22,"./midifile":25,"./part":29,"./settings":40,"./song":42,"./track":45,"./util":46,"isomorphic-fetch":2}],45:[function(require,module,exports){
+},{"./fetch_helpers":18,"./midi_event":24,"./midifile":27,"./part":31,"./settings":42,"./song":44,"./track":47,"./util":48,"isomorphic-fetch":2}],47:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './part', './midi_event', './midi_note', './init_midi', './util', './init_audio', './qambi', './eventlistener'], factory);
@@ -10545,7 +10771,7 @@ function polyfill() {
       this.sustainedSamples = [];
       this.sustainPedalDown = false;
       this.monitor = false;
-      this._songInput = null;
+      this._songGainNode = null;
       this._effects = [];
       this._numEffects = 0;
 
@@ -11021,12 +11247,16 @@ function polyfill() {
         var prevEffect = void 0;
 
         if (this._numEffects === 0) {
-          this._gainNode.disconnect(this._songInput);
+          this._gainNode.disconnect(this._songGainNode);
           this._gainNode.connect(effect.input);
           effect.output.connect(this._songGainNode);
         } else {
           prevEffect = this._effects[this._numEffects - 1];
-          prevEffect.output.disconnect(this._songGainNode);
+          try {
+            prevEffect.output.disconnect(this._songGainNode);
+          } catch (e) {
+            //Chrome throws an error here which is wrong
+          }
           prevEffect.output.connect(effect.input);
           effect.output.connect(this._songGainNode);
         }
@@ -11084,32 +11314,57 @@ function polyfill() {
         var nextEffect = void 0;
         var prevEffect = void 0;
 
+        //console.log(index, this._effects)
+
         if (index === 0) {
+          // we remove the first effect, so disconnect from output of track
           this._gainNode.disconnect(effect.input);
 
           if (this._numEffects === 1) {
+            // no effects anymore, so connect output of track to input of the song
             try {
               effect.output.disconnect(this._songGainNode);
             } catch (e) {
               //Chrome throws an error here which is wrong
             }
-
             this._gainNode.connect(this._songGainNode);
           } else {
+            // disconnect the removed effect from the next effect in the chain, this is now the first effect in the chain...
             nextEffect = this._effects[index + 1];
+            try {
+              effect.output.disconnect(nextEffect.input);
+            } catch (e) {}
+            //Chrome throws an error here which is wrong
+
+            // ... so connect the output of the track to the input of this effect
             this._gainNode.connect(nextEffect.input);
           }
         } else {
+
           prevEffect = this._effects[index - 1];
-          if (index === this._numEffects) {
-            prevEffect.output.disconnect(this._songGainNode);
-            prevEffect.output.connect(effect.input);
-            effect.input.connect(this._songGainNode);
+          //console.log(prevEffect)
+          // disconnect the removed effect from the previous effect in the chain
+          try {
+            prevEffect.output.disconnect(effect.input);
+          } catch (e) {
+            //Chrome throws an error here which is wrong
+          }
+
+          if (index === this._numEffects - 1) {
+            // we remove the last effect in the chain, so disconnect from the input of the song
+            try {
+              effect.output.disconnect(this._songGainNode);
+            } catch (e) {}
+            //Chrome throws an error here which is wrong
+
+            // the previous effect is now the last effect to connect it to the input of the song
+            prevEffect.output.connect(this._songGainNode);
           } else {
+            // disconnect the effect from the next effect in the chain
             nextEffect = this._effects[index];
-            prevEffect.output.disconnect(nextEffect.input);
-            prevEffect.output.connect(effect.input);
-            effect.output.connect(nextEffect.input);
+            effect.output.disconnect(nextEffect.input);
+            // connect the previous effect to the next effect
+            prevEffect.output.connect(nextEffect.input);
           }
         }
 
@@ -11299,7 +11554,7 @@ function polyfill() {
   }();
 });
 
-},{"./eventlistener":15,"./init_audio":18,"./init_midi":19,"./midi_event":22,"./midi_note":23,"./part":29,"./qambi":32,"./util":46}],46:[function(require,module,exports){
+},{"./eventlistener":17,"./init_audio":20,"./init_midi":21,"./midi_event":24,"./midi_note":25,"./part":31,"./qambi":34,"./util":48}],48:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'isomorphic-fetch'], factory);
@@ -11561,5 +11816,5 @@ function polyfill() {
   */
 });
 
-},{"isomorphic-fetch":2}]},{},[32])(32)
+},{"isomorphic-fetch":2}]},{},[34])(34)
 });

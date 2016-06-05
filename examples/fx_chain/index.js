@@ -16,10 +16,10 @@ document.addEventListener('DOMContentLoaded', function(){
       type: 'Song',
       url: '../data/minute_waltz.mid'
     },
-    // piano: {
-    //   type: 'Instrument',
-    //   url: '../../instruments/heartbeat/city-piano-light.json'
-    // }
+    piano: {
+      type: 'Instrument',
+      url: '../../instruments/heartbeat/city-piano-light.json'
+    }
   })
   .then(main)
 })
@@ -31,8 +31,8 @@ function main(data){
   let synth = new SimpleSynth('sine')
 
   song.getTracks().forEach(track => {
-    // track.setInstrument(piano)
-    track.setInstrument(synth)
+    track.setInstrument(piano)
+    //track.setInstrument(synth)
     // listen to all connected MIDI input devices
     track.connectMIDIInputs(...getMIDIInputs())
     // enable monitor (like in Logic and Cubase)
@@ -44,10 +44,15 @@ function main(data){
   let btnStop = document.getElementById('stop')
   let btnReverb = document.getElementById('reverb')
   let btnDelay = document.getElementById('delay')
+  let divReverb = document.getElementById('fx_reverb')
+  let divDelay = document.getElementById('fx_delay')
   let divLoading = document.getElementById('loading')
   let rangePanner = document.getElementById('panning')
   let rangeReverb = document.getElementById('reverb_amount')
   let rangeDelay = document.getElementById('delay_amount')
+  let rangeDelayTime = document.getElementById('delay_time')
+  let rangeDelayFeedback = document.getElementById('delay_feedback')
+  let rangeDelayFrequency = document.getElementById('delay_frequency')
   divLoading.innerHTML = ''
 
   btnPlay.disabled = false
@@ -87,16 +92,14 @@ function main(data){
         t.insertEffect(reverb)
       })
       btnReverb.innerHTML = 'remove reverb'
-      rangeReverb.disabled = false
+      divReverb.style.display = 'inline-block'
     }else{
       song.getTracks().forEach(t => {
         t.removeEffect(reverb)
         //t.removeEffectAt(0)
       })
       btnReverb.innerHTML = 'add reverb'
-      rangeReverb.disabled = true
-      //rangeReverb.value = 0
-      //reverb.setAmount(0)
+      divReverb.style.display = 'none'
     }
   })
 
@@ -112,14 +115,14 @@ function main(data){
         t.insertEffect(delay)
       })
       btnDelay.innerHTML = 'remove delay'
-      rangeDelay.disabled = false
+      divDelay.style.display = 'inline-block'
     }else{
       song.getTracks().forEach(t => {
         t.removeEffect(delay)
         //t.removeEffectAt(0)
       })
       btnDelay.innerHTML = 'add delay'
-      rangeDelay.disabled = true
+      divDelay.style.display = 'none'
     }
   })
 
@@ -178,6 +181,9 @@ function main(data){
     })
   })
 
+
+  // range inputs
+
   function setPanning(e){
     song.getTracks().forEach(t => {
       t.setPanning(e.target.valueAsNumber)
@@ -191,14 +197,12 @@ function main(data){
   })
 
   rangePanner.addEventListener('mouseup', e => {
+    setPanning(e)
     rangePanner.removeEventListener('mousemove', setPanning, false)
   })
 
 
   function setReverb(e){
-    if(hasReverb === false){
-      return
-    }
     reverb.setAmount(e.target.valueAsNumber)
     //console.log(e.target.valueAsNumber)
   }
@@ -208,14 +212,12 @@ function main(data){
   })
 
   rangeReverb.addEventListener('mouseup', e => {
+    setReverb(e)
     rangeReverb.removeEventListener('mousemove', setReverb, false)
   })
 
 
   function setDelay(e){
-    if(hasDelay === false){
-      return
-    }
     delay.setAmount(e.target.valueAsNumber)
     //console.log(e.target.valueAsNumber)
   }
@@ -225,6 +227,49 @@ function main(data){
   })
 
   rangeDelay.addEventListener('mouseup', e => {
+    setDelay(e)
     rangeDelay.removeEventListener('mousemove', setDelay, false)
+  })
+
+
+  function setDelayTime(e){
+    delay.setTime(e.target.valueAsNumber)
+  }
+
+  rangeDelayTime.addEventListener('mousedown', e => {
+    rangeDelayTime.addEventListener('mousemove', setDelayTime, false)
+  })
+
+  rangeDelayTime.addEventListener('mouseup', e => {
+    setDelayTime(e)
+    rangeDelayTime.removeEventListener('mousemove', setDelayTime, false)
+  })
+
+
+  function setDelayFeedback(e){
+    delay.setFeedback(e.target.valueAsNumber)
+  }
+
+  rangeDelayFeedback.addEventListener('mousedown', e => {
+    rangeDelayFeedback.addEventListener('mousemove', setDelayFeedback, false)
+  })
+
+  rangeDelayFeedback.addEventListener('mouseup', e => {
+    setDelayFeedback(e)
+    rangeDelayFeedback.removeEventListener('mousemove', setDelayFeedback, false)
+  })
+
+
+  function setDelayFrequency(e){
+    delay.setFrequency(e.target.valueAsNumber)
+  }
+
+  rangeDelayFrequency.addEventListener('mousedown', e => {
+    rangeDelayFrequency.addEventListener('mousemove', setDelayFrequency, false)
+  })
+
+  rangeDelayFrequency.addEventListener('mouseup', e => {
+    setDelayFrequency(e)
+    rangeDelayFrequency.removeEventListener('mousemove', setDelayFrequency, false)
   })
 }

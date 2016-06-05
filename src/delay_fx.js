@@ -33,16 +33,19 @@ export class Delay extends ChannelEffect{
     this.init()
   }
 
-  setDelayTime(value){
+  setTime(value){
     this._nodeFX.delayTime.value = this.delayTime = value
+    //console.log('time', value)
   }
 
   setFeedback(value){
     this._feedback.gain.value = this.feedback = value
+    //console.log('feedback', value)
   }
 
-  setCutOffFrequency(value){
+  setFrequency(value){
     this._filter.frequency.value = this.frequency = value
+    //console.log('frequency', value)
   }
 
 }
