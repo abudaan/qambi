@@ -79,14 +79,15 @@ function main(data){
     hasReverb = !hasReverb
     if(hasReverb){
       song.getTracks().forEach(t => {
-        t.addEffect(reverb)
+        t.insertEffect(reverb)
       })
       btnFX.innerHTML = 'remove reverb'
       rangeReverb.disabled = false
     }else{
       song.getTracks().forEach(t => {
         //t.removeEffect(0)
-        t.removeEffect(reverb)
+        //t.removeEffect(reverb)
+        t.removeEffectAt(0)
       })
       btnFX.innerHTML = 'add reverb'
       rangeReverb.disabled = true

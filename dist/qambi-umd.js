@@ -3535,7 +3535,7 @@ function polyfill() {
       this.track = new _track.Track({ name: this.song.id + '_metronome' });
       this.part = new _part3.Part();
       this.track.addParts(this.part);
-      this.track.connect(this.song._output);
+      this.track._gainNode.connect(this.song._gainNode);
 
       this.events = [];
       this.precountEvents = [];
@@ -6994,7 +6994,7 @@ function polyfill() {
     value: true
   });
   exports.ConvolutionReverb = exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
-  var version = '1.0.0-beta28';
+  var version = '1.0.0-beta29';
 
   var getAudioContext = function getAudioContext() {
     return _init_audio.context;
@@ -9283,6 +9283,8 @@ function polyfill() {
       this._changedParts = [];
       this._removedParts = [];
 
+      this._removedTracks = [];
+
       this._currentMillis = 0;
       this._scheduler = new _scheduler2.default(this);
       this._playhead = new _playhead.Playhead(this);
@@ -9294,9 +9296,9 @@ function polyfill() {
       this.stopped = true;
       this.looping = false;
 
-      this._output = _init_audio.context.createGain();
-      this._output.gain.value = this.volume;
-      this._output.connect(_init_audio.masterGain);
+      this._gainNode = _init_audio.context.createGain();
+      this._gainNode.gain.value = this.volume;
+      this._gainNode.connect(_init_audio.masterGain);
 
       this._metronome = new _metronome.Metronome(this);
       this._metronomeEvents = [];
@@ -9359,12 +9361,20 @@ function polyfill() {
           var _newEvents, _newParts;
 
           track._song = _this2;
-          track.connect(_this2._output);
+          track._gainNode.connect(_this2._gainNode);
+          track._songGainNode = _this2._gainNode;
           _this2._tracks.push(track);
           _this2._tracksById.set(track.id, track);
           (_newEvents = _this2._newEvents).push.apply(_newEvents, _toConsumableArray(track._events));
           (_newParts = _this2._newParts).push.apply(_newParts, _toConsumableArray(track._parts));
         });
+      }
+    }, {
+      key: 'removeTracks',
+      value: function removeTracks() {
+        var _removedTracks;
+
+        (_removedTracks = this._removedTracks).push.apply(_removedTracks, arguments);
       }
     }, {
       key: 'update',
@@ -9678,11 +9688,11 @@ function polyfill() {
         panic(){
           return new Promise(resolve => {
             this._tracks.forEach((track) => {
-              track.disconnect(this._output)
+              track.disconnect(this._gainNode)
             })
             setTimeout(() => {
               this._tracks.forEach((track) => {
-                track.connect(this._output)
+                track.connect(this._gainNode)
               })
               resolve()
             }, 100)
@@ -9972,7 +9982,7 @@ function polyfill() {
   function _update() {
     var _this = this;
 
-    if (this._updateTimeEvents === false && this._removedEvents.length === 0 && this._newEvents.length === 0 && this._movedEvents.length === 0 && this._newParts.length === 0 && this._removedParts.length === 0 && this._resized === false) {
+    if (this._updateTimeEvents === false && this._removedTracks.length === 0 && this._removedEvents.length === 0 && this._newEvents.length === 0 && this._movedEvents.length === 0 && this._newParts.length === 0 && this._removedParts.length === 0 && this._resized === false) {
       return;
     }
     //debug
@@ -9998,13 +10008,27 @@ function polyfill() {
       tobeParsed = [].concat(_toConsumableArray(this._events));
     }
 
-    // PARTS
+    // TRACKS
+    // removed tracks
+    if (this._removedTracks.length > 0) {
+      this._removedTracks.forEach(function (track) {
+        _this._tracksById.delete(track.id);
+        track.removeParts(track.getParts());
+        track._song = null;
+        track._gainNode.disconnect();
+        track._songGainNode = null;
+      });
+    }
 
-    // filter removed parts
-    //console.log('removed parts %O', this._removedParts)
-    this._removedParts.forEach(function (part) {
-      _this._partsById.delete(part.id);
-    });
+    // PARTS
+    // removed parts
+    //console.log('removed parts %O', this._changedParts)
+    if (this._removedParts.length > 0) {
+      this._removedParts.forEach(function (part) {
+        _this._partsById.delete(part.id);
+      });
+      this._parts = Array.from(this._partsById.values());
+    }
 
     // add new parts
     //console.log('new parts %O', this._newParts)
@@ -10019,16 +10043,6 @@ function polyfill() {
     this._changedParts.forEach(function (part) {
       part.update();
     });
-
-    // removed parts
-    //console.log('removed parts %O', this._changedParts)
-    this._removedParts.forEach(function (part) {
-      _this._partsById.delete(part.id);
-    });
-
-    if (this._removedParts.length > 0) {
-      this._parts = Array.from(this._partsById.values());
-    }
 
     // EVENTS
 
@@ -10511,10 +10525,10 @@ function polyfill() {
       this._panner = _init_audio.context.createPanner();
       this._panner.panningModel = 'equalpower';
       this._panner.setPosition(zeroValue, zeroValue, zeroValue);
-      this._output = _init_audio.context.createGain();
-      this._output.gain.value = this.volume;
-      this._panner.connect(this._output);
-      //this._output.connect(this._panner)
+      this._gainNode = _init_audio.context.createGain();
+      this._gainNode.gain.value = this.volume;
+      this._panner.connect(this._gainNode);
+      //this._gainNode.connect(this._panner)
       this._midiInputs = new Map();
       this._midiOutputs = new Map();
       this._song = null;
@@ -10533,6 +10547,7 @@ function polyfill() {
       this.monitor = false;
       this._songInput = null;
       this._effects = [];
+      this._numEffects = 0;
 
       var parts = settings.parts;
       var instrument = settings.instrument;
@@ -10983,118 +10998,128 @@ function polyfill() {
         (0, _util.sortEvents)(this._events);
         this._needsUpdate = false;
       }
-
-      /*
-        routing: sample source -> panner -> gain -> [...fx] -> song output
-        @TODO: needs some rethinking!
-      */
-
-    }, {
-      key: 'connect',
-      value: function connect(songOutput) {
-        this._songOutput = songOutput;
-        this._output.connect(this._songOutput);
-      }
-    }, {
-      key: 'disconnect',
-      value: function disconnect() {
-        this._output.disconnect(this._songOutput);
-        this._songOutput = null;
-      }
     }, {
       key: '_checkEffect',
       value: function _checkEffect(effect) {
-        if (typeof effect.setInput !== 'function' || typeof effect.setOutput !== 'function' || typeof effect.getOutput !== 'function' || typeof effect.disconnect !== 'function') {
-          console.log('Invalid channel fx, and channel fx should have the methods "setInput", "setOutput", "getOutput" and "disconnect"');
+        if (effect.input instanceof AudioNode === false || effect.output instanceof AudioNode === false) {
+          console.log('A channel fx should have an input and an output implementing the interface AudioNode');
           return false;
         }
         return true;
       }
 
-      // routing: audiosource -> panning -> track output -> effect -> song input
+      // routing: audiosource -> panning -> track output -> [...effect] -> song input
 
     }, {
-      key: 'addEffect',
-      value: function addEffect(effect) {
+      key: 'insertEffect',
+      value: function insertEffect(effect) {
 
-        //@TODO: add fx rack (currently only 1 fx can be added)
-
-        this._output.disconnect(this._songOutput);
-        this._output.connect(effect.input);
-        effect.output.connect(this._songOutput);
-
-        // if(this._checkEffect(effect) === false){
-        //   return
-        // }
-        // let numFX = this._effects.length
-        // let lastFX
-        // let output
-        // if(numFX === 0){
-        //   lastFX = this._output
-        //   lastFX.disconnect(this._songOutput)
-        //   output = this._output
-        // }else{
-        //   lastFX = this._effects[numFX - 1]
-        //   lastFX.disconnect()
-        //   output = lastFX.getOutput()
-        // }
-
-        // effect.setInput(output)
-        // effect.setOutput(this._songOutput)
-
-        // this._effects.push(effect)
-      }
-    }, {
-      key: 'addEffectAt',
-      value: function addEffectAt(effect, index) {
         if (this._checkEffect(effect) === false) {
           return;
         }
+
+        var prevEffect = void 0;
+
+        if (this._numEffects === 0) {
+          this._gainNode.disconnect(this._songInput);
+          this._gainNode.connect(effect.input);
+          effect.output.connect(this._songGainNode);
+        } else {
+          prevEffect = this._effects[this._numEffects - 1];
+          prevEffect.output.disconnect(this._songGainNode);
+          prevEffect.output.connect(effect.input);
+          effect.output.connect(this._songGainNode);
+        }
+
+        this._effects.push(effect);
+        this._numEffects++;
+      }
+    }, {
+      key: 'insertEffectAt',
+      value: function insertEffectAt(effect, index) {
+        if (this._checkEffect(effect) === false) {
+          return;
+        }
+        var prevEffect = this._effects[index - 1];
+        var nextEffect = void 0;
+
+        if (index === this._numEffects) {
+          prevEffect.output.disconnect(this._songGainNode);
+          prevEffect.output.connect(effect.input);
+          effect.input.connect(this._songGainNode);
+        } else {
+          nextEffect = this._effects[index];
+          prevEffect.output.disconnect(nextEffect.input);
+          prevEffect.output.connect(effect.input);
+          effect.output.connect(nextEffect.input);
+        }
         this._effects.splice(index, 0, effect);
+        this._numEffects++;
       }
 
-      //removeEffect(index: number){
+      //removeEffect(effect: Effect){
     }, {
       key: 'removeEffect',
       value: function removeEffect(effect) {
-        this._output.disconnect(effect.input);
-        try {
-          effect.output.disconnect(this._songOutput);
-        } catch (e) {
-          // Chrome throws an error here, which is wrong
+        if (this._checkEffect(effect) === false) {
+          return;
         }
-        this._output.connect(this._songOutput);
 
-        // if(isNaN(index)){
-        //   return
-        // }
-        // this._effects.forEach(fx => {
-        //   fx.disconnect()
-        // })
-        // this._effects.splice(index, 1)
+        var i = void 0;
+        for (i = 0; i < this._numEffects; i++) {
+          var fx = this._effects[i];
+          if (effect === fx) {
+            break;
+          }
+        }
+        this.removeEffectAt(i);
+      }
+    }, {
+      key: 'removeEffectAt',
+      value: function removeEffectAt(index) {
+        if (isNaN(index) || this._numEffects === 0 || index >= this._numEffects) {
+          return;
+        }
+        var effect = this._effects[index];
+        var nextEffect = void 0;
+        var prevEffect = void 0;
 
-        // let numFX = this._effects.length
+        if (index === 0) {
+          this._gainNode.disconnect(effect.input);
 
-        // if(numFX === 0){
-        //   this._output.connect(this._songOutput)
-        //   return
-        // }
+          if (this._numEffects === 1) {
+            try {
+              effect.output.disconnect(this._songGainNode);
+            } catch (e) {
+              //Chrome throws an error here which is wrong
+            }
 
-        // let lastFX = this._output
-        // this._effects.forEach((fx, i) => {
-        //   fx.setInput(lastFX)
-        //   if(i === numFX - 1){
-        //     fx.setOutput(this._songOutput)
-        //   }else{
-        //     fx.setOutput(this._effects[i + 1])
-        //   }
-        //   lastFX = fx
-        // })
+            this._gainNode.connect(this._songGainNode);
+          } else {
+            nextEffect = this._effects[index + 1];
+            this._gainNode.connect(nextEffect.input);
+          }
+        } else {
+          prevEffect = this._effects[index - 1];
+          if (index === this._numEffects) {
+            prevEffect.output.disconnect(this._songGainNode);
+            prevEffect.output.connect(effect.input);
+            effect.input.connect(this._songGainNode);
+          } else {
+            nextEffect = this._effects[index];
+            prevEffect.output.disconnect(nextEffect.input);
+            prevEffect.output.connect(effect.input);
+            effect.output.connect(nextEffect.input);
+          }
+        }
+
+        this._effects.splice(index, 1);
+        this._numEffects--;
       }
     }, {
       key: 'getEffects',
       value: function getEffects() {
-        return this._effects;
+        return [].concat(_toConsumableArray(this._effects));
       }
     }, {
       key: 'getEffectAt',
@@ -11107,12 +11132,12 @@ function polyfill() {
     }, {
       key: 'getOutput',
       value: function getOutput() {
-        return this._output;
+        return this._gainNode;
       }
     }, {
       key: 'getInput',
       value: function getInput() {
-        return this._songOutput;
+        return this._songGainNode;
       }
 
       // method is called when a MIDI events is send by an external or on-screen keyboard

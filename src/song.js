@@ -114,6 +114,8 @@ export class Song{
     this._changedParts = []
     this._removedParts = []
 
+    this._removedTracks = []
+
     this._currentMillis = 0
     this._scheduler = new Scheduler(this)
     this._playhead = new Playhead(this)
@@ -125,9 +127,9 @@ export class Song{
     this.stopped = true
     this.looping = false
 
-    this._output = context.createGain()
-    this._output.gain.value = this.volume
-    this._output.connect(masterGain)
+    this._gainNode = context.createGain()
+    this._gainNode.gain.value = this.volume
+    this._gainNode.connect(masterGain)
 
     this._metronome = new Metronome(this)
     this._metronomeEvents = []
@@ -175,12 +177,17 @@ export class Song{
   addTracks(...tracks){
     tracks.forEach((track) => {
       track._song = this
-      track.connect(this._output)
+      track._gainNode.connect(this._gainNode)
+      track._songGainNode = this._gainNode
       this._tracks.push(track)
       this._tracksById.set(track.id, track)
       this._newEvents.push(...track._events)
       this._newParts.push(...track._parts)
     })
+  }
+
+  removeTracks(...tracks){
+    this._removedTracks.push(...tracks)
   }
 
   update(){
@@ -455,11 +462,11 @@ export class Song{
   panic(){
     return new Promise(resolve => {
       this._tracks.forEach((track) => {
-        track.disconnect(this._output)
+        track.disconnect(this._gainNode)
       })
       setTimeout(() => {
         this._tracks.forEach((track) => {
-          track.connect(this._output)
+          track.connect(this._gainNode)
         })
         resolve()
       }, 100)

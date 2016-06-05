@@ -164,6 +164,8 @@ var Song = exports.Song = function () {
     this._changedParts = [];
     this._removedParts = [];
 
+    this._removedTracks = [];
+
     this._currentMillis = 0;
     this._scheduler = new _scheduler2.default(this);
     this._playhead = new _playhead.Playhead(this);
@@ -175,9 +177,9 @@ var Song = exports.Song = function () {
     this.stopped = true;
     this.looping = false;
 
-    this._output = _init_audio.context.createGain();
-    this._output.gain.value = this.volume;
-    this._output.connect(_init_audio.masterGain);
+    this._gainNode = _init_audio.context.createGain();
+    this._gainNode.gain.value = this.volume;
+    this._gainNode.connect(_init_audio.masterGain);
 
     this._metronome = new _metronome.Metronome(this);
     this._metronomeEvents = [];
@@ -240,12 +242,20 @@ var Song = exports.Song = function () {
         var _newEvents, _newParts;
 
         track._song = _this2;
-        track.connect(_this2._output);
+        track._gainNode.connect(_this2._gainNode);
+        track._songGainNode = _this2._gainNode;
         _this2._tracks.push(track);
         _this2._tracksById.set(track.id, track);
         (_newEvents = _this2._newEvents).push.apply(_newEvents, _toConsumableArray(track._events));
         (_newParts = _this2._newParts).push.apply(_newParts, _toConsumableArray(track._parts));
       });
+    }
+  }, {
+    key: 'removeTracks',
+    value: function removeTracks() {
+      var _removedTracks;
+
+      (_removedTracks = this._removedTracks).push.apply(_removedTracks, arguments);
     }
   }, {
     key: 'update',
@@ -559,11 +569,11 @@ var Song = exports.Song = function () {
       panic(){
         return new Promise(resolve => {
           this._tracks.forEach((track) => {
-            track.disconnect(this._output)
+            track.disconnect(this._gainNode)
           })
           setTimeout(() => {
             this._tracks.forEach((track) => {
-              track.connect(this._output)
+              track.connect(this._gainNode)
             })
             resolve()
           }, 100)

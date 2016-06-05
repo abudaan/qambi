@@ -29,7 +29,7 @@ export class Metronome{
     this.track = new Track({name: this.song.id + '_metronome'})
     this.part = new Part()
     this.track.addParts(this.part)
-    this.track.connect(this.song._output)
+    this.track._gainNode.connect(this.song._gainNode)
 
     this.events = []
     this.precountEvents = []

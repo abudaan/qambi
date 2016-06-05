@@ -1,6 +1,6 @@
 {
   "name": "qambi",
-  "version": "1.0.0-beta5",
+  "version": "1.0.0-beta29",
   "description": "MIDI sequencer, loads MIDI files, can record and playback MIDI, uses WebMIDI and WebAudio",
   "author": "abudaan daniel@abumarkub.net",
   "main": "dist/qambi.js",
@@ -41,6 +41,6 @@
   },
   "dependencies": {
     "isomorphic-fetch": "^2.2.1",
-    "qambi": "1.0.0-beta16"
+    "qambi": "1.0.0-beta29"
   }
 }

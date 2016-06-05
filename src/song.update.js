@@ -18,6 +18,7 @@ export function update():void{
 export function _update():void{
 
   if(this._updateTimeEvents === false
+    && this._removedTracks.length === 0
     && this._removedEvents.length === 0
     && this._newEvents.length === 0
     && this._movedEvents.length === 0
@@ -52,14 +53,28 @@ export function _update():void{
   }
 
 
+// TRACKS
+  // removed tracks
+  if(this._removedTracks.length > 0){
+    this._removedTracks.forEach(track => {
+      this._tracksById.delete(track.id)
+      track.removeParts(track.getParts())
+      track._song = null
+      track._gainNode.disconnect()
+      track._songGainNode = null
+    })
+  }
+
+
 // PARTS
-
-  // filter removed parts
-  //console.log('removed parts %O', this._removedParts)
-  this._removedParts.forEach((part) => {
-    this._partsById.delete(part.id)
-  })
-
+  // removed parts
+  //console.log('removed parts %O', this._changedParts)
+  if(this._removedParts.length > 0){
+    this._removedParts.forEach((part) => {
+      this._partsById.delete(part.id)
+    })
+    this._parts = Array.from(this._partsById.values())
+  }
 
   // add new parts
   //console.log('new parts %O', this._newParts)
@@ -75,17 +90,6 @@ export function _update():void{
   this._changedParts.forEach((part) => {
     part.update()
   })
-
-
-  // removed parts
-  //console.log('removed parts %O', this._changedParts)
-  this._removedParts.forEach((part) => {
-    this._partsById.delete(part.id)
-  })
-
-  if(this._removedParts.length > 0){
-    this._parts = Array.from(this._partsById.values())
-  }
 
 
 // EVENTS

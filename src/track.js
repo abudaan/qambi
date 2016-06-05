@@ -27,10 +27,10 @@ export class Track{
     this._panner = context.createPanner()
     this._panner.panningModel = 'equalpower'
     this._panner.setPosition(zeroValue, zeroValue, zeroValue)
-    this._output = context.createGain()
-    this._output.gain.value = this.volume
-    this._panner.connect(this._output)
-    //this._output.connect(this._panner)
+    this._gainNode = context.createGain()
+    this._gainNode.gain.value = this.volume
+    this._panner.connect(this._gainNode)
+    //this._gainNode.connect(this._panner)
     this._midiInputs = new Map()
     this._midiOutputs = new Map()
     this._song = null
@@ -49,6 +49,7 @@ export class Track{
     this.monitor = false
     this._songInput = null
     this._effects = []
+    this._numEffects = 0
 
     let {parts, instrument} = settings
     if(typeof parts !== 'undefined'){
@@ -385,105 +386,120 @@ export class Track{
     this._needsUpdate = false
   }
 
-  /*
-    routing: sample source -> panner -> gain -> [...fx] -> song output
-    @TODO: needs some rethinking!
-  */
-  connect(songOutput){
-    this._songOutput = songOutput
-    this._output.connect(this._songOutput)
-  }
-
-  disconnect(){
-    this._output.disconnect(this._songOutput)
-    this._songOutput = null
-  }
 
   _checkEffect(effect){
-    if(typeof effect.setInput !== 'function' || typeof effect.setOutput !== 'function' || typeof effect.getOutput !== 'function' || typeof effect.disconnect !== 'function'){
-      console.log('Invalid channel fx, and channel fx should have the methods "setInput", "setOutput", "getOutput" and "disconnect"')
+    if(effect.input instanceof AudioNode === false || effect.output instanceof AudioNode === false){
+      console.log('A channel fx should have an input and an output implementing the interface AudioNode')
       return false
     }
     return true
   }
 
-  // routing: audiosource -> panning -> track output -> effect -> song input
-  addEffect(effect){
 
-    //@TODO: add fx rack (currently only 1 fx can be added)
+  // routing: audiosource -> panning -> track output -> [...effect] -> song input
+  insertEffect(effect){
 
-    this._output.disconnect(this._songOutput)
-    this._output.connect(effect.input)
-    effect.output.connect(this._songOutput)
-
-    // if(this._checkEffect(effect) === false){
-    //   return
-    // }
-    // let numFX = this._effects.length
-    // let lastFX
-    // let output
-    // if(numFX === 0){
-    //   lastFX = this._output
-    //   lastFX.disconnect(this._songOutput)
-    //   output = this._output
-    // }else{
-    //   lastFX = this._effects[numFX - 1]
-    //   lastFX.disconnect()
-    //   output = lastFX.getOutput()
-    // }
-
-    // effect.setInput(output)
-    // effect.setOutput(this._songOutput)
-
-    // this._effects.push(effect)
-  }
-
-  addEffectAt(effect, index: number){
     if(this._checkEffect(effect) === false){
       return
     }
-    this._effects.splice(index, 0, effect)
+
+    let prevEffect
+
+    if(this._numEffects === 0){
+      this._gainNode.disconnect(this._songInput)
+      this._gainNode.connect(effect.input)
+      effect.output.connect(this._songGainNode)
+    }else{
+      prevEffect = this._effects[this._numEffects - 1]
+      prevEffect.output.disconnect(this._songGainNode)
+      prevEffect.output.connect(effect.input)
+      effect.output.connect(this._songGainNode)
+    }
+
+    this._effects.push(effect)
+    this._numEffects++
   }
 
-  //removeEffect(index: number){
-  removeEffect(effect){
-    this._output.disconnect(effect.input)
-    try{
-      effect.output.disconnect(this._songOutput)
-    }catch(e){
-      // Chrome throws an error here, which is wrong
+  insertEffectAt(effect, index: number){
+    if(this._checkEffect(effect) === false){
+      return
     }
-    this._output.connect(this._songOutput)
+    let prevEffect = this._effects[index - 1]
+    let nextEffect
 
-    // if(isNaN(index)){
-    //   return
-    // }
-    // this._effects.forEach(fx => {
-    //   fx.disconnect()
-    // })
-    // this._effects.splice(index, 1)
+    if(index === this._numEffects){
+      prevEffect.output.disconnect(this._songGainNode)
+      prevEffect.output.connect(effect.input)
+      effect.input.connect(this._songGainNode)
+    }else{
+      nextEffect = this._effects[index]
+      prevEffect.output.disconnect(nextEffect.input)
+      prevEffect.output.connect(effect.input)
+      effect.output.connect(nextEffect.input)
+    }
+    this._effects.splice(index, 0, effect)
+    this._numEffects++
+  }
 
-    // let numFX = this._effects.length
+  //removeEffect(effect: Effect){
+  removeEffect(effect){
+    if(this._checkEffect(effect) === false){
+      return
+    }
 
-    // if(numFX === 0){
-    //   this._output.connect(this._songOutput)
-    //   return
-    // }
+    let i
+    for(i = 0; i < this._numEffects; i++){
+      let fx = this._effects[i]
+      if(effect === fx){
+        break
+      }
+    }
+    this.removeEffectAt(i)
+  }
 
-    // let lastFX = this._output
-    // this._effects.forEach((fx, i) => {
-    //   fx.setInput(lastFX)
-    //   if(i === numFX - 1){
-    //     fx.setOutput(this._songOutput)
-    //   }else{
-    //     fx.setOutput(this._effects[i + 1])
-    //   }
-    //   lastFX = fx
-    // })
+  removeEffectAt(index:number){
+    if(isNaN(index) || this._numEffects === 0 || index >= this._numEffects){
+      return
+    }
+    let effect = this._effects[index]
+    let nextEffect
+    let prevEffect
+
+    if(index === 0){
+      this._gainNode.disconnect(effect.input)
+
+      if(this._numEffects === 1){
+        try{
+          effect.output.disconnect(this._songGainNode)
+        }catch(e){
+          //Chrome throws an error here which is wrong
+        }
+
+        this._gainNode.connect(this._songGainNode)
+      }else{
+        nextEffect = this._effects[index + 1]
+        this._gainNode.connect(nextEffect.input)
+      }
+    }else{
+      prevEffect = this._effects[index - 1]
+      if(index === this._numEffects){
+        prevEffect.output.disconnect(this._songGainNode)
+        prevEffect.output.connect(effect.input)
+        effect.input.connect(this._songGainNode)
+      }else{
+        nextEffect = this._effects[index]
+        prevEffect.output.disconnect(nextEffect.input)
+        prevEffect.output.connect(effect.input)
+        effect.output.connect(nextEffect.input)
+      }
+    }
+
+    this._effects.splice(index, 1)
+    this._numEffects--
   }
 
   getEffects(){
-    return this._effects
+    return [...this._effects]
   }
 
   getEffectAt(index: number){
@@ -494,11 +510,11 @@ export class Track{
   }
 
   getOutput(){
-    return this._output
+    return this._gainNode
   }
 
   getInput(){
-    return this._songOutput
+    return this._songGainNode
   }
 
   // method is called when a MIDI events is send by an external or on-screen keyboard

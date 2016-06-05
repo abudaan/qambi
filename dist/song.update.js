@@ -32,7 +32,7 @@ function update() {
 function _update() {
   var _this = this;
 
-  if (this._updateTimeEvents === false && this._removedEvents.length === 0 && this._newEvents.length === 0 && this._movedEvents.length === 0 && this._newParts.length === 0 && this._removedParts.length === 0 && this._resized === false) {
+  if (this._updateTimeEvents === false && this._removedTracks.length === 0 && this._removedEvents.length === 0 && this._newEvents.length === 0 && this._movedEvents.length === 0 && this._newParts.length === 0 && this._removedParts.length === 0 && this._resized === false) {
     return;
   }
   //debug
@@ -58,13 +58,27 @@ function _update() {
     tobeParsed = [].concat(_toConsumableArray(this._events));
   }
 
-  // PARTS
+  // TRACKS
+  // removed tracks
+  if (this._removedTracks.length > 0) {
+    this._removedTracks.forEach(function (track) {
+      _this._tracksById.delete(track.id);
+      track.removeParts(track.getParts());
+      track._song = null;
+      track._gainNode.disconnect();
+      track._songGainNode = null;
+    });
+  }
 
-  // filter removed parts
-  //console.log('removed parts %O', this._removedParts)
-  this._removedParts.forEach(function (part) {
-    _this._partsById.delete(part.id);
-  });
+  // PARTS
+  // removed parts
+  //console.log('removed parts %O', this._changedParts)
+  if (this._removedParts.length > 0) {
+    this._removedParts.forEach(function (part) {
+      _this._partsById.delete(part.id);
+    });
+    this._parts = Array.from(this._partsById.values());
+  }
 
   // add new parts
   //console.log('new parts %O', this._newParts)
@@ -79,16 +93,6 @@ function _update() {
   this._changedParts.forEach(function (part) {
     part.update();
   });
-
-  // removed parts
-  //console.log('removed parts %O', this._changedParts)
-  this._removedParts.forEach(function (part) {
-    _this._partsById.delete(part.id);
-  });
-
-  if (this._removedParts.length > 0) {
-    this._parts = Array.from(this._partsById.values());
-  }
 
   // EVENTS
 
