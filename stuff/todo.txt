@@ -18,7 +18,7 @@ implement save as MIDI file (https://github.com/eligrey/FileSaver.js/ or native:
 
 keyscaling
 
-plugins (reverb, autopan, 3rd party)
+plugins (reverb, autopan, 3rd party) ✓
 
 find samples Conga
 
@@ -31,6 +31,8 @@ quantize/undo quantize
 look into better timed events from sustain pedal up and down
 
 optimize metronome samples, check empty mp3
+
+add eventlisteners for MIDI devices: onconnect() ondisconnect()
 
 
 

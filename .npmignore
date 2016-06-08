@@ -4,6 +4,7 @@
 .npmrc
 .eslintrc
 .gitignore
+.htaccess
 gulpfile.js
 index.html
 npm-debug.log
@@ -12,3 +13,5 @@ instruments/
 node_modules/
 stuff/
 fonts/
+js/
+css/

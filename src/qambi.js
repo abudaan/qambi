@@ -1,4 +1,4 @@
-const version = '1.0.0-beta30'
+const version = '1.0.0-beta31'
 
 import {
   updateSettings,
