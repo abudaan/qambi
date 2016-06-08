@@ -1,7 +1,7 @@
 import qambi, {
   SimpleSynth,
   Song,
-} from '../../src/qambi'
+} from 'qambi'
 
 document.addEventListener('DOMContentLoaded', function(){
 

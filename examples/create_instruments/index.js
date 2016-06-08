@@ -1,7 +1,7 @@
 import qambi, {
   MIDIEvent,
   Instrument,
-} from '../../src/qambi'
+} from 'qambi'
 
 
 import {

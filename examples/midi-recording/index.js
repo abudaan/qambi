@@ -3,7 +3,7 @@ import qambi, {
   Track,
   SimpleSynth,
   getMIDIInputs,
-} from '../../src/qambi'
+} from 'qambi'
 
 
 document.addEventListener('DOMContentLoaded', function(){

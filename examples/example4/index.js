@@ -5,7 +5,7 @@ import qambi, {
   getMIDIInputs,
   getInstruments,
   getGMInstruments,
-} from '../../src/qambi' // use "from 'qambi'" in your own code! so without the extra "../../"
+} from 'qambi'
 
 
 document.addEventListener('DOMContentLoaded', function(){

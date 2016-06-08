@@ -1,4 +1,4 @@
-import qambi from '../../src/qambi' // use "from 'qambi'" in your own code! so without the extra "../../"
+import qambi from 'qambi'
 
 document.addEventListener('DOMContentLoaded', function(){
 

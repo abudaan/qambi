@@ -5,6 +5,7 @@
 .eslintrc
 .gitignore
 .htaccess
+.npmignore
 gulpfile.js
 index.html
 npm-debug.log

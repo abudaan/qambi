@@ -5,13 +5,14 @@ import qambi, {
   getMIDIInputs,
   getInstruments,
   getGMInstruments,
-} from '../../src/qambi' // use "from 'qambi'" in your own code! so without the extra "../../"
+} from 'qambi'
 
 document.addEventListener('DOMContentLoaded', function(){
 
   let song
   let track
   let sampler
+  const basePath = '../../' // you may have to adjust this path according to your folder layout
 
   qambi.init()
   .then(() => {
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     let selectBank = document.getElementById('bank')
     let selectInstrument = document.getElementById('instrument')
-    let path = '../../instruments/heartbeat'
+    let path = `${basePath}/instruments/heartbeat`
 
     let optionsHeartbeat = '<option id="select">select instrument</option>'
     let heartbeatInstruments = getInstruments()
@@ -67,10 +68,10 @@ document.addEventListener('DOMContentLoaded', function(){
       console.log(key)
       if(key === 'heartbeat'){
         selectInstrument.innerHTML = optionsHeartbeat
-        path = '../../instruments/heartbeat'
+        path = `${basePath}/instruments/heartbeat`
       }else if(key === 'fluidsynth'){
         selectInstrument.innerHTML = optionsGM
-        path = '../../instruments/fluidsynth'
+        path = `${basePath}/instruments/fluidsynth`
       }
     })
 

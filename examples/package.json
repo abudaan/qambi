@@ -1,9 +1,8 @@
 {
-  "name": "qambi",
-  "version": "1.0.0-beta30",
-  "description": "MIDI sequencer, loads MIDI files, can record and playback MIDI, uses WebMIDI and WebAudio",
+  "name": "qambi-examples",
+  "version": "1.0.0-beta31",
+  "description": "examples of using qambi",
   "author": "abudaan daniel@abumarkub.net",
-  "main": "dist/qambi.js",
   "private": false,
   "devDependencies": {
     "babel-eslint": "^6.0.2",
@@ -37,10 +36,10 @@
   },
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
-    "watch": "watchify ./fx_chain/index.js -t babelify -o ./fx_chain/build.js --debug --verbose"
+    "watch": "watchify ./example3/index.js -t babelify -o ./example3/build.js --debug --verbose"
   },
   "dependencies": {
     "isomorphic-fetch": "^2.2.1",
-    "qambi": "1.0.0-beta29"
+    "qambi": "1.0.0-beta31"
   }
 }

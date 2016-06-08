@@ -5,7 +5,7 @@ import qambi, {
   MIDIEvent,
   SimpleSynth,
   getMIDIOutputs,
-} from '../../src/qambi'
+} from 'qambi'
 
 
 document.addEventListener('DOMContentLoaded', function(){

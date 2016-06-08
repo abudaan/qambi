@@ -3,7 +3,7 @@ import qambi, {
   MIDIEvent,
   Track,
   getAudioContext,
-} from '../../src/qambi'
+} from 'qambi'
 
 document.addEventListener('DOMContentLoaded', function(){
 

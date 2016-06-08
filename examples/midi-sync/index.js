@@ -3,7 +3,7 @@ import qambi, {
   Sampler,
   getMIDIInputs,
   getMIDIOutputs,
-} from '../../src/qambi'
+} from 'qambi'
 
 
 import fetch from 'isomorphic-fetch'
