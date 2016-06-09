@@ -61,15 +61,22 @@ qambi.init({
 
 ```
 
-Some live examples can be found [here](http://abudaan.github.io/qambi/examples/index.html), more examples in the [examples](https://github.com/abudaan/qambi/tree/gh-pages/examples) folder of the repository.
+Some live examples can be found [here](http://abudaan.github.io/qambi/examples/index.html), more examples in the [examples](https://github.com/abudaan/qambi/tree/gh-pages/examples) folder of the repository. Like qambi itself, all examples are written in es2016 so they need to be compiled to es5 before you can run them in a browser. In the repository I have included the compiled build.js files for all examples so you can run them right away. However, if you want to experiment with the examples you need to compile them before you see your changes. The simplest way to do this is:
+
+ - cd into the examples folder and run `npm install` (only needed the first time)
+ - cd into the folder of the example that you want to experiment with and run `npm run watch`
+
+Now the main.js file will be compiled immediately after every edit of the file.
+
+
+#####Playgrounds
+
+You can try qambi without installation by using the qambi templates on [jsbin](http://jsbin.com/kosuva/edit?js,output) or [codepen](http://codepen.io/abudaan/pen/YqmMbK?editors=0010)
 
 
 #####Documentation
 
 Documentation is work in progress, see the [wiki](https://github.com/abudaan/qambi/wiki).
 
-#####Playgrounds
-
-You can try qambi without installation by using the qambi templates on [jsbin](http://jsbin.com/kosuva/edit?js,output) or [codepen](http://codepen.io/abudaan/pen/YqmMbK?editors=0010)
 
 
