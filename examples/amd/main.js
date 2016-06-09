@@ -11,7 +11,7 @@ require(['qambi'], function(qambi){
     let song = new qambi.Song()
     let track = new qambi.Track()
     let part = new qambi.Part()
-    var synth = new qambi.SimpleSynth()
+    let synth = new qambi.SimpleSynth()
 
     part.addEvents(new qambi.MIDIEvent(0, 144, 60, 100), new qambi.MIDIEvent(960, 128, 60, 0))
     track.setInstrument(synth)

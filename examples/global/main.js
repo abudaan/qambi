@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function(){
     let song = new Song()
     let track = new Track()
     let part = new Part()
-    var synth = new SimpleSynth()
+    let synth = new SimpleSynth()
 
     part.addEvents(new MIDIEvent(0, 144, 60, 100), new MIDIEvent(960, 128, 60, 0))
     track.setInstrument(synth)
