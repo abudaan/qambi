@@ -1,9 +1,9 @@
-###qambi
+### qambi
 
 Qambi is a rebuild of [heartbeat](https://abudaan.github.io/heartbeat) in es2016. It is still work in progress and not all functionality has been ported yet. If you need a well-tested sequencer for your project you'd better use heartbeat.
 
 
-#####Installation
+##### Installation
 
 Recommended is to install qambi via npm:
 
@@ -30,7 +30,7 @@ Or as a global variable:
 The last script file creates global variables for all qambi modules. This is not mandatory: if you add it you can for instance create a new song with `new Song()`, if you omit it you have to type `new qambi.Song()`.
 
 
-#####Examples
+##### Examples
 
 A simple example that plays back an existing MIDI file:
 
@@ -69,12 +69,12 @@ Some live examples can be found [here](http://abudaan.github.io/qambi/examples/i
 Now the main.js file will be compiled immediately after every edit of the file.
 
 
-#####Playgrounds
+##### Playgrounds
 
 You can try qambi without installation by using the qambi templates on [jsbin](http://jsbin.com/kosuva/edit?js,output) or [codepen](http://codepen.io/abudaan/pen/YqmMbK?editors=0010)
 
 
-#####Documentation
+##### Documentation
 
 Documentation is work in progress, see the [wiki](https://github.com/abudaan/qambi/wiki).
 
