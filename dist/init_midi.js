@@ -116,8 +116,8 @@ function initMIDI() {
         MIDIAccess = midiAccess;
         // @TODO: implement something in webmidiapishim that allows us to detect the Jazz plugin version
         if (typeof midiAccess._jazzInstances !== 'undefined') {
-          console.log('jazz');
           jazz = midiAccess._jazzInstances[0]._Jazz.version;
+          console.log('jazz version:', jazz);
           midi = true;
         } else {
           webmidi = true;

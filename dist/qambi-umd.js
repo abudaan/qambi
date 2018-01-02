@@ -483,10 +483,26 @@ var _util = require('./util/util');
 
 var _midi_input = require('./midi/midi_input');
 
+var Input = _interopRequireWildcard(_midi_input);
+
 var _midi_output = require('./midi/midi_output');
+
+var Output = _interopRequireWildcard(_midi_output);
 
 var _midimessage_event = require('./midi/midimessage_event');
 
+var _midimessage_event2 = _interopRequireDefault(_midimessage_event);
+
+var _midiconnection_event = require('./midi/midiconnection_event');
+
+var _midiconnection_event2 = _interopRequireDefault(_midiconnection_event);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+// import MIDIInput from './midi/midi_input';
+// import MIDIOutput from './midi/midi_output';
 var midiAccess = void 0;
 
 var init = function init() {
@@ -498,11 +514,12 @@ var init = function init() {
             // Singleton-ish, no need to create multiple instances of MIDIAccess
             if (midiAccess === undefined) {
                 midiAccess = (0, _midi_access.createMIDIAccess)();
-                // Add WebMIDI API globals
+                // Add global vars that mimic WebMIDI API native globals
                 var scope = (0, _util.getScope)();
-                scope.MIDIInput = _midi_input.MIDIInput;
-                scope.MIDIOutput = _midi_output.MIDIOutput;
-                scope.MIDIMessageEvent = _midimessage_event.MIDIMessageEvent;
+                scope.MIDIInput = Input;
+                scope.MIDIOutput = Output;
+                scope.MIDIMessageEvent = _midimessage_event2.default;
+                scope.MIDIConnectionEvent = _midiconnection_event2.default;
             }
             return midiAccess;
         };
@@ -518,7 +535,7 @@ var init = function init() {
 
 init();
 
-},{"./midi/midi_access":5,"./midi/midi_input":6,"./midi/midi_output":7,"./midi/midimessage_event":9,"./util/util":12}],5:[function(require,module,exports){
+},{"./midi/midi_access":5,"./midi/midi_input":6,"./midi/midi_output":7,"./midi/midiconnection_event":8,"./midi/midimessage_event":9,"./util/util":12}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -620,7 +637,7 @@ function createMIDIAccess() {
         }
 
         (0, _jazz_instance.createJazzInstance)(function (instance) {
-            if (typeof instance === 'undefined') {
+            if (typeof instance === 'undefined' || instance === null) {
                 reject({ message: 'No access to MIDI devices: your browser does not support the WebMIDI API and the Jazz plugin is not installed.' });
                 return;
             }
@@ -3313,8 +3330,8 @@ function polyfill() {
           MIDIAccess = midiAccess;
           // @TODO: implement something in webmidiapishim that allows us to detect the Jazz plugin version
           if (typeof midiAccess._jazzInstances !== 'undefined') {
-            console.log('jazz');
             jazz = midiAccess._jazzInstances[0]._Jazz.version;
+            console.log('jazz version:', jazz);
             midi = true;
           } else {
             webmidi = true;
@@ -7427,7 +7444,7 @@ function polyfill() {
     value: true
   });
   exports.Delay = exports.ConvolutionReverb = exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
-  var version = '1.0.0-beta36';
+  var version = '1.0.0-beta38';
 
   var getAudioContext = function getAudioContext() {
     return _init_audio.context;
@@ -10975,7 +10992,8 @@ function polyfill() {
           if (typeof output === 'string') {
             output = (0, _init_midi.getMIDIOutputById)(output);
           }
-          if (output instanceof MIDIOutput) {
+          // if (output instanceof MIDIOutput) {
+          if (output.type === 'output') {
             _this._midiOutputs.set(output.id, output);
           }
         });
@@ -10995,7 +11013,8 @@ function polyfill() {
           this._midiOutputs.clear();
         }
         outputs.forEach(function (port) {
-          if (port instanceof MIDIOutput) {
+          // if (port instanceof MIDIOutput) {
+          if (port.type === 'output') {
             port = port.id;
           }
           if (_this2._midiOutputs.has(port)) {
@@ -11015,11 +11034,13 @@ function polyfill() {
           inputs[_key3] = arguments[_key3];
         }
 
+        //console.log(Object.getPrototypeOf(MIDIInput));
         inputs.forEach(function (input) {
           if (typeof input === 'string') {
             input = (0, _init_midi.getMIDIInputById)(input);
           }
-          if (input instanceof MIDIInput) {
+          // if (input instanceof MIDIInput) {
+          if (input.type === 'input') {
 
             _this3._midiInputs.set(input.id, input);
 
@@ -11053,7 +11074,8 @@ function polyfill() {
           return;
         }
         inputs.forEach(function (port) {
-          if (port instanceof MIDIInput) {
+          // if (port instanceof MIDIInput) {
+          if (port.type === 'input') {
             port = port.id;
           }
           if (_this4._midiInputs.has(port)) {

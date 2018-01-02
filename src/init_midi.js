@@ -2,7 +2,7 @@
   Requests MIDI access, queries all inputs and outputs and stores them in alphabetical order
 */
 
-import {typeString} from './util'
+import { typeString } from './util'
 import 'web-midi-api-shim' // you can also embed the shim as a stand-alone script in the html, then you can comment this line out
 
 let MIDIAccess
@@ -54,9 +54,8 @@ export function initMIDI() {
 
     if (typeof navigator === 'undefined') {
       initialized = true
-      resolve({midi})
+      resolve({ midi })
     } else if (typeof navigator.requestMIDIAccess !== 'undefined') {
-
 
       navigator.requestMIDIAccess().then(
 
@@ -64,8 +63,8 @@ export function initMIDI() {
           MIDIAccess = midiAccess
           // @TODO: implement something in webmidiapishim that allows us to detect the Jazz plugin version
           if (typeof midiAccess._jazzInstances !== 'undefined') {
-            console.log('jazz')
             jazz = midiAccess._jazzInstances[0]._Jazz.version
+            console.log('jazz version:', jazz);
             midi = true
           } else {
             webmidi = true
@@ -101,13 +100,13 @@ export function initMIDI() {
           //console.log(e)
           //reject('Something went wrong while requesting MIDIAccess', e)
           initialized = true
-          resolve({midi, jazz})
+          resolve({ midi, jazz })
         }
       )
       // browsers without WebMIDI API
     } else {
       initialized = true
-      resolve({midi})
+      resolve({ midi })
     }
   })
 }

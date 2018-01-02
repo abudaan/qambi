@@ -132,7 +132,8 @@ var Track = exports.Track = function () {
         if (typeof output === 'string') {
           output = (0, _init_midi.getMIDIOutputById)(output);
         }
-        if (output instanceof MIDIOutput) {
+        // if (output instanceof MIDIOutput) {
+        if (output.type === 'output') {
           _this._midiOutputs.set(output.id, output);
         }
       });
@@ -152,7 +153,8 @@ var Track = exports.Track = function () {
         this._midiOutputs.clear();
       }
       outputs.forEach(function (port) {
-        if (port instanceof MIDIOutput) {
+        // if (port instanceof MIDIOutput) {
+        if (port.type === 'output') {
           port = port.id;
         }
         if (_this2._midiOutputs.has(port)) {
@@ -172,11 +174,13 @@ var Track = exports.Track = function () {
         inputs[_key3] = arguments[_key3];
       }
 
+      //console.log(Object.getPrototypeOf(MIDIInput));
       inputs.forEach(function (input) {
         if (typeof input === 'string') {
           input = (0, _init_midi.getMIDIInputById)(input);
         }
-        if (input instanceof MIDIInput) {
+        // if (input instanceof MIDIInput) {
+        if (input.type === 'input') {
 
           _this3._midiInputs.set(input.id, input);
 
@@ -210,7 +214,8 @@ var Track = exports.Track = function () {
         return;
       }
       inputs.forEach(function (port) {
-        if (port instanceof MIDIInput) {
+        // if (port instanceof MIDIInput) {
+        if (port.type === 'input') {
           port = port.id;
         }
         if (_this4._midiInputs.has(port)) {

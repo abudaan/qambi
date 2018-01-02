@@ -5,7 +5,8 @@ import qambi, {
   getMIDIInputs,
   getInstruments,
   getGMInstruments,
-} from 'qambi'
+  // } from 'qambi'
+} from '../../dist/qambi'
 
 document.addEventListener('DOMContentLoaded', function () {
 

@@ -1,18 +1,18 @@
-import {Part} from './part'
-import {MIDIEvent} from './midi_event'
-import {MIDINote} from './midi_note'
-import {getMIDIInputById, getMIDIOutputById} from './init_midi'
-import {sortEvents} from './util'
-import {context} from './init_audio'
-import {MIDIEventTypes} from './qambi'
-import {dispatchEvent} from './eventlistener'
+import { Part } from './part'
+import { MIDIEvent } from './midi_event'
+import { MIDINote } from './midi_note'
+import { getMIDIInputById, getMIDIOutputById } from './init_midi'
+import { sortEvents } from './util'
+import { context } from './init_audio'
+import { MIDIEventTypes } from './qambi'
+import { dispatchEvent } from './eventlistener'
 
 const zeroValue = 0.00000000000000001
 let instanceIndex = 0
 
-export class Track{
+export class Track {
 
-  constructor(settings = {}){
+  constructor(settings = {}) {
     this.id = `${this.constructor.name}_${instanceIndex++}_${new Date().getTime()}`;
 
     ({
@@ -51,70 +51,72 @@ export class Track{
     this._effects = []
     this._numEffects = 0
 
-    let {parts, instrument} = settings
-    if(typeof parts !== 'undefined'){
+    let { parts, instrument } = settings
+    if (typeof parts !== 'undefined') {
       this.addParts(...parts)
     }
-    if(typeof instrument !== 'undefined'){
+    if (typeof instrument !== 'undefined') {
       this.setInstrument(instrument)
     }
   }
 
-  setInstrument(instrument = null){
-    if(instrument !== null
+  setInstrument(instrument = null) {
+    if (instrument !== null
       // check if the mandatory functions of an instrument are present (Interface Instrument)
       && typeof instrument.connect === 'function'
       && typeof instrument.disconnect === 'function'
       && typeof instrument.processMIDIEvent === 'function'
       && typeof instrument.allNotesOff === 'function'
       && typeof instrument.unschedule === 'function'
-    ){
+    ) {
       this.removeInstrument()
       this._instrument = instrument
       this._instrument.connect(this._panner)
-    }else if(instrument === null){
+    } else if (instrument === null) {
       // if you pass null as argument the current instrument will be removed, same as removeInstrument
       this.removeInstrument()
-    }else{
+    } else {
       console.log('Invalid instrument, and instrument should have the methods "connect", "disconnect", "processMIDIEvent", "unschedule" and "allNotesOff"')
     }
   }
 
-  removeInstrument(){
-    if(this._instrument !== null){
+  removeInstrument() {
+    if (this._instrument !== null) {
       this._instrument.allNotesOff()
       this._instrument.disconnect()
       this._instrument = null
     }
   }
 
-  getInstrument(){
+  getInstrument() {
     return this._instrument
   }
 
-  connectMIDIOutputs(...outputs){
+  connectMIDIOutputs(...outputs) {
     //console.log(outputs)
     outputs.forEach(output => {
-      if(typeof output === 'string'){
+      if (typeof output === 'string') {
         output = getMIDIOutputById(output)
       }
-      if(output instanceof MIDIOutput){
+      // if (output instanceof MIDIOutput) {
+      if (output.type === 'output') {
         this._midiOutputs.set(output.id, output)
       }
     })
     //console.log(this._midiOutputs)
   }
 
-  disconnectMIDIOutputs(...outputs){
+  disconnectMIDIOutputs(...outputs) {
     //console.log(outputs)
-    if(outputs.length === 0){
+    if (outputs.length === 0) {
       this._midiOutputs.clear()
     }
     outputs.forEach(port => {
-      if(port instanceof MIDIOutput){
+      // if (port instanceof MIDIOutput) {
+      if (port.type === 'output') {
         port = port.id
       }
-      if(this._midiOutputs.has(port)){
+      if (this._midiOutputs.has(port)) {
         //console.log('removing', this._midiOutputs.get(port).name)
         this._midiOutputs.delete(port)
       }
@@ -123,17 +125,19 @@ export class Track{
     //console.log(this._midiOutputs)
   }
 
-  connectMIDIInputs(...inputs){
+  connectMIDIInputs(...inputs) {
+    //console.log(Object.getPrototypeOf(MIDIInput));
     inputs.forEach(input => {
-      if(typeof input === 'string'){
+      if (typeof input === 'string') {
         input = getMIDIInputById(input)
       }
-      if(input instanceof MIDIInput){
+      // if (input instanceof MIDIInput) {
+      if (input.type === 'input') {
 
         this._midiInputs.set(input.id, input)
 
         input.onmidimessage = e => {
-          if(this.monitor === true){
+          if (this.monitor === true) {
             //console.log(...e.data)
             this._preprocessMIDIEvent(new MIDIEvent(this._song._ticks, ...e.data))
           }
@@ -144,8 +148,8 @@ export class Track{
   }
 
   // you can pass both port and port ids
-  disconnectMIDIInputs(...inputs){
-    if(inputs.length === 0){
+  disconnectMIDIInputs(...inputs) {
+    if (inputs.length === 0) {
       this._midiInputs.forEach(port => {
         port.onmidimessage = null
       })
@@ -153,10 +157,11 @@ export class Track{
       return
     }
     inputs.forEach(port => {
-      if(port instanceof MIDIInput){
+      // if (port instanceof MIDIInput) {
+      if (port.type === 'input') {
         port = port.id
       }
-      if(this._midiInputs.has(port)){
+      if (this._midiInputs.has(port)) {
         this._midiInputs.get(port).onmidimessage = null
         this._midiInputs.delete(port)
       }
@@ -165,20 +170,20 @@ export class Track{
     //console.log(this._midiInputs)
   }
 
-  getMIDIInputs(){
+  getMIDIInputs() {
     return Array.from(this._midiInputs.values())
   }
 
-  getMIDIOutputs(){
+  getMIDIOutputs() {
     return Array.from(this._midiOutputs.values())
   }
 
-  setRecordEnabled(type){ // 'midi', 'audio', empty or anything will disable recording
+  setRecordEnabled(type) { // 'midi', 'audio', empty or anything will disable recording
     this._recordEnabled = type
   }
 
-  _startRecording(recordId){
-    if(this._recordEnabled === 'midi'){
+  _startRecording(recordId) {
+    if (this._recordEnabled === 'midi') {
       //console.log(recordId)
       this._recordId = recordId
       this._recordedEvents = []
@@ -186,11 +191,11 @@ export class Track{
     }
   }
 
-  _stopRecording(recordId){
-    if(this._recordId !== recordId){
+  _stopRecording(recordId) {
+    if (this._recordId !== recordId) {
       return
     }
-    if(this._recordedEvents.length === 0){
+    if (this._recordedEvents.length === 0) {
       return
     }
     this._recordPart.addEvents(...this._recordedEvents)
@@ -198,25 +203,25 @@ export class Track{
     this.addParts(this._recordPart)
   }
 
-  undoRecording(recordId){
-    if(this._recordId !== recordId){
+  undoRecording(recordId) {
+    if (this._recordId !== recordId) {
       return
     }
     this.removeParts(this._recordPart)
     //this._song._removedEvents.push(...this._recordedEvents)
   }
 
-  redoRecording(recordId){
-    if(this._recordId !== recordId){
+  redoRecording(recordId) {
+    if (this._recordId !== recordId) {
       return
     }
     this.addParts(this._recordPart)
   }
 
-  copy(){
+  copy() {
     let t = new Track(this.name + '_copy') // implement getNameOfCopy() in util (see heartbeat)
     let parts = []
-    this._parts.forEach(function(part){
+    this._parts.forEach(function (part) {
       let copy = part.copy()
       console.log(copy)
       parts.push(copy)
@@ -226,13 +231,13 @@ export class Track{
     return t
   }
 
-  transpose(amount: number){
+  transpose(amount: number) {
     this._events.forEach((event) => {
       event.transpose(amount)
     })
   }
 
-  addParts(...parts){
+  addParts(...parts) {
     let song = this._song
 
     parts.forEach((part) => {
@@ -244,7 +249,7 @@ export class Track{
       let events = part._events
       this._events.push(...events)
 
-      if(song){
+      if (song) {
         part._song = song
         song._newParts.push(part)
         song._newEvents.push(...events)
@@ -252,7 +257,7 @@ export class Track{
 
       events.forEach((event) => {
         event._track = this
-        if(song){
+        if (song) {
           event._song = song
         }
         this._eventsById.set(event.id, event)
@@ -261,7 +266,7 @@ export class Track{
     this._needsUpdate = true
   }
 
-  removeParts(...parts){
+  removeParts(...parts) {
     let song = this._song
 
     parts.forEach((part) => {
@@ -270,14 +275,14 @@ export class Track{
 
       let events = part._events
 
-      if(song){
+      if (song) {
         song._removedParts.push(part)
         song._removedEvents.push(...events)
       }
 
       events.forEach(event => {
         event._track = null
-        if(song){
+        if (song) {
           event._song = null
         }
         this._eventsById.delete(event.id, event)
@@ -287,8 +292,8 @@ export class Track{
     this._createEventArray = true
   }
 
-  getParts(){
-    if(this._needsUpdate){
+  getParts() {
+    if (this._needsUpdate) {
       this._parts = Array.from(this._partsById.values())
       this._events = Array.from(this._eventsById.values())
       this._needsUpdate = false
@@ -297,31 +302,31 @@ export class Track{
   }
 
 
-  transposeParts(amount: number, ...parts){
-    parts.forEach(function(part){
+  transposeParts(amount: number, ...parts) {
+    parts.forEach(function (part) {
       part.transpose(amount)
     })
   }
 
-  moveParts(ticks: number, ...parts){
-    parts.forEach(function(part){
+  moveParts(ticks: number, ...parts) {
+    parts.forEach(function (part) {
       part.move(ticks)
     })
   }
 
-  movePartsTo(ticks: number, ...parts){
-    parts.forEach(function(part){
+  movePartsTo(ticks: number, ...parts) {
+    parts.forEach(function (part) {
       part.moveTo(ticks)
     })
   }
-/*
-  addEvents(...events){
-    let p = new Part()
-    p.addEvents(...events)
-    this.addParts(p)
-  }
-*/
-  removeEvents(...events){
+  /*
+    addEvents(...events){
+      let p = new Part()
+      p.addEvents(...events)
+      this.addParts(p)
+    }
+  */
+  removeEvents(...events) {
     let parts = new Set()
     events.forEach((event) => {
       parts.set(event._part)
@@ -330,7 +335,7 @@ export class Track{
       event._song = null
       this._eventsById.delete(event.id)
     })
-    if(this._song){
+    if (this._song) {
       this._song._removedEvents.push(...events)
       this._song._changedParts.push(...Array.from(parts.entries()))
     }
@@ -338,47 +343,47 @@ export class Track{
     this._createEventArray = true
   }
 
-  moveEvents(ticks: number, ...events){
+  moveEvents(ticks: number, ...events) {
     let parts = new Set()
     events.forEach((event) => {
       event.move(ticks)
       parts.set(event.part)
     })
-    if(this._song){
+    if (this._song) {
       this._song._movedEvents.push(...events)
       this._song._changedParts.push(...Array.from(parts.entries()))
     }
   }
 
-  moveEventsTo(ticks: number, ...events){
+  moveEventsTo(ticks: number, ...events) {
     let parts = new Set()
     events.forEach((event) => {
       event.moveTo(ticks)
       parts.set(event.part)
     })
-    if(this._song){
+    if (this._song) {
       this._song._movedEvents.push(...events)
       this._song._changedParts.push(...Array.from(parts.entries()))
     }
   }
 
-  getEvents(filter: string[] = null){ // can be use as findEvents
-    if(this._needsUpdate){
+  getEvents(filter: string[] = null) { // can be use as findEvents
+    if (this._needsUpdate) {
       this.update()
     }
     return [...this._events] //@TODO implement filter -> filterEvents() should be a utility function (not a class method)
   }
 
-  mute(flag: boolean = null){
-    if(flag){
+  mute(flag: boolean = null) {
+    if (flag) {
       this._muted = flag
-    }else{
+    } else {
       this._muted = !this._muted
     }
   }
 
-  update(){ // you should only use this in huge songs (>100 tracks)
-    if(this._createEventArray){
+  update() { // you should only use this in huge songs (>100 tracks)
+    if (this._createEventArray) {
       this._events = Array.from(this._eventsById.values())
       this._createEventArray = false
     }
@@ -387,8 +392,8 @@ export class Track{
   }
 
 
-  _checkEffect(effect){
-    if(effect.input instanceof AudioNode === false || effect.output instanceof AudioNode === false){
+  _checkEffect(effect) {
+    if (effect.input instanceof AudioNode === false || effect.output instanceof AudioNode === false) {
       console.log('A channel fx should have an input and an output implementing the interface AudioNode')
       return false
     }
@@ -397,23 +402,23 @@ export class Track{
 
 
   // routing: audiosource -> panning -> track output -> [...effect] -> song input
-  insertEffect(effect){
+  insertEffect(effect) {
 
-    if(this._checkEffect(effect) === false){
+    if (this._checkEffect(effect) === false) {
       return
     }
 
     let prevEffect
 
-    if(this._numEffects === 0){
+    if (this._numEffects === 0) {
       this._gainNode.disconnect(this._songGainNode)
       this._gainNode.connect(effect.input)
       effect.output.connect(this._songGainNode)
-    }else{
+    } else {
       prevEffect = this._effects[this._numEffects - 1]
-      try{
+      try {
         prevEffect.output.disconnect(this._songGainNode)
-      }catch(e){
+      } catch (e) {
         //Chrome throws an error here which is wrong
       }
       prevEffect.output.connect(effect.input)
@@ -424,18 +429,18 @@ export class Track{
     this._numEffects++
   }
 
-  insertEffectAt(effect, index: number){
-    if(this._checkEffect(effect) === false){
+  insertEffectAt(effect, index: number) {
+    if (this._checkEffect(effect) === false) {
       return
     }
     let prevEffect = this._effects[index - 1]
     let nextEffect
 
-    if(index === this._numEffects){
+    if (index === this._numEffects) {
       prevEffect.output.disconnect(this._songGainNode)
       prevEffect.output.connect(effect.input)
       effect.input.connect(this._songGainNode)
-    }else{
+    } else {
       nextEffect = this._effects[index]
       prevEffect.output.disconnect(nextEffect.input)
       prevEffect.output.connect(effect.input)
@@ -446,23 +451,23 @@ export class Track{
   }
 
   //removeEffect(effect: Effect){
-  removeEffect(effect){
-    if(this._checkEffect(effect) === false){
+  removeEffect(effect) {
+    if (this._checkEffect(effect) === false) {
       return
     }
 
     let i
-    for(i = 0; i < this._numEffects; i++){
+    for (i = 0; i < this._numEffects; i++) {
       let fx = this._effects[i]
-      if(effect === fx){
+      if (effect === fx) {
         break
       }
     }
     this.removeEffectAt(i)
   }
 
-  removeEffectAt(index:number){
-    if(isNaN(index) || this._numEffects === 0 || index >= this._numEffects){
+  removeEffectAt(index: number) {
+    if (isNaN(index) || this._numEffects === 0 || index >= this._numEffects) {
       return
     }
     let effect = this._effects[index]
@@ -471,50 +476,50 @@ export class Track{
 
     //console.log(index, this._effects)
 
-    if(index === 0){
+    if (index === 0) {
       // we remove the first effect, so disconnect from output of track
       this._gainNode.disconnect(effect.input)
 
-      if(this._numEffects === 1){
+      if (this._numEffects === 1) {
         // no effects anymore, so connect output of track to input of the song
-        try{
+        try {
           effect.output.disconnect(this._songGainNode)
-        }catch(e){
+        } catch (e) {
           //Chrome throws an error here which is wrong
         }
         this._gainNode.connect(this._songGainNode)
-      }else{
+      } else {
         // disconnect the removed effect from the next effect in the chain, this is now the first effect in the chain...
         nextEffect = this._effects[index + 1]
-        try{
+        try {
           effect.output.disconnect(nextEffect.input)
-        }catch(e){
+        } catch (e) {
           //Chrome throws an error here which is wrong
         }
         // ... so connect the output of the track to the input of this effect
         this._gainNode.connect(nextEffect.input)
       }
-    }else{
+    } else {
 
       prevEffect = this._effects[index - 1]
       //console.log(prevEffect)
       // disconnect the removed effect from the previous effect in the chain
-      try{
+      try {
         prevEffect.output.disconnect(effect.input)
-      }catch(e){
+      } catch (e) {
         //Chrome throws an error here which is wrong
       }
 
-      if(index === this._numEffects - 1){
+      if (index === this._numEffects - 1) {
         // we remove the last effect in the chain, so disconnect from the input of the song
-        try{
+        try {
           effect.output.disconnect(this._songGainNode)
-        }catch(e){
+        } catch (e) {
           //Chrome throws an error here which is wrong
         }
         // the previous effect is now the last effect to connect it to the input of the song
         prevEffect.output.connect(this._songGainNode)
-      }else{
+      } else {
         // disconnect the effect from the next effect in the chain
         nextEffect = this._effects[index]
         effect.output.disconnect(nextEffect.input)
@@ -527,43 +532,43 @@ export class Track{
     this._numEffects--
   }
 
-  getEffects(){
+  getEffects() {
     return [...this._effects]
   }
 
-  getEffectAt(index: number){
-    if(isNaN(index)){
+  getEffectAt(index: number) {
+    if (isNaN(index)) {
       return null
     }
     return this._effects[index]
   }
 
-  getOutput(){
+  getOutput() {
     return this._gainNode
   }
 
-  getInput(){
+  getInput() {
     return this._songGainNode
   }
 
   // method is called when a MIDI events is send by an external or on-screen keyboard
-  _preprocessMIDIEvent(midiEvent){
+  _preprocessMIDIEvent(midiEvent) {
     let time = context.currentTime * 1000
     midiEvent.time = time
     midiEvent.time2 = 0//performance.now() -> passing 0 has the same effect as performance.now() so we choose the former
     midiEvent.recordMillis = time
     let note
 
-    if(midiEvent.type === MIDIEventTypes.NOTE_ON){
+    if (midiEvent.type === MIDIEventTypes.NOTE_ON) {
       note = new MIDINote(midiEvent)
       this._tmpRecordedNotes.set(midiEvent.data1, note)
       dispatchEvent({
         type: 'noteOn',
         data: midiEvent
       })
-    }else if(midiEvent.type === MIDIEventTypes.NOTE_OFF){
+    } else if (midiEvent.type === MIDIEventTypes.NOTE_OFF) {
       note = this._tmpRecordedNotes.get(midiEvent.data1)
-      if(typeof note === 'undefined'){
+      if (typeof note === 'undefined') {
         return
       }
       note.addNoteOff(midiEvent)
@@ -574,22 +579,22 @@ export class Track{
       })
     }
 
-    if(this._recordEnabled === 'midi' && this._song.recording === true){
+    if (this._recordEnabled === 'midi' && this._song.recording === true) {
       this._recordedEvents.push(midiEvent)
     }
     this.processMIDIEvent(midiEvent)
   }
 
   // method is called by scheduler during playback
-  processMIDIEvent(event){
+  processMIDIEvent(event) {
 
-    if(typeof event.time === 'undefined'){
+    if (typeof event.time === 'undefined') {
       this._preprocessMIDIEvent(event)
       return
     }
 
     // send to javascript instrument
-    if(this._instrument !== null){
+    if (this._instrument !== null) {
       //console.log(this.name, event)
       this._instrument.processMIDIEvent(event)
     }
@@ -598,13 +603,13 @@ export class Track{
     this._sendToExternalMIDIOutputs(event)
   }
 
-  _sendToExternalMIDIOutputs(event){
+  _sendToExternalMIDIOutputs(event) {
     //console.log(event.time, event.millis)
-    for(let port of this._midiOutputs.values()){
-      if(port){
-        if(event.data2 !== -1){
+    for (let port of this._midiOutputs.values()) {
+      if (port) {
+        if (event.data2 !== -1) {
           port.send([event.type + this.channel, event.data1, event.data2], event.time2)
-        }else{
+        } else {
           port.send([event.type + this.channel, event.data1], event.time2)
         }
         // if(event.type === 128 || event.type === 144 || event.type === 176){
@@ -616,17 +621,17 @@ export class Track{
     }
   }
 
-  unschedule(midiEvent){
+  unschedule(midiEvent) {
 
-    if(this._instrument !== null){
+    if (this._instrument !== null) {
       this._instrument.unschedule(midiEvent)
     }
 
-    if(this._midiOutputs.size === 0){
+    if (this._midiOutputs.size === 0) {
       return
     }
 
-    if(midiEvent.type === 144){
+    if (midiEvent.type === 144) {
       let midiNote = midiEvent.midiNote
       let noteOff = new MIDIEvent(0, 128, midiEvent.data1, 0)
       noteOff.midiNoteId = midiNote.id
@@ -635,8 +640,8 @@ export class Track{
     }
   }
 
-  allNotesOff(){
-    if(this._instrument !== null){
+  allNotesOff() {
+    if (this._instrument !== null) {
       this._instrument.allNotesOff()
     }
 
@@ -647,8 +652,8 @@ export class Track{
     // }
   }
 
-  setPanning(value){
-    if(value < -1 || value > 1){
+  setPanning(value) {
+    if (value < -1 || value > 1) {
       console.log('Track.setPanning() accepts a value between -1 (full left) and 1 (full right), you entered:', value)
       return
     }
@@ -664,7 +669,7 @@ export class Track{
     this._panningValue = value
   }
 
-  getPanning(){
+  getPanning() {
     return this._panningValue
   }
 

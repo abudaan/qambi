@@ -3457,9 +3457,9 @@ punycode@^1.3.2, punycode@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-1.4.1.tgz#c0d5a63b2718800ad8e1eb0fa5269c84dd41845e"
 
-qambi@1.0.0-beta37:
-  version "1.0.0-beta37"
-  resolved "https://registry.yarnpkg.com/qambi/-/qambi-1.0.0-beta37.tgz#c7e542bfb700c10037c9ed93007fe331d5efe9f0"
+qambi@1.0.0-beta38:
+  version "1.0.0-beta38"
+  resolved "https://registry.yarnpkg.com/qambi/-/qambi-1.0.0-beta38.tgz#c7e542bfb700c10037c9ed93007fe331d5efe9f0"
   dependencies:
     filesaverjs "0.2.2"
     isomorphic-fetch "^2.2.1"
