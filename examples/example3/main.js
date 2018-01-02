@@ -7,7 +7,7 @@ import qambi, {
   getGMInstruments,
 } from 'qambi'
 
-document.addEventListener('DOMContentLoaded', function(){
+document.addEventListener('DOMContentLoaded', function () {
 
   let song
   let track
@@ -15,17 +15,17 @@ document.addEventListener('DOMContentLoaded', function(){
   const basePath = '../../' // you may have to adjust this path according to your folder layout
 
   qambi.init()
-  .then(() => {
-    song = new Song()
-    track = new Track()
-    sampler = new Sampler()
-    song.addTracks(track)
-    track.setInstrument(sampler)
-    track.monitor = true
-    initUI()
-  })
+    .then(() => {
+      song = new Song()
+      track = new Track()
+      sampler = new Sampler()
+      song.addTracks(track)
+      track.setInstrument(sampler)
+      track.monitor = true
+      initUI()
+    })
 
-  function initUI(){
+  function initUI() {
 
     // setup drowndown menu for MIDI inputs
 
@@ -66,10 +66,10 @@ document.addEventListener('DOMContentLoaded', function(){
     selectBank.addEventListener('change', () => {
       let key = selectBank.options[selectBank.selectedIndex].id
       console.log(key)
-      if(key === 'heartbeat'){
+      if (key === 'heartbeat') {
         selectInstrument.innerHTML = optionsHeartbeat
         path = `${basePath}/instruments/heartbeat`
-      }else if(key === 'fluidsynth'){
+      } else if (key === 'fluidsynth') {
         selectInstrument.innerHTML = optionsGM
         path = `${basePath}/instruments/fluidsynth`
       }
@@ -82,18 +82,18 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
       // option 1: clear the samples of the currently loaded instrument after the new samples have been loaded
-      sampler.parseSampleData({url, clearAll: true})
-      .then(() => {
-        console.log(`loaded: ${key}`)
-      })
-/*
-      // option 2: clear the samples of the currently loaded instrument before loading the new samples
-      sampler.clearAllSampleData()
-      sampler.parseSampleData({url})
-      .then(() => {
-        console.log(`loaded: ${key}`)
-      })
-*/
+      sampler.parseSampleData({ url, clearAll: true })
+        .then(() => {
+          console.log(`loaded: ${key}`)
+        })
+      /*
+            // option 2: clear the samples of the currently loaded instrument before loading the new samples
+            sampler.clearAllSampleData()
+            sampler.parseSampleData({url})
+            .then(() => {
+              console.log(`loaded: ${key}`)
+            })
+      */
     })
   }
 })

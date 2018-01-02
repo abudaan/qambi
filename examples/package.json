@@ -1,6 +1,6 @@
 {
   "name": "qambi-examples",
-  "version": "1.0.0-beta36",
+  "version": "1.0.0-beta37",
   "description": "examples of using qambi",
   "author": "abudaan daniel@abumarkub.net",
   "private": false,
@@ -40,6 +40,6 @@
   },
   "dependencies": {
     "isomorphic-fetch": "^2.2.1",
-    "qambi": "1.0.0-beta36"
+    "qambi": "^1.0.0-beta37"
   }
 }

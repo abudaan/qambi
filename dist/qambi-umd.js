@@ -481,16 +481,28 @@ var _midi_access = require('./midi/midi_access');
 
 var _util = require('./util/util');
 
+var _midi_input = require('./midi/midi_input');
+
+var _midi_output = require('./midi/midi_output');
+
+var _midimessage_event = require('./midi/midimessage_event');
+
 var midiAccess = void 0;
 
 var init = function init() {
     if (!navigator.requestMIDIAccess) {
         // Add some functionality to older browsers
         (0, _util.polyfill)();
+
         navigator.requestMIDIAccess = function () {
             // Singleton-ish, no need to create multiple instances of MIDIAccess
             if (midiAccess === undefined) {
                 midiAccess = (0, _midi_access.createMIDIAccess)();
+                // Add WebMIDI API globals
+                var scope = (0, _util.getScope)();
+                scope.MIDIInput = _midi_input.MIDIInput;
+                scope.MIDIOutput = _midi_output.MIDIOutput;
+                scope.MIDIMessageEvent = _midimessage_event.MIDIMessageEvent;
             }
             return midiAccess;
         };
@@ -506,7 +518,7 @@ var init = function init() {
 
 init();
 
-},{"./midi/midi_access":5,"./util/util":12}],5:[function(require,module,exports){
+},{"./midi/midi_access":5,"./midi/midi_input":6,"./midi/midi_output":7,"./midi/midimessage_event":9,"./util/util":12}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1460,15 +1472,15 @@ exports.default = Store;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.getScope = getScope;
 exports.getDevice = getDevice;
 exports.generateUUID = generateUUID;
 exports.polyfill = polyfill;
-
 var Scope = void 0;
 var device = null;
 
 // check if we are in a browser or in Nodejs
-var getScope = function getScope() {
+function getScope() {
     if (typeof Scope !== 'undefined') {
         return Scope;
     }
@@ -1480,7 +1492,7 @@ var getScope = function getScope() {
     }
     // console.log('scope', scope);
     return Scope;
-};
+}
 
 // check on what type of device we are running, note that in this context
 // a device is a computer not a MIDI device
@@ -7415,7 +7427,7 @@ function polyfill() {
     value: true
   });
   exports.Delay = exports.ConvolutionReverb = exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
-  var version = '1.0.0-beta35';
+  var version = '1.0.0-beta36';
 
   var getAudioContext = function getAudioContext() {
     return _init_audio.context;

@@ -1,6 +1,6 @@
 {
   "name": "qambi",
-  "version": "1.0.0-beta36",
+  "version": "1.0.0-beta37",
   "description": "MIDI sequencer, loads MIDI files, can record and playback MIDI, uses WebMIDI and WebAudio",
   "keywords": [
     "MIDI",
