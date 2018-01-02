@@ -18,8 +18,8 @@ var instanceIndex = 0;
 
 var MIDIEvent = exports.MIDIEvent = function () {
   function MIDIEvent(ticks, type, data1) {
-    var data2 = arguments.length <= 3 || arguments[3] === undefined ? -1 : arguments[3];
-    var channel = arguments.length <= 4 || arguments[4] === undefined ? 0 : arguments[4];
+    var data2 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : -1;
+    var channel = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
 
     _classCallCheck(this, MIDIEvent);
 
@@ -47,11 +47,11 @@ var MIDIEvent = exports.MIDIEvent = function () {
       }
       //this.status = this.command + this.channel
     } else {
-        // 4. not a channel event, set the type and command to the value of type as provided in the constructor
-        this.type = type;
-        //this.type = this.command = type
-        this.channel = 0; // any
-      }
+      // 4. not a channel event, set the type and command to the value of type as provided in the constructor
+      this.type = type;
+      //this.type = this.command = type
+      this.channel = 0; // any
+    }
     //console.log(type, this.type, this.command, this.status, this.channel, this.id)
 
     // sometimes NOTE_OFF events are sent as NOTE_ON events with a 0 velocity value

@@ -288,10 +288,96 @@ if (typeof module !== "undefined" && module.exports) {
 require('whatwg-fetch');
 module.exports = self.fetch.bind(self);
 
-},{"whatwg-fetch":12}],3:[function(require,module,exports){
+},{"whatwg-fetch":13}],3:[function(require,module,exports){
 // shim for using process in browser
-
 var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
 var queue = [];
 var draining = false;
 var currentQueue;
@@ -316,7 +402,7 @@ function drainQueue() {
     if (draining) {
         return;
     }
-    var timeout = setTimeout(cleanUpNextTick);
+    var timeout = runTimeout(cleanUpNextTick);
     draining = true;
 
     var len = queue.length;
@@ -333,7 +419,7 @@ function drainQueue() {
     }
     currentQueue = null;
     draining = false;
-    clearTimeout(timeout);
+    runClearTimeout(timeout);
 }
 
 process.nextTick = function (fun) {
@@ -345,7 +431,7 @@ process.nextTick = function (fun) {
     }
     queue.push(new Item(fun, args));
     if (queue.length === 1 && !draining) {
-        setTimeout(drainQueue, 0);
+        runTimeout(drainQueue);
     }
 };
 
@@ -373,6 +459,10 @@ process.off = noop;
 process.removeListener = noop;
 process.removeAllListeners = noop;
 process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
 
 process.binding = function (name) {
     throw new Error('process.binding is not supported');
@@ -387,15 +477,783 @@ process.umask = function() { return 0; };
 },{}],4:[function(require,module,exports){
 'use strict';
 
+var _midi_access = require('./midi/midi_access');
+
+var _util = require('./util/util');
+
+var midiAccess = void 0;
+
+var init = function init() {
+    if (!navigator.requestMIDIAccess) {
+        // Add some functionality to older browsers
+        (0, _util.polyfill)();
+        navigator.requestMIDIAccess = function () {
+            // Singleton-ish, no need to create multiple instances of MIDIAccess
+            if (midiAccess === undefined) {
+                midiAccess = (0, _midi_access.createMIDIAccess)();
+            }
+            return midiAccess;
+        };
+        if ((0, _util.getDevice)().nodejs === true) {
+            navigator.close = function () {
+                // For Nodejs applications we need to add a method that closes all MIDI input ports,
+                // otherwise Nodejs will wait for MIDI input forever.
+                (0, _midi_access.closeAllMIDIInputs)();
+            };
+        }
+    }
+};
+
+init();
+
+},{"./midi/midi_access":5,"./util/util":12}],5:[function(require,module,exports){
+'use strict';
+
 Object.defineProperty(exports, "__esModule", {
-  value: true
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /*
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Creates a MIDIAccess instance:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       - Creates MIDIInput and MIDIOutput instances for the initially connected MIDI devices.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       - Keeps track of newly connected devices and creates the necessary instances of MIDIInput and MIDIOutput.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       - Keeps track of disconnected devices and removes them from the inputs and/or outputs map.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       - Creates a unique id for every device and stores these ids by the name of the device:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         so when a device gets disconnected and reconnected again, it will still have the same id. This
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         is in line with the behavior of the native MIDIAccess object.
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     */
+
+exports.createMIDIAccess = createMIDIAccess;
+exports.dispatchEvent = dispatchEvent;
+exports.closeAllMIDIInputs = closeAllMIDIInputs;
+exports.getMIDIDeviceId = getMIDIDeviceId;
+
+var _midi_input = require('./midi_input');
+
+var _midi_input2 = _interopRequireDefault(_midi_input);
+
+var _midi_output = require('./midi_output');
+
+var _midi_output2 = _interopRequireDefault(_midi_output);
+
+var _midiconnection_event = require('./midiconnection_event');
+
+var _midiconnection_event2 = _interopRequireDefault(_midiconnection_event);
+
+var _jazz_instance = require('../util/jazz_instance');
+
+var _util = require('../util/util');
+
+var _store = require('../util/store');
+
+var _store2 = _interopRequireDefault(_store);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var midiAccess = void 0;
+var jazzInstance = void 0;
+var midiInputs = new _store2.default();
+var midiOutputs = new _store2.default();
+var midiInputIds = new _store2.default();
+var midiOutputIds = new _store2.default();
+var listeners = new _store2.default();
+
+var MIDIAccess = function () {
+    function MIDIAccess(midiInputs, midiOutputs) {
+        _classCallCheck(this, MIDIAccess);
+
+        this.sysexEnabled = true;
+        this.inputs = midiInputs;
+        this.outputs = midiOutputs;
+    }
+
+    _createClass(MIDIAccess, [{
+        key: 'addEventListener',
+        value: function addEventListener(type, listener) {
+            if (type !== 'statechange') {
+                return;
+            }
+            if (listeners.has(listener) === false) {
+                listeners.add(listener);
+            }
+        }
+    }, {
+        key: 'removeEventListener',
+        value: function removeEventListener(type, listener) {
+            if (type !== 'statechange') {
+                return;
+            }
+            if (listeners.has(listener) === true) {
+                listeners.delete(listener);
+            }
+        }
+    }]);
+
+    return MIDIAccess;
+}();
+
+function createMIDIAccess() {
+    return new Promise(function (resolve, reject) {
+        if (typeof midiAccess !== 'undefined') {
+            resolve(midiAccess);
+            return;
+        }
+
+        if ((0, _util.getDevice)().browser === 'ie9') {
+            reject({ message: 'WebMIDIAPIShim supports Internet Explorer 10 and above.' });
+            return;
+        }
+
+        (0, _jazz_instance.createJazzInstance)(function (instance) {
+            if (typeof instance === 'undefined') {
+                reject({ message: 'No access to MIDI devices: your browser does not support the WebMIDI API and the Jazz plugin is not installed.' });
+                return;
+            }
+
+            jazzInstance = instance;
+
+            createMIDIPorts(function () {
+                setupListeners();
+                midiAccess = new MIDIAccess(midiInputs, midiOutputs);
+                resolve(midiAccess);
+            });
+        });
+    });
+}
+
+// create MIDIInput and MIDIOutput instances for all initially connected MIDI devices
+function createMIDIPorts(callback) {
+    var inputs = jazzInstance.MidiInList();
+    var outputs = jazzInstance.MidiOutList();
+    var numInputs = inputs.length;
+    var numOutputs = outputs.length;
+
+    loopCreateMIDIPort(0, numInputs, 'input', inputs, function () {
+        loopCreateMIDIPort(0, numOutputs, 'output', outputs, callback);
+    });
+}
+
+function loopCreateMIDIPort(index, max, type, list, callback) {
+    if (index < max) {
+        var name = list[index++];
+        createMIDIPort(type, name, function () {
+            loopCreateMIDIPort(index, max, type, list, callback);
+        });
+    } else {
+        callback();
+    }
+}
+
+function createMIDIPort(type, name, callback) {
+    (0, _jazz_instance.getJazzInstance)(type, function (instance) {
+        var port = void 0;
+        var info = [name, '', ''];
+        if (type === 'input') {
+            if (instance.Support('MidiInInfo')) {
+                info = instance.MidiInInfo(name);
+            }
+            port = new _midi_input2.default(info, instance);
+            midiInputs.set(port.id, port);
+        } else if (type === 'output') {
+            if (instance.Support('MidiOutInfo')) {
+                info = instance.MidiOutInfo(name);
+            }
+            port = new _midi_output2.default(info, instance);
+            midiOutputs.set(port.id, port);
+        }
+        callback(port);
+    });
+}
+
+// lookup function: Jazz gives us the name of the connected/disconnected MIDI devices but we have stored them by id
+function getPortByName(ports, name) {
+    var port = void 0;
+    var values = ports.values();
+    for (var i = 0; i < values.length; i += 1) {
+        port = values[i];
+        if (port.name === name) {
+            break;
+        }
+    }
+    return port;
+}
+
+// keep track of connected/disconnected MIDI devices
+function setupListeners() {
+    jazzInstance.OnDisconnectMidiIn(function (name) {
+        var port = getPortByName(midiInputs, name);
+        if (port !== undefined) {
+            port.state = 'disconnected';
+            port.close();
+            port._jazzInstance.inputInUse = false;
+            midiInputs.delete(port.id);
+            dispatchEvent(port);
+        }
+    });
+
+    jazzInstance.OnDisconnectMidiOut(function (name) {
+        var port = getPortByName(midiOutputs, name);
+        if (port !== undefined) {
+            port.state = 'disconnected';
+            port.close();
+            port._jazzInstance.outputInUse = false;
+            midiOutputs.delete(port.id);
+            dispatchEvent(port);
+        }
+    });
+
+    jazzInstance.OnConnectMidiIn(function (name) {
+        createMIDIPort('input', name, function (port) {
+            dispatchEvent(port);
+        });
+    });
+
+    jazzInstance.OnConnectMidiOut(function (name) {
+        createMIDIPort('output', name, function (port) {
+            dispatchEvent(port);
+        });
+    });
+}
+
+// when a device gets connected/disconnected both the port and MIDIAccess dispatch a MIDIConnectionEvent
+// therefor we call the ports dispatchEvent function here as well
+function dispatchEvent(port) {
+    port.dispatchEvent(new _midiconnection_event2.default(port, port));
+
+    var evt = new _midiconnection_event2.default(midiAccess, port);
+
+    if (typeof midiAccess.onstatechange === 'function') {
+        midiAccess.onstatechange(evt);
+    }
+    listeners.forEach(function (listener) {
+        return listener(evt);
+    });
+}
+
+function closeAllMIDIInputs() {
+    midiInputs.forEach(function (input) {
+        // input.close();
+        input._jazzInstance.MidiInClose();
+    });
+}
+
+// check if we have already created a unique id for this device, if so: reuse it, if not: create a new id and store it
+function getMIDIDeviceId(name, type) {
+    var id = void 0;
+    if (type === 'input') {
+        id = midiInputIds.get(name);
+        if (id === undefined) {
+            id = (0, _util.generateUUID)();
+            midiInputIds.set(name, id);
+        }
+    } else if (type === 'output') {
+        id = midiOutputIds.get(name);
+        if (id === undefined) {
+            id = (0, _util.generateUUID)();
+            midiOutputIds.set(name, id);
+        }
+    }
+    return id;
+}
+
+},{"../util/jazz_instance":10,"../util/store":11,"../util/util":12,"./midi_input":6,"./midi_output":7,"./midiconnection_event":8}],6:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /*
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       MIDIInput is a wrapper around an input of a Jazz instance
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     */
+
+var _midimessage_event = require('./midimessage_event');
+
+var _midimessage_event2 = _interopRequireDefault(_midimessage_event);
+
+var _midiconnection_event = require('./midiconnection_event');
+
+var _midiconnection_event2 = _interopRequireDefault(_midiconnection_event);
+
+var _midi_access = require('./midi_access');
+
+var _util = require('../util/util');
+
+var _store = require('../util/store');
+
+var _store2 = _interopRequireDefault(_store);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var midiProc = void 0;
+var nodejs = (0, _util.getDevice)().nodejs;
+
+var MIDIInput = function () {
+    function MIDIInput(info, instance) {
+        _classCallCheck(this, MIDIInput);
+
+        this.id = (0, _midi_access.getMIDIDeviceId)(info[0], 'input');
+        this.name = info[0];
+        this.manufacturer = info[1];
+        this.version = info[2];
+        this.type = 'input';
+        this.state = 'connected';
+        this.connection = 'pending';
+
+        this.onstatechange = null;
+        this._onmidimessage = null;
+        // because we need to implicitly open the device when an onmidimessage handler gets added
+        // we define a setter that opens the device if the set value is a function
+        Object.defineProperty(this, 'onmidimessage', {
+            set: function set(value) {
+                this._onmidimessage = value;
+                if (typeof value === 'function') {
+                    this.open();
+                }
+            }
+        });
+
+        this._listeners = new _store2.default().set('midimessage', new _store2.default()).set('statechange', new _store2.default());
+        this._inLongSysexMessage = false;
+        this._sysexBuffer = new Uint8Array();
+
+        this._jazzInstance = instance;
+        this._jazzInstance.inputInUse = true;
+
+        // on Linux opening and closing Jazz instances causes the plugin to crash a lot so we open
+        // the device here and don't close it when close() is called, see below
+        if ((0, _util.getDevice)().platform === 'linux') {
+            this._jazzInstance.MidiInOpen(this.name, midiProc.bind(this));
+        }
+    }
+
+    _createClass(MIDIInput, [{
+        key: 'addEventListener',
+        value: function addEventListener(type, listener) {
+            var listeners = this._listeners.get(type);
+            if (typeof listeners === 'undefined') {
+                return;
+            }
+
+            if (listeners.has(listener) === false) {
+                listeners.add(listener);
+            }
+        }
+    }, {
+        key: 'removeEventListener',
+        value: function removeEventListener(type, listener) {
+            var listeners = this._listeners.get(type);
+            if (typeof listeners === 'undefined') {
+                return;
+            }
+
+            if (listeners.has(listener) === true) {
+                listeners.delete(listener);
+            }
+        }
+    }, {
+        key: 'dispatchEvent',
+        value: function dispatchEvent(evt) {
+            var listeners = this._listeners.get(evt.type);
+            listeners.forEach(function (listener) {
+                listener(evt);
+            });
+
+            if (evt.type === 'midimessage') {
+                if (this._onmidimessage !== null) {
+                    this._onmidimessage(evt);
+                }
+            } else if (evt.type === 'statechange') {
+                if (this.onstatechange !== null) {
+                    this.onstatechange(evt);
+                }
+            }
+        }
+    }, {
+        key: 'open',
+        value: function open() {
+            if (this.connection === 'open') {
+                return;
+            }
+            if ((0, _util.getDevice)().platform !== 'linux') {
+                this._jazzInstance.MidiInOpen(this.name, midiProc.bind(this));
+            }
+            this.connection = 'open';
+            (0, _midi_access.dispatchEvent)(this); // dispatch MIDIConnectionEvent via MIDIAccess
+        }
+    }, {
+        key: 'close',
+        value: function close() {
+            if (this.connection === 'closed') {
+                return;
+            }
+            if ((0, _util.getDevice)().platform !== 'linux') {
+                this._jazzInstance.MidiInClose();
+            }
+            this.connection = 'closed';
+            (0, _midi_access.dispatchEvent)(this); // dispatch MIDIConnectionEvent via MIDIAccess
+            this._onmidimessage = null;
+            this.onstatechange = null;
+            this._listeners.get('midimessage').clear();
+            this._listeners.get('statechange').clear();
+        }
+    }, {
+        key: '_appendToSysexBuffer',
+        value: function _appendToSysexBuffer(data) {
+            var oldLength = this._sysexBuffer.length;
+            var tmpBuffer = new Uint8Array(oldLength + data.length);
+            tmpBuffer.set(this._sysexBuffer);
+            tmpBuffer.set(data, oldLength);
+            this._sysexBuffer = tmpBuffer;
+        }
+    }, {
+        key: '_bufferLongSysex',
+        value: function _bufferLongSysex(data, initialOffset) {
+            var j = initialOffset;
+            while (j < data.length) {
+                if (data[j] == 0xF7) {
+                    // end of sysex!
+                    j += 1;
+                    this._appendToSysexBuffer(data.slice(initialOffset, j));
+                    return j;
+                }
+                j += 1;
+            }
+            // didn't reach the end; just tack it on.
+            this._appendToSysexBuffer(data.slice(initialOffset, j));
+            this._inLongSysexMessage = true;
+            return j;
+        }
+    }]);
+
+    return MIDIInput;
+}();
+
+exports.default = MIDIInput;
+
+
+midiProc = function midiProc(timestamp, data) {
+    var length = 0;
+    var i = void 0;
+    var isSysexMessage = false;
+
+    // Jazz sometimes passes us multiple messages at once, so we need to parse them out and pass them one at a time.
+
+    for (i = 0; i < data.length; i += length) {
+        var isValidMessage = true;
+        if (this._inLongSysexMessage) {
+            i = this._bufferLongSysex(data, i);
+            if (data[i - 1] != 0xf7) {
+                // ran off the end without hitting the end of the sysex message
+                return;
+            }
+            isSysexMessage = true;
+        } else {
+            isSysexMessage = false;
+            switch (data[i] & 0xF0) {
+                case 0x00:
+                    // Chew up spurious 0x00 bytes.  Fixes a Windows problem.
+                    length = 1;
+                    isValidMessage = false;
+                    break;
+
+                case 0x80: // note off
+                case 0x90: // note on
+                case 0xA0: // polyphonic aftertouch
+                case 0xB0: // control change
+                case 0xE0:
+                    // channel mode
+                    length = 3;
+                    break;
+
+                case 0xC0: // program change
+                case 0xD0:
+                    // channel aftertouch
+                    length = 2;
+                    break;
+
+                case 0xF0:
+                    switch (data[i]) {
+                        case 0xf0:
+                            // letiable-length sysex.
+                            i = this._bufferLongSysex(data, i);
+                            if (data[i - 1] != 0xf7) {
+                                // ran off the end without hitting the end of the sysex message
+                                return;
+                            }
+                            isSysexMessage = true;
+                            break;
+
+                        case 0xF1: // MTC quarter frame
+                        case 0xF3:
+                            // song select
+                            length = 2;
+                            break;
+
+                        case 0xF2:
+                            // song position pointer
+                            length = 3;
+                            break;
+
+                        default:
+                            length = 1;
+                            break;
+                    }
+                    break;
+            }
+        }
+        if (!isValidMessage) {
+            continue;
+        }
+
+        var evt = {};
+        evt.receivedTime = parseFloat(timestamp.toString()) + this._jazzInstance._perfTimeZero;
+
+        if (isSysexMessage || this._inLongSysexMessage) {
+            evt.data = new Uint8Array(this._sysexBuffer);
+            this._sysexBuffer = new Uint8Array(0);
+            this._inLongSysexMessage = false;
+        } else {
+            evt.data = new Uint8Array(data.slice(i, length + i));
+        }
+
+        if (nodejs) {
+            if (this._onmidimessage) {
+                this._onmidimessage(evt);
+            }
+        } else {
+            var e = new _midimessage_event2.default(this, evt.data, evt.receivedTime);
+            this.dispatchEvent(e);
+        }
+    }
+};
+
+},{"../util/store":11,"../util/util":12,"./midi_access":5,"./midiconnection_event":8,"./midimessage_event":9}],7:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /*
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       MIDIOutput is a wrapper around an output of a Jazz instance
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     */
+
+
+var _util = require('../util/util');
+
+var _store = require('../util/store');
+
+var _store2 = _interopRequireDefault(_store);
+
+var _midi_access = require('./midi_access');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var MIDIOutput = function () {
+    function MIDIOutput(info, instance) {
+        _classCallCheck(this, MIDIOutput);
+
+        this.id = (0, _midi_access.getMIDIDeviceId)(info[0], 'output');
+        this.name = info[0];
+        this.manufacturer = info[1];
+        this.version = info[2];
+        this.type = 'output';
+        this.state = 'connected';
+        this.connection = 'pending';
+        this.onmidimessage = null;
+        this.onstatechange = null;
+
+        this._listeners = new _store2.default();
+        this._inLongSysexMessage = false;
+        this._sysexBuffer = new Uint8Array();
+
+        this._jazzInstance = instance;
+        this._jazzInstance.outputInUse = true;
+        if ((0, _util.getDevice)().platform === 'linux') {
+            this._jazzInstance.MidiOutOpen(this.name);
+        }
+    }
+
+    _createClass(MIDIOutput, [{
+        key: 'open',
+        value: function open() {
+            if (this.connection === 'open') {
+                return;
+            }
+            if ((0, _util.getDevice)().platform !== 'linux') {
+                this._jazzInstance.MidiOutOpen(this.name);
+            }
+            this.connection = 'open';
+            (0, _midi_access.dispatchEvent)(this); // dispatch MIDIConnectionEvent via MIDIAccess
+        }
+    }, {
+        key: 'close',
+        value: function close() {
+            if (this.connection === 'closed') {
+                return;
+            }
+            if ((0, _util.getDevice)().platform !== 'linux') {
+                this._jazzInstance.MidiOutClose();
+            }
+            this.connection = 'closed';
+            (0, _midi_access.dispatchEvent)(this); // dispatch MIDIConnectionEvent via MIDIAccess
+            this.onstatechange = null;
+            this._listeners.clear();
+        }
+    }, {
+        key: 'send',
+        value: function send(data, timestamp) {
+            var _this = this;
+
+            var delayBeforeSend = 0;
+
+            if (data.length === 0) {
+                return false;
+            }
+
+            if (timestamp) {
+                delayBeforeSend = Math.floor(timestamp - performance.now());
+            }
+
+            if (timestamp && delayBeforeSend > 1) {
+                setTimeout(function () {
+                    _this._jazzInstance.MidiOutLong(data);
+                }, delayBeforeSend);
+            } else {
+                this._jazzInstance.MidiOutLong(data);
+            }
+            return true;
+        }
+    }, {
+        key: 'clear',
+        value: function clear() {
+            // to be implemented
+        }
+    }, {
+        key: 'addEventListener',
+        value: function addEventListener(type, listener) {
+            if (type !== 'statechange') {
+                return;
+            }
+
+            if (this._listeners.has(listener) === false) {
+                this._listeners.add(listener);
+            }
+        }
+    }, {
+        key: 'removeEventListener',
+        value: function removeEventListener(type, listener) {
+            if (type !== 'statechange') {
+                return;
+            }
+
+            if (this._listeners.has(listener) === true) {
+                this._listeners.delete(listener);
+            }
+        }
+    }, {
+        key: 'dispatchEvent',
+        value: function dispatchEvent(evt) {
+            this._listeners.forEach(function (listener) {
+                listener(evt);
+            });
+
+            if (this.onstatechange !== null) {
+                this.onstatechange(evt);
+            }
+        }
+    }]);
+
+    return MIDIOutput;
+}();
+
+exports.default = MIDIOutput;
+
+},{"../util/store":11,"../util/util":12,"./midi_access":5}],8:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var MIDIConnectionEvent = function MIDIConnectionEvent(midiAccess, port) {
+    _classCallCheck(this, MIDIConnectionEvent);
+
+    this.bubbles = false;
+    this.cancelBubble = false;
+    this.cancelable = false;
+    this.currentTarget = midiAccess;
+    this.defaultPrevented = false;
+    this.eventPhase = 0;
+    this.path = [];
+    this.port = port;
+    this.returnValue = true;
+    this.srcElement = midiAccess;
+    this.target = midiAccess;
+    this.timeStamp = Date.now();
+    this.type = 'statechange';
+};
+
+exports.default = MIDIConnectionEvent;
+
+},{}],9:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var MIDIMessageEvent = function MIDIMessageEvent(port, data, receivedTime) {
+    _classCallCheck(this, MIDIMessageEvent);
+
+    this.bubbles = false;
+    this.cancelBubble = false;
+    this.cancelable = false;
+    this.currentTarget = port;
+    this.data = data;
+    this.defaultPrevented = false;
+    this.eventPhase = 0;
+    this.path = [];
+    this.receivedTime = receivedTime;
+    this.returnValue = true;
+    this.srcElement = port;
+    this.target = port;
+    this.timeStamp = Date.now();
+    this.type = 'midimessage';
+};
+
+exports.default = MIDIMessageEvent;
+
+},{}],10:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
 });
 exports.createJazzInstance = createJazzInstance;
 exports.getJazzInstance = getJazzInstance;
 
+var _store = require('./store');
+
+var _store2 = _interopRequireDefault(_store);
+
 var _util = require('./util');
 
-var jazzPluginInitTime = 100; // milliseconds
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* eslint no-underscore-dangle: 0 */
 
 /*
   Creates instances of the Jazz plugin if necessary. Initially the MIDIAccess creates one main Jazz instance that is used
@@ -409,1034 +1267,354 @@ var jazzPluginInitTime = 100; // milliseconds
   will be reused if a new device gets connected.
 */
 
+var jazzPluginInitTime = (0, _util.getDevice)().browser === 'firefox' ? 200 : 100; // 200 ms timeout for Firefox v.55
+
 var jazzInstanceNumber = 0;
-var jazzInstances = new Map();
+var jazzInstances = new _store2.default();
 
 function createJazzInstance(callback) {
+    var id = 'jazz_' + jazzInstanceNumber + '_' + Date.now();
+    jazzInstanceNumber += 1;
+    var objRef = void 0;
+    var activeX = void 0;
 
-  var id = 'jazz_' + jazzInstanceNumber++ + '' + Date.now();
-  var instance = void 0;
-  var objRef = void 0,
-      activeX = void 0;
+    if ((0, _util.getDevice)().nodejs === true) {
+        // jazzMidi is added to the global variable navigator in the node environment
+        objRef = new navigator.jazzMidi.MIDI();
+    } else {
+        /*
+            generate this html:
+             <object id="Jazz1" classid="CLSID:1ACE1618-1C7D-4561-AEE1-34842AA85E90" class="hidden">
+                <object id="Jazz2" type="audio/x-jazz" class="hidden">
+                    <p style="visibility:visible;">This page requires <a href=http://jazz-soft.net>Jazz-Plugin</a> ...</p>
+                </object>
+            </object>
+        */
 
-  if ((0, _util.getDevice)().nodejs === true) {
-    objRef = new jazzMidi.MIDI();
-  } else {
-    var o1 = document.createElement('object');
-    o1.id = id + 'ie';
-    o1.classid = 'CLSID:1ACE1618-1C7D-4561-AEE1-34842AA85E90';
-    activeX = o1;
+        activeX = document.createElement('object');
+        activeX.id = id + 'ie';
+        activeX.classid = 'CLSID:1ACE1618-1C7D-4561-AEE1-34842AA85E90';
 
-    var o2 = document.createElement('object');
-    o2.id = id;
-    o2.type = 'audio/x-jazz';
-    o1.appendChild(o2);
-    objRef = o2;
+        objRef = document.createElement('object');
+        objRef.id = id;
+        objRef.type = 'audio/x-jazz';
 
-    var e = document.createElement('p');
-    e.appendChild(document.createTextNode('This page requires the '));
+        activeX.appendChild(objRef);
 
-    var a = document.createElement('a');
-    a.appendChild(document.createTextNode('Jazz plugin'));
-    a.href = 'http://jazz-soft.net/';
+        var p = document.createElement('p');
+        p.appendChild(document.createTextNode('This page requires the '));
 
-    e.appendChild(a);
-    e.appendChild(document.createTextNode('.'));
-    o2.appendChild(e);
+        var a = document.createElement('a');
+        a.appendChild(document.createTextNode('Jazz plugin'));
+        a.href = 'http://jazz-soft.net/';
 
-    var insertionPoint = document.getElementById('MIDIPlugin');
-    if (!insertionPoint) {
-      // Create hidden element
-      insertionPoint = document.createElement('div');
-      insertionPoint.id = 'MIDIPlugin';
-      insertionPoint.style.position = 'absolute';
-      insertionPoint.style.visibility = 'hidden';
-      insertionPoint.style.left = '-9999px';
-      insertionPoint.style.top = '-9999px';
-      document.body.appendChild(insertionPoint);
+        p.appendChild(a);
+        p.appendChild(document.createTextNode('.'));
+
+        objRef.appendChild(p);
+
+        var insertionPoint = document.getElementById('MIDIPlugin');
+        if (!insertionPoint) {
+            // Create hidden element
+            insertionPoint = document.createElement('div');
+            insertionPoint.id = 'MIDIPlugin';
+            insertionPoint.style.position = 'absolute';
+            insertionPoint.style.visibility = 'hidden';
+            insertionPoint.style.left = '-9999px';
+            insertionPoint.style.top = '-9999px';
+            document.body.appendChild(insertionPoint);
+        }
+        insertionPoint.appendChild(activeX);
     }
-    insertionPoint.appendChild(o1);
-  }
 
-  setTimeout(function () {
-    if (objRef.isJazz === true) {
-      instance = objRef;
-    } else if (activeX.isJazz === true) {
-      instance = activeX;
-    }
-    if (typeof instance !== 'undefined') {
-      instance._perfTimeZero = performance.now();
-      jazzInstances.set(id, instance);
-    }
-    callback(instance);
-  }, jazzPluginInitTime);
+    setTimeout(function () {
+        var instance = null;
+        if (objRef.isJazz === true) {
+            instance = objRef;
+        } else if (activeX.isJazz === true) {
+            instance = activeX;
+        }
+        if (instance !== null) {
+            instance._perfTimeZero = performance.now();
+            jazzInstances.set(jazzInstanceNumber, instance);
+        }
+        callback(instance);
+    }, jazzPluginInitTime);
 }
 
 function getJazzInstance(type, callback) {
-  var instance = null;
-  var key = type === 'input' ? 'inputInUse' : 'outputInUse';
+    var key = type === 'input' ? 'inputInUse' : 'outputInUse';
+    var instance = null;
 
-  var _iteratorNormalCompletion = true;
-  var _didIteratorError = false;
-  var _iteratorError = undefined;
-
-  try {
-    for (var _iterator = jazzInstances.values()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-      var inst = _step.value;
-
-      if (inst[key] !== true) {
-        instance = inst;
-        break;
-      }
+    var values = jazzInstances.values();
+    for (var i = 0; i < values.length; i += 1) {
+        var inst = values[i];
+        if (inst[key] !== true) {
+            instance = inst;
+            break;
+        }
     }
-  } catch (err) {
-    _didIteratorError = true;
-    _iteratorError = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion && _iterator.return) {
-        _iterator.return();
-      }
-    } finally {
-      if (_didIteratorError) {
-        throw _iteratorError;
-      }
-    }
-  }
 
-  if (instance === null) {
-    createJazzInstance(callback);
-  } else {
-    callback(instance);
-  }
+    if (instance === null) {
+        createJazzInstance(callback);
+    } else {
+        callback(instance);
+    }
 }
-},{"./util":11}],5:[function(require,module,exports){
-'use strict';
+
+},{"./store":11,"./util":12}],11:[function(require,module,exports){
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
-  value: true
+    value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /*
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Creates a MIDIAccess instance:
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       - Creates MIDIInput and MIDIOutput instances for the initially connected MIDI devices.
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       - Keeps track of newly connected devices and creates the necessary instances of MIDIInput and MIDIOutput.
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       - Keeps track of disconnected devices and removes them from the inputs and/or outputs map.
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       - Creates a unique id for every device and stores these ids by the name of the device:
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         so when a device gets disconnected and reconnected again, it will still have the same id. This
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         is in line with the behaviour of the native MIDIAccess object.
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     */
-
-exports.createMIDIAccess = createMIDIAccess;
-exports.dispatchEvent = dispatchEvent;
-exports.closeAllMIDIInputs = closeAllMIDIInputs;
-exports.getMIDIDeviceId = getMIDIDeviceId;
-
-var _jazz_instance = require('./jazz_instance');
-
-var _midi_input = require('./midi_input');
-
-var _midi_output = require('./midi_output');
-
-var _midiconnection_event = require('./midiconnection_event');
-
-var _util = require('./util');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var midiAccess = void 0;
-var jazzInstance = void 0;
-var midiInputs = new Map();
-var midiOutputs = new Map();
-var midiInputIds = new Map();
-var midiOutputIds = new Map();
-var listeners = new Set();
+// es5 implementation of both Map and Set
 
-var MIDIAccess = function () {
-  function MIDIAccess(inputs, outputs) {
-    _classCallCheck(this, MIDIAccess);
+var idIndex = 0;
 
-    this.sysexEnabled = true;
-    this.inputs = inputs;
-    this.outputs = outputs;
-  }
+var Store = function () {
+    function Store() {
+        _classCallCheck(this, Store);
 
-  _createClass(MIDIAccess, [{
-    key: 'addEventListener',
-    value: function addEventListener(type, listener, useCapture) {
-      if (type !== 'statechange') {
-        return;
-      }
-      if (listeners.has(listener) === false) {
-        listeners.add(listener);
-      }
+        this.store = {};
+        this.keys = [];
     }
-  }, {
-    key: 'removeEventListener',
-    value: function removeEventListener(type, listener, useCapture) {
-      if (type !== 'statechange') {
-        return;
-      }
-      if (listeners.has(listener) === true) {
-        listeners.delete(listener);
-      }
-    }
-  }]);
 
-  return MIDIAccess;
+    _createClass(Store, [{
+        key: "add",
+        value: function add(obj) {
+            var id = "" + new Date().getTime() + idIndex;
+            idIndex += 1;
+            this.keys.push(id);
+            this.store[id] = obj;
+        }
+    }, {
+        key: "set",
+        value: function set(id, obj) {
+            this.keys.push(id);
+            this.store[id] = obj;
+            return this;
+        }
+    }, {
+        key: "get",
+        value: function get(id) {
+            return this.store[id];
+        }
+    }, {
+        key: "has",
+        value: function has(id) {
+            return this.keys.indexOf(id) !== -1;
+        }
+    }, {
+        key: "delete",
+        value: function _delete(id) {
+            delete this.store[id];
+            var index = this.keys.indexOf(id);
+            if (index > -1) {
+                this.keys.splice(index, 1);
+            }
+            return this;
+        }
+    }, {
+        key: "values",
+        value: function values() {
+            var elements = [];
+            var l = this.keys.length;
+            for (var i = 0; i < l; i += 1) {
+                var element = this.store[this.keys[i]];
+                elements.push(element);
+            }
+            return elements;
+        }
+    }, {
+        key: "forEach",
+        value: function forEach(cb) {
+            var l = this.keys.length;
+            for (var i = 0; i < l; i += 1) {
+                var element = this.store[this.keys[i]];
+                cb(element);
+            }
+        }
+    }, {
+        key: "clear",
+        value: function clear() {
+            this.keys = [];
+            this.store = {};
+        }
+    }]);
+
+    return Store;
 }();
 
-function createMIDIAccess() {
+exports.default = Store;
 
-  return new Promise(function executor(resolve, reject) {
-
-    if (typeof midiAccess !== 'undefined') {
-      resolve(midiAccess);
-      return;
-    }
-
-    if ((0, _util.getDevice)().browser === 'ie9') {
-      reject({ message: 'WebMIDIAPIShim supports Internet Explorer 10 and above.' });
-      return;
-    }
-
-    (0, _jazz_instance.createJazzInstance)(function (instance) {
-      if (typeof instance === 'undefined') {
-        reject({ message: 'No access to MIDI devices: browser does not support the WebMIDI API and the Jazz plugin is not installed.' });
-        return;
-      }
-
-      jazzInstance = instance;
-
-      createMIDIPorts(function () {
-        setupListeners();
-        midiAccess = new MIDIAccess(midiInputs, midiOutputs);
-        resolve(midiAccess);
-      });
-    });
-  });
-}
-
-// create MIDIInput and MIDIOutput instances for all initially connected MIDI devices
-function createMIDIPorts(callback) {
-  var inputs = jazzInstance.MidiInList();
-  var outputs = jazzInstance.MidiOutList();
-  var numInputs = inputs.length;
-  var numOutputs = outputs.length;
-
-  loopCreateMIDIPort(0, numInputs, 'input', inputs, function () {
-    loopCreateMIDIPort(0, numOutputs, 'output', outputs, callback);
-  });
-}
-
-function loopCreateMIDIPort(index, max, type, list, callback) {
-  if (index < max) {
-    var name = list[index++];
-    createMIDIPort(type, name, function () {
-      loopCreateMIDIPort(index, max, type, list, callback);
-    });
-  } else {
-    callback();
-  }
-}
-
-function createMIDIPort(type, name, callback) {
-  (0, _jazz_instance.getJazzInstance)(type, function (instance) {
-    var port = void 0;
-    var info = [name, '', ''];
-    if (type === 'input') {
-      if (instance.Support('MidiInInfo')) {
-        info = instance.MidiInInfo(name);
-      }
-      port = new _midi_input.MIDIInput(info, instance);
-      midiInputs.set(port.id, port);
-    } else if (type === 'output') {
-      if (instance.Support('MidiOutInfo')) {
-        info = instance.MidiOutInfo(name);
-      }
-      port = new _midi_output.MIDIOutput(info, instance);
-      midiOutputs.set(port.id, port);
-    }
-    callback(port);
-  });
-}
-
-// lookup function: Jazz gives us the name of the connected/disconnected MIDI devices but we have stored them by id
-function getPortByName(ports, name) {
-  var port = void 0;
-  var _iteratorNormalCompletion = true;
-  var _didIteratorError = false;
-  var _iteratorError = undefined;
-
-  try {
-    for (var _iterator = ports.values()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-      port = _step.value;
-
-      if (port.name === name) {
-        break;
-      }
-    }
-  } catch (err) {
-    _didIteratorError = true;
-    _iteratorError = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion && _iterator.return) {
-        _iterator.return();
-      }
-    } finally {
-      if (_didIteratorError) {
-        throw _iteratorError;
-      }
-    }
-  }
-
-  return port;
-}
-
-// keep track of connected/disconnected MIDI devices
-function setupListeners() {
-  jazzInstance.OnDisconnectMidiIn(function (name) {
-    var port = getPortByName(midiInputs, name);
-    if (typeof port !== 'undefined') {
-      port.state = 'disconnected';
-      port.close();
-      port._jazzInstance.inputInUse = false;
-      midiInputs.delete(port.id);
-      dispatchEvent(port);
-    }
-  });
-
-  jazzInstance.OnDisconnectMidiOut(function (name) {
-    var port = getPortByName(midiOutputs, name);
-    if (typeof port !== 'undefined') {
-      port.state = 'disconnected';
-      port.close();
-      port._jazzInstance.outputInUse = false;
-      midiOutputs.delete(port.id);
-      dispatchEvent(port);
-    }
-  });
-
-  jazzInstance.OnConnectMidiIn(function (name) {
-    createMIDIPort('input', name, function (port) {
-      dispatchEvent(port);
-    });
-  });
-
-  jazzInstance.OnConnectMidiOut(function (name) {
-    createMIDIPort('output', name, function (port) {
-      dispatchEvent(port);
-    });
-  });
-}
-
-// when a device gets connected/disconnected both the port and MIDIAccess dispatch a MIDIConnectionEvent
-// therefor we call the ports dispatchEvent function here as well
-function dispatchEvent(port) {
-  port.dispatchEvent(new _midiconnection_event.MIDIConnectionEvent(port, port));
-
-  var evt = new _midiconnection_event.MIDIConnectionEvent(midiAccess, port);
-
-  if (typeof midiAccess.onstatechange === 'function') {
-    midiAccess.onstatechange(evt);
-  }
-  var _iteratorNormalCompletion2 = true;
-  var _didIteratorError2 = false;
-  var _iteratorError2 = undefined;
-
-  try {
-    for (var _iterator2 = listeners[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-      var listener = _step2.value;
-
-      listener(evt);
-    }
-  } catch (err) {
-    _didIteratorError2 = true;
-    _iteratorError2 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion2 && _iterator2.return) {
-        _iterator2.return();
-      }
-    } finally {
-      if (_didIteratorError2) {
-        throw _iteratorError2;
-      }
-    }
-  }
-}
-
-function closeAllMIDIInputs() {
-  midiInputs.forEach(function (input) {
-    //input.close();
-    input._jazzInstance.MidiInClose();
-  });
-}
-
-// check if we have already created a unique id for this device, if so: reuse it, if not: create a new id and store it
-function getMIDIDeviceId(name, type) {
-  var id = void 0;
-  if (type === 'input') {
-    id = midiInputIds.get(name);
-    if (typeof id === 'undefined') {
-      id = (0, _util.generateUUID)();
-      midiInputIds.set(name, id);
-    }
-  } else if (type === 'output') {
-    id = midiOutputIds.get(name);
-    if (typeof id === 'undefined') {
-      id = (0, _util.generateUUID)();
-      midiOutputIds.set(name, id);
-    }
-  }
-  return id;
-}
-},{"./jazz_instance":4,"./midi_input":6,"./midi_output":7,"./midiconnection_event":8,"./util":11}],6:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.MIDIInput = undefined;
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /*
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       MIDIInput is a wrapper around an input of a Jazz instance
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     */
-
-var _util = require('./util');
-
-var _midimessage_event = require('./midimessage_event');
-
-var _midiconnection_event = require('./midiconnection_event');
-
-var _midi_access = require('./midi_access');
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var midiProc = void 0;
-var nodejs = (0, _util.getDevice)().nodejs;
-
-var MIDIInput = exports.MIDIInput = function () {
-  function MIDIInput(info, instance) {
-    _classCallCheck(this, MIDIInput);
-
-    this.id = (0, _midi_access.getMIDIDeviceId)(info[0], 'input');
-    this.name = info[0];
-    this.manufacturer = info[1];
-    this.version = info[2];
-    this.type = 'input';
-    this.state = 'connected';
-    this.connection = 'pending';
-
-    this.onstatechange = null;
-    this._onmidimessage = null;
-    // because we need to implicitly open the device when an onmidimessage handler gets added
-    // we define a setter that opens the device if the set value is a function
-    Object.defineProperty(this, 'onmidimessage', {
-      set: function set(value) {
-        this._onmidimessage = value;
-        if (typeof value === 'function') {
-          this.open();
-        }
-      }
-    });
-
-    this._listeners = new Map().set('midimessage', new Set()).set('statechange', new Set());
-    this._inLongSysexMessage = false;
-    this._sysexBuffer = new Uint8Array();
-
-    this._jazzInstance = instance;
-    this._jazzInstance.inputInUse = true;
-
-    // on Linux opening and closing Jazz instances causes the plugin to crash a lot so we open
-    // the device here and don't close it when close() is called, see below
-    if ((0, _util.getDevice)().platform === 'linux') {
-      this._jazzInstance.MidiInOpen(this.name, midiProc.bind(this));
-    }
-  }
-
-  _createClass(MIDIInput, [{
-    key: 'addEventListener',
-    value: function addEventListener(type, listener, useCapture) {
-      var listeners = this._listeners.get(type);
-      if (typeof listeners === 'undefined') {
-        return;
-      }
-
-      if (listeners.has(listener) === false) {
-        listeners.add(listener);
-      }
-    }
-  }, {
-    key: 'removeEventListener',
-    value: function removeEventListener(type, listener, useCapture) {
-      var listeners = this._listeners.get(type);
-      if (typeof listeners === 'undefined') {
-        return;
-      }
-
-      if (listeners.has(listener) === false) {
-        listeners.delete(listener);
-      }
-    }
-  }, {
-    key: 'dispatchEvent',
-    value: function dispatchEvent(evt) {
-      var listeners = this._listeners.get(evt.type);
-      listeners.forEach(function (listener) {
-        listener(evt);
-      });
-
-      if (evt.type === 'midimessage') {
-        if (this._onmidimessage !== null) {
-          this._onmidimessage(evt);
-        }
-      } else if (evt.type === 'statechange') {
-        if (this.onstatechange !== null) {
-          this.onstatechange(evt);
-        }
-      }
-    }
-  }, {
-    key: 'open',
-    value: function open() {
-      if (this.connection === 'open') {
-        return;
-      }
-      if ((0, _util.getDevice)().platform !== 'linux') {
-        this._jazzInstance.MidiInOpen(this.name, midiProc.bind(this));
-      }
-      this.connection = 'open';
-      (0, _midi_access.dispatchEvent)(this); // dispatch MIDIConnectionEvent via MIDIAccess
-    }
-  }, {
-    key: 'close',
-    value: function close() {
-      if (this.connection === 'closed') {
-        return;
-      }
-      if ((0, _util.getDevice)().platform !== 'linux') {
-        this._jazzInstance.MidiInClose();
-      }
-      this.connection = 'closed';
-      (0, _midi_access.dispatchEvent)(this); // dispatch MIDIConnectionEvent via MIDIAccess
-      this._onmidimessage = null;
-      this.onstatechange = null;
-      this._listeners.get('midimessage').clear();
-      this._listeners.get('statechange').clear();
-    }
-  }, {
-    key: '_appendToSysexBuffer',
-    value: function _appendToSysexBuffer(data) {
-      var oldLength = this._sysexBuffer.length;
-      var tmpBuffer = new Uint8Array(oldLength + data.length);
-      tmpBuffer.set(this._sysexBuffer);
-      tmpBuffer.set(data, oldLength);
-      this._sysexBuffer = tmpBuffer;
-    }
-  }, {
-    key: '_bufferLongSysex',
-    value: function _bufferLongSysex(data, initialOffset) {
-      var j = initialOffset;
-      while (j < data.length) {
-        if (data[j] == 0xF7) {
-          // end of sysex!
-          j++;
-          this._appendToSysexBuffer(data.slice(initialOffset, j));
-          return j;
-        }
-        j++;
-      }
-      // didn't reach the end; just tack it on.
-      this._appendToSysexBuffer(data.slice(initialOffset, j));
-      this._inLongSysexMessage = true;
-      return j;
-    }
-  }]);
-
-  return MIDIInput;
-}();
-
-midiProc = function midiProc(timestamp, data) {
-  var length = 0;
-  var i = void 0;
-  var isSysexMessage = false;
-
-  // Jazz sometimes passes us multiple messages at once, so we need to parse them out and pass them one at a time.
-
-  for (i = 0; i < data.length; i += length) {
-    var isValidMessage = true;
-    if (this._inLongSysexMessage) {
-      i = this._bufferLongSysex(data, i);
-      if (data[i - 1] != 0xf7) {
-        // ran off the end without hitting the end of the sysex message
-        return;
-      }
-      isSysexMessage = true;
-    } else {
-      isSysexMessage = false;
-      switch (data[i] & 0xF0) {
-        case 0x00:
-          // Chew up spurious 0x00 bytes.  Fixes a Windows problem.
-          length = 1;
-          isValidMessage = false;
-          break;
-
-        case 0x80: // note off
-        case 0x90: // note on
-        case 0xA0: // polyphonic aftertouch
-        case 0xB0: // control change
-        case 0xE0:
-          // channel mode
-          length = 3;
-          break;
-
-        case 0xC0: // program change
-        case 0xD0:
-          // channel aftertouch
-          length = 2;
-          break;
-
-        case 0xF0:
-          switch (data[i]) {
-            case 0xf0:
-              // letiable-length sysex.
-              i = this._bufferLongSysex(data, i);
-              if (data[i - 1] != 0xf7) {
-                // ran off the end without hitting the end of the sysex message
-                return;
-              }
-              isSysexMessage = true;
-              break;
-
-            case 0xF1: // MTC quarter frame
-            case 0xF3:
-              // song select
-              length = 2;
-              break;
-
-            case 0xF2:
-              // song position pointer
-              length = 3;
-              break;
-
-            default:
-              length = 1;
-              break;
-          }
-          break;
-      }
-    }
-    if (!isValidMessage) {
-      continue;
-    }
-
-    var evt = {};
-    evt.receivedTime = parseFloat(timestamp.toString()) + this._jazzInstance._perfTimeZero;
-
-    if (isSysexMessage || this._inLongSysexMessage) {
-      evt.data = new Uint8Array(this._sysexBuffer);
-      this._sysexBuffer = new Uint8Array(0);
-      this._inLongSysexMessage = false;
-    } else {
-      evt.data = new Uint8Array(data.slice(i, length + i));
-    }
-
-    if (nodejs) {
-      if (this._onmidimessage) {
-        this._onmidimessage(evt);
-      }
-    } else {
-      var e = new _midimessage_event.MIDIMessageEvent(this, evt.data, evt.receivedTime);
-      this.dispatchEvent(e);
-    }
-  }
-};
-},{"./midi_access":5,"./midiconnection_event":8,"./midimessage_event":9,"./util":11}],7:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.MIDIOutput = undefined;
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /*
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       MIDIOutput is a wrapper around an output of a Jazz instance
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     */
-
-var _util = require('./util');
-
-var _midi_access = require('./midi_access');
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var MIDIOutput = exports.MIDIOutput = function () {
-  function MIDIOutput(info, instance) {
-    _classCallCheck(this, MIDIOutput);
-
-    this.id = (0, _midi_access.getMIDIDeviceId)(info[0], 'output');
-    this.name = info[0];
-    this.manufacturer = info[1];
-    this.version = info[2];
-    this.type = 'output';
-    this.state = 'connected';
-    this.connection = 'pending';
-    this.onmidimessage = null;
-    this.onstatechange = null;
-
-    this._listeners = new Set();
-    this._inLongSysexMessage = false;
-    this._sysexBuffer = new Uint8Array();
-
-    this._jazzInstance = instance;
-    this._jazzInstance.outputInUse = true;
-    if ((0, _util.getDevice)().platform === 'linux') {
-      this._jazzInstance.MidiOutOpen(this.name);
-    }
-  }
-
-  _createClass(MIDIOutput, [{
-    key: 'open',
-    value: function open() {
-      if (this.connection === 'open') {
-        return;
-      }
-      if ((0, _util.getDevice)().platform !== 'linux') {
-        this._jazzInstance.MidiOutOpen(this.name);
-      }
-      this.connection = 'open';
-      (0, _midi_access.dispatchEvent)(this); // dispatch MIDIConnectionEvent via MIDIAccess
-    }
-  }, {
-    key: 'close',
-    value: function close() {
-      if (this.connection === 'closed') {
-        return;
-      }
-      if ((0, _util.getDevice)().platform !== 'linux') {
-        this._jazzInstance.MidiOutClose();
-      }
-      this.connection = 'closed';
-      (0, _midi_access.dispatchEvent)(this); // dispatch MIDIConnectionEvent via MIDIAccess
-      this.onstatechange = null;
-      this._listeners.clear();
-    }
-  }, {
-    key: 'send',
-    value: function send(data, timestamp) {
-      var _this = this;
-
-      var delayBeforeSend = 0;
-
-      if (data.length === 0) {
-        return false;
-      }
-
-      if (timestamp) {
-        delayBeforeSend = Math.floor(timestamp - performance.now());
-      }
-
-      if (timestamp && delayBeforeSend > 1) {
-        setTimeout(function () {
-          _this._jazzInstance.MidiOutLong(data);
-        }, delayBeforeSend);
-      } else {
-        this._jazzInstance.MidiOutLong(data);
-      }
-      return true;
-    }
-  }, {
-    key: 'clear',
-    value: function clear() {
-      // to be implemented
-    }
-  }, {
-    key: 'addEventListener',
-    value: function addEventListener(type, listener, useCapture) {
-      if (type !== 'statechange') {
-        return;
-      }
-
-      if (this._listeners.has(listener) === false) {
-        this._listeners.add(listener);
-      }
-    }
-  }, {
-    key: 'removeEventListener',
-    value: function removeEventListener(type, listener, useCapture) {
-      if (type !== 'statechange') {
-        return;
-      }
-
-      if (this._listeners.has(listener) === false) {
-        this._listeners.delete(listener);
-      }
-    }
-  }, {
-    key: 'dispatchEvent',
-    value: function dispatchEvent(evt) {
-      this._listeners.forEach(function (listener) {
-        listener(evt);
-      });
-
-      if (this.onstatechange !== null) {
-        this.onstatechange(evt);
-      }
-    }
-  }]);
-
-  return MIDIOutput;
-}();
-},{"./midi_access":5,"./util":11}],8:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var MIDIConnectionEvent = exports.MIDIConnectionEvent = function MIDIConnectionEvent(midiAccess, port) {
-  _classCallCheck(this, MIDIConnectionEvent);
-
-  this.bubbles = false;
-  this.cancelBubble = false;
-  this.cancelable = false;
-  this.currentTarget = midiAccess;
-  this.defaultPrevented = false;
-  this.eventPhase = 0;
-  this.path = [];
-  this.port = port;
-  this.returnValue = true;
-  this.srcElement = midiAccess;
-  this.target = midiAccess;
-  this.timeStamp = Date.now();
-  this.type = 'statechange';
-};
-},{}],9:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var MIDIMessageEvent = exports.MIDIMessageEvent = function MIDIMessageEvent(port, data, receivedTime) {
-  _classCallCheck(this, MIDIMessageEvent);
-
-  this.bubbles = false;
-  this.cancelBubble = false;
-  this.cancelable = false;
-  this.currentTarget = port;
-  this.data = data;
-  this.defaultPrevented = false;
-  this.eventPhase = 0;
-  this.path = [];
-  this.receivedTime = receivedTime;
-  this.returnValue = true;
-  this.srcElement = port;
-  this.target = port;
-  this.timeStamp = Date.now();
-  this.type = 'midimessage';
-};
-},{}],10:[function(require,module,exports){
-(function (global){
-'use strict';
-
-var _midi_access = require('./midi_access');
-
-var _midi_input = require('./midi_input');
-
-var _midi_output = require('./midi_output');
-
-var _midimessage_event = require('./midimessage_event');
-
-/*
-  main entry point
-*/
-//import {createMIDIAccess, closeAllMIDIInputs} from './midi_access'
-//import {polyfill, getDevice} from './util'
-
-
-(function initShim() {
-
-  if (typeof navigator.requestMIDIAccess === 'undefined') {
-
-    global.MIDIInput = _midi_input.MIDIInput;
-    global.MIDIOutput = _midi_output.MIDIOutput;
-    global.MIDIMessageEvent = _midimessage_event.MIDIMessageEvent;
-
-    //polyfill()
-
-    navigator.requestMIDIAccess = function () {
-      console.log('webmidiapishim 1.0.1', navigator.requestMIDIAccess);
-      return (0, _midi_access.createMIDIAccess)();
-    };
-    /*
-        if(getDevice().nodejs === true){
-          navigator.close = function(){
-            // Need to close MIDI input ports, otherwise Node.js will wait for MIDI input forever.
-            closeAllMIDIInputs()
-          }
-        }
-    */
-  }
-})();
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./midi_access":5,"./midi_input":6,"./midi_output":7,"./midimessage_event":9}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 (function (process,global){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-  value: true
+    value: true
 });
-exports.generateUUID = generateUUID;
 exports.getDevice = getDevice;
-exports.polyfillPerformance = polyfillPerformance;
-exports.polyfillPromise = polyfillPromise;
+exports.generateUUID = generateUUID;
 exports.polyfill = polyfill;
-/*
-  A collection of handy util methods
-*/
 
-function generateUUID() {
-  var d = new Date().getTime();
-  var uuid = new Array(64).join('x'); //'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
-  uuid = uuid.replace(/[xy]/g, function (c) {
-    var r = (d + Math.random() * 16) % 16 | 0;
-    d = Math.floor(d / 16);
-    return (c == 'x' ? r : r & 0x3 | 0x8).toString(16).toUpperCase();
-  });
-  return uuid;
-}
+var Scope = void 0;
+var device = null;
 
-var device = void 0;
+// check if we are in a browser or in Nodejs
+var getScope = function getScope() {
+    if (typeof Scope !== 'undefined') {
+        return Scope;
+    }
+    Scope = null;
+    if (typeof window !== 'undefined') {
+        Scope = window;
+    } else if (typeof global !== 'undefined') {
+        Scope = global;
+    }
+    // console.log('scope', scope);
+    return Scope;
+};
 
-// check on what type of device we are running, note that in this context a device is a computer not a MIDI device
+// check on what type of device we are running, note that in this context
+// a device is a computer not a MIDI device
 function getDevice() {
+    var scope = getScope();
+    if (device !== null) {
+        return device;
+    }
 
-  if (typeof device !== 'undefined') {
-    return device;
-  }
+    var platform = 'undetected';
+    var browser = 'undetected';
 
-  var platform = 'undetected',
-      browser = 'undetected',
-      nodejs = false;
+    if (scope.navigator.node === true) {
+        device = {
+            platform: process.platform,
+            nodejs: true,
+            mobile: platform === 'ios' || platform === 'android'
+        };
+        return device;
+    }
 
-  if (navigator.nodejs) {
-    platform = process.platform;
+    var ua = scope.navigator.userAgent;
+
+    if (ua.match(/(iPad|iPhone|iPod)/g)) {
+        platform = 'ios';
+    } else if (ua.indexOf('Android') !== -1) {
+        platform = 'android';
+    } else if (ua.indexOf('Linux') !== -1) {
+        platform = 'linux';
+    } else if (ua.indexOf('Macintosh') !== -1) {
+        platform = 'osx';
+    } else if (ua.indexOf('Windows') !== -1) {
+        platform = 'windows';
+    }
+
+    if (ua.indexOf('Chrome') !== -1) {
+        // chrome, chromium and canary
+        browser = 'chrome';
+
+        if (ua.indexOf('OPR') !== -1) {
+            browser = 'opera';
+        } else if (ua.indexOf('Chromium') !== -1) {
+            browser = 'chromium';
+        }
+    } else if (ua.indexOf('Safari') !== -1) {
+        browser = 'safari';
+    } else if (ua.indexOf('Firefox') !== -1) {
+        browser = 'firefox';
+    } else if (ua.indexOf('Trident') !== -1) {
+        browser = 'ie';
+        if (ua.indexOf('MSIE 9') !== -1) {
+            browser = 'ie9';
+        }
+    }
+
+    if (platform === 'ios') {
+        if (ua.indexOf('CriOS') !== -1) {
+            browser = 'chrome';
+        }
+    }
+
     device = {
-      platform: platform,
-      nodejs: true,
-      mobile: platform === 'ios' || platform === 'android'
+        platform: platform,
+        browser: browser,
+        mobile: platform === 'ios' || platform === 'android',
+        nodejs: false
     };
     return device;
-  }
-
-  var ua = navigator.userAgent;
-
-  if (ua.match(/(iPad|iPhone|iPod)/g)) {
-    platform = 'ios';
-  } else if (ua.indexOf('Android') !== -1) {
-    platform = 'android';
-  } else if (ua.indexOf('Linux') !== -1) {
-    platform = 'linux';
-  } else if (ua.indexOf('Macintosh') !== -1) {
-    platform = 'osx';
-  } else if (ua.indexOf('Windows') !== -1) {
-    platform = 'windows';
-  }
-
-  if (ua.indexOf('Chrome') !== -1) {
-    // chrome, chromium and canary
-    browser = 'chrome';
-
-    if (ua.indexOf('OPR') !== -1) {
-      browser = 'opera';
-    } else if (ua.indexOf('Chromium') !== -1) {
-      browser = 'chromium';
-    }
-  } else if (ua.indexOf('Safari') !== -1) {
-    browser = 'safari';
-  } else if (ua.indexOf('Firefox') !== -1) {
-    browser = 'firefox';
-  } else if (ua.indexOf('Trident') !== -1) {
-    browser = 'ie';
-    if (ua.indexOf('MSIE 9') !== -1) {
-      browser = 'ie9';
-    }
-  }
-
-  if (platform === 'ios') {
-    if (ua.indexOf('CriOS') !== -1) {
-      browser = 'chrome';
-    }
-  }
-
-  device = {
-    platform: platform,
-    browser: browser,
-    mobile: platform === 'ios' || platform === 'android',
-    nodejs: false
-  };
-  return device;
 }
 
-function polyfillPerformance() {
-  if (typeof performance === 'undefined') {
-    performance = {};
-  }
-  Date.now = Date.now || function () {
-    return new Date().getTime();
-  };
+// polyfill for window.performance.now()
+var polyfillPerformance = function polyfillPerformance() {
+    var scope = getScope();
+    if (typeof scope.performance === 'undefined') {
+        scope.performance = {};
+    }
+    Date.now = Date.now || function () {
+        return new Date().getTime();
+    };
 
-  if (typeof performance.now === 'undefined') {
-    (function () {
-      var nowOffset = Date.now();
-      if (typeof performance.timing !== 'undefined' && typeof performance.timing.navigationStart !== 'undefined') {
-        nowOffset = performance.timing.navigationStart;
-      }
-      performance.now = function now() {
-        return Date.now() - nowOffset;
-      };
-    })();
-  }
+    if (typeof scope.performance.now === 'undefined') {
+        var nowOffset = Date.now();
+        if (typeof scope.performance.timing !== 'undefined' && typeof scope.performance.timing.navigationStart !== 'undefined') {
+            nowOffset = scope.performance.timing.navigationStart;
+        }
+        scope.performance.now = function now() {
+            return Date.now() - nowOffset;
+        };
+    }
+};
+
+// generates UUID for MIDI devices
+function generateUUID() {
+    var d = new Date().getTime();
+    var uuid = new Array(64).join('x'); // 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+    uuid = uuid.replace(/[xy]/g, function (c) {
+        var r = (d + Math.random() * 16) % 16 | 0;
+        d = Math.floor(d / 16);
+        return (c === 'x' ? r : r & 0x3 | 0x8).toString(16).toUpperCase();
+    });
+    return uuid;
 }
 
 // a very simple implementation of a Promise for Internet Explorer and Nodejs
-function polyfillPromise(scope) {
-  if (typeof scope.Promise !== 'function') {
+var polyfillPromise = function polyfillPromise() {
+    var scope = getScope();
+    if (typeof scope.Promise !== 'function') {
+        scope.Promise = function promise(executor) {
+            this.executor = executor;
+        };
 
-    scope.Promise = function (executor) {
-      this.executor = executor;
-    };
-
-    scope.Promise.prototype.then = function (resolve, reject) {
-      if (typeof resolve !== 'function') {
-        resolve = function resolve() {};
-      }
-      if (typeof reject !== 'function') {
-        reject = function reject() {};
-      }
-      this.executor(resolve, reject);
-    };
-  }
-}
+        scope.Promise.prototype.then = function then(resolve, reject) {
+            if (typeof resolve !== 'function') {
+                resolve = function resolve() {};
+            }
+            if (typeof reject !== 'function') {
+                reject = function reject() {};
+            }
+            this.executor(resolve, reject);
+        };
+    }
+};
 
 function polyfill() {
-  var device = getDevice();
-  if (device.browser === 'ie') {
-    polyfillPromise(window);
-  } else if (device.nodejs === true) {
-    polyfillPromise(global);
-  }
-  polyfillPerformance();
+    var d = getDevice();
+    // console.log(device);
+    if (d.browser === 'ie' || d.nodejs === true) {
+        polyfillPromise();
+    }
+    polyfillPerformance();
 }
+
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":3}],12:[function(require,module,exports){
+},{"_process":3}],13:[function(require,module,exports){
 (function(self) {
   'use strict';
 
@@ -1457,6 +1635,28 @@ function polyfill() {
     })(),
     formData: 'FormData' in self,
     arrayBuffer: 'ArrayBuffer' in self
+  }
+
+  if (support.arrayBuffer) {
+    var viewClasses = [
+      '[object Int8Array]',
+      '[object Uint8Array]',
+      '[object Uint8ClampedArray]',
+      '[object Int16Array]',
+      '[object Uint16Array]',
+      '[object Int32Array]',
+      '[object Uint32Array]',
+      '[object Float32Array]',
+      '[object Float64Array]'
+    ]
+
+    var isDataView = function(obj) {
+      return obj && DataView.prototype.isPrototypeOf(obj)
+    }
+
+    var isArrayBufferView = ArrayBuffer.isView || function(obj) {
+      return obj && viewClasses.indexOf(Object.prototype.toString.call(obj)) > -1
+    }
   }
 
   function normalizeName(name) {
@@ -1501,7 +1701,10 @@ function polyfill() {
       headers.forEach(function(value, name) {
         this.append(name, value)
       }, this)
-
+    } else if (Array.isArray(headers)) {
+      headers.forEach(function(header) {
+        this.append(header[0], header[1])
+      }, this)
     } else if (headers) {
       Object.getOwnPropertyNames(headers).forEach(function(name) {
         this.append(name, headers[name])
@@ -1512,12 +1715,8 @@ function polyfill() {
   Headers.prototype.append = function(name, value) {
     name = normalizeName(name)
     value = normalizeValue(value)
-    var list = this.map[name]
-    if (!list) {
-      list = []
-      this.map[name] = list
-    }
-    list.push(value)
+    var oldValue = this.map[name]
+    this.map[name] = oldValue ? oldValue+','+value : value
   }
 
   Headers.prototype['delete'] = function(name) {
@@ -1525,12 +1724,8 @@ function polyfill() {
   }
 
   Headers.prototype.get = function(name) {
-    var values = this.map[normalizeName(name)]
-    return values ? values[0] : null
-  }
-
-  Headers.prototype.getAll = function(name) {
-    return this.map[normalizeName(name)] || []
+    name = normalizeName(name)
+    return this.has(name) ? this.map[name] : null
   }
 
   Headers.prototype.has = function(name) {
@@ -1538,15 +1733,15 @@ function polyfill() {
   }
 
   Headers.prototype.set = function(name, value) {
-    this.map[normalizeName(name)] = [normalizeValue(value)]
+    this.map[normalizeName(name)] = normalizeValue(value)
   }
 
   Headers.prototype.forEach = function(callback, thisArg) {
-    Object.getOwnPropertyNames(this.map).forEach(function(name) {
-      this.map[name].forEach(function(value) {
-        callback.call(thisArg, value, name, this)
-      }, this)
-    }, this)
+    for (var name in this.map) {
+      if (this.map.hasOwnProperty(name)) {
+        callback.call(thisArg, this.map[name], name, this)
+      }
+    }
   }
 
   Headers.prototype.keys = function() {
@@ -1591,14 +1786,36 @@ function polyfill() {
 
   function readBlobAsArrayBuffer(blob) {
     var reader = new FileReader()
+    var promise = fileReaderReady(reader)
     reader.readAsArrayBuffer(blob)
-    return fileReaderReady(reader)
+    return promise
   }
 
   function readBlobAsText(blob) {
     var reader = new FileReader()
+    var promise = fileReaderReady(reader)
     reader.readAsText(blob)
-    return fileReaderReady(reader)
+    return promise
+  }
+
+  function readArrayBufferAsText(buf) {
+    var view = new Uint8Array(buf)
+    var chars = new Array(view.length)
+
+    for (var i = 0; i < view.length; i++) {
+      chars[i] = String.fromCharCode(view[i])
+    }
+    return chars.join('')
+  }
+
+  function bufferClone(buf) {
+    if (buf.slice) {
+      return buf.slice(0)
+    } else {
+      var view = new Uint8Array(buf.byteLength)
+      view.set(new Uint8Array(buf))
+      return view.buffer
+    }
   }
 
   function Body() {
@@ -1606,7 +1823,9 @@ function polyfill() {
 
     this._initBody = function(body) {
       this._bodyInit = body
-      if (typeof body === 'string') {
+      if (!body) {
+        this._bodyText = ''
+      } else if (typeof body === 'string') {
         this._bodyText = body
       } else if (support.blob && Blob.prototype.isPrototypeOf(body)) {
         this._bodyBlob = body
@@ -1614,11 +1833,12 @@ function polyfill() {
         this._bodyFormData = body
       } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
         this._bodyText = body.toString()
-      } else if (!body) {
-        this._bodyText = ''
-      } else if (support.arrayBuffer && ArrayBuffer.prototype.isPrototypeOf(body)) {
-        // Only support ArrayBuffers for POST method.
-        // Receiving ArrayBuffers happens via Blobs, instead.
+      } else if (support.arrayBuffer && support.blob && isDataView(body)) {
+        this._bodyArrayBuffer = bufferClone(body.buffer)
+        // IE 10-11 can't handle a DataView body.
+        this._bodyInit = new Blob([this._bodyArrayBuffer])
+      } else if (support.arrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
+        this._bodyArrayBuffer = bufferClone(body)
       } else {
         throw new Error('unsupported BodyInit type')
       }
@@ -1643,6 +1863,8 @@ function polyfill() {
 
         if (this._bodyBlob) {
           return Promise.resolve(this._bodyBlob)
+        } else if (this._bodyArrayBuffer) {
+          return Promise.resolve(new Blob([this._bodyArrayBuffer]))
         } else if (this._bodyFormData) {
           throw new Error('could not read FormData body as blob')
         } else {
@@ -1651,27 +1873,28 @@ function polyfill() {
       }
 
       this.arrayBuffer = function() {
-        return this.blob().then(readBlobAsArrayBuffer)
-      }
-
-      this.text = function() {
-        var rejected = consumed(this)
-        if (rejected) {
-          return rejected
-        }
-
-        if (this._bodyBlob) {
-          return readBlobAsText(this._bodyBlob)
-        } else if (this._bodyFormData) {
-          throw new Error('could not read FormData body as text')
+        if (this._bodyArrayBuffer) {
+          return consumed(this) || Promise.resolve(this._bodyArrayBuffer)
         } else {
-          return Promise.resolve(this._bodyText)
+          return this.blob().then(readBlobAsArrayBuffer)
         }
       }
-    } else {
-      this.text = function() {
-        var rejected = consumed(this)
-        return rejected ? rejected : Promise.resolve(this._bodyText)
+    }
+
+    this.text = function() {
+      var rejected = consumed(this)
+      if (rejected) {
+        return rejected
+      }
+
+      if (this._bodyBlob) {
+        return readBlobAsText(this._bodyBlob)
+      } else if (this._bodyArrayBuffer) {
+        return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer))
+      } else if (this._bodyFormData) {
+        throw new Error('could not read FormData body as text')
+      } else {
+        return Promise.resolve(this._bodyText)
       }
     }
 
@@ -1699,7 +1922,8 @@ function polyfill() {
   function Request(input, options) {
     options = options || {}
     var body = options.body
-    if (Request.prototype.isPrototypeOf(input)) {
+
+    if (input instanceof Request) {
       if (input.bodyUsed) {
         throw new TypeError('Already read')
       }
@@ -1710,12 +1934,12 @@ function polyfill() {
       }
       this.method = input.method
       this.mode = input.mode
-      if (!body) {
+      if (!body && input._bodyInit != null) {
         body = input._bodyInit
         input.bodyUsed = true
       }
     } else {
-      this.url = input
+      this.url = String(input)
     }
 
     this.credentials = options.credentials || this.credentials || 'omit'
@@ -1733,7 +1957,7 @@ function polyfill() {
   }
 
   Request.prototype.clone = function() {
-    return new Request(this)
+    return new Request(this, { body: this._bodyInit })
   }
 
   function decode(body) {
@@ -1749,16 +1973,17 @@ function polyfill() {
     return form
   }
 
-  function headers(xhr) {
-    var head = new Headers()
-    var pairs = (xhr.getAllResponseHeaders() || '').trim().split('\n')
-    pairs.forEach(function(header) {
-      var split = header.trim().split(':')
-      var key = split.shift().trim()
-      var value = split.join(':').trim()
-      head.append(key, value)
+  function parseHeaders(rawHeaders) {
+    var headers = new Headers()
+    rawHeaders.split(/\r?\n/).forEach(function(line) {
+      var parts = line.split(':')
+      var key = parts.shift().trim()
+      if (key) {
+        var value = parts.join(':').trim()
+        headers.append(key, value)
+      }
     })
-    return head
+    return headers
   }
 
   Body.call(Request.prototype)
@@ -1769,10 +1994,10 @@ function polyfill() {
     }
 
     this.type = 'default'
-    this.status = options.status
+    this.status = 'status' in options ? options.status : 200
     this.ok = this.status >= 200 && this.status < 300
-    this.statusText = options.statusText
-    this.headers = options.headers instanceof Headers ? options.headers : new Headers(options.headers)
+    this.statusText = 'statusText' in options ? options.statusText : 'OK'
+    this.headers = new Headers(options.headers)
     this.url = options.url || ''
     this._initBody(bodyInit)
   }
@@ -1810,35 +2035,16 @@ function polyfill() {
 
   self.fetch = function(input, init) {
     return new Promise(function(resolve, reject) {
-      var request
-      if (Request.prototype.isPrototypeOf(input) && !init) {
-        request = input
-      } else {
-        request = new Request(input, init)
-      }
-
+      var request = new Request(input, init)
       var xhr = new XMLHttpRequest()
-
-      function responseURL() {
-        if ('responseURL' in xhr) {
-          return xhr.responseURL
-        }
-
-        // Avoid security warnings on getResponseHeader when not allowed by CORS
-        if (/^X-Request-URL:/m.test(xhr.getAllResponseHeaders())) {
-          return xhr.getResponseHeader('X-Request-URL')
-        }
-
-        return
-      }
 
       xhr.onload = function() {
         var options = {
           status: xhr.status,
           statusText: xhr.statusText,
-          headers: headers(xhr),
-          url: responseURL()
+          headers: parseHeaders(xhr.getAllResponseHeaders() || '')
         }
+        options.url = 'responseURL' in xhr ? xhr.responseURL : options.headers.get('X-Request-URL')
         var body = 'response' in xhr ? xhr.response : xhr.responseText
         resolve(new Response(body, options))
       }
@@ -1871,7 +2077,7 @@ function polyfill() {
   self.fetch.polyfill = true
 })(typeof self !== 'undefined' ? self : this);
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_audio'], factory);
@@ -1969,7 +2175,7 @@ function polyfill() {
   }();
 });
 
-},{"./init_audio":20}],14:[function(require,module,exports){
+},{"./init_audio":21}],15:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -2019,7 +2225,7 @@ function polyfill() {
   exports.MIDIEventTypes = MIDIEventTypes;
 });
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_audio', './parse_audio', './channel_fx'], factory);
@@ -2094,7 +2300,7 @@ function polyfill() {
     function ConvolutionReverb(buffer) {
       _classCallCheck(this, ConvolutionReverb);
 
-      var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ConvolutionReverb).call(this));
+      var _this = _possibleConstructorReturn(this, (ConvolutionReverb.__proto__ || Object.getPrototypeOf(ConvolutionReverb)).call(this));
 
       _this._nodeFX = _init_audio.context.createConvolver();
       _this.init();
@@ -2137,7 +2343,7 @@ function polyfill() {
   }(_channel_fx.ChannelEffect);
 });
 
-},{"./channel_fx":13,"./init_audio":20,"./parse_audio":29}],16:[function(require,module,exports){
+},{"./channel_fx":14,"./init_audio":21,"./parse_audio":30}],17:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_audio', './channel_fx'], factory);
@@ -2210,11 +2416,11 @@ function polyfill() {
     _inherits(Delay, _ChannelEffect);
 
     function Delay() {
-      var config = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+      var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       _classCallCheck(this, Delay);
 
-      var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Delay).call(this));
+      var _this = _possibleConstructorReturn(this, (Delay.__proto__ || Object.getPrototypeOf(Delay)).call(this));
 
       _this._nodeFX = _init_audio.context.createDelay();
 
@@ -2266,7 +2472,7 @@ function polyfill() {
   }(_channel_fx.ChannelEffect);
 });
 
-},{"./channel_fx":13,"./init_audio":20}],17:[function(require,module,exports){
+},{"./channel_fx":14,"./init_audio":21}],18:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -2433,10 +2639,9 @@ function polyfill() {
 
       try {
         for (var _iterator3 = map.entries()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-          var _step3$value = _slicedToArray(_step3.value, 2);
-
-          var key = _step3$value[0];
-          var value = _step3$value[1];
+          var _step3$value = _slicedToArray(_step3.value, 2),
+              key = _step3$value[0],
+              value = _step3$value[1];
 
           console.log(key, value);
           if (value === id) {
@@ -2471,7 +2676,7 @@ function polyfill() {
   }
 });
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(["exports"], factory);
@@ -2539,7 +2744,7 @@ function polyfill() {
   }
 });
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './qambi', './song', './sampler', './init_audio', './init_midi', './settings'], factory);
@@ -2606,7 +2811,7 @@ function polyfill() {
   }
 
   function init() {
-    var settings = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+    var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
 
     // load settings.instruments (array or object)
@@ -2740,7 +2945,7 @@ function polyfill() {
   }
 });
 
-},{"./init_audio":20,"./init_midi":21,"./qambi":34,"./sampler":38,"./settings":42,"./song":44}],20:[function(require,module,exports){
+},{"./init_audio":21,"./init_midi":22,"./qambi":35,"./sampler":39,"./settings":43,"./song":45}],21:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './samples', './parse_audio'], factory);
@@ -2774,7 +2979,7 @@ function polyfill() {
   var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
     return typeof obj;
   } : function (obj) {
-    return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
   };
 
   var data = void 0;
@@ -2821,9 +3026,7 @@ function polyfill() {
     // set up the elementary audio nodes
     exports.masterCompressor = compressor = context.createDynamicsCompressor();
     compressor.connect(context.destination);
-    exports.
-    //console.log('already done')
-    masterGain = masterGain = context.createGain();
+    exports.masterGain = masterGain = context.createGain();
     masterGain.connect(context.destination);
     masterGain.gain.value = 0.5;
     initialized = true;
@@ -2848,13 +3051,13 @@ function polyfill() {
   }
 
   var _setMasterVolume = function setMasterVolume() {
-    var value = arguments.length <= 0 || arguments[0] === undefined ? 0.5 : arguments[0];
+    var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0.5;
 
     if (initialized === false) {
       console.warn('please call qambi.init() first');
     } else {
       exports.setMasterVolume = _setMasterVolume = function setMasterVolume() {
-        var value = arguments.length <= 0 || arguments[0] === undefined ? 0.5 : arguments[0];
+        var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0.5;
 
         if (value > 1) {
           console.info('maximal volume is 1.0, volume is set to 1.0');
@@ -2956,7 +3159,9 @@ function polyfill() {
     }
     src.start(0);
     src.stop(0.001);
-    exports.unlockWebAudio = _unlockWebAudio = function unlockWebAudio() {};
+    exports.unlockWebAudio = _unlockWebAudio = function unlockWebAudio() {
+      //console.log('already done')
+    };
   };
 
   exports.masterGain = masterGain;
@@ -2969,17 +3174,17 @@ function polyfill() {
   exports.configureMasterCompressor = _configureMasterCompressor;
 });
 
-},{"./parse_audio":29,"./samples":39}],21:[function(require,module,exports){
+},{"./parse_audio":30,"./samples":40}],22:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './util', 'webmidiapishim'], factory);
+    define(['exports', './util', 'web-midi-api-shim'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./util'), require('webmidiapishim'));
+    factory(exports, require('./util'), require('web-midi-api-shim'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.util, global.webmidiapishim);
+    factory(mod.exports, global.util, global.webMidiApiShim);
     global.init_midi = mod.exports;
   }
 })(this, function (exports, _util) {
@@ -3135,9 +3340,9 @@ function polyfill() {
         });
         // browsers without WebMIDI API
       } else {
-          initialized = true;
-          resolve({ midi: midi });
-        }
+        initialized = true;
+        resolve({ midi: midi });
+      }
     });
   }
 
@@ -3471,10 +3676,11 @@ function polyfill() {
   }
 
   */
+
   exports.getMIDIInputById = _getMIDIInputById;
 });
 
-},{"./util":48,"webmidiapishim":10}],22:[function(require,module,exports){
+},{"./util":49,"web-midi-api-shim":4}],23:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_audio', './eventlistener'], factory);
@@ -3580,72 +3786,72 @@ function polyfill() {
           //console.log('scheduling', event.id, event.midiNoteId)
           //console.log('start', event.midiNoteId)
         } else if (event.type === 128) {
-            //console.log(128, ':', time, context.currentTime, event.millis)
-            sample = this.scheduledSamples.get(event.midiNoteId);
-            if (typeof sample === 'undefined') {
-              //console.info('sample not found for event', event.id, ' midiNote', event.midiNoteId, event)
-              return;
-            }
+          //console.log(128, ':', time, context.currentTime, event.millis)
+          sample = this.scheduledSamples.get(event.midiNoteId);
+          if (typeof sample === 'undefined') {
+            //console.info('sample not found for event', event.id, ' midiNote', event.midiNoteId, event)
+            return;
+          }
 
-            // we don't want that the sustain pedal prevents the an event to unscheduled
-            if (this.sustainPedalDown === true) {
-              //console.log(event.midiNoteId)
-              this.sustainedSamples.push(event.midiNoteId);
-            } else {
-              sample.stop(time, function () {
-                // console.log('stop', time, event.midiNoteId)
-                sample.output.disconnect();
-                _this.scheduledSamples.delete(event.midiNoteId);
+          // we don't want that the sustain pedal prevents the an event to unscheduled
+          if (this.sustainPedalDown === true) {
+            //console.log(event.midiNoteId)
+            this.sustainedSamples.push(event.midiNoteId);
+          } else {
+            sample.stop(time, function () {
+              // console.log('stop', time, event.midiNoteId)
+              sample.output.disconnect();
+              _this.scheduledSamples.delete(event.midiNoteId);
+            });
+            //sample.stop(time)
+          }
+        } else if (event.type === 176) {
+          // sustain pedal
+          if (event.data1 === 64) {
+            if (event.data2 === 127) {
+              this.sustainPedalDown = true;
+              ///*
+              (0, _eventlistener.dispatchEvent)({
+                type: 'sustainpedal',
+                data: 'down'
               });
-              //sample.stop(time)
-            }
-          } else if (event.type === 176) {
-              // sustain pedal
-              if (event.data1 === 64) {
-                if (event.data2 === 127) {
-                  this.sustainPedalDown = true;
-                  ///*
-                  (0, _eventlistener.dispatchEvent)({
-                    type: 'sustainpedal',
-                    data: 'down'
+              //*/
+              //console.log('sustain pedal down')
+            } else if (event.data2 === 0) {
+              this.sustainPedalDown = false;
+              this.sustainedSamples.forEach(function (midiNoteId) {
+                sample = _this.scheduledSamples.get(midiNoteId);
+                if (sample) {
+                  //sample.stop(time)
+                  sample.stop(time, function () {
+                    //console.log('stop', midiNoteId)
+                    sample.output.disconnect();
+                    _this.scheduledSamples.delete(midiNoteId);
                   });
-                  //*/
-                  //console.log('sustain pedal down')
-                } else if (event.data2 === 0) {
-                    this.sustainPedalDown = false;
-                    this.sustainedSamples.forEach(function (midiNoteId) {
-                      sample = _this.scheduledSamples.get(midiNoteId);
-                      if (sample) {
-                        //sample.stop(time)
-                        sample.stop(time, function () {
-                          //console.log('stop', midiNoteId)
-                          sample.output.disconnect();
-                          _this.scheduledSamples.delete(midiNoteId);
-                        });
-                      }
-                    });
-                    //console.log('sustain pedal up', this.sustainedSamples)
-                    this.sustainedSamples = [];
-                    ///*
-                    (0, _eventlistener.dispatchEvent)({
-                      type: 'sustainpedal',
-                      data: 'up'
-                    });
-                    //*/
-                    //this.stopSustain(time);
-                  }
-
-                // panning
-              } else if (event.data1 === 10) {
-                  // panning is *not* exactly timed -> not possible (yet) with WebAudio
-                  //console.log(data2, remap(data2, 0, 127, -1, 1));
-                  //track.setPanning(remap(data2, 0, 127, -1, 1));
-
-                  // volume
-                } else if (event.data1 === 7) {
-                    // to be implemented
-                  }
+                }
+              });
+              //console.log('sustain pedal up', this.sustainedSamples)
+              this.sustainedSamples = [];
+              ///*
+              (0, _eventlistener.dispatchEvent)({
+                type: 'sustainpedal',
+                data: 'up'
+              });
+              //*/
+              //this.stopSustain(time);
             }
+
+            // panning
+          } else if (event.data1 === 10) {
+            // panning is *not* exactly timed -> not possible (yet) with WebAudio
+            //console.log(data2, remap(data2, 0, 127, -1, 1));
+            //track.setPanning(remap(data2, 0, 127, -1, 1));
+
+            // volume
+          } else if (event.data1 === 7) {
+            // to be implemented
+          }
+        }
       }
 
       // mandatory
@@ -3687,7 +3893,7 @@ function polyfill() {
   }();
 });
 
-},{"./eventlistener":17,"./init_audio":20}],23:[function(require,module,exports){
+},{"./eventlistener":18,"./init_audio":21}],24:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './track', './part', './parse_events', './midi_event', './util', './position', './sampler', './init_audio', './constants'], factory);
@@ -3795,7 +4001,7 @@ function polyfill() {
     }, {
       key: 'createEvents',
       value: function createEvents(startBar, endBar) {
-        var id = arguments.length <= 2 || arguments[2] === undefined ? 'init' : arguments[2];
+        var id = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'init';
 
         var i = void 0,
             j = void 0;
@@ -3848,12 +4054,12 @@ function polyfill() {
     }, {
       key: 'getEvents',
       value: function getEvents() {
-        var startBar = arguments.length <= 0 || arguments[0] === undefined ? 1 : arguments[0];
+        var startBar = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
 
         var _part;
 
-        var endBar = arguments.length <= 1 || arguments[1] === undefined ? this.song.bars : arguments[1];
-        var id = arguments.length <= 2 || arguments[2] === undefined ? 'init' : arguments[2];
+        var endBar = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.song.bars;
+        var id = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'init';
 
         this.part.removeEvents(this.part.getEvents());
         this.events = this.createEvents(startBar, endBar, id);
@@ -3904,12 +4110,12 @@ function polyfill() {
     }, {
       key: 'addEvents',
       value: function addEvents() {
-        var startBar = arguments.length <= 0 || arguments[0] === undefined ? 1 : arguments[0];
+        var startBar = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
 
         var _events, _part2;
 
-        var endBar = arguments.length <= 1 || arguments[1] === undefined ? this.song.bars : arguments[1];
-        var id = arguments.length <= 2 || arguments[2] === undefined ? 'add' : arguments[2];
+        var endBar = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.song.bars;
+        var id = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'add';
 
         // console.log(startBar, endBar)
         var events = this.createEvents(startBar, endBar, id);
@@ -4139,7 +4345,7 @@ function polyfill() {
   }();
 });
 
-},{"./constants":14,"./init_audio":20,"./midi_event":24,"./parse_events":30,"./part":31,"./position":33,"./sampler":38,"./track":47,"./util":48}],24:[function(require,module,exports){
+},{"./constants":15,"./init_audio":21,"./midi_event":25,"./parse_events":31,"./part":32,"./position":34,"./sampler":39,"./track":48,"./util":49}],25:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './note', './settings'], factory);
@@ -4188,8 +4394,8 @@ function polyfill() {
 
   var MIDIEvent = exports.MIDIEvent = function () {
     function MIDIEvent(ticks, type, data1) {
-      var data2 = arguments.length <= 3 || arguments[3] === undefined ? -1 : arguments[3];
-      var channel = arguments.length <= 4 || arguments[4] === undefined ? 0 : arguments[4];
+      var data2 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : -1;
+      var channel = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
 
       _classCallCheck(this, MIDIEvent);
 
@@ -4217,11 +4423,11 @@ function polyfill() {
         }
         //this.status = this.command + this.channel
       } else {
-          // 4. not a channel event, set the type and command to the value of type as provided in the constructor
-          this.type = type;
-          //this.type = this.command = type
-          this.channel = 0; // any
-        }
+        // 4. not a channel event, set the type and command to the value of type as provided in the constructor
+        this.type = type;
+        //this.type = this.command = type
+        this.channel = 0; // any
+      }
       //console.log(type, this.type, this.command, this.status, this.channel, this.id)
 
       // sometimes NOTE_OFF events are sent as NOTE_ON events with a 0 velocity value
@@ -4288,7 +4494,7 @@ function polyfill() {
   }();
 });
 
-},{"./note":28,"./settings":42}],25:[function(require,module,exports){
+},{"./note":29,"./settings":43}],26:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './midi_event'], factory);
@@ -4418,7 +4624,7 @@ function polyfill() {
   }();
 });
 
-},{"./midi_event":24}],26:[function(require,module,exports){
+},{"./midi_event":25}],27:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -4474,7 +4680,6 @@ function polyfill() {
   var MIDIStream = function () {
 
     // buffer is Uint8Array
-
     function MIDIStream(buffer) {
       _classCallCheck(this, MIDIStream);
 
@@ -4488,7 +4693,7 @@ function polyfill() {
     _createClass(MIDIStream, [{
       key: 'read',
       value: function read(length) {
-        var toString = arguments.length <= 1 || arguments[1] === undefined ? true : arguments[1];
+        var toString = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
         var result = void 0;
 
@@ -4568,7 +4773,7 @@ function polyfill() {
   exports.default = MIDIStream;
 });
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './midi_stream'], factory);
@@ -4880,7 +5085,7 @@ function polyfill() {
   }
 });
 
-},{"./midi_stream":26}],28:[function(require,module,exports){
+},{"./midi_stream":27}],29:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './settings'], factory);
@@ -4930,12 +5135,12 @@ function polyfill() {
     }
   */
   function getNoteData(settings) {
-    var fullName = settings.fullName;
-    var name = settings.name;
-    var octave = settings.octave;
-    var mode = settings.mode;
-    var number = settings.number;
-    var frequency = settings.frequency;
+    var fullName = settings.fullName,
+        name = settings.name,
+        octave = settings.octave,
+        mode = settings.mode,
+        number = settings.number,
+        frequency = settings.frequency;
 
     var _getSettings = (0, _settings.getSettings)();
 
@@ -4992,13 +5197,12 @@ function polyfill() {
       number: number,
       frequency: _getFrequency(number),
       blackKey: _isBlackKey(number)
-    };
-    //console.log(data)
-    return data;
+      //console.log(data)
+    };return data;
   }
 
   function _getNoteName(number) {
-    var mode = arguments.length <= 1 || arguments[1] === undefined ? noteNameMode : arguments[1];
+    var mode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noteNameMode;
 
     //let octave = Math.floor((number / 12) - 2), // → in Cubase central C = C3 instead of C4
     var octave = floor(number / 12 - 1);
@@ -5110,7 +5314,7 @@ function polyfill() {
   }
 });
 
-},{"./settings":42}],29:[function(require,module,exports){
+},{"./settings":43}],30:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'isomorphic-fetch', './init_audio', './util', './eventlistener'], factory);
@@ -5144,7 +5348,7 @@ function polyfill() {
   var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
     return typeof obj;
   } : function (obj) {
-    return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
   };
 
   function decodeSample(sample, id, every) {
@@ -5246,7 +5450,7 @@ function polyfill() {
 
   // only for internally use in qambi
   function parseSamples2(mapping) {
-    var every = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+    var every = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
     var type = (0, _util.typeString)(mapping),
         promises = [],
@@ -5278,13 +5482,11 @@ function polyfill() {
         }
       });
     } else if (type === 'array') {
-      (function () {
-        var key = void 0;
-        mapping.forEach(function (sample) {
-          // key is deliberately undefined
-          getPromises(promises, sample, key, baseUrl, every);
-        });
-      })();
+      var key = void 0;
+      mapping.forEach(function (sample) {
+        // key is deliberately undefined
+        getPromises(promises, sample, key, baseUrl, every);
+      });
     }
 
     return new Promise(function (resolve) {
@@ -5328,7 +5530,7 @@ function polyfill() {
   }
 });
 
-},{"./eventlistener":17,"./init_audio":20,"./util":48,"isomorphic-fetch":2}],30:[function(require,module,exports){
+},{"./eventlistener":18,"./init_audio":21,"./util":49,"isomorphic-fetch":2}],31:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util', './midi_note'], factory);
@@ -5391,7 +5593,7 @@ function polyfill() {
   }
 
   function updatePosition(event) {
-    var fast = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+    var fast = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
     diffTicks = event.ticks - ticks;
     // if(diffTicks < 0){
@@ -5420,7 +5622,7 @@ function polyfill() {
   }
 
   function parseTimeEvents(settings, timeEvents) {
-    var isPlaying = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+    var isPlaying = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
     //console.log('parse time events')
     var type = void 0;
@@ -5502,7 +5704,7 @@ function polyfill() {
 
   //export function parseEvents(song, events){
   function parseEvents(events) {
-    var isPlaying = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+    var isPlaying = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
     //console.log('parseEvents')
     var event = void 0;
@@ -5544,6 +5746,7 @@ function polyfill() {
     });
     event = events[0];
     //console.log(event)
+
 
     bpm = event.bpm;
     factor = event.factor;
@@ -5601,6 +5804,7 @@ function polyfill() {
           //console.log(nominator,numSixteenth,ticksPerSixteenth);
           //console.log(event);
 
+
           break;
 
         default:
@@ -5635,7 +5839,7 @@ function polyfill() {
   }
 
   function updateEvent(event) {
-    var fast = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+    var fast = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
     //console.log(bar, beat, ticks)
     //console.log(event, bpm, millisPerTick, ticks, millis);
@@ -5683,6 +5887,7 @@ function polyfill() {
     // if(millis < 0){
     //   console.log(event)
     // }
+
   }
 
   var midiNoteIndex = 0;
@@ -5812,7 +6017,7 @@ function polyfill() {
   }
 });
 
-},{"./midi_note":25,"./util":48}],31:[function(require,module,exports){
+},{"./midi_note":26,"./util":49}],32:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util'], factory);
@@ -5873,7 +6078,7 @@ function polyfill() {
 
   var Part = exports.Part = function () {
     function Part() {
-      var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+      var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       _classCallCheck(this, Part);
 
@@ -6062,7 +6267,7 @@ function polyfill() {
     }, {
       key: 'getEvents',
       value: function getEvents() {
-        var filter = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+        var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
         // can be use as findEvents
         if (this._needsUpdate) {
           this.update();
@@ -6072,7 +6277,7 @@ function polyfill() {
     }, {
       key: 'mute',
       value: function mute() {
-        var flag = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+        var flag = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
         if (flag) {
           this.muted = flag;
@@ -6100,7 +6305,7 @@ function polyfill() {
   }();
 });
 
-},{"./util":48}],32:[function(require,module,exports){
+},{"./util":49}],33:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './position.js', './eventlistener.js', './util.js'], factory);
@@ -6162,7 +6367,7 @@ function polyfill() {
 
   var Playhead = exports.Playhead = function () {
     function Playhead(song) {
-      var type = arguments.length <= 1 || arguments[1] === undefined ? 'all' : arguments[1];
+      var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'all';
 
       _classCallCheck(this, Playhead);
 
@@ -6476,7 +6681,7 @@ function polyfill() {
   }();
 });
 
-},{"./eventlistener.js":17,"./position.js":33,"./util.js":48}],33:[function(require,module,exports){
+},{"./eventlistener.js":18,"./position.js":34,"./util.js":49}],34:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './util'], factory);
@@ -6590,7 +6795,7 @@ function polyfill() {
   }
 
   function millisToTicks(song, targetMillis) {
-    var beos = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+    var beos = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
     beyondEndOfSong = beos;
     fromMillis(song, targetMillis);
@@ -6599,7 +6804,7 @@ function polyfill() {
   }
 
   function ticksToMillis(song, targetTicks) {
-    var beos = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+    var beos = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
     beyondEndOfSong = beos;
     fromTicks(song, targetTicks);
@@ -6630,7 +6835,7 @@ function polyfill() {
   }
 
   function ticksToBars(song, target) {
-    var beos = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+    var beos = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
     beyondEndOfSong = beos;
     fromTicks(song, target);
@@ -6640,7 +6845,7 @@ function polyfill() {
   }
 
   function millisToBars(song, target) {
-    var beos = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+    var beos = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
     beyondEndOfSong = beos;
     fromMillis(song, target);
@@ -6713,7 +6918,7 @@ function polyfill() {
 
   // main calculation function for bars and beats position
   function fromBars(song, targetBar, targetBeat, targetSixteenth, targetTick) {
-    var event = arguments.length <= 5 || arguments[5] === undefined ? null : arguments[5];
+    var event = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : null;
 
     //console.time('fromBars');
     var i = 0,
@@ -6950,15 +7155,14 @@ function polyfill() {
 
   // improved version of getPosition
   function calculatePosition(song, settings) {
-    var type = settings.type;
-    var // any of barsandbeats barsbeats time millis ticks perc percentage
-    target = settings.target;
-    var _settings$result = settings.result;
-    var result = _settings$result === undefined ? 'all' : _settings$result;
-    var _settings$beos = settings.beos;
-    var beos = _settings$beos === undefined ? true : _settings$beos;
-    var _settings$snap = settings.snap;
-    var snap = _settings$snap === undefined ? -1 : _settings$snap;
+    var type = settings.type,
+        target = settings.target,
+        _settings$result = settings.result,
+        result = _settings$result === undefined ? 'all' : _settings$result,
+        _settings$beos = settings.beos,
+        beos = _settings$beos === undefined ? true : _settings$beos,
+        _settings$snap = settings.snap,
+        snap = _settings$snap === undefined ? -1 : _settings$snap;
 
 
     if (supportedReturnTypes.indexOf(result) === -1) {
@@ -6978,40 +7182,38 @@ function polyfill() {
 
       case 'barsbeats':
       case 'barsandbeats':
-        var _target = _slicedToArray(target, 4);
-
-        var _target$ = _target[0];
-        var targetbar = _target$ === undefined ? 1 : _target$;
-        var _target$2 = _target[1];
-        var targetbeat = _target$2 === undefined ? 1 : _target$2;
-        var _target$3 = _target[2];
-        var targetsixteenth = _target$3 === undefined ? 1 : _target$3;
-        var _target$4 = _target[3];
-        var targettick = _target$4 === undefined ? 0 : _target$4;
+        var _target = _slicedToArray(target, 4),
+            _target$ = _target[0],
+            targetbar = _target$ === undefined ? 1 : _target$,
+            _target$2 = _target[1],
+            targetbeat = _target$2 === undefined ? 1 : _target$2,
+            _target$3 = _target[2],
+            targetsixteenth = _target$3 === undefined ? 1 : _target$3,
+            _target$4 = _target[3],
+            targettick = _target$4 === undefined ? 0 : _target$4;
 
         //console.log(targetbar, targetbeat, targetsixteenth, targettick)
         fromBars(song, targetbar, targetbeat, targetsixteenth, targettick);
         return getPositionData(song);
 
       case 'time':
-        var _target2 = _slicedToArray(target, 4);
+        var _target2 = _slicedToArray(target, 4),
+            _target2$ = _target2[0],
+            targethour = _target2$ === undefined ? 0 : _target2$,
+            _target2$2 = _target2[1],
+            targetminute = _target2$2 === undefined ? 0 : _target2$2,
+            _target2$3 = _target2[2],
+            targetsecond = _target2$3 === undefined ? 0 : _target2$3,
+            _target2$4 = _target2[3],
+            targetmillisecond = _target2$4 === undefined ? 0 : _target2$4;
 
-        var _target2$ = _target2[0];
-        var targethour = _target2$ === undefined ? 0 : _target2$;
-        var _target2$2 = _target2[1];
-        var targetminute = _target2$2 === undefined ? 0 : _target2$2;
-        var _target2$3 = _target2[2];
-        var targetsecond = _target2$3 === undefined ? 0 : _target2$3;
-        var _target2$4 = _target2[3];
-        var targetmillisecond = _target2$4 === undefined ? 0 : _target2$4;
+        var _millis = 0;
+        _millis += targethour * 60 * 60 * 1000; //hours
+        _millis += targetminute * 60 * 1000; //minutes
+        _millis += targetsecond * 1000; //seconds
+        _millis += targetmillisecond; //milliseconds
 
-        var millis = 0;
-        millis += targethour * 60 * 60 * 1000; //hours
-        millis += targetminute * 60 * 1000; //minutes
-        millis += targetsecond * 1000; //seconds
-        millis += targetmillisecond; //milliseconds
-
-        fromMillis(song, millis);
+        fromMillis(song, _millis);
         calculateBarsAndBeats();
         return getPositionData(song);
 
@@ -7193,7 +7395,7 @@ function polyfill() {
   */
 });
 
-},{"./util":48}],34:[function(require,module,exports){
+},{"./util":49}],35:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './settings', './note', './midi_event', './midi_note', './part', './track', './song', './instrument', './sampler', './simple_synth', './convolution_reverb', './delay_fx', './midifile', './init', './init_audio', './init_midi', './parse_audio', './constants', './eventlistener'], factory);
@@ -7213,7 +7415,7 @@ function polyfill() {
     value: true
   });
   exports.Delay = exports.ConvolutionReverb = exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
-  var version = '1.0.0-beta32';
+  var version = '1.0.0-beta34';
 
   var getAudioContext = function getAudioContext() {
     return _init_audio.context;
@@ -7311,92 +7513,38 @@ function polyfill() {
 
   exports.default = qambi;
   exports.version = version;
-  exports.
-
-  // from ./init
-  init = _init.init;
-  exports.
-
-  // from ./settings
-  getInstruments = _settings.getInstruments;
+  exports.init = _init.init;
+  exports.getInstruments = _settings.getInstruments;
   exports.getGMInstruments = _settings.getGMInstruments;
   exports.updateSettings = _settings.updateSettings;
   exports.getSettings = _settings.getSettings;
-  exports.
-
-  // from ./constants
-  MIDIEventTypes = _constants.MIDIEventTypes;
-  exports.
-
-  // from ./util
-  parseSamples = _parse_audio.parseSamples;
-  exports.
-
-  // from ./midifile
-  parseMIDIFile = _midifile.parseMIDIFile;
-  exports.
-
-  // from ./init_audio
-  getAudioContext = getAudioContext;
+  exports.MIDIEventTypes = _constants.MIDIEventTypes;
+  exports.parseSamples = _parse_audio.parseSamples;
+  exports.parseMIDIFile = _midifile.parseMIDIFile;
+  exports.getAudioContext = getAudioContext;
   exports.getMasterVolume = _init_audio.getMasterVolume;
   exports.setMasterVolume = _init_audio.setMasterVolume;
-  exports.
-
-  // from ./init_midi
-  getMIDIAccess = _init_midi.getMIDIAccess;
+  exports.getMIDIAccess = _init_midi.getMIDIAccess;
   exports.getMIDIInputs = _init_midi.getMIDIInputs;
   exports.getMIDIOutputs = _init_midi.getMIDIOutputs;
   exports.getMIDIInputIds = _init_midi.getMIDIInputIds;
   exports.getMIDIOutputIds = _init_midi.getMIDIOutputIds;
   exports.getMIDIInputsById = _init_midi.getMIDIInputsById;
   exports.getMIDIOutputsById = _init_midi.getMIDIOutputsById;
-  exports.
-
-  // from ./note
-  getNoteData = _note.getNoteData;
-  exports.
-
-  // from ./midi_event
-  MIDIEvent = _midi_event.MIDIEvent;
-  exports.
-
-  // from ./midi_note
-  MIDINote = _midi_note.MIDINote;
-  exports.
-
-  // from ./song
-  Song = _song.Song;
-  exports.
-
-  // from ./track
-  Track = _track.Track;
-  exports.
-
-  // from ./part
-  Part = _part.Part;
-  exports.
-
-  // from ./instrument
-  Instrument = _instrument.Instrument;
-  exports.
-
-  // from ./simple_synth
-  SimpleSynth = _simple_synth.SimpleSynth;
-  exports.
-
-  // from ./sampler
-  Sampler = _sampler.Sampler;
-  exports.
-
-  // from ./convolution_reverb
-  ConvolutionReverb = _convolution_reverb.ConvolutionReverb;
-  exports.
-
-  // from ./delay_fx
-  Delay = _delay_fx.Delay;
+  exports.getNoteData = _note.getNoteData;
+  exports.MIDIEvent = _midi_event.MIDIEvent;
+  exports.MIDINote = _midi_note.MIDINote;
+  exports.Song = _song.Song;
+  exports.Track = _track.Track;
+  exports.Part = _part.Part;
+  exports.Instrument = _instrument.Instrument;
+  exports.SimpleSynth = _simple_synth.SimpleSynth;
+  exports.Sampler = _sampler.Sampler;
+  exports.ConvolutionReverb = _convolution_reverb.ConvolutionReverb;
+  exports.Delay = _delay_fx.Delay;
 });
 
-},{"./constants":14,"./convolution_reverb":15,"./delay_fx":16,"./eventlistener":17,"./init":19,"./init_audio":20,"./init_midi":21,"./instrument":22,"./midi_event":24,"./midi_note":25,"./midifile":27,"./note":28,"./parse_audio":29,"./part":31,"./sampler":38,"./settings":42,"./simple_synth":43,"./song":44,"./track":47}],35:[function(require,module,exports){
+},{"./constants":15,"./convolution_reverb":16,"./delay_fx":17,"./eventlistener":18,"./init":20,"./init_audio":21,"./init_midi":22,"./instrument":23,"./midi_event":25,"./midi_note":26,"./midifile":28,"./note":29,"./parse_audio":30,"./part":32,"./sampler":39,"./settings":43,"./simple_synth":44,"./song":45,"./track":48}],36:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_audio.js', './util.js'], factory);
@@ -7453,9 +7601,9 @@ function polyfill() {
     _createClass(Sample, [{
       key: 'start',
       value: function start(time) {
-        var _sampleData = this.sampleData;
-        var sustainStart = _sampleData.sustainStart;
-        var sustainEnd = _sampleData.sustainEnd;
+        var _sampleData = this.sampleData,
+            sustainStart = _sampleData.sustainStart,
+            sustainEnd = _sampleData.sustainEnd;
         //console.log(sustainStart, sustainEnd)
 
         if (sustainStart && sustainEnd) {
@@ -7470,10 +7618,10 @@ function polyfill() {
       value: function stop(time, cb) {
         var _this = this;
 
-        var _sampleData2 = this.sampleData;
-        var releaseDuration = _sampleData2.releaseDuration;
-        var releaseEnvelope = _sampleData2.releaseEnvelope;
-        var releaseEnvelopeArray = _sampleData2.releaseEnvelopeArray;
+        var _sampleData2 = this.sampleData,
+            releaseDuration = _sampleData2.releaseDuration,
+            releaseEnvelope = _sampleData2.releaseEnvelope,
+            releaseEnvelopeArray = _sampleData2.releaseEnvelopeArray;
         //console.log(releaseDuration, releaseEnvelope)
 
         this.source.onended = cb;
@@ -7557,7 +7705,7 @@ function polyfill() {
   }
 });
 
-},{"./init_audio.js":20,"./util.js":48}],36:[function(require,module,exports){
+},{"./init_audio.js":21,"./util.js":49}],37:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './sample', './init_audio'], factory);
@@ -7634,7 +7782,7 @@ function polyfill() {
     function SampleBuffer(sampleData, event) {
       _classCallCheck(this, SampleBuffer);
 
-      var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(SampleBuffer).call(this, sampleData, event));
+      var _this = _possibleConstructorReturn(this, (SampleBuffer.__proto__ || Object.getPrototypeOf(SampleBuffer)).call(this, sampleData, event));
 
       _this.id = _this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
 
@@ -7665,11 +7813,11 @@ function polyfill() {
     _createClass(SampleBuffer, [{
       key: 'start',
       value: function start(time) {
-        var _sampleData = this.sampleData;
-        var sustainStart = _sampleData.sustainStart;
-        var sustainEnd = _sampleData.sustainEnd;
-        var segmentStart = _sampleData.segmentStart;
-        var segmentDuration = _sampleData.segmentDuration;
+        var _sampleData = this.sampleData,
+            sustainStart = _sampleData.sustainStart,
+            sustainEnd = _sampleData.sustainEnd,
+            segmentStart = _sampleData.segmentStart,
+            segmentDuration = _sampleData.segmentDuration;
         //console.log(sustainStart, sustainEnd, segmentStart, segmentDuration)
 
         if (sustainStart && sustainEnd) {
@@ -7690,7 +7838,7 @@ function polyfill() {
   }(_sample.Sample);
 });
 
-},{"./init_audio":20,"./sample":35}],37:[function(require,module,exports){
+},{"./init_audio":21,"./sample":36}],38:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './sample', './init_audio'], factory);
@@ -7749,7 +7897,7 @@ function polyfill() {
     function SampleOscillator(sampleData, event) {
       _classCallCheck(this, SampleOscillator);
 
-      var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(SampleOscillator).call(this, sampleData, event));
+      var _this = _possibleConstructorReturn(this, (SampleOscillator.__proto__ || Object.getPrototypeOf(SampleOscillator)).call(this, sampleData, event));
 
       _this.id = _this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
 
@@ -7790,7 +7938,7 @@ function polyfill() {
   }(_sample.Sample);
 });
 
-},{"./init_audio":20,"./sample":35}],38:[function(require,module,exports){
+},{"./init_audio":21,"./sample":36}],39:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './instrument', './note', './parse_audio', './util', './fetch_helpers', './sample_buffer'], factory);
@@ -7852,7 +8000,7 @@ function polyfill() {
   var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
     return typeof obj;
   } : function (obj) {
-    return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
   };
 
   function _classCallCheck(instance, Constructor) {
@@ -7911,7 +8059,7 @@ function polyfill() {
     function Sampler(name) {
       _classCallCheck(this, Sampler);
 
-      var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Sampler).call(this));
+      var _this = _possibleConstructorReturn(this, (Sampler.__proto__ || Object.getPrototypeOf(Sampler)).call(this));
 
       _this.id = _this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
       _this.name = name || _this.id;
@@ -8026,66 +8174,66 @@ function polyfill() {
                   }
                 }
               } else {
-                  var _iteratorNormalCompletion2 = true;
-                  var _didIteratorError2 = false;
-                  var _iteratorError2 = undefined;
+                var _iteratorNormalCompletion2 = true;
+                var _didIteratorError2 = false;
+                var _iteratorError2 = undefined;
 
-                  try {
-                    var _loop = function _loop() {
-                      var noteId = _step2.value;
+                try {
+                  var _loop = function _loop() {
+                    var noteId = _step2.value;
 
-                      var buffer = result[noteId];
-                      var sampleData = data[noteId];
+                    var buffer = result[noteId];
+                    var sampleData = data[noteId];
 
-                      if (typeof sampleData === 'undefined') {
-                        console.log('sampleData is undefined', noteId);
-                      } else if ((0, _util.typeString)(buffer) === 'array') {
+                    if (typeof sampleData === 'undefined') {
+                      console.log('sampleData is undefined', noteId);
+                    } else if ((0, _util.typeString)(buffer) === 'array') {
 
-                        //console.log(buffer, sampleData)
-                        sampleData.forEach(function (sd, i) {
-                          //console.log(noteId, buffer[i])
-                          if (typeof sd === 'string') {
-                            sd = {
-                              buffer: buffer[i]
-                            };
-                          } else {
-                            sd.buffer = buffer[i];
-                          }
-                          sd.note = parseInt(noteId, 10);
-                          _this2._updateSampleData(sd);
-                        });
-                      } else {
-
-                        if (typeof sampleData === 'string') {
-                          sampleData = {
-                            buffer: buffer
+                      //console.log(buffer, sampleData)
+                      sampleData.forEach(function (sd, i) {
+                        //console.log(noteId, buffer[i])
+                        if (typeof sd === 'string') {
+                          sd = {
+                            buffer: buffer[i]
                           };
                         } else {
-                          sampleData.buffer = buffer;
+                          sd.buffer = buffer[i];
                         }
-                        sampleData.note = parseInt(noteId, 10);
-                        _this2._updateSampleData(sampleData);
-                      }
-                    };
+                        sd.note = parseInt(noteId, 10);
+                        _this2._updateSampleData(sd);
+                      });
+                    } else {
 
-                    for (var _iterator2 = Object.keys(result)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                      _loop();
+                      if (typeof sampleData === 'string') {
+                        sampleData = {
+                          buffer: buffer
+                        };
+                      } else {
+                        sampleData.buffer = buffer;
+                      }
+                      sampleData.note = parseInt(noteId, 10);
+                      _this2._updateSampleData(sampleData);
                     }
-                  } catch (err) {
-                    _didIteratorError2 = true;
-                    _iteratorError2 = err;
+                  };
+
+                  for (var _iterator2 = Object.keys(result)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                    _loop();
+                  }
+                } catch (err) {
+                  _didIteratorError2 = true;
+                  _iteratorError2 = err;
+                } finally {
+                  try {
+                    if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                      _iterator2.return();
+                    }
                   } finally {
-                    try {
-                      if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                        _iterator2.return();
-                      }
-                    } finally {
-                      if (_didIteratorError2) {
-                        throw _iteratorError2;
-                      }
+                    if (_didIteratorError2) {
+                      throw _iteratorError2;
                     }
                   }
                 }
+              }
             } else {
 
               result.forEach(function (sample) {
@@ -8150,23 +8298,22 @@ function polyfill() {
       value: function _updateSampleData() {
         var _this4 = this;
 
-        var data = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+        var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
         //console.log(data)
-        var note = data.note;
-        var _data$buffer = data.buffer;
-        var buffer = _data$buffer === undefined ? null : _data$buffer;
-        var _data$sustain = data.sustain;
-        var sustain = _data$sustain === undefined ? [null, null] : _data$sustain;
-        var _data$segment = data.segment;
-        var segment = _data$segment === undefined ? [null, null] : _data$segment;
-        var _data$release = data.release;
-        var release = _data$release === undefined ? [null, 'linear'] : _data$release;
-        var _data$pan = data.pan;
-        var // release duration is in seconds!
-        pan = _data$pan === undefined ? null : _data$pan;
-        var _data$velocity = data.velocity;
-        var velocity = _data$velocity === undefined ? [0, 127] : _data$velocity;
+        var note = data.note,
+            _data$buffer = data.buffer,
+            buffer = _data$buffer === undefined ? null : _data$buffer,
+            _data$sustain = data.sustain,
+            sustain = _data$sustain === undefined ? [null, null] : _data$sustain,
+            _data$segment = data.segment,
+            segment = _data$segment === undefined ? [null, null] : _data$segment,
+            _data$release = data.release,
+            release = _data$release === undefined ? [null, 'linear'] : _data$release,
+            _data$pan = data.pan,
+            pan = _data$pan === undefined ? null : _data$pan,
+            _data$velocity = data.velocity,
+            velocity = _data$velocity === undefined ? [0, 127] : _data$velocity;
 
 
         if (typeof note === 'undefined') {
@@ -8182,26 +8329,21 @@ function polyfill() {
         }
         note = n.number;
 
-        var _sustain = _slicedToArray(sustain, 2);
+        var _sustain = _slicedToArray(sustain, 2),
+            sustainStart = _sustain[0],
+            sustainEnd = _sustain[1];
 
-        var sustainStart = _sustain[0];
-        var sustainEnd = _sustain[1];
+        var _release = _slicedToArray(release, 2),
+            releaseDuration = _release[0],
+            releaseEnvelope = _release[1];
 
-        var _release = _slicedToArray(release, 2);
+        var _segment = _slicedToArray(segment, 2),
+            segmentStart = _segment[0],
+            segmentDuration = _segment[1];
 
-        var releaseDuration = _release[0];
-        var releaseEnvelope = _release[1];
-
-        var _segment = _slicedToArray(segment, 2);
-
-        var segmentStart = _segment[0];
-        var segmentDuration = _segment[1];
-
-        var _velocity = _slicedToArray(velocity, 2);
-
-        var velocityStart = _velocity[0];
-        var velocityEnd = _velocity[1];
-
+        var _velocity = _slicedToArray(velocity, 2),
+            velocityStart = _velocity[0],
+            velocityEnd = _velocity[1];
 
         if (sustain.length !== 2) {
           sustainStart = sustainEnd = null;
@@ -8216,6 +8358,7 @@ function polyfill() {
         // console.log(releaseDuration, releaseEnvelope)
         // console.log(pan)
         // console.log(velocityStart, velocityEnd)
+
 
         this.samplesData[note].forEach(function (sampleData, i) {
           if (i >= velocityStart && i <= velocityEnd) {
@@ -8288,7 +8431,7 @@ function polyfill() {
   }(_instrument.Instrument);
 });
 
-},{"./fetch_helpers":18,"./instrument":22,"./note":28,"./parse_audio":29,"./sample_buffer":36,"./util":48}],39:[function(require,module,exports){
+},{"./fetch_helpers":19,"./instrument":23,"./note":29,"./parse_audio":30,"./sample_buffer":37,"./util":49}],40:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -8317,7 +8460,7 @@ function polyfill() {
   exports.default = samples;
 });
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'filesaverjs'], factory);
@@ -8377,8 +8520,8 @@ function polyfill() {
   var META_SEQ_EVENT = 0x7f;
 
   function saveAsMIDIFile(song) {
-    var fileName = arguments.length <= 1 || arguments[1] === undefined ? song.name : arguments[1];
-    var ppq = arguments.length <= 2 || arguments[2] === undefined ? 960 : arguments[2];
+    var fileName = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : song.name;
+    var ppq = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 960;
 
 
     PPQ = ppq;
@@ -8437,7 +8580,7 @@ function polyfill() {
   }
 
   function trackToBytes(events, lastEventTicks, trackName) {
-    var instrumentName = arguments.length <= 3 || arguments[3] === undefined ? 'no instrument' : arguments[3];
+    var instrumentName = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'no instrument';
 
     var lengthBytes,
         i,
@@ -8621,7 +8764,7 @@ function polyfill() {
   }
 });
 
-},{"filesaverjs":1}],41:[function(require,module,exports){
+},{"filesaverjs":1}],42:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './init_midi', './init_audio', './midi_event', './util'], factory);
@@ -8868,8 +9011,8 @@ function polyfill() {
               //this.getDanglingAudioEvents(this.song.loopStart, events);
             }
           } else {
-              this.looped = false;
-            }
+            this.looped = false;
+          }
         }
 
         //console.log('scheduler', this.looped)
@@ -8885,10 +9028,10 @@ function polyfill() {
             if (_event2.type === 'audio') {
               // to be implemented
             } else {
-                _event2.time = this.timeStamp + _event2.millis - this.songStartMillis;
-                _event2.time2 = this.timeStamp2 + _event2.millis - this.songStartMillis;
-                events.push(_event2);
-              }
+              _event2.time = this.timeStamp + _event2.millis - this.songStartMillis;
+              _event2.time2 = this.timeStamp2 + _event2.millis - this.songStartMillis;
+              events.push(_event2);
+            }
             this.index++;
           } else {
             break;
@@ -8929,13 +9072,13 @@ function polyfill() {
             //console.log(events)
           }
         } else {
-            this.songCurrentMillis += diff;
-            this.maxtime = this.songCurrentMillis + this.bufferTime;
-            events = this.getEvents();
-            //events = this.song._getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
-            //events = this.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
-            //console.log('done', this.songCurrentMillis, diff, this.index, events.length)
-          }
+          this.songCurrentMillis += diff;
+          this.maxtime = this.songCurrentMillis + this.bufferTime;
+          events = this.getEvents();
+          //events = this.song._getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
+          //events = this.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
+          //console.log('done', this.songCurrentMillis, diff, this.index, events.length)
+        }
 
         // if(this.song.useMetronome === true){
         //   let metronomeEvents = this.song._metronome.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
@@ -8987,17 +9130,17 @@ function polyfill() {
           if (event.type === 'audio') {
             // to be implemented
           } else {
-              track.processMIDIEvent(event);
-              //console.log(context.currentTime * 1000, event.time, this.index)
-              if (event.type === 144) {
-                this.notes.set(event.midiNoteId, event.midiNote);
-              } else if (event.type === 128) {
-                this.notes.delete(event.midiNoteId);
-              }
-              // if(this.notes.size > 0){
-              //   console.log(this.notes)
-              // }
+            track.processMIDIEvent(event);
+            //console.log(context.currentTime * 1000, event.time, this.index)
+            if (event.type === 144) {
+              this.notes.set(event.midiNoteId, event.midiNote);
+            } else if (event.type === 128) {
+              this.notes.delete(event.midiNoteId);
             }
+            // if(this.notes.size > 0){
+            //   console.log(this.notes)
+            // }
+          }
         }
         //console.log(this.index, this.numEvents)
         //return this.index >= 10
@@ -9023,7 +9166,7 @@ function polyfill() {
   exports.default = Scheduler;
 });
 
-},{"./init_audio":20,"./init_midi":21,"./midi_event":24,"./util":48}],42:[function(require,module,exports){
+},{"./init_audio":21,"./init_midi":22,"./midi_event":25,"./util":49}],43:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -9193,7 +9336,7 @@ function polyfill() {
   };
 });
 
-},{}],43:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './instrument', './sample_oscillator'], factory);
@@ -9270,7 +9413,7 @@ function polyfill() {
     function SimpleSynth(type, name) {
       _classCallCheck(this, SimpleSynth);
 
-      var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(SimpleSynth).call(this));
+      var _this = _possibleConstructorReturn(this, (SimpleSynth.__proto__ || Object.getPrototypeOf(SimpleSynth)).call(this));
 
       _this.id = _this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
       _this.name = name || _this.id;
@@ -9319,7 +9462,7 @@ function polyfill() {
   }(_instrument.Instrument);
 });
 
-},{"./instrument":22,"./sample_oscillator":37}],44:[function(require,module,exports){
+},{"./instrument":23,"./sample_oscillator":38}],45:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './constants', './parse_events', './init_audio', './scheduler', './midi_event', './song_from_midifile', './util', './position', './playhead', './metronome', './eventlistener', './save_midifile', './song.update', './settings'], factory);
@@ -9347,12 +9490,6 @@ function polyfill() {
       default: obj
     };
   }
-
-  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
-    return typeof obj;
-  } : function (obj) {
-    return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
-  };
 
   function _toConsumableArray(arr) {
     if (Array.isArray(arr)) {
@@ -9441,7 +9578,7 @@ function polyfill() {
     }]);
 
     function Song() {
-      var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+      var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       _classCallCheck(this, Song);
 
@@ -9539,8 +9676,8 @@ function polyfill() {
       this._precountBars = 0;
       this._endPrecountMillis = 0;
 
-      var tracks = settings.tracks;
-      var timeEvents = settings.timeEvents;
+      var tracks = settings.tracks,
+          timeEvents = settings.timeEvents;
       //console.log(tracks, timeEvents)
 
       if (typeof timeEvents === 'undefined') {
@@ -9875,22 +10012,16 @@ function polyfill() {
         }
 
         if (typeof config.ppq !== 'undefined') {
-          var _ret = function () {
-            if (config.ppq === _this7.ppq) {
-              return {
-                v: void 0
-              };
-            }
-            var ppqFactor = config.ppq / _this7.ppq;
-            _this7.ppq = config.ppq;
-            _this7._allEvents.forEach(function (e) {
-              e.ticks = event.ticks * ppqFactor;
-            });
-            _this7._updateTimeEvents = true;
-            _this7.update();
-          }();
-
-          if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+          if (config.ppq === this.ppq) {
+            return;
+          }
+          var ppqFactor = config.ppq / this.ppq;
+          this.ppq = config.ppq;
+          this._allEvents.forEach(function (e) {
+            e.ticks = event.ticks * ppqFactor;
+          });
+          this._updateTimeEvents = true;
+          this.update();
         }
 
         if (typeof config.playbackSpeed !== 'undefined') {
@@ -10039,7 +10170,7 @@ function polyfill() {
     }, {
       key: 'setLoop',
       value: function setLoop() {
-        var flag = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+        var flag = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
 
         this.looping = flag !== null ? flag : !this._loop;
@@ -10069,7 +10200,7 @@ function polyfill() {
     }, {
       key: 'setPrecount',
       value: function setPrecount() {
-        var value = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+        var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
 
         this._precountBars = value;
       }
@@ -10163,7 +10294,7 @@ function polyfill() {
   }();
 });
 
-},{"./constants":14,"./eventlistener":17,"./init_audio":20,"./metronome":23,"./midi_event":24,"./parse_events":30,"./playhead":32,"./position":33,"./save_midifile":40,"./scheduler":41,"./settings":42,"./song.update":45,"./song_from_midifile":46,"./util":48}],45:[function(require,module,exports){
+},{"./constants":15,"./eventlistener":18,"./init_audio":21,"./metronome":24,"./midi_event":25,"./parse_events":31,"./playhead":33,"./position":34,"./save_midifile":41,"./scheduler":42,"./settings":43,"./song.update":46,"./song_from_midifile":47,"./util":49}],46:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './parse_events', './util', './constants', './position', './midi_event', './eventlistener'], factory);
@@ -10420,7 +10551,7 @@ function polyfill() {
   }
 });
 
-},{"./constants":14,"./eventlistener":17,"./midi_event":24,"./parse_events":30,"./position":33,"./util":48}],46:[function(require,module,exports){
+},{"./constants":15,"./eventlistener":18,"./midi_event":25,"./parse_events":31,"./position":34,"./util":49}],47:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'isomorphic-fetch', './midifile', './midi_event', './part', './track', './song', './util', './fetch_helpers', './settings'], factory);
@@ -10625,7 +10756,7 @@ function polyfill() {
   }
 
   function songFromMIDIFileSync(data) {
-    var settings = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+    var settings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     var song = null;
 
@@ -10655,7 +10786,7 @@ function polyfill() {
   }
 
   function songFromMIDIFile(url) {
-    var settings = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+    var settings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     return new Promise(function (resolve, reject) {
       // fetch(url, {
@@ -10670,7 +10801,7 @@ function polyfill() {
   }
 });
 
-},{"./fetch_helpers":18,"./midi_event":24,"./midifile":27,"./part":31,"./settings":42,"./song":44,"./track":47,"./util":48,"isomorphic-fetch":2}],47:[function(require,module,exports){
+},{"./fetch_helpers":19,"./midi_event":25,"./midifile":28,"./part":32,"./settings":43,"./song":45,"./track":48,"./util":49,"isomorphic-fetch":2}],48:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './part', './midi_event', './midi_note', './init_midi', './util', './init_audio', './qambi', './eventlistener'], factory);
@@ -10732,7 +10863,7 @@ function polyfill() {
 
   var Track = exports.Track = function () {
     function Track() {
-      var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+      var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       _classCallCheck(this, Track);
 
@@ -10775,8 +10906,8 @@ function polyfill() {
       this._effects = [];
       this._numEffects = 0;
 
-      var parts = settings.parts;
-      var instrument = settings.instrument;
+      var parts = settings.parts,
+          instrument = settings.instrument;
 
       if (typeof parts !== 'undefined') {
         this.addParts.apply(this, _toConsumableArray(parts));
@@ -10789,11 +10920,11 @@ function polyfill() {
     _createClass(Track, [{
       key: 'setInstrument',
       value: function setInstrument() {
-        var instrument = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+        var instrument = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
         if (instrument !== null
         // check if the mandatory functions of an instrument are present (Interface Instrument)
-         && typeof instrument.connect === 'function' && typeof instrument.disconnect === 'function' && typeof instrument.processMIDIEvent === 'function' && typeof instrument.allNotesOff === 'function' && typeof instrument.unschedule === 'function') {
+        && typeof instrument.connect === 'function' && typeof instrument.disconnect === 'function' && typeof instrument.processMIDIEvent === 'function' && typeof instrument.allNotesOff === 'function' && typeof instrument.unschedule === 'function') {
           this.removeInstrument();
           this._instrument = instrument;
           this._instrument.connect(this._panner);
@@ -11195,7 +11326,7 @@ function polyfill() {
     }, {
       key: 'getEvents',
       value: function getEvents() {
-        var filter = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+        var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
         // can be use as findEvents
         if (this._needsUpdate) {
           this.update();
@@ -11205,7 +11336,7 @@ function polyfill() {
     }, {
       key: 'mute',
       value: function mute() {
-        var flag = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+        var flag = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
         if (flag) {
           this._muted = flag;
@@ -11288,6 +11419,7 @@ function polyfill() {
       }
 
       //removeEffect(effect: Effect){
+
     }, {
       key: 'removeEffect',
       value: function removeEffect(effect) {
@@ -11554,7 +11686,7 @@ function polyfill() {
   }();
 });
 
-},{"./eventlistener":17,"./init_audio":20,"./init_midi":21,"./midi_event":24,"./midi_note":25,"./part":31,"./qambi":34,"./util":48}],48:[function(require,module,exports){
+},{"./eventlistener":18,"./init_audio":21,"./init_midi":22,"./midi_event":25,"./midi_note":26,"./part":32,"./qambi":35,"./util":49}],49:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', 'isomorphic-fetch'], factory);
@@ -11592,7 +11724,7 @@ function polyfill() {
   var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
     return typeof obj;
   } : function (obj) {
-    return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
   };
 
   var mPI = Math.PI,
@@ -11816,5 +11948,5 @@ function polyfill() {
   */
 });
 
-},{"isomorphic-fetch":2}]},{},[34])(34)
+},{"isomorphic-fetch":2}]},{},[35])(35)
 });

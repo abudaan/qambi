@@ -203,7 +203,7 @@ function toSong(parsed, settings) {
 }
 
 function songFromMIDIFileSync(data) {
-  var settings = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+  var settings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
   var song = null;
 
@@ -233,7 +233,7 @@ function songFromMIDIFileSync(data) {
 }
 
 function songFromMIDIFile(url) {
-  var settings = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+  var settings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
   return new Promise(function (resolve, reject) {
     // fetch(url, {

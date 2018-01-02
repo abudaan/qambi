@@ -50,7 +50,7 @@ function setTicksPerBeat() {
 }
 
 function updatePosition(event) {
-  var fast = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+  var fast = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
   diffTicks = event.ticks - ticks;
   // if(diffTicks < 0){
@@ -79,7 +79,7 @@ function updatePosition(event) {
 }
 
 function parseTimeEvents(settings, timeEvents) {
-  var isPlaying = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+  var isPlaying = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
   //console.log('parse time events')
   var type = void 0;
@@ -161,7 +161,7 @@ function parseTimeEvents(settings, timeEvents) {
 
 //export function parseEvents(song, events){
 function parseEvents(events) {
-  var isPlaying = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+  var isPlaying = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
   //console.log('parseEvents')
   var event = void 0;
@@ -203,6 +203,7 @@ function parseEvents(events) {
   });
   event = events[0];
   //console.log(event)
+
 
   bpm = event.bpm;
   factor = event.factor;
@@ -260,6 +261,7 @@ function parseEvents(events) {
         //console.log(nominator,numSixteenth,ticksPerSixteenth);
         //console.log(event);
 
+
         break;
 
       default:
@@ -294,7 +296,7 @@ function parseEvents(events) {
 }
 
 function updateEvent(event) {
-  var fast = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+  var fast = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
   //console.log(bar, beat, ticks)
   //console.log(event, bpm, millisPerTick, ticks, millis);
@@ -342,6 +344,7 @@ function updateEvent(event) {
   // if(millis < 0){
   //   console.log(event)
   // }
+
 }
 
 var midiNoteIndex = 0;

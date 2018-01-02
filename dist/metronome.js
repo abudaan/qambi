@@ -80,7 +80,7 @@ var Metronome = exports.Metronome = function () {
   }, {
     key: 'createEvents',
     value: function createEvents(startBar, endBar) {
-      var id = arguments.length <= 2 || arguments[2] === undefined ? 'init' : arguments[2];
+      var id = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'init';
 
       var i = void 0,
           j = void 0;
@@ -133,12 +133,12 @@ var Metronome = exports.Metronome = function () {
   }, {
     key: 'getEvents',
     value: function getEvents() {
-      var startBar = arguments.length <= 0 || arguments[0] === undefined ? 1 : arguments[0];
+      var startBar = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
 
       var _part;
 
-      var endBar = arguments.length <= 1 || arguments[1] === undefined ? this.song.bars : arguments[1];
-      var id = arguments.length <= 2 || arguments[2] === undefined ? 'init' : arguments[2];
+      var endBar = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.song.bars;
+      var id = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'init';
 
       this.part.removeEvents(this.part.getEvents());
       this.events = this.createEvents(startBar, endBar, id);
@@ -189,12 +189,12 @@ var Metronome = exports.Metronome = function () {
   }, {
     key: 'addEvents',
     value: function addEvents() {
-      var startBar = arguments.length <= 0 || arguments[0] === undefined ? 1 : arguments[0];
+      var startBar = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
 
       var _events, _part2;
 
-      var endBar = arguments.length <= 1 || arguments[1] === undefined ? this.song.bars : arguments[1];
-      var id = arguments.length <= 2 || arguments[2] === undefined ? 'add' : arguments[2];
+      var endBar = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.song.bars;
+      var id = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'add';
 
       // console.log(startBar, endBar)
       var events = this.createEvents(startBar, endBar, id);

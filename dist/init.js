@@ -59,7 +59,7 @@ function loadInstrument(data) {
 }
 
 function init() {
-  var settings = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+  var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
 
   // load settings.instruments (array or object)

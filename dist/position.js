@@ -65,7 +65,7 @@ function getTimeEvent(song, unit, target) {
 }
 
 function millisToTicks(song, targetMillis) {
-  var beos = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+  var beos = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
   beyondEndOfSong = beos;
   fromMillis(song, targetMillis);
@@ -74,7 +74,7 @@ function millisToTicks(song, targetMillis) {
 }
 
 function ticksToMillis(song, targetTicks) {
-  var beos = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+  var beos = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
   beyondEndOfSong = beos;
   fromTicks(song, targetTicks);
@@ -105,7 +105,7 @@ function barsToTicks(song, position, beos) {
 }
 
 function ticksToBars(song, target) {
-  var beos = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+  var beos = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
   beyondEndOfSong = beos;
   fromTicks(song, target);
@@ -115,7 +115,7 @@ function ticksToBars(song, target) {
 }
 
 function millisToBars(song, target) {
-  var beos = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+  var beos = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
   beyondEndOfSong = beos;
   fromMillis(song, target);
@@ -188,7 +188,7 @@ function fromTicks(song, targetTicks, event) {
 
 // main calculation function for bars and beats position
 function fromBars(song, targetBar, targetBeat, targetSixteenth, targetTick) {
-  var event = arguments.length <= 5 || arguments[5] === undefined ? null : arguments[5];
+  var event = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : null;
 
   //console.time('fromBars');
   var i = 0,
@@ -425,15 +425,14 @@ function getPosition2(song, unit, target, type, event) {
 
 // improved version of getPosition
 function calculatePosition(song, settings) {
-  var type = settings.type;
-  var // any of barsandbeats barsbeats time millis ticks perc percentage
-  target = settings.target;
-  var _settings$result = settings.result;
-  var result = _settings$result === undefined ? 'all' : _settings$result;
-  var _settings$beos = settings.beos;
-  var beos = _settings$beos === undefined ? true : _settings$beos;
-  var _settings$snap = settings.snap;
-  var snap = _settings$snap === undefined ? -1 : _settings$snap;
+  var type = settings.type,
+      target = settings.target,
+      _settings$result = settings.result,
+      result = _settings$result === undefined ? 'all' : _settings$result,
+      _settings$beos = settings.beos,
+      beos = _settings$beos === undefined ? true : _settings$beos,
+      _settings$snap = settings.snap,
+      snap = _settings$snap === undefined ? -1 : _settings$snap;
 
 
   if (supportedReturnTypes.indexOf(result) === -1) {
@@ -453,42 +452,40 @@ function calculatePosition(song, settings) {
 
     case 'barsbeats':
     case 'barsandbeats':
-      var _target = _slicedToArray(target, 4);
-
-      var _target$ = _target[0];
-      var targetbar = _target$ === undefined ? 1 : _target$;
-      var _target$2 = _target[1];
-      var targetbeat = _target$2 === undefined ? 1 : _target$2;
-      var _target$3 = _target[2];
-      var targetsixteenth = _target$3 === undefined ? 1 : _target$3;
-      var _target$4 = _target[3];
-      var targettick = _target$4 === undefined ? 0 : _target$4;
+      var _target = _slicedToArray(target, 4),
+          _target$ = _target[0],
+          targetbar = _target$ === undefined ? 1 : _target$,
+          _target$2 = _target[1],
+          targetbeat = _target$2 === undefined ? 1 : _target$2,
+          _target$3 = _target[2],
+          targetsixteenth = _target$3 === undefined ? 1 : _target$3,
+          _target$4 = _target[3],
+          targettick = _target$4 === undefined ? 0 : _target$4;
       //console.log(targetbar, targetbeat, targetsixteenth, targettick)
+
 
       fromBars(song, targetbar, targetbeat, targetsixteenth, targettick);
       return getPositionData(song);
 
     case 'time':
       // calculate millis out of time array: hours, minutes, seconds, millis
+      var _target2 = _slicedToArray(target, 4),
+          _target2$ = _target2[0],
+          targethour = _target2$ === undefined ? 0 : _target2$,
+          _target2$2 = _target2[1],
+          targetminute = _target2$2 === undefined ? 0 : _target2$2,
+          _target2$3 = _target2[2],
+          targetsecond = _target2$3 === undefined ? 0 : _target2$3,
+          _target2$4 = _target2[3],
+          targetmillisecond = _target2$4 === undefined ? 0 : _target2$4;
 
-      var _target2 = _slicedToArray(target, 4);
+      var _millis = 0;
+      _millis += targethour * 60 * 60 * 1000; //hours
+      _millis += targetminute * 60 * 1000; //minutes
+      _millis += targetsecond * 1000; //seconds
+      _millis += targetmillisecond; //milliseconds
 
-      var _target2$ = _target2[0];
-      var targethour = _target2$ === undefined ? 0 : _target2$;
-      var _target2$2 = _target2[1];
-      var targetminute = _target2$2 === undefined ? 0 : _target2$2;
-      var _target2$3 = _target2[2];
-      var targetsecond = _target2$3 === undefined ? 0 : _target2$3;
-      var _target2$4 = _target2[3];
-      var targetmillisecond = _target2$4 === undefined ? 0 : _target2$4;
-
-      var millis = 0;
-      millis += targethour * 60 * 60 * 1000; //hours
-      millis += targetminute * 60 * 1000; //minutes
-      millis += targetsecond * 1000; //seconds
-      millis += targetmillisecond; //milliseconds
-
-      fromMillis(song, millis);
+      fromMillis(song, _millis);
       calculateBarsAndBeats();
       return getPositionData(song);
 

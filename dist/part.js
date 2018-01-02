@@ -17,7 +17,7 @@ var instanceIndex = 0;
 
 var Part = exports.Part = function () {
   function Part() {
-    var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Part);
 
@@ -206,7 +206,7 @@ var Part = exports.Part = function () {
   }, {
     key: 'getEvents',
     value: function getEvents() {
-      var filter = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+      var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
       // can be use as findEvents
       if (this._needsUpdate) {
         this.update();
@@ -216,7 +216,7 @@ var Part = exports.Part = function () {
   }, {
     key: 'mute',
     value: function mute() {
-      var flag = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+      var flag = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
       if (flag) {
         this.muted = flag;

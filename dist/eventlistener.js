@@ -115,10 +115,9 @@ function removeEventListener(type, id) {
 
     try {
       for (var _iterator3 = map.entries()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-        var _step3$value = _slicedToArray(_step3.value, 2);
-
-        var key = _step3$value[0];
-        var value = _step3$value[1];
+        var _step3$value = _slicedToArray(_step3.value, 2),
+            key = _step3$value[0],
+            value = _step3$value[1];
 
         console.log(key, value);
         if (value === id) {

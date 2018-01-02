@@ -3,7 +3,7 @@
 */
 
 import {typeString} from './util'
-import 'webmidiapishim' // you can also embed the shim as a stand-alone script in the html, then you can comment this line out
+import 'web-midi-api-shim' // you can also embed the shim as a stand-alone script in the html, then you can comment this line out
 
 let MIDIAccess
 let initialized = false
@@ -18,13 +18,13 @@ let songMidiEventListener
 let midiEventListenerId = 0
 
 
-function getMIDIports(){
+function getMIDIports() {
   inputs = Array.from(MIDIAccess.inputs.values())
 
   //sort ports by name ascending
   inputs.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1)
 
-  for(let port of inputs){
+  for (let port of inputs) {
     inputsById.set(port.id, port)
     inputIds.push(port.id)
   }
@@ -35,7 +35,7 @@ function getMIDIports(){
   outputs.sort((a, b) => a.name.toLowerCase() <= b.name.toLowerCase() ? 1 : -1)
 
   //console.log(outputs)
-  for(let port of outputs){
+  for (let port of outputs) {
     //console.log(port.id, port.name)
     outputsById.set(port.id, port)
     outputIds.push(port.id)
@@ -44,30 +44,30 @@ function getMIDIports(){
 }
 
 
-export function initMIDI(){
+export function initMIDI() {
 
-  return new Promise(function executor(resolve, reject){
+  return new Promise(function executor(resolve, reject) {
 
     let jazz = false
     let midi = false
     let webmidi = false
 
-    if(typeof navigator === 'undefined'){
+    if (typeof navigator === 'undefined') {
       initialized = true
       resolve({midi})
-    }else if(typeof navigator.requestMIDIAccess !== 'undefined'){
+    } else if (typeof navigator.requestMIDIAccess !== 'undefined') {
 
 
       navigator.requestMIDIAccess().then(
 
-        function onFulFilled(midiAccess){
+        function onFulFilled(midiAccess) {
           MIDIAccess = midiAccess
           // @TODO: implement something in webmidiapishim that allows us to detect the Jazz plugin version
-          if(typeof midiAccess._jazzInstances !== 'undefined'){
+          if (typeof midiAccess._jazzInstances !== 'undefined') {
             console.log('jazz')
             jazz = midiAccess._jazzInstances[0]._Jazz.version
             midi = true
-          }else{
+          } else {
             webmidi = true
             midi = true
           }
@@ -75,12 +75,12 @@ export function initMIDI(){
           getMIDIports()
 
           // onconnect and ondisconnect are not yet implemented in Chrome and Chromium
-          midiAccess.onconnect = function(e){
+          midiAccess.onconnect = function (e) {
             console.log('device connected', e)
             getMIDIports()
           }
 
-          midiAccess.ondisconnect = function(e){
+          midiAccess.ondisconnect = function (e) {
             console.log('device disconnected', e)
             getMIDIports()
           }
@@ -97,15 +97,15 @@ export function initMIDI(){
           })
         },
 
-        function onReject(e){
+        function onReject(e) {
           //console.log(e)
           //reject('Something went wrong while requesting MIDIAccess', e)
           initialized = true
           resolve({midi, jazz})
         }
       )
-    // browsers without WebMIDI API
-    }else{
+      // browsers without WebMIDI API
+    } else {
       initialized = true
       resolve({midi})
     }
@@ -113,11 +113,11 @@ export function initMIDI(){
 }
 
 
-export let getMIDIAccess = function(){
-  if(initialized === false){
+export let getMIDIAccess = function () {
+  if (initialized === false) {
     console.warn('please call qambi.init() first')
-  }else {
-    getMIDIAccess = function(){
+  } else {
+    getMIDIAccess = function () {
       return MIDIAccess
     }
     return getMIDIAccess()
@@ -126,11 +126,11 @@ export let getMIDIAccess = function(){
 }
 
 
-export let getMIDIOutputs = function(){
-  if(initialized === false){
+export let getMIDIOutputs = function () {
+  if (initialized === false) {
     console.warn('please call qambi.init() first')
-  }else {
-    getMIDIOutputs = function(){
+  } else {
+    getMIDIOutputs = function () {
       return outputs
     }
     return getMIDIOutputs()
@@ -139,11 +139,11 @@ export let getMIDIOutputs = function(){
 }
 
 
-export let getMIDIInputs = function(){
-  if(initialized === false){
+export let getMIDIInputs = function () {
+  if (initialized === false) {
     console.warn('please call qambi.init() first')
-  }else {
-    getMIDIInputs = function(){
+  } else {
+    getMIDIInputs = function () {
       return inputs
     }
     return getMIDIInputs()
@@ -151,11 +151,11 @@ export let getMIDIInputs = function(){
   return false
 }
 
-export let getMIDIOutputIds = function(){
-  if(initialized === false){
+export let getMIDIOutputIds = function () {
+  if (initialized === false) {
     console.warn('please call qambi.init() first')
-  }else {
-    getMIDIOutputIds = function(){
+  } else {
+    getMIDIOutputIds = function () {
       return outputIds
     }
     return getMIDIOutputIds()
@@ -164,11 +164,11 @@ export let getMIDIOutputIds = function(){
 }
 
 
-export let getMIDIInputIds = function(){
-  if(initialized === false){
+export let getMIDIInputIds = function () {
+  if (initialized === false) {
     console.warn('please call qambi.init() first')
-  }else {
-    getMIDIInputIds = function(){
+  } else {
+    getMIDIInputIds = function () {
       return inputIds
     }
     return getMIDIInputIds()
@@ -177,11 +177,11 @@ export let getMIDIInputIds = function(){
 }
 
 
-export let getMIDIOutputById = function(id: string){
-  if(initialized === false){
+export let getMIDIOutputById = function (id: string) {
+  if (initialized === false) {
     console.warn('please call qambi.init() first')
-  }else {
-    getMIDIOutputById = function(_id){
+  } else {
+    getMIDIOutputById = function (_id) {
       return outputsById.get(_id)
     }
     return getMIDIOutputById(id)
@@ -190,11 +190,11 @@ export let getMIDIOutputById = function(id: string){
 }
 
 
-export let getMIDIInputById = function(id: string){
-  if(initialized === false){
+export let getMIDIInputById = function (id: string) {
+  if (initialized === false) {
     console.warn('please call qambi.init() first')
-  }else {
-    getMIDIInputById = function(_id){
+  } else {
+    getMIDIInputById = function (_id) {
       return inputsById.get(_id)
     }
     return getMIDIInputById(id)

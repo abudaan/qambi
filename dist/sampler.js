@@ -7,7 +7,7 @@ exports.Sampler = undefined;
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -37,7 +37,7 @@ var Sampler = exports.Sampler = function (_Instrument) {
   function Sampler(name) {
     _classCallCheck(this, Sampler);
 
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Sampler).call(this));
+    var _this = _possibleConstructorReturn(this, (Sampler.__proto__ || Object.getPrototypeOf(Sampler)).call(this));
 
     _this.id = _this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
     _this.name = name || _this.id;
@@ -152,66 +152,66 @@ var Sampler = exports.Sampler = function (_Instrument) {
                 }
               }
             } else {
-                var _iteratorNormalCompletion2 = true;
-                var _didIteratorError2 = false;
-                var _iteratorError2 = undefined;
+              var _iteratorNormalCompletion2 = true;
+              var _didIteratorError2 = false;
+              var _iteratorError2 = undefined;
 
-                try {
-                  var _loop = function _loop() {
-                    var noteId = _step2.value;
+              try {
+                var _loop = function _loop() {
+                  var noteId = _step2.value;
 
-                    var buffer = result[noteId];
-                    var sampleData = data[noteId];
+                  var buffer = result[noteId];
+                  var sampleData = data[noteId];
 
-                    if (typeof sampleData === 'undefined') {
-                      console.log('sampleData is undefined', noteId);
-                    } else if ((0, _util.typeString)(buffer) === 'array') {
+                  if (typeof sampleData === 'undefined') {
+                    console.log('sampleData is undefined', noteId);
+                  } else if ((0, _util.typeString)(buffer) === 'array') {
 
-                      //console.log(buffer, sampleData)
-                      sampleData.forEach(function (sd, i) {
-                        //console.log(noteId, buffer[i])
-                        if (typeof sd === 'string') {
-                          sd = {
-                            buffer: buffer[i]
-                          };
-                        } else {
-                          sd.buffer = buffer[i];
-                        }
-                        sd.note = parseInt(noteId, 10);
-                        _this2._updateSampleData(sd);
-                      });
-                    } else {
-
-                      if (typeof sampleData === 'string') {
-                        sampleData = {
-                          buffer: buffer
+                    //console.log(buffer, sampleData)
+                    sampleData.forEach(function (sd, i) {
+                      //console.log(noteId, buffer[i])
+                      if (typeof sd === 'string') {
+                        sd = {
+                          buffer: buffer[i]
                         };
                       } else {
-                        sampleData.buffer = buffer;
+                        sd.buffer = buffer[i];
                       }
-                      sampleData.note = parseInt(noteId, 10);
-                      _this2._updateSampleData(sampleData);
-                    }
-                  };
+                      sd.note = parseInt(noteId, 10);
+                      _this2._updateSampleData(sd);
+                    });
+                  } else {
 
-                  for (var _iterator2 = Object.keys(result)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                    _loop();
+                    if (typeof sampleData === 'string') {
+                      sampleData = {
+                        buffer: buffer
+                      };
+                    } else {
+                      sampleData.buffer = buffer;
+                    }
+                    sampleData.note = parseInt(noteId, 10);
+                    _this2._updateSampleData(sampleData);
                   }
-                } catch (err) {
-                  _didIteratorError2 = true;
-                  _iteratorError2 = err;
+                };
+
+                for (var _iterator2 = Object.keys(result)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                  _loop();
+                }
+              } catch (err) {
+                _didIteratorError2 = true;
+                _iteratorError2 = err;
+              } finally {
+                try {
+                  if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                    _iterator2.return();
+                  }
                 } finally {
-                  try {
-                    if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                      _iterator2.return();
-                    }
-                  } finally {
-                    if (_didIteratorError2) {
-                      throw _iteratorError2;
-                    }
+                  if (_didIteratorError2) {
+                    throw _iteratorError2;
                   }
                 }
               }
+            }
           } else {
 
             result.forEach(function (sample) {
@@ -276,23 +276,22 @@ var Sampler = exports.Sampler = function (_Instrument) {
     value: function _updateSampleData() {
       var _this4 = this;
 
-      var data = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+      var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       //console.log(data)
-      var note = data.note;
-      var _data$buffer = data.buffer;
-      var buffer = _data$buffer === undefined ? null : _data$buffer;
-      var _data$sustain = data.sustain;
-      var sustain = _data$sustain === undefined ? [null, null] : _data$sustain;
-      var _data$segment = data.segment;
-      var segment = _data$segment === undefined ? [null, null] : _data$segment;
-      var _data$release = data.release;
-      var release = _data$release === undefined ? [null, 'linear'] : _data$release;
-      var _data$pan = data.pan;
-      var // release duration is in seconds!
-      pan = _data$pan === undefined ? null : _data$pan;
-      var _data$velocity = data.velocity;
-      var velocity = _data$velocity === undefined ? [0, 127] : _data$velocity;
+      var note = data.note,
+          _data$buffer = data.buffer,
+          buffer = _data$buffer === undefined ? null : _data$buffer,
+          _data$sustain = data.sustain,
+          sustain = _data$sustain === undefined ? [null, null] : _data$sustain,
+          _data$segment = data.segment,
+          segment = _data$segment === undefined ? [null, null] : _data$segment,
+          _data$release = data.release,
+          release = _data$release === undefined ? [null, 'linear'] : _data$release,
+          _data$pan = data.pan,
+          pan = _data$pan === undefined ? null : _data$pan,
+          _data$velocity = data.velocity,
+          velocity = _data$velocity === undefined ? [0, 127] : _data$velocity;
 
 
       if (typeof note === 'undefined') {
@@ -308,26 +307,21 @@ var Sampler = exports.Sampler = function (_Instrument) {
       }
       note = n.number;
 
-      var _sustain = _slicedToArray(sustain, 2);
+      var _sustain = _slicedToArray(sustain, 2),
+          sustainStart = _sustain[0],
+          sustainEnd = _sustain[1];
 
-      var sustainStart = _sustain[0];
-      var sustainEnd = _sustain[1];
+      var _release = _slicedToArray(release, 2),
+          releaseDuration = _release[0],
+          releaseEnvelope = _release[1];
 
-      var _release = _slicedToArray(release, 2);
+      var _segment = _slicedToArray(segment, 2),
+          segmentStart = _segment[0],
+          segmentDuration = _segment[1];
 
-      var releaseDuration = _release[0];
-      var releaseEnvelope = _release[1];
-
-      var _segment = _slicedToArray(segment, 2);
-
-      var segmentStart = _segment[0];
-      var segmentDuration = _segment[1];
-
-      var _velocity = _slicedToArray(velocity, 2);
-
-      var velocityStart = _velocity[0];
-      var velocityEnd = _velocity[1];
-
+      var _velocity = _slicedToArray(velocity, 2),
+          velocityStart = _velocity[0],
+          velocityEnd = _velocity[1];
 
       if (sustain.length !== 2) {
         sustainStart = sustainEnd = null;
@@ -342,6 +336,7 @@ var Sampler = exports.Sampler = function (_Instrument) {
       // console.log(releaseDuration, releaseEnvelope)
       // console.log(pan)
       // console.log(velocityStart, velocityEnd)
+
 
       this.samplesData[note].forEach(function (sampleData, i) {
         if (i >= velocityStart && i <= velocityEnd) {

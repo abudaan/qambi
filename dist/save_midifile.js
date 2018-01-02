@@ -45,8 +45,8 @@ var META_KEY_SIG = 0x59;
 var META_SEQ_EVENT = 0x7f;
 
 function saveAsMIDIFile(song) {
-  var fileName = arguments.length <= 1 || arguments[1] === undefined ? song.name : arguments[1];
-  var ppq = arguments.length <= 2 || arguments[2] === undefined ? 960 : arguments[2];
+  var fileName = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : song.name;
+  var ppq = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 960;
 
 
   PPQ = ppq;
@@ -105,7 +105,7 @@ function saveAsMIDIFile(song) {
 }
 
 function trackToBytes(events, lastEventTicks, trackName) {
-  var instrumentName = arguments.length <= 3 || arguments[3] === undefined ? 'no instrument' : arguments[3];
+  var instrumentName = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'no instrument';
 
   var lengthBytes,
       i,

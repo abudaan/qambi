@@ -22,7 +22,7 @@ var instanceIndex = 0;
 
 var Playhead = exports.Playhead = function () {
   function Playhead(song) {
-    var type = arguments.length <= 1 || arguments[1] === undefined ? 'all' : arguments[1];
+    var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'all';
 
     _classCallCheck(this, Playhead);
 

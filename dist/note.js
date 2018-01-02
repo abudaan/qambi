@@ -35,12 +35,12 @@ var pitch = void 0;
   }
 */
 function getNoteData(settings) {
-  var fullName = settings.fullName;
-  var name = settings.name;
-  var octave = settings.octave;
-  var mode = settings.mode;
-  var number = settings.number;
-  var frequency = settings.frequency;
+  var fullName = settings.fullName,
+      name = settings.name,
+      octave = settings.octave,
+      mode = settings.mode,
+      number = settings.number,
+      frequency = settings.frequency;
 
   var _getSettings = (0, _settings.getSettings)();
 
@@ -97,13 +97,12 @@ function getNoteData(settings) {
     number: number,
     frequency: _getFrequency(number),
     blackKey: _isBlackKey(number)
-  };
-  //console.log(data)
-  return data;
+    //console.log(data)
+  };return data;
 }
 
 function _getNoteName(number) {
-  var mode = arguments.length <= 1 || arguments[1] === undefined ? noteNameMode : arguments[1];
+  var mode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noteNameMode;
 
   //let octave = Math.floor((number / 12) - 2), // → in Cubase central C = C3 instead of C4
   var octave = floor(number / 12 - 1);

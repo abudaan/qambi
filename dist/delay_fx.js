@@ -23,11 +23,11 @@ var Delay = exports.Delay = function (_ChannelEffect) {
   _inherits(Delay, _ChannelEffect);
 
   function Delay() {
-    var config = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Delay);
 
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Delay).call(this));
+    var _this = _possibleConstructorReturn(this, (Delay.__proto__ || Object.getPrototypeOf(Delay)).call(this));
 
     _this._nodeFX = _init_audio.context.createDelay();
 

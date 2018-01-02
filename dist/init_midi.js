@@ -8,7 +8,7 @@ exports.initMIDI = initMIDI;
 
 var _util = require('./util');
 
-require('webmidiapishim');
+require('web-midi-api-shim');
 
 // you can also embed the shim as a stand-alone script in the html, then you can comment this line out
 
@@ -155,9 +155,9 @@ function initMIDI() {
       });
       // browsers without WebMIDI API
     } else {
-        initialized = true;
-        resolve({ midi: midi });
-      }
+      initialized = true;
+      resolve({ midi: midi });
+    }
   });
 }
 
@@ -491,4 +491,5 @@ function removeMidiEventListeners(){
 }
 
 */
+
 exports.getMIDIInputById = _getMIDIInputById;

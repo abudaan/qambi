@@ -32,7 +32,7 @@ var instanceIndex = 0;
 
 var Track = exports.Track = function () {
   function Track() {
-    var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Track);
 
@@ -75,8 +75,8 @@ var Track = exports.Track = function () {
     this._effects = [];
     this._numEffects = 0;
 
-    var parts = settings.parts;
-    var instrument = settings.instrument;
+    var parts = settings.parts,
+        instrument = settings.instrument;
 
     if (typeof parts !== 'undefined') {
       this.addParts.apply(this, _toConsumableArray(parts));
@@ -89,11 +89,11 @@ var Track = exports.Track = function () {
   _createClass(Track, [{
     key: 'setInstrument',
     value: function setInstrument() {
-      var instrument = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+      var instrument = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
       if (instrument !== null
       // check if the mandatory functions of an instrument are present (Interface Instrument)
-       && typeof instrument.connect === 'function' && typeof instrument.disconnect === 'function' && typeof instrument.processMIDIEvent === 'function' && typeof instrument.allNotesOff === 'function' && typeof instrument.unschedule === 'function') {
+      && typeof instrument.connect === 'function' && typeof instrument.disconnect === 'function' && typeof instrument.processMIDIEvent === 'function' && typeof instrument.allNotesOff === 'function' && typeof instrument.unschedule === 'function') {
         this.removeInstrument();
         this._instrument = instrument;
         this._instrument.connect(this._panner);
@@ -495,7 +495,7 @@ var Track = exports.Track = function () {
   }, {
     key: 'getEvents',
     value: function getEvents() {
-      var filter = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+      var filter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
       // can be use as findEvents
       if (this._needsUpdate) {
         this.update();
@@ -505,7 +505,7 @@ var Track = exports.Track = function () {
   }, {
     key: 'mute',
     value: function mute() {
-      var flag = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+      var flag = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
       if (flag) {
         this._muted = flag;
@@ -588,6 +588,7 @@ var Track = exports.Track = function () {
     }
 
     //removeEffect(effect: Effect){
+
   }, {
     key: 'removeEffect',
     value: function removeEffect(effect) {

@@ -20,6 +20,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 // millis
 
+
 var Scheduler = function () {
   function Scheduler(song) {
     _classCallCheck(this, Scheduler);
@@ -214,8 +215,8 @@ var Scheduler = function () {
             //this.getDanglingAudioEvents(this.song.loopStart, events);
           }
         } else {
-            this.looped = false;
-          }
+          this.looped = false;
+        }
       }
 
       //console.log('scheduler', this.looped)
@@ -231,10 +232,10 @@ var Scheduler = function () {
           if (_event2.type === 'audio') {
             // to be implemented
           } else {
-              _event2.time = this.timeStamp + _event2.millis - this.songStartMillis;
-              _event2.time2 = this.timeStamp2 + _event2.millis - this.songStartMillis;
-              events.push(_event2);
-            }
+            _event2.time = this.timeStamp + _event2.millis - this.songStartMillis;
+            _event2.time2 = this.timeStamp2 + _event2.millis - this.songStartMillis;
+            events.push(_event2);
+          }
           this.index++;
         } else {
           break;
@@ -275,13 +276,13 @@ var Scheduler = function () {
           //console.log(events)
         }
       } else {
-          this.songCurrentMillis += diff;
-          this.maxtime = this.songCurrentMillis + this.bufferTime;
-          events = this.getEvents();
-          //events = this.song._getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
-          //events = this.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
-          //console.log('done', this.songCurrentMillis, diff, this.index, events.length)
-        }
+        this.songCurrentMillis += diff;
+        this.maxtime = this.songCurrentMillis + this.bufferTime;
+        events = this.getEvents();
+        //events = this.song._getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
+        //events = this.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
+        //console.log('done', this.songCurrentMillis, diff, this.index, events.length)
+      }
 
       // if(this.song.useMetronome === true){
       //   let metronomeEvents = this.song._metronome.getEvents2(this.maxtime, (this.timeStamp - this.songStartMillis))
@@ -333,17 +334,17 @@ var Scheduler = function () {
         if (event.type === 'audio') {
           // to be implemented
         } else {
-            track.processMIDIEvent(event);
-            //console.log(context.currentTime * 1000, event.time, this.index)
-            if (event.type === 144) {
-              this.notes.set(event.midiNoteId, event.midiNote);
-            } else if (event.type === 128) {
-              this.notes.delete(event.midiNoteId);
-            }
-            // if(this.notes.size > 0){
-            //   console.log(this.notes)
-            // }
+          track.processMIDIEvent(event);
+          //console.log(context.currentTime * 1000, event.time, this.index)
+          if (event.type === 144) {
+            this.notes.set(event.midiNoteId, event.midiNote);
+          } else if (event.type === 128) {
+            this.notes.delete(event.midiNoteId);
           }
+          // if(this.notes.size > 0){
+          //   console.log(this.notes)
+          // }
+        }
       }
       //console.log(this.index, this.numEvents)
       //return this.index >= 10

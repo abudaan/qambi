@@ -5,9 +5,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.configureMasterCompressor = exports.enableMasterCompressor = exports.getCompressionReduction = exports.getMasterVolume = exports.setMasterVolume = exports.masterCompressor = exports.unlockWebAudio = exports.masterGain = exports.context = undefined;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; }; /*
-                                                                                                                                                                                                                                                    Sets up the basic audio routing, tests which audio formats are supported and parses the samples for the metronome ticks.
-                                                                                                                                                                                                                                                  */
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; /*
+                                                                                                                                                                                                                                                                                Sets up the basic audio routing, tests which audio formats are supported and parses the samples for the metronome ticks.
+                                                                                                                                                                                                                                                                              */
 
 exports.initAudio = initAudio;
 exports.getInitData = getInitData;
@@ -64,9 +64,7 @@ function initAudio() {
   // set up the elementary audio nodes
   exports.masterCompressor = compressor = context.createDynamicsCompressor();
   compressor.connect(context.destination);
-  exports.
-  //console.log('already done')
-  masterGain = masterGain = context.createGain();
+  exports.masterGain = masterGain = context.createGain();
   masterGain.connect(context.destination);
   masterGain.gain.value = 0.5;
   initialized = true;
@@ -91,13 +89,13 @@ function initAudio() {
 }
 
 var _setMasterVolume = function setMasterVolume() {
-  var value = arguments.length <= 0 || arguments[0] === undefined ? 0.5 : arguments[0];
+  var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0.5;
 
   if (initialized === false) {
     console.warn('please call qambi.init() first');
   } else {
     exports.setMasterVolume = _setMasterVolume = function setMasterVolume() {
-      var value = arguments.length <= 0 || arguments[0] === undefined ? 0.5 : arguments[0];
+      var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0.5;
 
       if (value > 1) {
         console.info('maximal volume is 1.0, volume is set to 1.0');
@@ -199,7 +197,9 @@ var _unlockWebAudio = function unlockWebAudio() {
   }
   src.start(0);
   src.stop(0.001);
-  exports.unlockWebAudio = _unlockWebAudio = function unlockWebAudio() {};
+  exports.unlockWebAudio = _unlockWebAudio = function unlockWebAudio() {
+    //console.log('already done')
+  };
 };
 
 exports.masterGain = masterGain;

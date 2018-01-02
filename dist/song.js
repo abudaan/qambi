@@ -5,8 +5,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Song = undefined;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); //@ flow
 
 var _constants = require('./constants');
@@ -96,7 +94,7 @@ var Song = exports.Song = function () {
   }]);
 
   function Song() {
-    var settings = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Song);
 
@@ -194,8 +192,8 @@ var Song = exports.Song = function () {
     this._precountBars = 0;
     this._endPrecountMillis = 0;
 
-    var tracks = settings.tracks;
-    var timeEvents = settings.timeEvents;
+    var tracks = settings.tracks,
+        timeEvents = settings.timeEvents;
     //console.log(tracks, timeEvents)
 
     if (typeof timeEvents === 'undefined') {
@@ -530,22 +528,16 @@ var Song = exports.Song = function () {
       }
 
       if (typeof config.ppq !== 'undefined') {
-        var _ret = function () {
-          if (config.ppq === _this7.ppq) {
-            return {
-              v: void 0
-            };
-          }
-          var ppqFactor = config.ppq / _this7.ppq;
-          _this7.ppq = config.ppq;
-          _this7._allEvents.forEach(function (e) {
-            e.ticks = event.ticks * ppqFactor;
-          });
-          _this7._updateTimeEvents = true;
-          _this7.update();
-        }();
-
-        if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+        if (config.ppq === this.ppq) {
+          return;
+        }
+        var ppqFactor = config.ppq / this.ppq;
+        this.ppq = config.ppq;
+        this._allEvents.forEach(function (e) {
+          e.ticks = event.ticks * ppqFactor;
+        });
+        this._updateTimeEvents = true;
+        this.update();
       }
 
       if (typeof config.playbackSpeed !== 'undefined') {
@@ -694,7 +686,7 @@ var Song = exports.Song = function () {
   }, {
     key: 'setLoop',
     value: function setLoop() {
-      var flag = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+      var flag = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
 
       this.looping = flag !== null ? flag : !this._loop;
@@ -724,7 +716,7 @@ var Song = exports.Song = function () {
   }, {
     key: 'setPrecount',
     value: function setPrecount() {
-      var value = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+      var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
 
       this._precountBars = value;
     }

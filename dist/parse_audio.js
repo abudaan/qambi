@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 exports.decodeSample = decodeSample;
 exports.parseSamples2 = parseSamples2;
@@ -121,7 +121,7 @@ function getPromises(promises, sample, key, baseUrl, every) {
 
 // only for internally use in qambi
 function parseSamples2(mapping) {
-  var every = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+  var every = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
   var type = (0, _util.typeString)(mapping),
       promises = [],
@@ -153,13 +153,11 @@ function parseSamples2(mapping) {
       }
     });
   } else if (type === 'array') {
-    (function () {
-      var key = void 0;
-      mapping.forEach(function (sample) {
-        // key is deliberately undefined
-        getPromises(promises, sample, key, baseUrl, every);
-      });
-    })();
+    var key = void 0;
+    mapping.forEach(function (sample) {
+      // key is deliberately undefined
+      getPromises(promises, sample, key, baseUrl, every);
+    });
   }
 
   return new Promise(function (resolve) {

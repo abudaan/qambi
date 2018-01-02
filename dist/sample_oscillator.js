@@ -23,7 +23,7 @@ var SampleOscillator = exports.SampleOscillator = function (_Sample) {
   function SampleOscillator(sampleData, event) {
     _classCallCheck(this, SampleOscillator);
 
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(SampleOscillator).call(this, sampleData, event));
+    var _this = _possibleConstructorReturn(this, (SampleOscillator.__proto__ || Object.getPrototypeOf(SampleOscillator)).call(this, sampleData, event));
 
     _this.id = _this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
 

@@ -25,7 +25,7 @@ var SampleBuffer = exports.SampleBuffer = function (_Sample) {
   function SampleBuffer(sampleData, event) {
     _classCallCheck(this, SampleBuffer);
 
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(SampleBuffer).call(this, sampleData, event));
+    var _this = _possibleConstructorReturn(this, (SampleBuffer.__proto__ || Object.getPrototypeOf(SampleBuffer)).call(this, sampleData, event));
 
     _this.id = _this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
 
@@ -56,11 +56,11 @@ var SampleBuffer = exports.SampleBuffer = function (_Sample) {
   _createClass(SampleBuffer, [{
     key: 'start',
     value: function start(time) {
-      var _sampleData = this.sampleData;
-      var sustainStart = _sampleData.sustainStart;
-      var sustainEnd = _sampleData.sustainEnd;
-      var segmentStart = _sampleData.segmentStart;
-      var segmentDuration = _sampleData.segmentDuration;
+      var _sampleData = this.sampleData,
+          sustainStart = _sampleData.sustainStart,
+          sustainEnd = _sampleData.sustainEnd,
+          segmentStart = _sampleData.segmentStart,
+          segmentDuration = _sampleData.segmentDuration;
       //console.log(sustainStart, sustainEnd, segmentStart, segmentDuration)
 
       if (sustainStart && sustainEnd) {

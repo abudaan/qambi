@@ -26,9 +26,9 @@ var Sample = exports.Sample = function () {
   _createClass(Sample, [{
     key: 'start',
     value: function start(time) {
-      var _sampleData = this.sampleData;
-      var sustainStart = _sampleData.sustainStart;
-      var sustainEnd = _sampleData.sustainEnd;
+      var _sampleData = this.sampleData,
+          sustainStart = _sampleData.sustainStart,
+          sustainEnd = _sampleData.sustainEnd;
       //console.log(sustainStart, sustainEnd)
 
       if (sustainStart && sustainEnd) {
@@ -43,10 +43,10 @@ var Sample = exports.Sample = function () {
     value: function stop(time, cb) {
       var _this = this;
 
-      var _sampleData2 = this.sampleData;
-      var releaseDuration = _sampleData2.releaseDuration;
-      var releaseEnvelope = _sampleData2.releaseEnvelope;
-      var releaseEnvelopeArray = _sampleData2.releaseEnvelopeArray;
+      var _sampleData2 = this.sampleData,
+          releaseDuration = _sampleData2.releaseDuration,
+          releaseEnvelope = _sampleData2.releaseEnvelope,
+          releaseEnvelopeArray = _sampleData2.releaseEnvelopeArray;
       //console.log(releaseDuration, releaseEnvelope)
 
       this.source.onended = cb;

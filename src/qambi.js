@@ -1,4 +1,4 @@
-const version = '1.0.0-beta32'
+const version = '1.0.0-beta34'
 
 import {
   updateSettings,
@@ -13,15 +13,15 @@ import {
   MIDIEvent
 } from './midi_event'
 
-import{
+import {
   MIDINote,
 } from './midi_note'
 
-import{
+import {
   Part,
 } from './part'
 
-import{
+import {
   Track,
 } from './track'
 
@@ -94,7 +94,7 @@ import {
 } from './eventlistener'
 
 
-const getAudioContext = function(){
+const getAudioContext = function () {
   return context
 }
 
@@ -141,11 +141,11 @@ const qambi = {
   getInstruments,
   getGMInstruments,
 
-  addEventListener(type, callback){
+  addEventListener(type, callback) {
     return addEventListener(type, callback)
   },
 
-  removeEventListener(type, id){
+  removeEventListener(type, id) {
     removeEventListener(type, id)
   },
 
@@ -179,8 +179,8 @@ const qambi = {
   // from ./delay_fx
   Delay,
 
-  log(id){
-    switch(id){
+  log(id) {
+    switch (id) {
       case 'functions':
         console.log(`functions:
           getAudioContext

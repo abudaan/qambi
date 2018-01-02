@@ -25,7 +25,7 @@ var ConvolutionReverb = exports.ConvolutionReverb = function (_ChannelEffect) {
   function ConvolutionReverb(buffer) {
     _classCallCheck(this, ConvolutionReverb);
 
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ConvolutionReverb).call(this));
+    var _this = _possibleConstructorReturn(this, (ConvolutionReverb.__proto__ || Object.getPrototypeOf(ConvolutionReverb)).call(this));
 
     _this._nodeFX = _init_audio.context.createConvolver();
     _this.init();

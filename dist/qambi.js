@@ -43,7 +43,7 @@ var _constants = require('./constants');
 
 var _eventlistener = require('./eventlistener');
 
-var version = '1.0.0-beta32';
+var version = '1.0.0-beta34';
 
 var getAudioContext = function getAudioContext() {
   return _init_audio.context;
@@ -141,86 +141,32 @@ var qambi = {
 
 exports.default = qambi;
 exports.version = version;
-exports.
-
-// from ./init
-init = _init.init;
-exports.
-
-// from ./settings
-getInstruments = _settings.getInstruments;
+exports.init = _init.init;
+exports.getInstruments = _settings.getInstruments;
 exports.getGMInstruments = _settings.getGMInstruments;
 exports.updateSettings = _settings.updateSettings;
 exports.getSettings = _settings.getSettings;
-exports.
-
-// from ./constants
-MIDIEventTypes = _constants.MIDIEventTypes;
-exports.
-
-// from ./util
-parseSamples = _parse_audio.parseSamples;
-exports.
-
-// from ./midifile
-parseMIDIFile = _midifile.parseMIDIFile;
-exports.
-
-// from ./init_audio
-getAudioContext = getAudioContext;
+exports.MIDIEventTypes = _constants.MIDIEventTypes;
+exports.parseSamples = _parse_audio.parseSamples;
+exports.parseMIDIFile = _midifile.parseMIDIFile;
+exports.getAudioContext = getAudioContext;
 exports.getMasterVolume = _init_audio.getMasterVolume;
 exports.setMasterVolume = _init_audio.setMasterVolume;
-exports.
-
-// from ./init_midi
-getMIDIAccess = _init_midi.getMIDIAccess;
+exports.getMIDIAccess = _init_midi.getMIDIAccess;
 exports.getMIDIInputs = _init_midi.getMIDIInputs;
 exports.getMIDIOutputs = _init_midi.getMIDIOutputs;
 exports.getMIDIInputIds = _init_midi.getMIDIInputIds;
 exports.getMIDIOutputIds = _init_midi.getMIDIOutputIds;
 exports.getMIDIInputsById = _init_midi.getMIDIInputsById;
 exports.getMIDIOutputsById = _init_midi.getMIDIOutputsById;
-exports.
-
-// from ./note
-getNoteData = _note.getNoteData;
-exports.
-
-// from ./midi_event
-MIDIEvent = _midi_event.MIDIEvent;
-exports.
-
-// from ./midi_note
-MIDINote = _midi_note.MIDINote;
-exports.
-
-// from ./song
-Song = _song.Song;
-exports.
-
-// from ./track
-Track = _track.Track;
-exports.
-
-// from ./part
-Part = _part.Part;
-exports.
-
-// from ./instrument
-Instrument = _instrument.Instrument;
-exports.
-
-// from ./simple_synth
-SimpleSynth = _simple_synth.SimpleSynth;
-exports.
-
-// from ./sampler
-Sampler = _sampler.Sampler;
-exports.
-
-// from ./convolution_reverb
-ConvolutionReverb = _convolution_reverb.ConvolutionReverb;
-exports.
-
-// from ./delay_fx
-Delay = _delay_fx.Delay;
+exports.getNoteData = _note.getNoteData;
+exports.MIDIEvent = _midi_event.MIDIEvent;
+exports.MIDINote = _midi_note.MIDINote;
+exports.Song = _song.Song;
+exports.Track = _track.Track;
+exports.Part = _part.Part;
+exports.Instrument = _instrument.Instrument;
+exports.SimpleSynth = _simple_synth.SimpleSynth;
+exports.Sampler = _sampler.Sampler;
+exports.ConvolutionReverb = _convolution_reverb.ConvolutionReverb;
+exports.Delay = _delay_fx.Delay;

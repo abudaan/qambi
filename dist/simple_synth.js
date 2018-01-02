@@ -25,7 +25,7 @@ var SimpleSynth = exports.SimpleSynth = function (_Instrument) {
   function SimpleSynth(type, name) {
     _classCallCheck(this, SimpleSynth);
 
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(SimpleSynth).call(this));
+    var _this = _possibleConstructorReturn(this, (SimpleSynth.__proto__ || Object.getPrototypeOf(SimpleSynth)).call(this));
 
     _this.id = _this.constructor.name + '_' + instanceIndex++ + '_' + new Date().getTime();
     _this.name = name || _this.id;

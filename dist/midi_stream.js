@@ -20,7 +20,6 @@ var fcc = String.fromCharCode;
 var MIDIStream = function () {
 
   // buffer is Uint8Array
-
   function MIDIStream(buffer) {
     _classCallCheck(this, MIDIStream);
 
@@ -34,7 +33,7 @@ var MIDIStream = function () {
   _createClass(MIDIStream, [{
     key: 'read',
     value: function read(length) {
-      var toString = arguments.length <= 1 || arguments[1] === undefined ? true : arguments[1];
+      var toString = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
       var result = void 0;
 
