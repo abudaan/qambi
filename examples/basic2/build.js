@@ -5268,7 +5268,7 @@ var _constants = require('./constants');
 
 var _eventlistener = require('./eventlistener');
 
-var version = '1.0.0-beta34';
+var version = '1.0.0-beta35';
 
 var getAudioContext = function getAudioContext() {
   return _init_audio.context;
