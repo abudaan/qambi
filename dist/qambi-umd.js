@@ -525,7 +525,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        - Creates a unique id for every device and stores these ids by the name of the device:
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          so when a device gets disconnected and reconnected again, it will still have the same id. This
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          is in line with the behaviour of the native MIDIAccess object.
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
 exports.createMIDIAccess = createMIDIAccess;
@@ -2721,10 +2721,10 @@ function polyfill() {
       (data) => {
         // parseAudio
         let dataAudio = data[0]
-    
+
         // parseMIDI
         let dataMidi = data[1]
-    
+
         callback({
           legacy: dataAudio.legacy,
           mp3: dataAudio.mp3,
@@ -3233,32 +3233,32 @@ function polyfill() {
 
   /*
   export function initMidiSong(song){
-  
+
     songMidiEventListener = function(e){
       //console.log(e)
       handleMidiMessageSong(song, e, this);
     };
-  
+
     // by default a song listens to all available midi-in ports
     inputs.forEach(function(port){
       port.addEventListener('midimessage', songMidiEventListener);
       song.midiInputs.set(port.id, port);
     });
-  
+
     outputs.forEach(function(port){
       song.midiOutputs.set(port.id, port);
     });
   }
-  
-  
+
+
   export function setMidiInputSong(song, id, flag){
     let input = inputs.get(id);
-  
+
     if(input === undefined){
       warn('no midi input with id', id, 'found');
       return;
     }
-  
+
     if(flag === false){
       song.midiInputs.delete(id);
       input.removeEventListener('midimessage', songMidiEventListener);
@@ -3266,22 +3266,22 @@ function polyfill() {
       song.midiInputs.set(id, input);
       input.addEventListener('midimessage', songMidiEventListener);
     }
-  
+
     let tracks = song.tracks;
     for(let track of tracks){
       track.setMidiInput(id, flag);
     }
   }
-  
-  
+
+
   export function setMidiOutputSong(song, id, flag){
     let output = outputs.get(id);
-  
+
     if(output === undefined){
       warn('no midi output with id', id, 'found');
       return;
     }
-  
+
     if(flag === false){
       song.midiOutputs.delete(id);
       let time = song.scheduler.lastEventTime + 100;
@@ -3290,29 +3290,29 @@ function polyfill() {
     }else{
       song.midiOutputs.set(id, output);
     }
-  
+
     let tracks = song.tracks;
     for(let track of tracks){
       track.setMidiOutput(id, flag);
     }
   }
-  
-  
+
+
   function handleMidiMessageSong(song, midiMessageEvent, input){
     let midiEvent = new MidiEvent(song.ticks, ...midiMessageEvent.data);
-  
+
     //console.log(midiMessageEvent.data);
-  
+
     let tracks = song.tracks;
     for(let track of tracks){
       //console.log(track.midiInputs, input);
-  
-  
+
+
       //if(midiEvent.channel === track.channel || track.channel === 0 || track.channel === 'any'){
       //  handleMidiMessageTrack(midiEvent, track);
       //}
-  
-  
+
+
       // like in Cubase, midi events from all devices, sent on any midi channel are forwarded to all tracks
       // set track.monitor to false if you don't want to receive midi events on a certain track
       // note that track.monitor is by default set to false and that track.monitor is automatically set to true
@@ -3322,7 +3322,7 @@ function polyfill() {
         handleMidiMessageTrack(midiEvent, track, input);
       }
     }
-  
+
     let listeners = song.midiEventListeners.get(midiEvent.type);
     if(listeners !== undefined){
       for(let listener of listeners){
@@ -3330,22 +3330,22 @@ function polyfill() {
       }
     }
   }
-  
-  
+
+
   function handleMidiMessageTrack(track, midiEvent, input){
     let song = track.song,
       note, listeners, channel;
       //data = midiMessageEvent.data,
       //midiEvent = createMidiEvent(song.ticks, data[0], data[1], data[2]);
-  
+
     //midiEvent.source = midiMessageEvent.srcElement.name;
     //console.log(midiMessageEvent)
     //console.log('---->', midiEvent.type);
-  
+
     // add the exact time of this event so we can calculate its ticks position
     midiEvent.recordMillis = context.currentTime * 1000; // millis
     midiEvent.state = 'recorded';
-  
+
     if(midiEvent.type === 144){
       note = createMidiNote(midiEvent);
       track.recordingNotes[midiEvent.data1] = note;
@@ -3361,9 +3361,9 @@ function polyfill() {
       delete track.recordingNotes[midiEvent.data1];
       //delete track.song.recordingNotes[note.id];
     }
-  
+
     //console.log(song.preroll, song.recording, track.recordEnabled);
-  
+
     if((song.prerolling || song.recording) && track.recordEnabled === 'midi'){
       if(midiEvent.type === 144){
         track.song.recordedNotes.push(note);
@@ -3374,7 +3374,7 @@ function polyfill() {
     }else if(track.enableRetrospectiveRecording){
       track.retrospectiveRecording.push(midiEvent);
     }
-  
+
     // call all midi event listeners
     listeners = track.midiEventListeners[midiEvent.type];
     if(listeners !== undefined){
@@ -3382,12 +3382,12 @@ function polyfill() {
         listener(midiEvent, input);
       });
     }
-  
+
     channel = track.channel;
     if(channel === 'any' || channel === undefined || isNaN(channel) === true){
       channel = 0;
     }
-  
+
     objectForEach(track.midiOutputs, function(output){
       //console.log('midi out', output, midiEvent.type);
       if(midiEvent.type === 128 || midiEvent.type === 144 || midiEvent.type === 176){
@@ -3398,7 +3398,7 @@ function polyfill() {
       }
       //output.send([midiEvent.status + channel, midiEvent.data1, midiEvent.data2]);
     });
-  
+
     // @TODO: maybe a track should be able to send its event to both a midi-out port and an internal heartbeat song?
     //console.log(track.routeToMidiOut);
     if(track.routeToMidiOut === false){
@@ -3406,17 +3406,17 @@ function polyfill() {
       track.instrument.processEvent(midiEvent);
     }
   }
-  
-  
+
+
   function addMidiEventListener(...args){ // caller can be a track or a song
-  
+
     let id = midiEventListenerId++;
     let listener;
       types = {},
       ids = [],
       loop;
-  
-  
+
+
     // should I inline this?
     loop = function(args){
       for(let arg of args){
@@ -3439,10 +3439,10 @@ function polyfill() {
         }
       }
     };
-  
+
     loop(args, 0, args.length);
     //console.log('types', types, 'listener', listener);
-  
+
     objectForEach(types, function(type){
       //console.log(type);
       if(obj.midiEventListeners[type] === undefined){
@@ -3451,12 +3451,12 @@ function polyfill() {
       obj.midiEventListeners[type][id] = listener;
       ids.push(type + '_' + id);
     });
-  
+
     //console.log(obj.midiEventListeners);
     return ids.length === 1 ? ids[0] : ids;
   }
-  
-  
+
+
   function removeMidiEventListener(id, obj){
     var type;
     id = id.split('_');
@@ -3464,12 +3464,12 @@ function polyfill() {
     id = id[1];
     delete obj.midiEventListeners[type][id];
   }
-  
-  
+
+
   function removeMidiEventListeners(){
-  
+
   }
-  
+
   */
   exports.getMIDIInputById = _getMIDIInputById;
 });
@@ -4434,7 +4434,7 @@ function polyfill() {
 })(this, function (exports) {
   /*
     Wrapper for accessing bytes through sequential reads
-  
+
     based on: https://github.com/gasman/jasmid
     adapted to work with ArrayBuffer -> Uint8Array
   */
@@ -4584,7 +4584,7 @@ function polyfill() {
 })(this, function (exports, _midi_stream) {
   /*
     Extracts all midi events from a binary midi file, uses midi_stream.js
-  
+
     based on: https://github.com/gasman/jasmid
   */
 
@@ -6448,14 +6448,14 @@ function polyfill() {
           this.set(this.unit, this.currentValue);
           //console.log(type,activeParts);
         }
-      
-      
+
+
         addType(t){
           this.type += ' ' + t;
           this.set(this.unit, this.currentValue);
           //console.log(type,activeParts);
         }
-      
+
         removeType(t){
           var arr = this.type.split(' ');
           this.type = '';
@@ -7052,25 +7052,25 @@ function polyfill() {
   }
 
   /*
-  
+
   //@param: 'millis', 1000, [true]
   //@param: 'ticks', 1000, [true]
   //@param: 'barsandbeats', 1, ['all', true]
   //@param: 'barsandbeats', 60, 4, 3, 120, ['all', true]
   //@param: 'barsandbeats', 60, 4, 3, 120, [true, 'all']
-  
+
   function checkPosition(type, args, returnType = 'all'){
     beyondEndOfSong = true;
     console.log('----> checkPosition:', args, typeString(args));
-  
+
     if(typeString(args) === 'array'){
       let
         numArgs = args.length,
         position,
         i, a, positionLength;
-  
+
       type = args[0];
-  
+
       // support for [['millis', 3000]]
       if(typeString(args[0]) === 'array'){
         //console.warn('this shouldn\'t happen!');
@@ -7078,13 +7078,13 @@ function polyfill() {
         type = args[0];
         numArgs = args.length;
       }
-  
+
       position = [type];
-  
+
       console.log('check position', args, numArgs, supportedTypes.indexOf(type));
-  
+
       //console.log('arg', 0, '->', type);
-  
+
       if(supportedTypes.indexOf(type) !== -1){
         for(i = 1; i < numArgs; i++){
           a = args[i];
@@ -7114,33 +7114,33 @@ function polyfill() {
     }
     return false;
   }
-  
-  
+
+
   export function getPosition(song, type, args){
     //console.log('getPosition', args);
-  
+
     if(typeof args === 'undefined'){
       return {
         millis: 0
       }
     }
-  
+
     let position = checkPosition(type, args),
       millis, tmp, snap;
-  
-  
+
+
     if(position === false){
       error('wrong position data');
       return false;
     }
-  
+
     switch(type){
-  
+
       case 'barsbeats':
       case 'barsandbeats':
         fromBars(song, position[1], position[2], position[3], position[4]);
         return getPositionData(song);
-  
+
       case 'time':
         // calculate millis out of time array: hours, minutes, seconds, millis
         millis = 0;
@@ -7152,29 +7152,29 @@ function polyfill() {
         millis += tmp * 1000; //seconds
         tmp = position[4] || 0;
         millis += tmp; //milliseconds
-  
+
         fromMillis(song, millis);
         calculateBarsAndBeats();
         return getPositionData(song);
-  
+
       case 'millis':
         fromMillis(song, position[1]);
         calculateBarsAndBeats();
         return getPositionData(song);
-  
+
       case 'ticks':
         fromTicks(song, position[1]);
         calculateBarsAndBeats();
         return getPositionData(song);
-  
+
       case 'perc':
       case 'percentage':
         snap = position[2];
-  
+
         //millis = position[1] * song.durationMillis;
         //fromMillis(song, millis);
         //console.log(millis);
-  
+
         ticks = position[1] * song.durationTicks;
         if(snap !== undefined){
           ticks = floor(ticks/snap) * snap;
@@ -7189,7 +7189,7 @@ function polyfill() {
     }
     return false;
   }
-  
+
   */
 });
 
@@ -7213,7 +7213,7 @@ function polyfill() {
     value: true
   });
   exports.Delay = exports.ConvolutionReverb = exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
-  var version = '1.0.0-beta31';
+  var version = '1.0.0-beta32';
 
   var getAudioContext = function getAudioContext() {
     return _init_audio.context;
@@ -8340,12 +8340,12 @@ function polyfill() {
 
 
   var PPQ = 960; /*
-                 
-                 
+
+
                  This code is based on https://github.com/sergi/jsmidi
-                 
+
                  info: http://www.deluge.co/?q=midi-tempo-bpm
-                 
+
                  */
 
   var HDR_PPQ = str2Bytes(PPQ.toString(16), 2);
@@ -11754,24 +11754,24 @@ function polyfill() {
 
   /*
   //old school ajax
-  
+
   export function ajax(config){
     let
       request = new XMLHttpRequest(),
       method = typeof config.method === 'undefined' ? 'GET' : config.method,
       fileSize;
-  
+
     function executor(resolve, reject){
-  
+
       reject = reject || function(){};
       resolve = resolve || function(){};
-  
+
       request.onload = function(){
         if(request.status !== 200){
           reject(request.status);
           return;
         }
-  
+
         if(config.responseType === 'json'){
           fileSize = request.response.length;
           resolve(JSON.parse(request.response), fileSize);
@@ -11781,17 +11781,17 @@ function polyfill() {
           request = null;
         }
       };
-  
+
       request.onerror = function(e){
         config.onError(e);
       };
-  
+
       request.open(method, config.url, true);
-  
+
       if(config.overrideMimeType){
         request.overrideMimeType(config.overrideMimeType);
       }
-  
+
       if(config.responseType){
         if(config.responseType === 'json'){
           request.responseType = 'text';
@@ -11799,18 +11799,18 @@ function polyfill() {
           request.responseType = config.responseType;
         }
       }
-  
+
       if(method === 'POST') {
         request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
       }
-  
+
       if(config.data){
         request.send(config.data);
       }else{
         request.send();
       }
     }
-  
+
     return new Promise(executor);
   }
   */

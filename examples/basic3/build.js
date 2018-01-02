@@ -1090,10 +1090,10 @@ function init() {
     (data) => {
       // parseAudio
       let dataAudio = data[0]
-  
+
       // parseMIDI
       let dataMidi = data[1]
-  
+
       callback({
         legacy: dataAudio.legacy,
         mp3: dataAudio.mp3,
@@ -4519,14 +4519,14 @@ var Playhead = exports.Playhead = function () {
         this.set(this.unit, this.currentValue);
         //console.log(type,activeParts);
       }
-    
-    
+
+
       addType(t){
         this.type += ' ' + t;
         this.set(this.unit, this.currentValue);
         //console.log(type,activeParts);
       }
-    
+
       removeType(t){
         var arr = this.type.split(' ');
         this.type = '';
@@ -5262,7 +5262,7 @@ var _constants = require('./constants');
 
 var _eventlistener = require('./eventlistener');
 
-var version = '1.0.0-beta31';
+var version = '1.0.0-beta32';
 
 var getAudioContext = function getAudioContext() {
   return _init_audio.context;
@@ -6161,12 +6161,12 @@ exports.saveAsMIDIFile = saveAsMIDIFile;
 var _filesaverjs = require('filesaverjs');
 
 var PPQ = 960; /*
-               
-               
+
+
                This code is based on https://github.com/sergi/jsmidi
-               
+
                info: http://www.deluge.co/?q=midi-tempo-bpm
-               
+
                */
 
 var HDR_PPQ = str2Bytes(PPQ.toString(16), 2);
@@ -6795,15 +6795,15 @@ var Scheduler = function () {
 
     /*
       unschedule(){
-    
+
         let min = this.song._currentMillis
         let max = min + (bufferTime * 1000)
-    
+
         //console.log('reschedule', this.notes.size)
         this.notes.forEach((note, id) => {
           // console.log(note)
           // console.log(note.noteOn.millis, note.noteOff.millis, min, max)
-    
+
           if(typeof note === 'undefined' || note.state === 'removed'){
             //sample.unschedule(0, unscheduleCallback);
             //console.log('NOTE IS UNDEFINED')
@@ -9677,7 +9677,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        - Creates a unique id for every device and stores these ids by the name of the device:
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          so when a device gets disconnected and reconnected again, it will still have the same id. This
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          is in line with the behaviour of the native MIDIAccess object.
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
 
 exports.createMIDIAccess = createMIDIAccess;
