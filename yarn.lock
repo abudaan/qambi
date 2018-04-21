@@ -2588,9 +2588,9 @@ isstream@~0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/isstream/-/isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a"
 
-jazz-midi@>=1.4.4:
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/jazz-midi/-/jazz-midi-1.6.0.tgz#f12d7409c83a82c2832415f10112b7b589e56742"
+jazz-midi@^1.6.1:
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/jazz-midi/-/jazz-midi-1.6.2.tgz#c628d474da8dd9b6e455d0f4fd6d3d729fcb353f"
 
 js-tokens@^3.0.0, js-tokens@^3.0.2:
   version "3.0.2"
@@ -2663,6 +2663,12 @@ jsprim@^1.2.2:
     extsprintf "1.3.0"
     json-schema "0.2.3"
     verror "1.10.0"
+
+jzz@^0.4.6:
+  version "0.4.6"
+  resolved "https://registry.yarnpkg.com/jzz/-/jzz-0.4.6.tgz#7e5876d079e492433e377289feff352302751930"
+  dependencies:
+    jazz-midi "^1.6.1"
 
 kind-of@^3.0.2:
   version "3.2.2"
@@ -4155,12 +4161,6 @@ ware@^1.0.1:
   resolved "https://registry.yarnpkg.com/ware/-/ware-1.3.0.tgz#d1b14f39d2e2cb4ab8c4098f756fe4b164e473d4"
   dependencies:
     wrap-fn "^0.1.0"
-
-web-midi-api-shim@^1.4.16:
-  version "1.4.16"
-  resolved "https://registry.yarnpkg.com/web-midi-api-shim/-/web-midi-api-shim-1.4.16.tgz#bbb68883dcdde4992a23ea22dafa9e39dd89d039"
-  dependencies:
-    jazz-midi ">=1.4.4"
 
 whatwg-fetch@>=0.10.0:
   version "2.0.3"

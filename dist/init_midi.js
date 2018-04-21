@@ -8,7 +8,7 @@ exports.initMIDI = initMIDI;
 
 var _util = require('./util');
 
-require('web-midi-api-shim');
+require('jzz');
 
 // you can also embed the shim as a stand-alone script in the html, then you can comment this line out
 
@@ -106,6 +106,8 @@ function initMIDI() {
     var jazz = false;
     var midi = false;
     var webmidi = false;
+
+    console.log('hallo aap!', navigator.requestMIDIAccess);
 
     if (typeof navigator === 'undefined') {
       initialized = true;
