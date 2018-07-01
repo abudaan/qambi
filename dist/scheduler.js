@@ -4,7 +4,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); // millis
+
 
 var _init_midi = require('./init_midi');
 
@@ -13,6 +14,8 @@ var _init_audio = require('./init_audio');
 var _midi_event = require('./midi_event');
 
 var _util = require('./util');
+
+var _eventlistener = require('./eventlistener');
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -335,6 +338,12 @@ var Scheduler = function () {
           // to be implemented
         } else {
           track.processMIDIEvent(event);
+          if (track.name === this.song.id + '_metronome' && this.song.useMetronome) {
+            (0, _eventlistener.dispatchEvent)({
+              type: 'metronome',
+              data: event
+            });
+          }
           //console.log(context.currentTime * 1000, event.time, this.index)
           if (event.type === 144) {
             this.notes.set(event.midiNoteId, event.midiNote);
@@ -353,16 +362,13 @@ var Scheduler = function () {
 
     /*
       unschedule(){
-    
-        let min = this.song._currentMillis
+         let min = this.song._currentMillis
         let max = min + (bufferTime * 1000)
-    
-        //console.log('reschedule', this.notes.size)
+         //console.log('reschedule', this.notes.size)
         this.notes.forEach((note, id) => {
           // console.log(note)
           // console.log(note.noteOn.millis, note.noteOff.millis, min, max)
-    
-          if(typeof note === 'undefined' || note.state === 'removed'){
+           if(typeof note === 'undefined' || note.state === 'removed'){
             //sample.unschedule(0, unscheduleCallback);
             //console.log('NOTE IS UNDEFINED')
             //sample.stop(0)

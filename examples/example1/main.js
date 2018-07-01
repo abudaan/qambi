@@ -7,12 +7,12 @@ document.addEventListener('DOMContentLoaded', function(){
   qambi.init({
     song: {
       type: 'Song',
-      url: '../data/minute_waltz.mid'
+      url: '../data/minute_waltz.mid',
       // url: '../data/mozk545a.mid'
     },
     piano: {
       type: 'Instrument',
-      url: '../../instruments/heartbeat/city-piano.json'
+      url: '../../instruments/heartbeat/city-piano-light.json'
     }
   })
   .then((data) => {
@@ -22,6 +22,15 @@ document.addEventListener('DOMContentLoaded', function(){
     song.getTracks().forEach(track => {
       track.setInstrument(piano)
     })
+
+    song.setMetronome(true);
+    const metronomeName = `${song.id}_metronome`;
+    song.addEventListener('noteOn', (note) => {
+      console.log(note.data._track.name);
+      if(note.data._track.name === metronomeName) {
+        console.log(`tick says the metronome: ${note}`);
+      }
+    });
 
     initUI(song)
   })

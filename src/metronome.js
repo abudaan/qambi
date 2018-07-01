@@ -1,3 +1,4 @@
+import {Instrument} from './instrument';
 import {Track} from './track'
 import {Part} from './part'
 import {parseEvents, parseMIDINotes} from './parse_events'

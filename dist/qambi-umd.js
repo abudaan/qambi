@@ -4993,17 +4993,17 @@ process.umask = function() { return 0; };
 },{"./eventlistener":11,"./init_audio":14}],17:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './track', './part', './parse_events', './midi_event', './util', './position', './sampler', './init_audio', './constants'], factory);
+    define(['exports', './instrument', './track', './part', './parse_events', './midi_event', './util', './position', './sampler', './init_audio', './constants'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./track'), require('./part'), require('./parse_events'), require('./midi_event'), require('./util'), require('./position'), require('./sampler'), require('./init_audio'), require('./constants'));
+    factory(exports, require('./instrument'), require('./track'), require('./part'), require('./parse_events'), require('./midi_event'), require('./util'), require('./position'), require('./sampler'), require('./init_audio'), require('./constants'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.track, global.part, global.parse_events, global.midi_event, global.util, global.position, global.sampler, global.init_audio, global.constants);
+    factory(mod.exports, global.instrument, global.track, global.part, global.parse_events, global.midi_event, global.util, global.position, global.sampler, global.init_audio, global.constants);
     global.metronome = mod.exports;
   }
-})(this, function (exports, _track, _part3, _parse_events, _midi_event, _util, _position, _sampler, _init_audio, _constants) {
+})(this, function (exports, _instrument, _track, _part3, _parse_events, _midi_event, _util, _position, _sampler, _init_audio, _constants) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -5362,7 +5362,7 @@ process.umask = function() { return 0; };
     }, {
       key: 'setInstrument',
       value: function setInstrument(instrument) {
-        if (!instrument instanceof Instrument) {
+        if (!instrument instanceof _instrument.Instrument) {
           console.warn('not an instance of Instrument');
           return;
         }
@@ -5442,7 +5442,7 @@ process.umask = function() { return 0; };
   }();
 });
 
-},{"./constants":8,"./init_audio":14,"./midi_event":18,"./parse_events":24,"./part":25,"./position":27,"./sampler":32,"./track":41,"./util":42}],18:[function(require,module,exports){
+},{"./constants":8,"./init_audio":14,"./instrument":16,"./midi_event":18,"./parse_events":24,"./part":25,"./position":27,"./sampler":32,"./track":41,"./util":42}],18:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports', './note', './settings'], factory);
@@ -8511,7 +8511,7 @@ process.umask = function() { return 0; };
     value: true
   });
   exports.Delay = exports.ConvolutionReverb = exports.Sampler = exports.SimpleSynth = exports.Instrument = exports.Part = exports.Track = exports.Song = exports.MIDINote = exports.MIDIEvent = exports.getNoteData = exports.getMIDIOutputsById = exports.getMIDIInputsById = exports.getMIDIOutputIds = exports.getMIDIInputIds = exports.getMIDIOutputs = exports.getMIDIInputs = exports.getMIDIAccess = exports.setMasterVolume = exports.getMasterVolume = exports.getAudioContext = exports.parseMIDIFile = exports.parseSamples = exports.MIDIEventTypes = exports.getSettings = exports.updateSettings = exports.getGMInstruments = exports.getInstruments = exports.init = exports.version = undefined;
-  var version = '1.0.0-beta38';
+  var version = '1.0.0-beta39';
 
   var getAudioContext = function getAudioContext() {
     return _init_audio.context;
@@ -9863,17 +9863,17 @@ process.umask = function() { return 0; };
 },{"filesaverjs":1}],35:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', './init_midi', './init_audio', './midi_event', './util'], factory);
+    define(['exports', './init_midi', './init_audio', './midi_event', './util', './eventlistener'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('./init_midi'), require('./init_audio'), require('./midi_event'), require('./util'));
+    factory(exports, require('./init_midi'), require('./init_audio'), require('./midi_event'), require('./util'), require('./eventlistener'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.init_midi, global.init_audio, global.midi_event, global.util);
+    factory(mod.exports, global.init_midi, global.init_audio, global.midi_event, global.util, global.eventlistener);
     global.scheduler = mod.exports;
   }
-})(this, function (exports, _init_midi, _init_audio, _midi_event, _util) {
+})(this, function (exports, _init_midi, _init_audio, _midi_event, _util, _eventlistener) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -10227,6 +10227,12 @@ process.umask = function() { return 0; };
             // to be implemented
           } else {
             track.processMIDIEvent(event);
+            if (track.name === this.song.id + '_metronome' && this.song.useMetronome) {
+              (0, _eventlistener.dispatchEvent)({
+                type: 'metronome',
+                data: event
+              });
+            }
             //console.log(context.currentTime * 1000, event.time, this.index)
             if (event.type === 144) {
               this.notes.set(event.midiNoteId, event.midiNote);
@@ -10262,7 +10268,7 @@ process.umask = function() { return 0; };
   exports.default = Scheduler;
 });
 
-},{"./init_audio":14,"./init_midi":15,"./midi_event":18,"./util":42}],36:[function(require,module,exports){
+},{"./eventlistener":11,"./init_audio":14,"./init_midi":15,"./midi_event":18,"./util":42}],36:[function(require,module,exports){
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);

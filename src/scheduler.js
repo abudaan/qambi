@@ -2,18 +2,19 @@ import {getMIDIOutputById, getMIDIOutputs} from './init_midi'
 import {context} from './init_audio'
 import {MIDIEvent} from './midi_event'
 import {sortEvents} from './util' // millis
+import {dispatchEvent} from './eventlistener' // millis
 
 
-export default class Scheduler{
+export default class Scheduler {
 
-  constructor(song){
+  constructor(song) {
     this.song = song
     this.notes = new Map()
     this.bufferTime = song.bufferTime
   }
 
 
-  init(millis){
+  init(millis) {
     this.songCurrentMillis = millis
     this.songStartMillis = millis
     this.events = this.song._allEvents
@@ -28,7 +29,7 @@ export default class Scheduler{
   }
 
 
-  updateSong(){
+  updateSong() {
     //this.songCurrentMillis = this.song._currentMillis
     this.events = this.song._allEvents
     this.numEvents = this.events.length
@@ -39,17 +40,17 @@ export default class Scheduler{
   }
 
 
-  setTimeStamp(timeStamp){
+  setTimeStamp(timeStamp) {
     this.timeStamp = timeStamp // timestamp WebAudio context -> for internal instruments
     this.timeStamp2 = performance.now() // timestamp since opening webpage -> for external instruments
   }
 
   // get the index of the event that has its millis value at or right after the provided millis value
-  setIndex(millis){
+  setIndex(millis) {
     let i = 0
     let event
-    for(event of this.events){
-      if(event.millis >= millis){
+    for (event of this.events) {
+      if (event.millis >= millis) {
         this.index = i;
         break;
       }
@@ -63,17 +64,17 @@ export default class Scheduler{
   }
 
 
-  getEvents(){
+  getEvents() {
     let events = []
 
-    if(this.song._loop === true && this.song._loopDuration < this.bufferTime){
+    if (this.song._loop === true && this.song._loopDuration < this.bufferTime) {
       this.maxtime = this.songStartMillis + this.song._loopDuration - 1
       //console.log(this.maxtime, this.song.loopDuration);
     }
 
-    if(this.song._loop === true){
+    if (this.song._loop === true) {
 
-      if(this.maxtime >= this.song._rightLocator.millis && this.beyondLoop === false){
+      if (this.maxtime >= this.song._rightLocator.millis && this.beyondLoop === false) {
         //console.log('LOOP', this.maxtime, this.song._rightLocator.millis)
 
         let diff = this.maxtime - this.song._rightLocator.millis
@@ -81,25 +82,25 @@ export default class Scheduler{
 
         //console.log('-------LOOPED', this.maxtime, diff, this.song._leftLocator.millis, this.song._rightLocator.millis);
 
-        if(this.looped === false){
+        if (this.looped === false) {
           this.looped = true;
           let leftMillis = this.song._leftLocator.millis
           let rightMillis = this.song._rightLocator.millis
 
-          for(let i = this.index; i < this.numEvents; i++){
+          for (let i = this.index; i < this.numEvents; i++) {
             let event = this.events[i];
             //console.log(event)
-            if(event.millis < rightMillis){
+            if (event.millis < rightMillis) {
               event.time = this.timeStamp + event.millis - this.songStartMillis
               event.time2 = this.timeStamp2 + event.millis - this.songStartMillis
               events.push(event)
 
-              if(event.type === 144){
+              if (event.type === 144) {
                 this.notes.set(event.midiNoteId, event.midiNote)
               }
               //console.log(event.midiNoteId, event.type)
               this.index++
-            }else{
+            } else {
               break
             }
           }
@@ -108,10 +109,10 @@ export default class Scheduler{
           let endTicks = this.song._rightLocator.ticks - 1
           let endMillis = this.song.calculatePosition({type: 'ticks', target: endTicks, result: 'millis'}).millis
 
-          for(let note of this.notes.values()){
+          for (let note of this.notes.values()) {
             let noteOn = note.noteOn
             let noteOff = note.noteOff
-            if(noteOff.millis <= rightMillis){
+            if (noteOff.millis <= rightMillis) {
               continue
             }
             let event = new MIDIEvent(endTicks, 128, noteOn.data1, 0)
@@ -126,19 +127,19 @@ export default class Scheduler{
             events.push(event)
           }
 
-/*
-          // stop overflowing audio samples
-          for(i in this.scheduledAudioEvents){
-            if(this.scheduledAudioEvents.hasOwnProperty(i)){
-              audioEvent = this.scheduledAudioEvents[i];
-              if(audioEvent.endMillis > this.song.loopEnd){
-                audioEvent.stopSample(this.song.loopEnd/1000);
-                delete this.scheduledAudioEvents[i];
-                //console.log('stopping audio event', i);
-              }
-            }
-          }
-*/
+          /*
+                    // stop overflowing audio samples
+                    for(i in this.scheduledAudioEvents){
+                      if(this.scheduledAudioEvents.hasOwnProperty(i)){
+                        audioEvent = this.scheduledAudioEvents[i];
+                        if(audioEvent.endMillis > this.song.loopEnd){
+                          audioEvent.stopSample(this.song.loopEnd/1000);
+                          delete this.scheduledAudioEvents[i];
+                          //console.log('stopping audio event', i);
+                        }
+                      }
+                    }
+          */
           this.notes = new Map()
           this.setIndex(leftMillis)
           this.timeStamp += this.song._loopDuration
@@ -149,7 +150,7 @@ export default class Scheduler{
           // get the audio events that start before song.loopStart
           //this.getDanglingAudioEvents(this.song.loopStart, events);
         }
-      }else{
+      } else {
         this.looped = false
       }
     }
@@ -157,22 +158,22 @@ export default class Scheduler{
     //console.log('scheduler', this.looped)
 
     // main loop
-    for(let i = this.index; i < this.numEvents; i++){
+    for (let i = this.index; i < this.numEvents; i++) {
       let event = this.events[i];
       //console.log(event.millis, this.maxtime)
-      if(event.millis < this.maxtime){
+      if (event.millis < this.maxtime) {
 
         //event.time = this.timeStamp + event.millis - this.songStartMillis;
 
-        if(event.type === 'audio'){
+        if (event.type === 'audio') {
           // to be implemented
-        }else{
+        } else {
           event.time = (this.timeStamp + event.millis - this.songStartMillis)
           event.time2 = (this.timeStamp2 + event.millis - this.songStartMillis)
           events.push(event);
         }
         this.index++;
-      }else{
+      } else {
         break;
       }
     }
@@ -180,7 +181,7 @@ export default class Scheduler{
   }
 
 
-  update(diff){
+  update(diff) {
     var i,
       event,
       numEvents,
@@ -189,7 +190,7 @@ export default class Scheduler{
 
     this.prevMaxtime = this.maxtime
 
-    if(this.song.precounting){
+    if (this.song.precounting) {
       this.songCurrentMillis += diff
       this.maxtime = this.songCurrentMillis + this.bufferTime
       //console.log(this.songCurrentMillis)
@@ -200,7 +201,7 @@ export default class Scheduler{
       //   console.log(events)
       // }
 
-      if(this.maxtime > this.song._metronome.endMillis && this.precountingDone === false){
+      if (this.maxtime > this.song._metronome.endMillis && this.precountingDone === false) {
         this.precountingDone = true
         this.timeStamp += this.song._precountDuration
 
@@ -212,7 +213,7 @@ export default class Scheduler{
         events.push(...this.getEvents())
         //console.log(events)
       }
-    }else{
+    } else {
       this.songCurrentMillis += diff
       this.maxtime = this.songCurrentMillis + this.bufferTime
       events = this.getEvents()
@@ -241,7 +242,7 @@ export default class Scheduler{
 
     //console.log(this.maxtime, this.song._currentMillis, '[diff]', this.maxtime - this.prevMaxtime)
 
-    for(i = 0; i < numEvents; i++){
+    for (i = 0; i < numEvents; i++) {
       event = events[i]
       track = event._track
       // console.log(this.maxtime, this.prevMaxtime, event.millis)
@@ -252,31 +253,37 @@ export default class Scheduler{
       //   continue
       // }
 
-      if(event._part === null || track === null){
+      if (event._part === null || track === null) {
         console.log(event)
         this.notes.set(event.midiNoteId, event.midiNote)
         continue
       }
 
-      if(event._part.muted === true || track.muted === true || event.muted === true){
+      if (event._part.muted === true || track.muted === true || event.muted === true) {
         continue
       }
 
-      if((event.type === 144 || event.type === 128) && typeof event.midiNote === 'undefined'){
+      if ((event.type === 144 || event.type === 128) && typeof event.midiNote === 'undefined') {
         // this is usually caused by the same note on the same ticks value, which is probably a bug in the midi file
         //console.info('no midiNoteId', event)
         continue
       }
       // /console.log(event.ticks, event.time, event.millis, event.type, event._track.name)
 
-      if(event.type === 'audio'){
+      if (event.type === 'audio') {
         // to be implemented
-      }else{
+      } else {
         track.processMIDIEvent(event)
+        if (track.name === `${this.song.id}_metronome` && this.song.useMetronome) {
+          dispatchEvent({
+            type: 'metronome',
+            data: event,
+          });
+        }
         //console.log(context.currentTime * 1000, event.time, this.index)
-        if(event.type === 144){
+        if (event.type === 144) {
           this.notes.set(event.midiNoteId, event.midiNote)
-        }else if(event.type === 128){
+        } else if (event.type === 128) {
           this.notes.delete(event.midiNoteId)
         }
         // if(this.notes.size > 0){
@@ -289,39 +296,39 @@ export default class Scheduler{
     return this.index >= this.numEvents // last event of song
   }
 
-/*
-  unschedule(){
+  /*
+    unschedule(){
 
-    let min = this.song._currentMillis
-    let max = min + (bufferTime * 1000)
+      let min = this.song._currentMillis
+      let max = min + (bufferTime * 1000)
 
-    //console.log('reschedule', this.notes.size)
-    this.notes.forEach((note, id) => {
-      // console.log(note)
-      // console.log(note.noteOn.millis, note.noteOff.millis, min, max)
+      //console.log('reschedule', this.notes.size)
+      this.notes.forEach((note, id) => {
+        // console.log(note)
+        // console.log(note.noteOn.millis, note.noteOff.millis, min, max)
 
-      if(typeof note === 'undefined' || note.state === 'removed'){
-        //sample.unschedule(0, unscheduleCallback);
-        //console.log('NOTE IS UNDEFINED')
-        //sample.stop(0)
-        this.notes.delete(id)
-      }else if((note.noteOn.millis >= min || note.noteOff.millis < max) === false){
-        //sample.stop(0)
-        let noteOn = note.noteOn
-        let noteOff = new MIDIEvent(0, 128, noteOn.data1, 0)
-        noteOff.midiNoteId = note.id
-        noteOff.time = 0//context.currentTime + min
-        note._track.processMIDIEvent(noteOff)
-        this.notes.delete(id)
-        console.log('STOPPING', id, note._track.name)
-      }
-    })
-    //console.log('NOTES', this.notes.size)
-    //this.notes.clear()
-  }
-*/
+        if(typeof note === 'undefined' || note.state === 'removed'){
+          //sample.unschedule(0, unscheduleCallback);
+          //console.log('NOTE IS UNDEFINED')
+          //sample.stop(0)
+          this.notes.delete(id)
+        }else if((note.noteOn.millis >= min || note.noteOff.millis < max) === false){
+          //sample.stop(0)
+          let noteOn = note.noteOn
+          let noteOff = new MIDIEvent(0, 128, noteOn.data1, 0)
+          noteOff.midiNoteId = note.id
+          noteOff.time = 0//context.currentTime + min
+          note._track.processMIDIEvent(noteOff)
+          this.notes.delete(id)
+          console.log('STOPPING', id, note._track.name)
+        }
+      })
+      //console.log('NOTES', this.notes.size)
+      //this.notes.clear()
+    }
+  */
 
-  allNotesOff(){
+  allNotesOff() {
     let timeStamp = performance.now()
     let outputs = getMIDIOutputs()
     outputs.forEach((output) => {

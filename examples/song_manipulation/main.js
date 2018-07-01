@@ -50,6 +50,10 @@ function main(){
   song.setLeftLocator('barsbeats', 1)
   song.setRightLocator('barsbeats', 3)
 
+  song.addEventListener('metronome', (event) => {
+    console.log(event);
+  })
+
   let btnPlay = document.getElementById('play')
   let btnPause = document.getElementById('pause')
   let btnStop = document.getElementById('stop')
