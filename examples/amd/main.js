@@ -1,6 +1,6 @@
 requirejs.config({
   paths: {
-    qambi: '//qambi.org/dist/qambi-umd.min'
+    qambi: '//abumarkub.org/qambi/dist/qambi-umd.min'
   }
 })
 
