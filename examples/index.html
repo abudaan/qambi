@@ -10,11 +10,12 @@
   <link rel="stylesheet" type="text/css" href="../css/home.css">
   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-5081547-11"></script>
   <script>
-    console.log(window.location.hostname, window.location.hostname === 'abudaan.github.io');
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'UA-5081547-11');
+    if(window.location.hostname === 'abudaan.github.io'){
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-5081547-11');
+    }
   </script>
 </head>
 <body class="center">
