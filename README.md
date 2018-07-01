@@ -15,7 +15,7 @@ But you can also add qambi as an AMD module:
 ```javascript
 requirejs.config({
   paths: {
-    qambi: '//qambi.org/dist/qambi-umd.min'
+    qambi: 'https://abumarkub.org/qambi/dist/qambi-umd.min'
   }
 })
 
@@ -24,8 +24,8 @@ requirejs.config({
 
 Or as a global variable:
 ```html
-  <script src="//qambi.org/dist/qambi-umd.min.js"></script>
-  <script src="//qambi.org/dist/globals.js"></script>
+  <script src="https://abumarkub.org/qambi/dist/qambi-umd.min.js"></script>
+  <script src="https://abumarkub.org/qambi/dist/globals.js"></script>
 ```
 The last script file creates global variables for all qambi modules. This is not mandatory: if you add it you can for instance create a new song with `new Song()`, if you omit it you have to type `new qambi.Song()`.
 
@@ -41,11 +41,11 @@ import qambi from 'qambi'
 qambi.init({
     song: {
       type: 'Song',
-      url: '//qambi.org/midi/minute_waltz.mid'
+      url: './midi/minute_waltz.mid'
     },
     piano: {
       type: 'Instrument',
-      url: '//qambi.org/instruments/heartbeat/city-piano-light.json'
+      url: './instruments/heartbeat/city-piano-light.json'
     }
   })
   .then(data => {
