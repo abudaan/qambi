@@ -23,14 +23,14 @@ document.addEventListener('DOMContentLoaded', function(){
       track.setInstrument(piano)
     })
 
-    song.setMetronome(true);
-    const metronomeName = `${song.id}_metronome`;
-    song.addEventListener('noteOn', (note) => {
-      console.log(note.data._track.name);
-      if(note.data._track.name === metronomeName) {
-        console.log(`tick says the metronome: ${note}`);
-      }
-    });
+    // song.setMetronome(true);
+    // const metronomeName = `${song.id}_metronome`;
+    // song.addEventListener('noteOn', (note) => {
+    //   console.log(note.data._track.name);
+    //   if(note.data._track.name === metronomeName) {
+    //     console.log(`tick says the metronome: ${note}`);
+    //   }
+    // });
 
     initUI(song)
   })
