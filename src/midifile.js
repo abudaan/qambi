@@ -8,9 +8,8 @@
 
 import MIDIStream from './midi_stream';
 
-let
-  lastEventTypeByte,
-  trackName;
+let lastEventTypeByte;
+let originalTrackName;
 
 
 function readChunk(stream){
@@ -18,9 +17,9 @@ function readChunk(stream){
   let length = stream.readInt32();
   //console.log(length);
   return{
-    'id': id,
-    'length': length,
-    'data': stream.read(length, false)
+    id,
+    length,
+    data: stream.read(length, false)
   };
 }
 
@@ -57,7 +56,7 @@ function readEvent(stream){
         case 0x03:
           event.subtype = 'trackName';
           event.text = stream.read(length);
-          trackName = event.text;
+          originalTrackName = event.text;
           return event;
         case 0x04:
           event.subtype = 'instrumentName';
@@ -105,7 +104,7 @@ function readEvent(stream){
             throw 'Expected length for smpteOffset event is 5, got ' + length;
           }
           let hourByte = stream.readInt8();
-          event.frameRate ={
+          event.frameRate = {
             0x00: 24, 0x20: 25, 0x40: 29, 0x60: 30
           }[hourByte & 0x60];
           event.hour = hourByte & 0x1f;
@@ -146,17 +145,17 @@ function readEvent(stream){
       }
       event.data = stream.read(length);
       return event;
-    }else if(eventTypeByte == 0xf0){
+    } else if(eventTypeByte == 0xf0){
       event.type = 'sysEx';
       length = stream.readVarInt();
       event.data = stream.read(length);
       return event;
-    }else if(eventTypeByte == 0xf7){
+    } else if(eventTypeByte == 0xf7){
       event.type = 'dividedSysEx';
       length = stream.readVarInt();
       event.data = stream.read(length);
       return event;
-    }else{
+    } else {
       throw 'Unrecognised MIDI event type byte: ' + eventTypeByte;
     }
   }else{
@@ -265,29 +264,28 @@ export function parseMIDIFile(buffer){
     throw 'Expressing time division in SMTPE frames is not supported yet';
   }
 
-  let header ={
-    'formatType': formatType,
-    'trackCount': trackCount,
-    'ticksPerBeat': timeDivision
+  let header = {
+    ticksPerBeat: timeDivision
   };
 
   for(let i = 0; i < trackCount; i++){
-    trackName = 'track_' + i;
+    originalTrackName = false;
     let track = [];
     let trackChunk = readChunk(stream);
     if(trackChunk.id !== 'MTrk'){
-      throw 'Unexpected chunk - expected MTrk, got '+ trackChunk.id;
+      throw 'Unexpected chunk - expected MTrk, got ' + trackChunk.id;
     }
     let trackStream = new MIDIStream(trackChunk.data);
     while(!trackStream.eof()){
       let event = readEvent(trackStream);
       track.push(event);
     }
+    const trackName = originalTrackName || 'track_' + i;
     tracks.set(trackName, track);
   }
 
-  return{
-    'header': header,
-    'tracks': tracks
+  return {
+    header,
+    tracks
   };
 }

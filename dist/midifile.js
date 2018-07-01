@@ -17,17 +17,17 @@ var _midi_stream2 = _interopRequireDefault(_midi_stream);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var lastEventTypeByte = void 0,
-    trackName = void 0;
+var lastEventTypeByte = void 0;
+var originalTrackName = void 0;
 
 function readChunk(stream) {
   var id = stream.read(4, true);
   var length = stream.readInt32();
   //console.log(length);
   return {
-    'id': id,
-    'length': length,
-    'data': stream.read(length, false)
+    id: id,
+    length: length,
+    data: stream.read(length, false)
   };
 }
 
@@ -63,7 +63,7 @@ function readEvent(stream) {
         case 0x03:
           event.subtype = 'trackName';
           event.text = stream.read(length);
-          trackName = event.text;
+          originalTrackName = event.text;
           return event;
         case 0x04:
           event.subtype = 'instrumentName';
@@ -267,13 +267,11 @@ function parseMIDIFile(buffer) {
   }
 
   var header = {
-    'formatType': formatType,
-    'trackCount': trackCount,
-    'ticksPerBeat': timeDivision
+    ticksPerBeat: timeDivision
   };
 
   for (var i = 0; i < trackCount; i++) {
-    trackName = 'track_' + i;
+    originalTrackName = false;
     var track = [];
     var trackChunk = readChunk(stream);
     if (trackChunk.id !== 'MTrk') {
@@ -284,11 +282,12 @@ function parseMIDIFile(buffer) {
       var event = readEvent(trackStream);
       track.push(event);
     }
+    var trackName = originalTrackName || 'track_' + i;
     tracks.set(trackName, track);
   }
 
   return {
-    'header': header,
-    'tracks': tracks
+    header: header,
+    tracks: tracks
   };
 }

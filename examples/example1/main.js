@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function(){
     song: {
       type: 'Song',
       url: '../data/minute_waltz.mid'
+      // url: '../data/mozk545a.mid'
     },
     piano: {
       type: 'Instrument',

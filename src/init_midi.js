@@ -52,8 +52,6 @@ export function initMIDI() {
     let midi = false
     let webmidi = false
 
-    console.log('hallo aap!', navigator.requestMIDIAccess);
-
     if (typeof navigator === 'undefined') {
       initialized = true
       resolve({midi})

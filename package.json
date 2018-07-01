@@ -43,6 +43,7 @@
     "node": ">0.10.x"
   },
   "scripts": {
+    "server": "python -m SimpleHTTPServer 1234",
     "test": "",
     "compile": "node_modules/babel-cli/bin/babel.js src --out-dir dist",
     "dev": "node_modules/babel-cli/bin/babel.js src --watch --out-dir ./examples/node_modules/qambi/dist/",

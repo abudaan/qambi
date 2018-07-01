@@ -107,8 +107,6 @@ function initMIDI() {
     var midi = false;
     var webmidi = false;
 
-    console.log('hallo aap!', navigator.requestMIDIAccess);
-
     if (typeof navigator === 'undefined') {
       initialized = true;
       resolve({ midi: midi });

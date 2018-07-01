@@ -4389,8 +4389,6 @@ process.umask = function() { return 0; };
       var midi = false;
       var webmidi = false;
 
-      console.log('hallo aap!', navigator.requestMIDIAccess);
-
       if (typeof navigator === 'undefined') {
         initialized = true;
         resolve({ midi: midi });
@@ -5907,17 +5905,17 @@ process.umask = function() { return 0; };
     };
   }
 
-  var lastEventTypeByte = void 0,
-      trackName = void 0;
+  var lastEventTypeByte = void 0;
+  var originalTrackName = void 0;
 
   function readChunk(stream) {
     var id = stream.read(4, true);
     var length = stream.readInt32();
     //console.log(length);
     return {
-      'id': id,
-      'length': length,
-      'data': stream.read(length, false)
+      id: id,
+      length: length,
+      data: stream.read(length, false)
     };
   }
 
@@ -5953,7 +5951,7 @@ process.umask = function() { return 0; };
           case 0x03:
             event.subtype = 'trackName';
             event.text = stream.read(length);
-            trackName = event.text;
+            originalTrackName = event.text;
             return event;
           case 0x04:
             event.subtype = 'instrumentName';
@@ -6157,13 +6155,11 @@ process.umask = function() { return 0; };
     }
 
     var header = {
-      'formatType': formatType,
-      'trackCount': trackCount,
-      'ticksPerBeat': timeDivision
+      ticksPerBeat: timeDivision
     };
 
     for (var i = 0; i < trackCount; i++) {
-      trackName = 'track_' + i;
+      originalTrackName = false;
       var track = [];
       var trackChunk = readChunk(stream);
       if (trackChunk.id !== 'MTrk') {
@@ -6174,12 +6170,13 @@ process.umask = function() { return 0; };
         var event = readEvent(trackStream);
         track.push(event);
       }
+      var trackName = originalTrackName || 'track_' + i;
       tracks.set(trackName, track);
     }
 
     return {
-      'header': header,
-      'tracks': tracks
+      header: header,
+      tracks: tracks
     };
   }
 });
