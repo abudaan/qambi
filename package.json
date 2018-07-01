@@ -55,7 +55,7 @@
     "babel-node": "node_modules/.bin/babel-node"
   },
   "dependencies": {
-    "filesaverjs": "0.2.2",
+    "filesaverjs": "^1.2.1",
     "isomorphic-fetch": "^2.2.1",
     "jzz": "^0.4.6"
   }
