@@ -1,6 +1,6 @@
 {
   "name": "qambi",
-  "version": "1.0.0-beta40",
+  "version": "1.0.0-beta41",
   "description": "MIDI sequencer, loads MIDI files, can record and playback MIDI, uses WebMIDI and WebAudio",
   "keywords": [
     "MIDI",
@@ -15,6 +15,7 @@
   "private": false,
   "devDependencies": {
     "babel-cli": "^6.7.5",
+    "babel-core": "^6.26.3",
     "babel-eslint": "^6.0.2",
     "babel-plugin-transform-es2015-modules-umd": "6.8.0",
     "babel-plugin-transform-flow-strip-types": "^6.7.0",
@@ -24,7 +25,7 @@
     "browserify": "13.0.1",
     "eslint": "^2.7.0",
     "eslint-plugin-babel": "^3.2.0",
-    "flow-bin": "^0.22.1",
+    "flow-bin": "^0.109.0",
     "minifyify": "7.3.3"
   },
   "license": "MIT",
@@ -55,7 +56,7 @@
     "babel-node": "node_modules/.bin/babel-node"
   },
   "dependencies": {
-    "filesaverjs": "^1.2.1",
+    "file-saver": "^2.0.2",
     "isomorphic-fetch": "^2.2.1",
     "jzz": "^0.4.6"
   }
