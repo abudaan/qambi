@@ -10,33 +10,41 @@ let masterGain
 let compressor
 let initialized = false
 
+export let context; // Creating Audio CTX here on load fails due to Chrome Policy... moved to function below ... init now in initAudio()
+// dont konw about the implications...
+//The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://goo.gl/7K7WLu
+// Also dont like things dangeling around in Window ctx
 
-export let context = (function(){
+
+function createAudioCtx() {
   //console.log('init AudioContext')
   let ctx
-  if(typeof window === 'object'){
+  if (typeof window === 'object') {
     let AudioContext = window.AudioContext || window.webkitAudioContext
-    if(AudioContext !== 'undefined'){
+    if (AudioContext !== 'undefined') {
       ctx = new AudioContext()
     }
   }
-  if(typeof ctx === 'undefined'){
+  if (typeof ctx === 'undefined') {
     //@TODO: create dummy AudioContext for use in node, see: https://www.npmjs.com/package/audio-context
-    context = {
-      createGain: function(){
+    ctx = {
+      createGain: function () {
         return {
           gain: 1
         }
       },
-      createOscillator: function(){},
+      createOscillator: function () {
+      },
     }
   }
   return ctx
-}())
+}
 
 
-export function initAudio(){
-
+export function initAudio() {
+  if(!context) {
+    context = createAudioCtx();
+  }
   if(typeof context.createGainNode === 'undefined'){
     context.createGainNode = context.createGain
   }

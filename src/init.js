@@ -43,7 +43,7 @@ function loadInstrument(data){
   })
 }
 
-export function init(settings = null): void{
+export function init(settings = null) {
 
   // load settings.instruments (array or object)
   // load settings.midifiles (array or object)

@@ -1,4 +1,5 @@
 .gitignore
+.idea
 npm-debug.log
 lib/qambi
 node_modules/*

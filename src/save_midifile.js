@@ -8,7 +8,7 @@ info: http://www.deluge.co/?q=midi-tempo-bpm
 */
 
 
-import {saveAs} from 'filesaverjs'
+import saveAs from 'file-saver'
 
 let PPQ = 960
 let HDR_PPQ = str2Bytes(PPQ.toString(16), 2)

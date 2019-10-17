@@ -165,7 +165,7 @@ export class Sampler extends Instrument{
 
         }
         //console.log(new Date().getTime())
-        resolve()
+        resolve(this)
       })
     })
   }
